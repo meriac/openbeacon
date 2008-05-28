@@ -1,0 +1,21 @@
+# copy this file to /etc/openbeacon.conf
+
+# you can use the -c=<filepath> switch on aggregator to select which config filepath to use
+
+# reflector clients
+# list client IPs to send any incoming UDP packets on to here
+# you can list up to the maximum number of clients on a line each
+
+#client=192.168.0.54
+
+# should we log every UDP packet that comes in?
+# default is yes
+#
+# log=n
+
+# should we decrypt incoming UDP?
+# default is yes
+# you don't want to decrypt if you are downstream of another
+# aggregator that has already decrypted for you
+#
+# decrypt=n
