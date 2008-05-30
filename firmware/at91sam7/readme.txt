@@ -30,5 +30,22 @@ Use the contained "at91flash"-tool to udpate to contained firmware. The
 supplied script depends on our modified sam7 tool:
 http://www.openpcd.org/dl/sam7utils-0.1.0-bm.tar.bz2
 
+Subdirectory list:
+
+[openbeacon-usb]
+
+This direcectory contains the Standard Tag Distance Estimator version. This
+firmware makes a list of tags within its range and sorts them by distance and
+by up-to-dateness. Nearer tags expire earlier because 
+
+Please make sure to change the contained key in xxtea.c to a random key that matches
+your tag!
+
+[openbouncer]
+
+...
+
+
+
 
 Enjoy !

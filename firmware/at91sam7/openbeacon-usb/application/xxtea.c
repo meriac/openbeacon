@@ -34,7 +34,11 @@
 #include "proto.h"
 #include "xxtea.h"
 
-const long tea_key[4] = {0x8e7d6649,0x7e82fa5b,0xddd4541e,0xe23742cb};
+//
+// Dummy TEA encryption key of the tag - please change for real applications!
+//
+const long tea_key[4] = {0x00112233,0x44556677,0x8899AABB,0xCCDDEEFF};
+
 unsigned long z, y, sum, tmp, mx;
 unsigned char e;
 
