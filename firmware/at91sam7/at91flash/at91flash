@@ -1,0 +1,27 @@
+#!/bin/bash
+# (C) Milosch Meriac <meriac@bitmanufaktur.de> 2006
+
+UART='/dev/ttyUSB0'
+SAM7='/usr/local/bin/sam7'
+
+if [[ -a $1 ]]; then
+
+    echo "1. please unplug the USB cable and insert the SAM-BA jumper (Pin 1+2)"
+    echo "2. attach the USB cable"
+    echo "3. wait ten seconds"
+    echo "4. unplug the USB cable"
+    echo "5. remove the SAM-BA jumper"
+    echo "6. attach the USB cable"
+    echo "7. wait several seconds to allow the device to be detected by Linux"
+    echo "8. press [ENTER] to start flashing"    
+    read
+    echo -e "9. flashing '$1'...\n"
+    $SAM7 -l$UART<< ENDOFMYTEXT
+set_clock
+unlock_regions
+flash $1
+ENDOFMYTEXT
+    echo '10. done!'
+else
+    echo "can't open flash image file '$1'"
+fi

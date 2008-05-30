@@ -1,5 +1,5 @@
 /*
-	FreeRTOS.org V4.2.1 - Copyright (C) 2003-2007 Richard Barry.
+	FreeRTOS.org V5.0.0 - Copyright (C) 2003-2008 Richard Barry.
 
 	This file is part of the FreeRTOS.org distribution.
 
@@ -23,14 +23,28 @@
 	of http://www.FreeRTOS.org for full details of how and when the exception
 	can be applied.
 
-	***************************************************************************
-	See http://www.FreeRTOS.org for documentation, latest information, license
-	and contact details.  Please ensure to read the configuration and relevant
-	port sections of the online documentation.
+    ***************************************************************************
+    ***************************************************************************
+    *                                                                         *
+    * SAVE TIME AND MONEY!  We can port FreeRTOS.org to your own hardware,    *
+    * and even write all or part of your application on your behalf.          *
+    * See http://www.OpenRTOS.com for details of the services we provide to   *
+    * expedite your project.                                                  *
+    *                                                                         *
+    ***************************************************************************
+    ***************************************************************************
 
-	Also see http://www.SafeRTOS.com for an IEC 61508 compliant version along
-	with commercial development and support options.
-	***************************************************************************
+	Please ensure to read the configuration and relevant port sections of the
+	online documentation.
+
+	http://www.FreeRTOS.org - Documentation, latest information, license and 
+	contact details.
+
+	http://www.SafeRTOS.com - A version that is certified for use in safety 
+	critical systems.
+
+	http://www.OpenRTOS.com - Commercial support, development, porting, 
+	licensing and training services.
 */
 
 /*
@@ -54,42 +68,55 @@ const portCHAR pxLanguageStringDescriptor[] = {
 };
 
 const portCHAR pxManufacturerStringDescriptor[] = {
-  28,
+  18,
   usbDESCRIPTOR_TYPE_STRING,
 
-  'b', 0x00, 'i', 0x00, 't', 0x00, 'm', 0x00,
-  'a', 0x00, 'n', 0x00, 'u', 0x00, 'f', 0x00,
-  'a', 0x00, 'k', 0x00, 't', 0x00, 'u', 0x00,
-  'r', 0x00
+  'F', 0x00, 'r', 0x00, 'e', 0x00, 'e', 0x00, 'R', 0x00, 'T', 0x00, 'O', 0x00,
+    'S', 0x00
 };
 
 const portCHAR pxProductStringDescriptor[] = {
-  44,
+  36,
   usbDESCRIPTOR_TYPE_STRING,
-  
-  'O', 0x00, 'p', 0x00, 'e', 0x00, 'n', 0x00,
-  'B', 0x00, 'e', 0x00, 'a', 0x00, 'c', 0x00,
-  'o', 0x00, 'n', 0x00, ' ', 0x00, 'U', 0x00,
-  'S', 0x00, 'B', 0x00, ' ', 0x00, '2', 0x00,
-  '.', 0x00, '4', 0x00, 'G', 0x00, 'H', 0x00,
-  'z', 0x00
+
+  'F', 0x00, 'r', 0x00, 'e', 0x00, 'e', 0x00, 'R', 0x00, 'T', 0x00, 'O', 0x00,
+    'S', 0x00, ' ', 0x00, 'C', 0x00, 'D', 0x00,
+  'C', 0x00, ' ', 0x00, 'D', 0x00, 'E', 0x00, 'M', 0x00, 'O', 0x00
+};
+
+const portCHAR pxConfigurationStringDescriptor[] = {
+  38,
+  usbDESCRIPTOR_TYPE_STRING,
+
+  'C', 0x00, 'o', 0x00, 'n', 0x00, 'f', 0x00, 'i', 0x00, 'g', 0x00, 'u', 0x00,
+    'r', 0x00, 'a', 0x00, 't', 0x00, 'i', 0x00,
+  'o', 0x00, 'n', 0x00, ' ', 0x00, 'N', 0x00, 'a', 0x00, 'm', 0x00, 'e', 0x00
+};
+
+const portCHAR pxInterfaceStringDescriptor[] = {
+  30,
+  usbDESCRIPTOR_TYPE_STRING,
+
+  'I', 0x00, 'n', 0x00, 't', 0x00, 'e', 0x00, 'r', 0x00, 'f', 0x00, 'a', 0x00,
+    'c', 0x00, 'e', 0x00, ' ', 0x00, 'N', 0x00,
+  'a', 0x00, 'm', 0x00, 'e', 0x00
 };
 
 /* Device should properly be 0x134A:0x9001, using 0x05F9:0xFFFF for Linux testing */
 const char pxDeviceDescriptor[] = {
   /* Device descriptor */
-  0x12,				/* bLength                      */
+  0x12,				/* bLength                              */
   0x01,				/* bDescriptorType              */
-  0x10, 0x01,			/* bcdUSBL                      */
+  0x10, 0x01,			/* bcdUSBL                              */
   0x02,				/* bDeviceClass:                */
   0x00,				/* bDeviceSubclass:             */
   0x00,				/* bDeviceProtocol:             */
   0x08,				/* bMaxPacketSize0              */
-  0xC0, 0x16,			/* idVendorL                    */
-  0xAC, 0x08,			/* idProductL                   */
+  0x03, 0xEB,			/* idVendorL                    */
+  0x20, 0x09,			/* idProductL                   */
   0x10, 0x01,			/* bcdDeviceL                   */
   usbMANUFACTURER_STRING,	/* iManufacturer                */
-  usbPRODUCT_STRING,		/* iProduct                     */
+  usbPRODUCT_STRING,		/* iProduct                             */
   0x00,				/* SerialNumber                 */
   0x01				/* bNumConfigs                  */
 };
@@ -107,7 +134,7 @@ const char pxConfigDescriptor[] = {
   0x43, 0x00,			/* CwTotalLength 2 EP + Control         ?       */
   0x02,				/* CbNumInterfaces                                              */
   0x01,				/* CbConfigurationValue                                 */
-  0x00,				/* CiConfiguration                                      */
+  usbCONFIGURATION_STRING,	/* CiConfiguration                                      */
   usbBUS_POWERED,		/* CbmAttributes Bus powered + Remote Wakeup */
   0x32,				/* CMaxPower: 100mA                                             */
 
@@ -119,7 +146,7 @@ const char pxConfigDescriptor[] = {
   0x01,				/* bNumEndpoints                                                */
   0x02,				/* bInterfaceClass: Comm Interface Class */
   0x02,				/* bInterfaceSubclass: Abstract Control Model */
-  0x01,				/* bInterfaceProtocol                                   */
+  0x00,				/* bInterfaceProtocol                                   */
   usbINTERFACE_STRING,		/* iInterface                                                       */
 
   /* Header Functional Descriptor                                                         */

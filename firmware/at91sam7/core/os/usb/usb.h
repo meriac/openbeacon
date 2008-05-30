@@ -116,31 +116,31 @@ unchanged by writing with a 1. */
 
 
 #define usbCSR_SET_BIT( pulValueNow, ulBit )											\
-{																						\
-	/* Set TXCOMP, RX_DATA_BK0, RXSETUP, */												\
-	/* STALLSENT and RX_DATA_BK1 to 1 so the */											\
-	/* write has no effect. */															\
-	( * ( ( unsigned portLONG * ) pulValueNow ) ) |= ( unsigned portLONG ) 0x4f;		\
-																						\
+{																\
+	/* Set TXCOMP, RX_DATA_BK0, RXSETUP, */											\
+	/* STALLSENT and RX_DATA_BK1 to 1 so the */										\
+	/* write has no effect. */												\
+	( * ( ( unsigned portLONG * ) pulValueNow ) ) |= ( unsigned portLONG ) 0x4f;						\
+																\
 	/* Clear the FORCE_STALL and TXPKTRDY bits */										\
-	/* so the write has no effect. */													\
-	( * ( ( unsigned portLONG * ) pulValueNow ) ) &= ( unsigned portLONG ) 0xffffffcf;	\
-																						\
-	/* Set whichever bit we want set. */												\
-	( * ( ( unsigned portLONG * ) pulValueNow ) ) |= ( ulBit );							\
+	/* so the write has no effect. */											\
+	( * ( ( unsigned portLONG * ) pulValueNow ) ) &= ( unsigned portLONG ) 0xffffffcf;					\
+																\
+	/* Set whichever bit we want set. */											\
+	( * ( ( unsigned portLONG * ) pulValueNow ) ) |= ( ulBit );								\
 }
 
 #define usbCSR_CLEAR_BIT( pulValueNow, ulBit )											\
-{																						\
-	/* Set TXCOMP, RX_DATA_BK0, RXSETUP, */												\
-	/* STALLSENT and RX_DATA_BK1 to 1 so the */											\
-	/* write has no effect. */															\
-	( * ( ( unsigned portLONG * ) pulValueNow ) ) |= ( unsigned portLONG ) 0x4f;		\
-																						\
+{																\
+	/* Set TXCOMP, RX_DATA_BK0, RXSETUP, */											\
+	/* STALLSENT and RX_DATA_BK1 to 1 so the */										\
+	/* write has no effect. */												\
+	( * ( ( unsigned portLONG * ) pulValueNow ) ) |= ( unsigned portLONG ) 0x4f;						\
+																\
 	/* Clear the FORCE_STALL and TXPKTRDY bits */										\
-	/* so the write has no effect. */													\
-	( * ( ( unsigned portLONG * ) pulValueNow ) ) &= ( unsigned portLONG ) 0xffffffcf;	\
-																						\
-	/* Clear whichever bit we want clear. */											\
-	( * ( ( unsigned portLONG * ) pulValueNow ) ) &= ( ~ulBit );						\
+	/* so the write has no effect. */											\
+	( * ( ( unsigned portLONG * ) pulValueNow ) ) &= ( unsigned portLONG ) 0xffffffcf;					\
+																\
+	/* Clear whichever bit we want clear. */										\
+	( * ( ( unsigned portLONG * ) pulValueNow ) ) &= ( ~ulBit );								\
 }

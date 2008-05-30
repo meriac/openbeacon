@@ -107,6 +107,9 @@ $(TARGET).elf : $(ARM_OBJ) $(CRT0) Makefile config/FreeRTOSConfig.h
 $(ARM_OBJ) : %.o : %.c $(LDSCRIPT) Makefile config/FreeRTOSConfig.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
+flash : $(TARGET).bin
+	../at91flash/at91flash $(TARGET).bin
+
 clean : app_clean
 	find $(CORE) -name '*.o' -exec rm \{\} \;
 	rm -f $(TARGET).bin $(TARGET).elf $(TARGET).map $(TARGET).asm

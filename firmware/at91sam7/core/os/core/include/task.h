@@ -1,5 +1,5 @@
 /*
-	FreeRTOS.org V4.2.1 - Copyright (C) 2003-2007 Richard Barry.
+	FreeRTOS.org V5.0.0 - Copyright (C) 2003-2008 Richard Barry.
 
 	This file is part of the FreeRTOS.org distribution.
 
@@ -23,14 +23,34 @@
 	of http://www.FreeRTOS.org for full details of how and when the exception
 	can be applied.
 
-	***************************************************************************
-	See http://www.FreeRTOS.org for documentation, latest information, license
-	and contact details.  Please ensure to read the configuration and relevant
-	port sections of the online documentation.
+    ***************************************************************************
+    ***************************************************************************
+    *                                                                         *
+    * SAVE TIME AND MONEY!  We can port FreeRTOS.org to your own hardware,    *
+    * and even write all or part of your application on your behalf.          *
+    * See http://www.OpenRTOS.com for details of the services we provide to   *
+    * expedite your project.                                                  *
+    *                                                                         *
+    ***************************************************************************
+    ***************************************************************************
 
-	Also see http://www.SafeRTOS.com for an IEC 61508 compliant version along
-	with commercial development and support options.
-	***************************************************************************
+	Please ensure to read the configuration and relevant port sections of the
+	online documentation.
+
+	http://www.FreeRTOS.org - Documentation, latest information, license and 
+	contact details.
+
+	http://www.SafeRTOS.com - A version that is certified for use in safety 
+	critical systems.
+
+	http://www.OpenRTOS.com - Commercial support, development, porting, 
+	licensing and training services.
+*/
+
+/*
+Changes since V4.3.1:
+
+	+ Added xTaskGetSchedulerState() function.
 */
 
 #ifndef TASK_H
@@ -39,11 +59,15 @@
 #include "portable.h"
 #include "list.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 /*-----------------------------------------------------------
  * MACROS AND DEFINITIONS
  *----------------------------------------------------------*/
 
-#define tskKERNEL_VERSION_NUMBER "V4.2.1"
+#define tskKERNEL_VERSION_NUMBER "V5.0.0"
 
 /**
  * task. h
@@ -55,16 +79,16 @@
  * \page xTaskHandle xTaskHandle
  * \ingroup Tasks
  */
-typedef void *xTaskHandle;
+  typedef void *xTaskHandle;
 
 /*
  * Used internally only.
  */
-typedef struct xTIME_OUT
-{
-  portBASE_TYPE xOverflowCount;
-  portTickType xTimeOnEntering;
-} xTimeOutType;
+  typedef struct xTIME_OUT
+  {
+    portBASE_TYPE xOverflowCount;
+    portTickType xTimeOnEntering;
+  } xTimeOutType;
 
 /*
  * Defines the priority used by the idle task.  This must not be modified.
@@ -131,6 +155,10 @@ typedef struct xTIME_OUT
  */
 #define taskENABLE_INTERRUPTS()		portENABLE_INTERRUPTS()
 
+/* Definitions returned by xTaskGetSchedulerState(). */
+#define taskSCHEDULER_NOT_STARTED	0
+#define taskSCHEDULER_RUNNING		1
+#define taskSCHEDULER_SUSPENDED		2
 
 /*-----------------------------------------------------------
  * TASK CREATION API
@@ -200,12 +228,12 @@ typedef struct xTIME_OUT
  * \defgroup xTaskCreate xTaskCreate
  * \ingroup Tasks
  */
-signed portBASE_TYPE xTaskCreate (pdTASK_CODE pvTaskCode,
-				  const signed portCHAR * const pcName,
-				  unsigned portSHORT usStackDepth,
-				  void *pvParameters,
-				  unsigned portBASE_TYPE uxPriority,
-				  xTaskHandle * pvCreatedTask);
+  signed portBASE_TYPE xTaskCreate (pdTASK_CODE pvTaskCode,
+				    const signed portCHAR * const pcName,
+				    unsigned portSHORT usStackDepth,
+				    void *pvParameters,
+				    unsigned portBASE_TYPE uxPriority,
+				    xTaskHandle * pvCreatedTask);
 
 /**
  * task. h
@@ -246,7 +274,7 @@ signed portBASE_TYPE xTaskCreate (pdTASK_CODE pvTaskCode,
  * \defgroup vTaskDelete vTaskDelete
  * \ingroup Tasks
  */
-void vTaskDelete (xTaskHandle pxTask);
+  void vTaskDelete (xTaskHandle pxTask);
 
 
 /*-----------------------------------------------------------
@@ -300,7 +328,7 @@ void vTaskDelete (xTaskHandle pxTask);
  * \defgroup vTaskDelay vTaskDelay
  * \ingroup TaskCtrl
  */
-void vTaskDelay (portTickType xTicksToDelay);
+  void vTaskDelay (portTickType xTicksToDelay);
 
 /**
  * task. h
@@ -359,8 +387,8 @@ void vTaskDelay (portTickType xTicksToDelay);
  * \defgroup vTaskDelayUntil vTaskDelayUntil
  * \ingroup TaskCtrl
  */
-void vTaskDelayUntil (portTickType * pxPreviousWakeTime,
-		      portTickType xTimeIncrement);
+  void vTaskDelayUntil (portTickType * const pxPreviousWakeTime,
+			portTickType xTimeIncrement);
 
 /**
  * task. h
@@ -407,7 +435,7 @@ void vTaskDelayUntil (portTickType * pxPreviousWakeTime,
  * \defgroup uxTaskPriorityGet uxTaskPriorityGet
  * \ingroup TaskCtrl
  */
-unsigned portBASE_TYPE uxTaskPriorityGet (xTaskHandle pxTask);
+  unsigned portBASE_TYPE uxTaskPriorityGet (xTaskHandle pxTask);
 
 /**
  * task. h
@@ -449,8 +477,8 @@ unsigned portBASE_TYPE uxTaskPriorityGet (xTaskHandle pxTask);
  * \defgroup vTaskPrioritySet vTaskPrioritySet
  * \ingroup TaskCtrl
  */
-void vTaskPrioritySet (xTaskHandle pxTask,
-		       unsigned portBASE_TYPE uxNewPriority);
+  void vTaskPrioritySet (xTaskHandle pxTask,
+			 unsigned portBASE_TYPE uxNewPriority);
 
 /**
  * task. h
@@ -501,7 +529,7 @@ void vTaskPrioritySet (xTaskHandle pxTask,
  * \defgroup vTaskSuspend vTaskSuspend
  * \ingroup TaskCtrl
  */
-void vTaskSuspend (xTaskHandle pxTaskToSuspend);
+  void vTaskSuspend (xTaskHandle pxTaskToSuspend);
 
 /**
  * task. h
@@ -550,7 +578,7 @@ void vTaskSuspend (xTaskHandle pxTaskToSuspend);
  * \defgroup vTaskResume vTaskResume
  * \ingroup TaskCtrl
  */
-void vTaskResume (xTaskHandle pxTaskToResume);
+  void vTaskResume (xTaskHandle pxTaskToResume);
 
 /**
  * task. h
@@ -570,7 +598,7 @@ void vTaskResume (xTaskHandle pxTaskToResume);
  * \defgroup vTaskResumeFromISR vTaskResumeFromISR
  * \ingroup TaskCtrl
  */
-portBASE_TYPE xTaskResumeFromISR (xTaskHandle pxTaskToResume);
+  portBASE_TYPE xTaskResumeFromISR (xTaskHandle pxTaskToResume);
 
 /*-----------------------------------------------------------
  * SCHEDULER CONTROL
@@ -608,7 +636,7 @@ portBASE_TYPE xTaskResumeFromISR (xTaskHandle pxTaskToResume);
  * \defgroup vTaskStartScheduler vTaskStartScheduler
  * \ingroup SchedulerControl
  */
-void vTaskStartScheduler (void);
+  void vTaskStartScheduler (void);
 
 /**
  * task. h
@@ -661,7 +689,7 @@ void vTaskStartScheduler (void);
  * \defgroup vTaskEndScheduler vTaskEndScheduler
  * \ingroup SchedulerControl
  */
-void vTaskEndScheduler (void);
+  void vTaskEndScheduler (void);
 
 /**
  * task. h
@@ -708,7 +736,7 @@ void vTaskEndScheduler (void);
  * \defgroup vTaskSuspendAll vTaskSuspendAll
  * \ingroup SchedulerControl
  */
-void vTaskSuspendAll (void);
+  void vTaskSuspendAll (void);
 
 /**
  * task. h
@@ -760,7 +788,7 @@ void vTaskSuspendAll (void);
  * \defgroup xTaskResumeAll xTaskResumeAll
  * \ingroup SchedulerControl
  */
-signed portBASE_TYPE xTaskResumeAll (void);
+  signed portBASE_TYPE xTaskResumeAll (void);
 
 
 /*-----------------------------------------------------------
@@ -776,7 +804,7 @@ signed portBASE_TYPE xTaskResumeAll (void);
  * \page xTaskGetTickCount xTaskGetTickCount
  * \ingroup TaskUtils
  */
-portTickType xTaskGetTickCount (void);
+  portTickType xTaskGetTickCount (void);
 
 /**
  * task. h
@@ -790,7 +818,7 @@ portTickType xTaskGetTickCount (void);
  * \page uxTaskGetNumberOfTasks uxTaskGetNumberOfTasks
  * \ingroup TaskUtils
  */
-unsigned portBASE_TYPE uxTaskGetNumberOfTasks (void);
+  unsigned portBASE_TYPE uxTaskGetNumberOfTasks (void);
 
 /**
  * task. h
@@ -817,7 +845,7 @@ unsigned portBASE_TYPE uxTaskGetNumberOfTasks (void);
  * \page vTaskList vTaskList
  * \ingroup TaskUtils
  */
-void vTaskList (signed portCHAR * pcWriteBuffer);
+  void vTaskList (signed portCHAR * pcWriteBuffer);
 
 /**
  * task. h
@@ -838,8 +866,8 @@ void vTaskList (signed portCHAR * pcWriteBuffer);
  * \page vTaskStartTrace vTaskStartTrace
  * \ingroup TaskUtils
  */
-void vTaskStartTrace (signed portCHAR * pcBuffer,
-		      unsigned portLONG ulBufferSize);
+  void vTaskStartTrace (signed portCHAR * pcBuffer,
+			unsigned portLONG ulBufferSize);
 
 /**
  * task. h
@@ -852,7 +880,51 @@ void vTaskStartTrace (signed portCHAR * pcBuffer,
  * \page usTaskEndTrace usTaskEndTrace
  * \ingroup TaskUtils
  */
-unsigned portLONG ulTaskEndTrace (void);
+  unsigned portLONG ulTaskEndTrace (void);
+
+/**
+ * task.h
+ * <PRE>unsigned portBASE_TYPE uxTaskGetStackHighWaterMark( xTaskHandle xTask );</PRE>
+ *
+ * INCLUDE_uxTaskGetStackHighWaterMark must be set to 1 in FreeRTOSConfig.h for
+ * this function to be available.
+ *
+ * Returns the high water mark of the stack associated with xTask.  That is,
+ * the minimum free stack space there has been (in bytes) since the task
+ * started.  The smaller the returned number the closer the task has come
+ * to overflowing its stack.
+ *
+ * @param xTask Handle of the task associated with the stack to be checked.
+ * Set xTask to NULL to check the stack of the calling task.
+ *
+ * @return The smallest amount of free stack space there has been (in bytes)
+ * since the task referenced by xTask was created.
+ */
+  unsigned portBASE_TYPE uxTaskGetStackHighWaterMark (xTaskHandle xTask);
+
+/**
+ * task.h
+ * <pre>void vTaskSetApplicationTaskTag( xTaskHandle xTask, pdTASK_HOOK_CODE pxHookFunction );</pre>
+ *
+ * Sets pxHookFunction to be the task hook function used by the task xTask.
+ * Passing xTask as NULL has the effect of setting the calling tasks hook
+ * function.
+ */
+  void vTaskSetApplicationTaskTag (xTaskHandle xTask,
+				   pdTASK_HOOK_CODE pxHookFunction);
+
+/**
+ * task.h
+ * <pre>portBASE_TYPE xTaskCallApplicationTaskHook( xTaskHandle xTask, pdTASK_HOOK_CODE pxHookFunction );</pre>
+ *
+ * Calls the hook function associated with xTask.  Passing xTask as NULL has
+ * the effect of calling the Running tasks (the calling task) hook function.
+ *
+ * pvParameter is passed to the hook function for the task to interpret as it
+ * wants.
+ */
+  portBASE_TYPE xTaskCallApplicationTaskHook (xTaskHandle xTask,
+					      void *pvParameter);
 
 
 /*-----------------------------------------------------------
@@ -869,7 +941,7 @@ unsigned portLONG ulTaskEndTrace (void);
  * for a finite period required removing from a blocked list and placing on
  * a ready list.
  */
-inline void vTaskIncrementTick (void);
+  inline void vTaskIncrementTick (void);
 
 /*
  * THIS FUNCTION MUST NOT BE USED FROM APPLICATION CODE.  IT IS AN
@@ -892,7 +964,8 @@ inline void vTaskIncrementTick (void);
  * portTICK_RATE_MS can be used to convert kernel ticks into a real time
  * period.
  */
-void vTaskPlaceOnEventList (xList * pxEventList, portTickType xTicksToWait);
+  void vTaskPlaceOnEventList (const xList * const pxEventList,
+			      portTickType xTicksToWait);
 
 /*
  * THIS FUNCTION MUST NOT BE USED FROM APPLICATION CODE.  IT IS AN
@@ -909,7 +982,8 @@ void vTaskPlaceOnEventList (xList * pxEventList, portTickType xTicksToWait);
  * @return pdTRUE if the task being removed has a higher priority than the task
  * making the call, otherwise pdFALSE.
  */
-signed portBASE_TYPE xTaskRemoveFromEventList (const xList * pxEventList);
+  signed portBASE_TYPE xTaskRemoveFromEventList (const xList *
+						 const pxEventList);
 
 /*
  * THIS FUNCTION MUST NOT BE USED FROM APPLICATION CODE.  IT IS AN
@@ -922,7 +996,7 @@ signed portBASE_TYPE xTaskRemoveFromEventList (const xList * pxEventList);
  * Empties the ready and delayed queues of task control blocks, freeing the
  * memory allocated for the task control block and task stacks as it goes.
  */
-void vTaskCleanUpResources (void);
+  void vTaskCleanUpResources (void);
 
 /*
  * THIS FUNCTION MUST NOT BE USED FROM APPLICATION CODE.  IT IS ONLY
@@ -932,29 +1006,50 @@ void vTaskCleanUpResources (void);
  * Sets the pointer to the current TCB to the TCB of the highest priority task
  * that is ready to run.
  */
-inline void vTaskSwitchContext (void);
+  inline void vTaskSwitchContext (void);
 
 /*
  * Return the handle of the calling task.
  */
-xTaskHandle xTaskGetCurrentTaskHandle (void);
+  xTaskHandle xTaskGetCurrentTaskHandle (void);
 
 /*
  * Capture the current time status for future reference.
  */
-void vTaskSetTimeOutState (xTimeOutType * pxTimeOut);
+  void vTaskSetTimeOutState (xTimeOutType * const pxTimeOut);
 
 /*
  * Compare the time status now with that previously captured to see if the
  * timeout has expired.
  */
-portBASE_TYPE xTaskCheckForTimeOut (xTimeOutType * pxTimeOut,
-				    portTickType * pxTicksToWait);
+  portBASE_TYPE xTaskCheckForTimeOut (xTimeOutType * const pxTimeOut,
+				      portTickType * const pxTicksToWait);
 
 /*
  * Shortcut used by the queue implementation to prevent unnecessary call to
  * taskYIELD();
  */
-void vTaskMissedYield (void);
+  void vTaskMissedYield (void);
 
-#endif /* TASK_H */
+/*
+ * Returns the scheduler state as taskSCHEDULER_RUNNING,
+ * taskSCHEDULER_NOT_STARTED or taskSCHEDULER_SUSPENDED.
+ */
+  portBASE_TYPE xTaskGetSchedulerState (void);
+
+/*
+ * Raises the priority of the mutex holder to that of the calling task should
+ * the mutex holder have a priority less than the calling task.
+ */
+  void vTaskPriorityInherit (xTaskHandle * const pxMutexHolder);
+
+/*
+ * Set the priority of a task back to its proper priority in the case that it
+ * inherited a higher priority while it was holding a semaphore.
+ */
+  void vTaskPriorityDisinherit (xTaskHandle * const pxMutexHolder);
+
+#ifdef __cplusplus
+}
+#endif
+#endif				/* TASK_H */

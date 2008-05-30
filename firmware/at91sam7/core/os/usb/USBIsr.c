@@ -1,5 +1,5 @@
 /*
-  FreeRTOS.org V4.2.1 - Copyright (C) 2003-2007 Richard Barry.
+  FreeRTOS.org V5.0.0 - Copyright (C) 2003-2008 Richard Barry.
 
   This file is part of the FreeRTOS.org distribution.
 
@@ -47,8 +47,8 @@
 
 /* Demo application includes. */
 #include <board.h>
-#include <usb.h>
-#include <USB-CDC.h>
+#include "usb.h"
+#include "USB-CDC.h"
 
 #define usbINT_CLEAR_MASK	(AT91C_UDP_TXCOMP | AT91C_UDP_STALLSENT | AT91C_UDP_RXSETUP | AT91C_UDP_RX_DATA_BK0 | AT91C_UDP_RX_DATA_BK1 )
 /*-----------------------------------------------------------*/
@@ -59,21 +59,17 @@ extern xQueueHandle xUSBInterruptQueue;
 /*-----------------------------------------------------------*/
 
 /* The ISR can cause a context switch so is declared naked. */
-void vUSB_ISR (void) __attribute__ ((naked));
+void vUSB_ISR_Wrapper (void) __attribute__ ((naked));
 
+/* The function that actually performs the ISR work.  This must be separate
+from the wrapper function to ensure the correct stack frame gets set up. */
+void vUSB_ISR_Handler (void);
 /*-----------------------------------------------------------*/
 
-
 void
-vUSB_ISR (void)
+vUSB_ISR_Handler (void)
 {
-  /* This ISR can cause a context switch.  Therefore a call to the 
-     portENTER_SWITCHING_ISR() macro is made.  This must come BEFORE any 
-     stack variable declarations. */
-  portENTER_SWITCHING_ISR ();
-
-  /* Now variables can be declared. */
-  portCHAR cTaskWokenByPost = pdFALSE;
+  portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
   static volatile unsigned portLONG ulNextMessage = 0;
   xISRStatus *pxMessage;
   unsigned portLONG ulRxBytes;
@@ -159,11 +155,34 @@ vUSB_ISR (void)
   AT91C_BASE_UDP->UDP_CSR[usbEND_POINT_3] &= ~usbINT_CLEAR_MASK;
 
   /* Post ISR data to queue for task-level processing */
-  cTaskWokenByPost =
-    xQueueSendFromISR (xUSBInterruptQueue, &pxMessage, cTaskWokenByPost);
+  xQueueSendFromISR (xUSBInterruptQueue, &pxMessage,
+		     &xHigherPriorityTaskWoken);
 
   /* Clear AIC to complete ISR processing */
   AT91C_BASE_AIC->AIC_EOICR = 0;
 
   /* Do a task switch if needed */
-portEXIT_SWITCHING_ISR (cTaskWokenByPost)}
+  if (xHigherPriorityTaskWoken)
+    {
+      /* This call will ensure that the unblocked task will be executed
+         immediately upon completion of the ISR if it has a priority higher
+         than the interrupted task. */
+      portYIELD_FROM_ISR ();
+    }
+}
+
+/*-----------------------------------------------------------*/
+
+void
+vUSB_ISR_Wrapper (void)
+{
+  /* Save the context of the interrupted task. */
+  portSAVE_CONTEXT ();
+
+  /* Call the handler to do the work.  This must be a separate
+     function to ensure the stack frame is set up correctly. */
+  vUSB_ISR_Handler ();
+
+  /* Restore the context of whichever task will execute next. */
+  portRESTORE_CONTEXT ();
+}

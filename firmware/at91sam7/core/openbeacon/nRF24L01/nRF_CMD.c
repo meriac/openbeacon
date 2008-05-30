@@ -158,18 +158,24 @@ portBASE_TYPE __attribute__((section (".ramfunc"))) nRFCMD_ProcessNextMacro(void
     return pdFALSE;
 }
 
-void __attribute__((naked, section (".ramfunc"))) nRFCMD_ISR_DMA(void)
+void __attribute__((section (".ramfunc"))) nRFCMD_ISR_DMA_Handler(void)
 {
-    portENTER_SWITCHING_ISR();
-
     portBASE_TYPE xTaskWokenDMA = pdFALSE;    
     
     if((AT91C_BASE_SPI->SPI_SR & AT91C_SPI_ENDTX) && (nRFCMD_ProcessNextMacro()))
-	xTaskWokenDMA = xSemaphoreGiveFromISR( xnRF_SemaphoreDMA, xTaskWokenDMA );
+	xTaskWokenDMA = xSemaphoreGiveFromISR( xnRF_SemaphoreDMA, &xTaskWokenDMA );
     
     AT91C_BASE_AIC->AIC_EOICR = 0;
+    
+    if(xTaskWokenDMA)
+	portYIELD_FROM_ISR();	
+}
 
-    portEXIT_SWITCHING_ISR( xTaskWokenDMA );
+void __attribute__((naked, section (".ramfunc"))) nRFCMD_ISR_DMA(void)
+{
+    portSAVE_CONTEXT();
+    nRFCMD_ISR_DMA_Handler();        
+    portRESTORE_CONTEXT();    
 }
 
 void nRFCMD_ExecMacro(const unsigned char *macro, unsigned char *rx_data)
@@ -180,18 +186,24 @@ void nRFCMD_ExecMacro(const unsigned char *macro, unsigned char *rx_data)
     xSemaphoreTake(xnRF_SemaphoreDMA,portMAX_DELAY);
 }
 
-void __attribute__((naked, section (".ramfunc"))) nRFCMD_ISR_ACK(void)
+void __attribute__((naked, section (".ramfunc"))) nRFCMD_ISR_ACK_Handler(void)
 {
-    portENTER_SWITCHING_ISR();
-
     portBASE_TYPE xTaskWokenACK = pdFALSE;
 
     if( (AT91C_BASE_PIOA->PIO_ISR & IRQ_PIN) && ((AT91F_PIO_GetInput(AT91C_BASE_PIOA)&IRQ_PIN)==0) )
-        xTaskWokenACK = xSemaphoreGiveFromISR( xnRF_SemaphoreACK, xTaskWokenACK );
+        xTaskWokenACK = xSemaphoreGiveFromISR( xnRF_SemaphoreACK, &xTaskWokenACK );
 
     AT91C_BASE_AIC->AIC_EOICR = 0;
 
-    portEXIT_SWITCHING_ISR( xTaskWokenACK );
+    if(xTaskWokenACK)
+	portYIELD_FROM_ISR();
+}
+
+void __attribute__((naked, section (".ramfunc"))) nRFCMD_ISR_ACK(void)
+{
+    portSAVE_CONTEXT();
+    nRFCMD_ISR_ACK_Handler();        
+    portRESTORE_CONTEXT();
 }
 
 unsigned char nRFCMD_WaitRx(unsigned int ticks)

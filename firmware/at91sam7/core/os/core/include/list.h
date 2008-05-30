@@ -1,5 +1,5 @@
 /*
-	FreeRTOS.org V4.2.1 - Copyright (C) 2003-2007 Richard Barry.
+	FreeRTOS.org V5.0.0 - Copyright (C) 2003-2008 Richard Barry.
 
 	This file is part of the FreeRTOS.org distribution.
 
@@ -23,14 +23,28 @@
 	of http://www.FreeRTOS.org for full details of how and when the exception
 	can be applied.
 
-	***************************************************************************
-	See http://www.FreeRTOS.org for documentation, latest information, license
-	and contact details.  Please ensure to read the configuration and relevant
-	port sections of the online documentation.
+    ***************************************************************************
+    ***************************************************************************
+    *                                                                         *
+    * SAVE TIME AND MONEY!  We can port FreeRTOS.org to your own hardware,    *
+    * and even write all or part of your application on your behalf.          *
+    * See http://www.OpenRTOS.com for details of the services we provide to   *
+    * expedite your project.                                                  *
+    *                                                                         *
+    ***************************************************************************
+    ***************************************************************************
 
-	Also see http://www.SafeRTOS.com for an IEC 61508 compliant version along
-	with commercial development and support options.
-	***************************************************************************
+	Please ensure to read the configuration and relevant port sections of the
+	online documentation.
+
+	http://www.FreeRTOS.org - Documentation, latest information, license and 
+	contact details.
+
+	http://www.SafeRTOS.com - A version that is certified for use in safety 
+	critical systems.
+
+	http://www.OpenRTOS.com - Commercial support, development, porting, 
+	licensing and training services.
 */
 
 /*
@@ -61,40 +75,50 @@
  * \ingroup FreeRTOSIntro
  */
 
+/*
+	Changes from V4.3.1
+
+	+ Included local const within listGET_OWNER_OF_NEXT_ENTRY() to assist
+	  compiler with optimisation.  Thanks B.R.
+*/
 
 #ifndef LIST_H
 #define LIST_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 /*
  * Definition of the only type of object that a list can contain.
  */
-struct xLIST_ITEM
-{
-  portTickType xItemValue;	/*< The value being listed.  In most cases this is used to sort the list in descending order. */
-  volatile struct xLIST_ITEM *pxNext;	/*< Pointer to the next xListItem in the list. */
-  volatile struct xLIST_ITEM *pxPrevious;	/*< Pointer to the previous xListItem in the list. */
-  void *pvOwner;		/*< Pointer to the object (normally a TCB) that contains the list item.  There is therefore a two way link between the object containing the list item and the list item itself. */
-  void *pvContainer;		/*< Pointer to the list in which this list item is placed (if any). */
-};
-typedef struct xLIST_ITEM xListItem;	/* For some reason lint wants this as two separate definitions. */
+  struct xLIST_ITEM
+  {
+    portTickType xItemValue;	/*< The value being listed.  In most cases this is used to sort the list in descending order. */
+    volatile struct xLIST_ITEM *pxNext;	/*< Pointer to the next xListItem in the list. */
+    volatile struct xLIST_ITEM *pxPrevious;	/*< Pointer to the previous xListItem in the list. */
+    void *pvOwner;		/*< Pointer to the object (normally a TCB) that contains the list item.  There is therefore a two way link between the object containing the list item and the list item itself. */
+    void *pvContainer;		/*< Pointer to the list in which this list item is placed (if any). */
+  };
+  typedef struct xLIST_ITEM xListItem;	/* For some reason lint wants this as two separate definitions. */
 
-struct xMINI_LIST_ITEM
-{
-  portTickType xItemValue;
-  volatile struct xLIST_ITEM *pxNext;
-  volatile struct xLIST_ITEM *pxPrevious;
-};
-typedef struct xMINI_LIST_ITEM xMiniListItem;
+  struct xMINI_LIST_ITEM
+  {
+    portTickType xItemValue;
+    volatile struct xLIST_ITEM *pxNext;
+    volatile struct xLIST_ITEM *pxPrevious;
+  };
+  typedef struct xMINI_LIST_ITEM xMiniListItem;
 
 /*
  * Definition of the type of queue used by the scheduler.
  */
-typedef struct xLIST
-{
-  volatile unsigned portBASE_TYPE uxNumberOfItems;
-  volatile xListItem *pxIndex;	/*< Used to walk through the list.  Points to the last item returned by a call to pvListGetOwnerOfNextEntry (). */
-  volatile xMiniListItem xListEnd;	/*< List item that contains the maximum possible item value meaning it is always at the end of the list and is therefore used as a marker. */
-} xList;
+  typedef struct xLIST
+  {
+    volatile unsigned portBASE_TYPE uxNumberOfItems;
+    volatile xListItem *pxIndex;	/*< Used to walk through the list.  Points to the last item returned by a call to pvListGetOwnerOfNextEntry (). */
+    volatile xMiniListItem xListEnd;	/*< List item that contains the maximum possible item value meaning it is always at the end of the list and is therefore used as a marker. */
+  } xList;
 
 /*
  * Access macro to set the owner of a list item.  The owner of a list item
@@ -158,14 +182,17 @@ typedef struct xLIST
  * \ingroup LinkedList
  */
 #define listGET_OWNER_OF_NEXT_ENTRY( pxTCB, pxList )									\
+{																						\
+xList * const pxConstList = pxList;														\
 	/* Increment the index to the next item and return the item, ensuring */			\
 	/* we don't return the marker used at the end of the list.  */						\
-	( pxList )->pxIndex = ( pxList )->pxIndex->pxNext;									\
-	if( ( pxList )->pxIndex == ( xListItem * ) &( ( pxList )->xListEnd ) )				\
+	( pxConstList )->pxIndex = ( pxConstList )->pxIndex->pxNext;						\
+	if( ( pxConstList )->pxIndex == ( xListItem * ) &( ( pxConstList )->xListEnd ) )	\
 	{																					\
-		( pxList )->pxIndex = ( pxList )->pxIndex->pxNext;								\
+		( pxConstList )->pxIndex = ( pxConstList )->pxIndex->pxNext;					\
 	}																					\
-	pxTCB = ( pxList )->pxIndex->pvOwner
+	pxTCB = ( pxConstList )->pxIndex->pvOwner;											\
+}
 
 
 /*
@@ -208,7 +235,7 @@ typedef struct xLIST
  * \page vListInitialise vListInitialise
  * \ingroup LinkedList
  */
-void vListInitialise (xList * pxList);
+  void vListInitialise (xList * pxList);
 
 /*
  * Must be called before a list item is used.  This sets the list container to
@@ -219,7 +246,7 @@ void vListInitialise (xList * pxList);
  * \page vListInitialiseItem vListInitialiseItem
  * \ingroup LinkedList
  */
-void vListInitialiseItem (xListItem * pxItem);
+  void vListInitialiseItem (xListItem * pxItem);
 
 /*
  * Insert a list item into a list.  The item will be inserted into the list in
@@ -232,7 +259,7 @@ void vListInitialiseItem (xListItem * pxItem);
  * \page vListInsert vListInsert
  * \ingroup LinkedList
  */
-void vListInsert (xList * pxList, xListItem * pxNewListItem);
+  void vListInsert (xList * pxList, xListItem * pxNewListItem);
 
 /*
  * Insert a list item into a list.  The item will be inserted in a position
@@ -253,7 +280,7 @@ void vListInsert (xList * pxList, xListItem * pxNewListItem);
  * \page vListInsertEnd vListInsertEnd
  * \ingroup LinkedList
  */
-void vListInsertEnd (xList * pxList, xListItem * pxNewListItem);
+  void vListInsertEnd (xList * pxList, xListItem * pxNewListItem);
 
 /*
  * Remove an item from a list.  The list item has a pointer to the list that
@@ -265,8 +292,10 @@ void vListInsertEnd (xList * pxList, xListItem * pxNewListItem);
  * \page vListRemove vListRemove
  * \ingroup LinkedList
  */
-void vListRemove (xListItem * pxItemToRemove);
+  void vListRemove (xListItem * pxItemToRemove);
 
-
+#ifdef __cplusplus
+}
+#endif
 
 #endif
