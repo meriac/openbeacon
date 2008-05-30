@@ -243,7 +243,7 @@ void vCmdCode(void *pvParameters) {
 /**********************************************************************/
 
 // A task to read commands from USB
-void vCmdRecvUsbCode(void *pvParameters) {
+/*void vCmdRecvUsbCode(void *pvParameters) {
 	portBASE_TYPE len=0;
 	cmd_type next_command = { source: SRC_USB, command: ""};
 	(void) pvParameters;
@@ -267,7 +267,7 @@ void vCmdRecvUsbCode(void *pvParameters) {
 			}
 	    	}
     	}
-}
+}*/
 
 portBASE_TYPE vCmdInit(void) {
 
@@ -284,10 +284,10 @@ portBASE_TYPE vCmdInit(void) {
 		return 0;
 	}
 	
-	if(xTaskCreate(vCmdRecvUsbCode, (signed portCHAR *)"CMDUSB", TASK_CMD_STACK, NULL, 
+/*	if(xTaskCreate(vCmdRecvUsbCode, (signed portCHAR *)"CMDUSB", TASK_CMD_STACK, NULL, 
 		TASK_CMD_PRIORITY, &xCmdRecvUsbTask) != pdPASS) {
 		return 0;
-	}
+	}*/
 	
 	return 1;
 }
