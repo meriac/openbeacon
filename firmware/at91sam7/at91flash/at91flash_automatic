@@ -1,0 +1,111 @@
+#!/bin/bash
+# (C) Milosch Meriac <meriac@bitmanufaktur.de> 2006
+# (C) Henryk Plötz <henryk@ploetzli.ch> 2007
+
+#UART='/dev/ttyUSB1'
+FLASH_FILE=$1
+USB_ID='03eb:6124'
+USB_MODALIAS='usb:v03EBp6124d0110dc02dsc00dp00ic0Aisc00ip00'
+SAM7='/usr/local/bin/sam7'
+LSUSB='/usr/sbin/lsusb'
+
+echo "Automatic SAM-BA flasher ..."
+echo
+echo "Each time you want to reflash do the following:"
+echo "1. unplug the USB cable and insert the SAM-BA jumper (Pin 1+2)"
+echo "2. attach the USB cable"
+echo "3. wait ten seconds"
+echo "4. unplug the USB cable"
+echo "5. remove the SAM-BA jumper"
+echo "6. attach the USB cable"
+echo "7. wait several seconds to allow the device to be detected by Linux"
+echo "8. the device will automatically be flashed, wait for the confirmation message"
+echo "9. disconnect and reconnect USB to use the device"
+echo
+echo "Press Ctrl-C if you want to abort this program"
+echo
+
+do_flash() {
+    $SAM7 -l $UART << ENDOFMYTEXT
+set_clock
+unlock_regions
+flash $FLASH_FILE
+ENDOFMYTEXT
+}
+
+blink_thinklight() {
+    if [ ! -w /proc/acpi/ibm/light ]; then return; fi
+    OLDSTATUS=`grep status < /proc/acpi/ibm/light | awk '{print $2;}'`
+    if [ "${OLDSTATUS}" = "off" ]; then
+	echo "on" > /proc/acpi/ibm/light
+	sleep 1
+	echo "off" > /proc/acpi/ibm/light
+    else
+	echo "off" > /proc/acpi/ibm/light
+	sleep 1
+	echo "on" > /proc/acpi/ibm/light
+    fi
+}
+
+flashing_failed() {
+    aplay /usr/kde/3.5/share/sounds/KDE_Error.wav > /dev/null 2>&1
+}
+flashing_successful() {
+    blink_thinklight &
+    aplay /usr/kde/3.5/share/sounds/KDE_Notify.wav > /dev/null 2>&1
+}
+
+do_detect() {
+    ${LSUSB} -d ${USB_ID} > /dev/null
+    return $?
+}
+
+find_uart() {
+    DEV=`grep -l ${USB_MODALIAS} /sys/bus/usb-serial/devices/ttyUSB*/../modalias | head -n 1 | cut -d '/' --output-delimiter "
+" -f - | egrep -i '^ttyUSB'`
+    UART="/dev/${DEV}"
+    return $?
+}
+
+attention() {
+    echo '*********************************************************************************'
+    echo -n `date -R`": "
+}
+
+while true; do
+    if do_detect; then
+	echo "Device detected, flashing ${FLASH_FILE}"
+	if [ ! -r "${FLASH_FILE}" ]; then
+	    attention
+	    echo
+	    echo "File to be flashed '${FLASH_FILE}' does not exist or is not readable"
+	    echo "Please provide the file, then disconnect and reconnect the device"
+	    echo "Or hit Ctrl-C to cancel flashing"
+	else
+	    if ! find_uart; then
+		echo "Can't find UART, internal error, aborting"
+		break
+	    else
+		echo "UART at $UART"
+	    fi
+	    sleep 1
+	    if do_flash; then
+		echo
+		attention
+		echo "Flashing successful"
+		flashing_successful
+		echo
+	    else
+		echo
+		attention
+		echo "Flashing failed"
+		flashing_failed
+		echo "Disconnect and reconnect the device to retry"
+		echo "Or hit Ctrl-C to cancel flashing"
+		echo
+	    fi
+	fi
+	while do_detect; do sleep 1; done
+    fi
+    sleep 1
+done
