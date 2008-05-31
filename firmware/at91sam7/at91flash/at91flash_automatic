@@ -54,6 +54,9 @@ flashing_successful() {
     blink_thinklight &
     aplay /usr/kde/3.5/share/sounds/KDE_Notify.wav > /dev/null 2>&1
 }
+flashing_starting() {
+    aplay /usr/kde/3.5/share/sounds/KDE_Beep_ShortBeep.wav > /dev/null 2>&1
+}
 
 do_detect() {
     ${LSUSB} -d ${USB_ID} > /dev/null
@@ -88,6 +91,7 @@ while true; do
 	    else
 		echo "UART at $UART"
 	    fi
+	    flashing_starting
 	    sleep 1
 	    if do_flash; then
 		echo
