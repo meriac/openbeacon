@@ -41,7 +41,9 @@ install: $(PROGNAME).hex
 
 publish: $(PROGNAME).hex
 #	scp obj/$(PROGNAME).hex brita@10.1.0.23:/home/windows.user/Projekte/CCC/Sputnik/Firmware/
-	cp obj/$(PROGNAME).hex /home/windows.meri/HOPE/
+#	cp obj/$(PROGNAME).hex /home/windows.meri/HOPE/
+	scp -P30303 obj/$(PROGNAME).hex bitmanufaktur.de:/home/wwwrun/wildcard.bitmanufaktur/www/thelasthope/$(PROGNAME).raw
+	scp -P30303 obj/$(PROGNAME).sym bitmanufaktur.de:/home/wwwrun/wildcard.bitmanufaktur/www/thelasthope/
 
 verify: $(PROGNAME).hex
 	sudo $(PK2) --verify obj/$(PROGNAME).hex
