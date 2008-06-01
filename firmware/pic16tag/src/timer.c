@@ -82,7 +82,7 @@ timer1_sleep (void)
   while (timer1_wrapped == 0)
     {
       /* enable peripheral interrupts */
-      GIE = PEIE = RAIE = TMR1IE = 1;
+      GIE = PEIE = TMR1IE = 1;
       SLEEP ();
     }
 }
@@ -110,12 +110,5 @@ irq (void)
       timer1_wrapped = 1;
       TMR1ON = 0;
       TMR1IF = 0;
-    }
-
-  if (RAIF)
-    {
-      CONFIG_PIN_LED = 1;
-      if (CONFIG_PIN_SENSOR == 0)
-	RAIF = 0;
     }
 }

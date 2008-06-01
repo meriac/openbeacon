@@ -46,10 +46,6 @@ const unsigned char g_MacroInitialization[] = {
   0x06, RX_ADDR_P0 | WRITE_REG, 'O', 'C', 'A', 'E', 'B',	// set RX_ADDR_P0 to "BEACO"
   0x06, TX_ADDR    | WRITE_REG, 0x01, 0x02, 0x03, 0x02, 0x01,	// set TX_ADDR
   0x02, RX_PW_P0   | WRITE_REG, 16,	// set payload width of pipe 0 to sizeof(TRfBroadcast)
-/*
-  0x02, ACTIVATE,               0x73,   // Enable advanced features
-  0x02, FEATURE    | WRITE_REG, 0x03,   // Enable: Dynamic Payload Length, Payload with ACK, W_TX_PAYLOAD_NOACK command
-*/ 
   0x00					// termination
 };
 
