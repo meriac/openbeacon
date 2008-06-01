@@ -55,36 +55,24 @@ vLedSetGreen (bool_t on)
 void
 vLedHaltBlinking (int reason)
 {
+
   volatile u_int32_t i = 0;
+  s_int32_t t;
   while (1)
     {
-      AT91F_PIO_ClearOutput (AT91C_BASE_PIOA, LED_MASK);
-      for (i = 0; i < MCK / 40; i++);
-
-      switch (reason)
+      for (t = 0; t < reason; t++)
 	{
-	case 1:
-	  vLedSetGreen (1);
-	  vLedSetRed (0);
-	  break;
-	case 2:
-	  vLedSetGreen (0);
-	  vLedSetRed (1);
-	  break;
-	case 3:
-	  vLedSetGreen (1);
-	  vLedSetRed (1);
-	  break;
-	case 0:
-	default:
-	  vLedSetGreen (0);
-	  vLedSetRed (0);
-	  break;
-	}
-      for (i = 0; i < MCK / 20; i++);
+	  AT91F_PIO_ClearOutput (AT91C_BASE_PIOA, LED_MASK);
+	  for (i = 0; i < MCK / 200; i++)
+	    AT91F_WDTRestart (AT91C_BASE_WDTC);
 
-      AT91F_PIO_SetOutput (AT91C_BASE_PIOA, LED_MASK);
-      for (i = 0; i < MCK / 40; i++);
+	  AT91F_PIO_SetOutput (AT91C_BASE_PIOA, LED_MASK);
+	  for (i = 0; i < MCK / 100; i++)
+	    AT91F_WDTRestart (AT91C_BASE_WDTC);
+
+	}
+      for (i = 0; i < MCK / 25; i++)
+	AT91F_WDTRestart (AT91C_BASE_WDTC);
     }
 }
 
