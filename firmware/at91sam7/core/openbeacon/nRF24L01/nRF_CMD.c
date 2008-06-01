@@ -186,7 +186,7 @@ void nRFCMD_ExecMacro(const unsigned char *macro, unsigned char *rx_data)
     xSemaphoreTake(xnRF_SemaphoreDMA,portMAX_DELAY);
 }
 
-void __attribute__((naked, section (".ramfunc"))) nRFCMD_ISR_ACK_Handler(void)
+void __attribute__((section (".ramfunc"))) nRFCMD_ISR_ACK_Handler(void)
 {
     portBASE_TYPE xTaskWokenACK = pdFALSE;
 
