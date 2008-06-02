@@ -1,0 +1,44 @@
+[Version]
+Signature="$Windows NT$"
+Class=Ports
+ClassGuid={4D36E978-E325-11CE-BFC1-08002BE10318}
+Provider=%bitmanufaktur%
+LayoutFile=layout.inf
+DriverVer=2008-03-29,1.2.34.1
+
+[Manufacturer]
+%OpenBeacon%=OpenBeaconUSB,NT,NTamd64
+
+[OpenBeaconUSB.NT]
+%OpenBeacon_CDC%=OpenBeaconInstall,USB\VID_16C0&PID_08AC
+
+[OpenBeaconUSB.NTamd64]
+%OpenBeacon_CDC%=OpenBeaconInstall,USB\VID_16C0&PID_08AC
+
+[DestinationDirs]
+DefaultDestDir=12
+
+[OpenBeaconInstall.NT] 
+Include=mdmcpq.inf 
+CopyFiles=FakeModemCopyFileSection 
+AddReg=OpenBeaconInstall.NT.AddReg 
+
+[OpenBeaconInstall.NT.AddReg] 
+HKR,,DevLoader,,*ntkern 
+HKR,,NTMPDriver,,usbser.sys 
+HKR,,EnumPropPages32,,"MsPorts.dll,SerialPortPropPageProvider" 
+
+[OpenBeaconInstall.NT.Services] 
+AddService=usbser, 0x00000002, DriverServiceInst 
+
+[DriverServiceInst] 
+DisplayName=%OpenBeacon_CDC% 
+ServiceType=1 
+StartType=3 
+ErrorControl=1 
+ServiceBinary=%12%\usbser.sys
+
+[Strings]
+bitmanufaktur = "Bitmanufaktur IT Solutions"
+OpenBeacon = "http://www.openbeacon.de"
+OpenBeacon_CDC = "OpenBeacon Tag Sniffer 2.4GHz"
