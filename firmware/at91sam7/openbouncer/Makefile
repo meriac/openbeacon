@@ -6,6 +6,8 @@ OPTIM=-O2
 APP_CFLAGS=-Iapplication    
 
 APP_SRC= \
+  application/main.c \
+  application/led.c \
   application/cmd_key.c \
   application/cmd_main.c \
   application/cmd_user.c \
