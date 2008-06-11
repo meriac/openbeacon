@@ -8,14 +8,15 @@ APP_CFLAGS=-Iapplication
 APP_SRC= \
   application/main.c \
   application/led.c \
-  application/cmd_key.c \
-  application/cmd_main.c \
-  application/cmd_user.c \
-  application/commandline.c \
-  application/login.c \
-  application/usbio.c \
-  application/vsprintf.c \
-  application/vt100.c  
+  application/cmd/cmd.c \
+  application/cmd/cmd_key.c \
+  application/cmd/cmd_main.c \
+  application/cmd/cmd_user.c \
+  application/cmd/commandline.c \
+  application/cmd/login.c \
+  application/cmd/usbio.c \
+  application/cmd/vsprintf.c \
+  application/cmd/vt100.c  
   
 all: $(TARGET).bin
   
