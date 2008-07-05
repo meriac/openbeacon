@@ -1,10 +1,10 @@
 MEMORY 
 {
-	flash	: ORIGIN = 0x00100000, LENGTH = 128K - 1K /* save 1K for environment on top of flash */
-	ram		: ORIGIN = 0x00200000, LENGTH = 32K
+	flash	: ORIGIN = 0x00100000, LENGTH = 64K - 1K /* save 1K for environment on top of flash */
+	ram		: ORIGIN = 0x00200000, LENGTH = 16K
 }
 
-__stack_end__ = 0x00200000 + 32K - 4;
+__stack_end__ = 0x00200000 + 16K - 4;
 
 SECTIONS 
 {
