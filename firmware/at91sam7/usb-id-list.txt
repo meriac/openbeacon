@@ -1,0 +1,7 @@
+#
+# VendorID:ProductID,"Description",directory
+#
+16C0:08AC,"OpenBeacon Sniffer",openbeacon-sniffer
+16C0:08AD,"OpenBeacon Estimator",openbeacon-estimator
+16C0:08AE,"OpenBouncer",openbouncer
+16C0:08AF,"OpenBeacon Blinkenlights",openbeacon-blinkenlights
