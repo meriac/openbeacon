@@ -37,6 +37,12 @@
 const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 1, 2, 3, 2, 1 };
 TBeaconEnvelope g_Beacon;
 
+#define PWM_CMR_PRESCALER 0x3
+#define PWM_CMR_CLOCK_FREQUENCY (MCK/(1<<PWM_CMR_PRESCALER))
+#define PWM_CMR_PWM_MAX_LEN_SEC (65536.0/PWM_CMR_CLOCK_FREQUENCY)
+#define PWM_CMR_PWM_FREQ ((int)(65536.0*((1/100.0)/PWM_CMR_PWM_MAX_LEN_SEC)))
+
+
 /**********************************************************************/
 #define SHUFFLE(a,b)    tmp=g_Beacon.datab[a];\
                         g_Beacon.datab[a]=g_Beacon.datab[b];\
@@ -148,7 +154,7 @@ vnRFtaskRx (void *parameter)
     {
       if (nRFCMD_WaitRx (10))
 	{
-	  vLedSetRed (1);
+	  vLedSetGreen (0);
 
 	  do
 	    {
@@ -180,15 +186,44 @@ vnRFtaskRx (void *parameter)
 	    }
 	  while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
 
-	  vLedSetRed (0);
+	  vLedSetGreen (1);
 	}
       nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
     }
 }
 
+static inline void
+vInitDimmerInit (void)
+{
+    /* Enable Peripherals */
+    AT91F_PIO_CfgPeriph(AT91C_BASE_PIOA, 0, TRIGGER_PIN|PHASE_PIN);
+
+    /* Configure Timer/Counter */    
+    AT91F_TC2_CfgPMC();
+    AT91C_BASE_TC2->TC_IDR = 0xFF;
+    AT91C_BASE_TC2->TC_CCR = AT91C_TC_CLKDIS;
+    AT91C_BASE_TC2->TC_CMR =
+	AT91C_TC_CLKS_TIMER_DIV2_CLOCK |
+	AT91C_TC_CPCSTOP |
+	AT91C_TC_EEVTEDG_RISING |
+	AT91C_TC_EEVT_TIOB |
+	AT91C_TC_ENETRG |
+	AT91C_TC_WAVE |
+	AT91C_TC_WAVESEL_UP_AUTO |
+	AT91C_TC_ACPA_SET |
+	AT91C_TC_ACPC_CLEAR;
+    AT91C_BASE_TC2->TC_RA = 0x5000;
+    AT91C_BASE_TC2->TC_RC = 0x5400;
+    AT91C_BASE_TC2->TC_CCR = AT91C_TC_CLKEN;
+
+    AT91C_BASE_TCB->TCB_BCR=AT91C_TCB_SYNC;
+    AT91C_BASE_TCB->TCB_BMR=AT91C_TCB_TC0XC0S_NONE|AT91C_TCB_TC1XC1S_NONE|AT91C_TCB_TC2XC2S_NONE;
+}
+
 void
 vInitProtocolLayer (void)
 {
-  xTaskCreate (vnRFtaskRx, (signed portCHAR *) "nRF_Rx", TASK_NRF_STACK,
-	       NULL, TASK_NRF_PRIORITY, NULL);
+    vInitDimmerInit ();
+/*  xTaskCreate (vnRFtaskRx, (signed portCHAR *) "nRF_Rx", TASK_NRF_STACK,
+	       NULL, TASK_NRF_PRIORITY, NULL);*/
 }

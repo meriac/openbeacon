@@ -30,17 +30,6 @@
 #include "led.h"
 /**********************************************************************/
 
-void
-vLedSetRed (bool_t on)
-{
-  if (on)
-    AT91F_PIO_ClearOutput (AT91C_BASE_PIOA, LED_RED);
-  else
-    AT91F_PIO_SetOutput (AT91C_BASE_PIOA, LED_RED);
-}
-
-/**********************************************************************/
-
 extern void
 vLedSetGreen (bool_t on)
 {

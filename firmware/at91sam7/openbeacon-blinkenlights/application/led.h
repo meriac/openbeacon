@@ -23,7 +23,6 @@
 #ifndef __LED_H__
 #define __LED_H__
 
-extern void vLedSetRed (bool_t on);
 extern void vLedSetGreen (bool_t on);
 extern void vLedHaltBlinking (int reason);
 extern void vLedInit (void);

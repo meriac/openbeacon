@@ -49,9 +49,9 @@
 /* LED declaration               */
 /*-------------------------------*/
 
-#define LED_GREEN	(1L<<23)
-#define LED_RED		(1L<<20)
-#define LED_MASK	(LED_GREEN|LED_RED)
+#define LED_YELLOW	(1L<<17)
+#define LED_GREEN	(1L<<18)
+#define LED_MASK	(LED_GREEN|LED_YELLOW)
 
 /*-------------------------------*/
 /* nRF declaration               */
@@ -64,7 +64,10 @@
 #define MOSI_PIN	(1L<<13)
 #define SCK_PIN		(1L<<14)
 #define IRQ_PIN		(1L<<19)
-#define CE_PIN		(1L<<26)
+#define CE_PIN		(1L<<25)
+
+#define TRIGGER_PIN	(1L<<26)
+#define PHASE_PIN	(1L<<27)
 
 /*-------------------------------*/
 /* utils settings                */
