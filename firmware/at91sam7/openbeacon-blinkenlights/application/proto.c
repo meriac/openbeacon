@@ -1,6 +1,6 @@
 /***************************************************************
  *
- * OpenBeacon.org - OpenBeacon link layer protocol
+ * OpenBeacon.org - OpenBeacon dimmer link layer protocol
  *
  * Copyright 2007 Milosch Meriac <meriac@openbeacon.de>
  *
@@ -39,9 +39,7 @@ TBeaconEnvelope g_Beacon;
 
 #define PWM_CMR_PRESCALER 0x3
 #define PWM_CMR_CLOCK_FREQUENCY (MCK/(1<<PWM_CMR_PRESCALER))
-#define PWM_CMR_PWM_MAX_LEN_SEC (65536.0/PWM_CMR_CLOCK_FREQUENCY)
-#define PWM_CMR_PWM_FREQ ((int)(65536.0*((1/100.0)/PWM_CMR_PWM_MAX_LEN_SEC)))
-
+#define PWM_CMR_DEFAULT_DIMMER  (PWM_CMR_CLOCK_FREQUENCY/200)
 
 /**********************************************************************/
 #define SHUFFLE(a,b)    tmp=g_Beacon.datab[a];\
@@ -212,8 +210,8 @@ vInitDimmerInit (void)
 	AT91C_TC_WAVESEL_UP_AUTO |
 	AT91C_TC_ACPA_SET |
 	AT91C_TC_ACPC_CLEAR;
-    AT91C_BASE_TC2->TC_RA = 0x5000;
-    AT91C_BASE_TC2->TC_RC = 0x5400;
+    AT91C_BASE_TC2->TC_RA = PWM_CMR_DEFAULT_DIMMER;
+    AT91C_BASE_TC2->TC_RC = PWM_CMR_DEFAULT_DIMMER+0x400;
     AT91C_BASE_TC2->TC_CCR = AT91C_TC_CLKEN;
 
     AT91C_BASE_TCB->TCB_BCR=AT91C_TCB_SYNC;
