@@ -39,7 +39,12 @@ TBeaconEnvelope g_Beacon;
 
 #define PWM_CMR_PRESCALER 0x3
 #define PWM_CMR_CLOCK_FREQUENCY (MCK/(1<<PWM_CMR_PRESCALER))
+
+// set dimmer default brightness to 50%
 #define PWM_CMR_DEFAULT_DIMMER  (PWM_CMR_CLOCK_FREQUENCY/200)
+
+// set LED flash time for triac trigger to 250us
+#define PWM_CMR_DIMMER_LED_TIME (PWM_CMR_CLOCK_FREQUENCY/4000)
 
 /**********************************************************************/
 #define SHUFFLE(a,b)    tmp=g_Beacon.datab[a];\
@@ -211,7 +216,7 @@ vInitDimmerInit (void)
 	AT91C_TC_ACPA_SET |
 	AT91C_TC_ACPC_CLEAR;
     AT91C_BASE_TC2->TC_RA = PWM_CMR_DEFAULT_DIMMER;
-    AT91C_BASE_TC2->TC_RC = PWM_CMR_DEFAULT_DIMMER+0x400;
+    AT91C_BASE_TC2->TC_RC = PWM_CMR_DEFAULT_DIMMER+PWM_CMR_DIMMER_LED_TIME;
     AT91C_BASE_TC2->TC_CCR = AT91C_TC_CLKEN;
 
     AT91C_BASE_TCB->TCB_BCR=AT91C_TCB_SYNC;
