@@ -44,7 +44,9 @@ TBeaconEnvelope g_Beacon;
 #define PWM_CMR_DEFAULT_DIMMER  (PWM_CMR_CLOCK_FREQUENCY/200)
 
 // set LED flash time for triac trigger to 250us
-#define PWM_CMR_DIMMER_LED_TIME (PWM_CMR_CLOCK_FREQUENCY/4000)
+#define PWM_CMR_DIMMER_LED_TIME (PWM_CMR_CLOCK_FREQUENCY/400)
+
+#define BLINK_INTERVAL_MS (50*portTICK_RATE_MS)
 
 /**********************************************************************/
 #define SHUFFLE(a,b)    tmp=g_Beacon.datab[a];\
@@ -147,17 +149,22 @@ vnRFtaskRx (void *parameter)
 {
   u_int16_t crc;
   (void) parameter;
-
+  int DidBlink=0;
+  portTickType Ticks=0;
+  
   if (!PtInitNRF ())
     return;
-
-  DumpStringToUSB ("INFO: 'RX: oid,seq,strength,flags'");
 
   for (;;)
     {
       if (nRFCMD_WaitRx (10))
 	{
-	  vLedSetGreen (0);
+	  if(!DidBlink)
+	  {
+	    vLedSetGreen (1);
+	    Ticks = xTaskGetTickCount();
+	    DidBlink = 1;
+	  }
 
 	  do
 	    {
@@ -188,15 +195,19 @@ vnRFtaskRx (void *parameter)
 		}
 	    }
 	  while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
-
-	  vLedSetGreen (1);
 	}
       nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
+    
+      if( DidBlink && ((xTaskGetTickCount()-Ticks)>BLINK_INTERVAL_MS) )
+      {
+        DidBlink=0;
+	vLedSetGreen(0);
+      }
     }
 }
 
 static inline void
-vInitDimmerInit (void)
+vInitDimmer (void)
 {
     /* Enable Peripherals */
     AT91F_PIO_CfgPeriph(AT91C_BASE_PIOA, 0, TRIGGER_PIN|PHASE_PIN);
@@ -226,7 +237,7 @@ vInitDimmerInit (void)
 void
 vInitProtocolLayer (void)
 {
-    vInitDimmerInit ();
-/*  xTaskCreate (vnRFtaskRx, (signed portCHAR *) "nRF_Rx", TASK_NRF_STACK,
-	       NULL, TASK_NRF_PRIORITY, NULL);*/
+    vInitDimmer ();
+    xTaskCreate (vnRFtaskRx, (signed portCHAR *) "nRF_Rx", TASK_NRF_STACK,
+	NULL, TASK_NRF_PRIORITY, NULL);
 }
