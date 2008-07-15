@@ -46,7 +46,7 @@ TBeaconEnvelope g_Beacon;
 // set LED flash time for triac trigger to 250us
 #define PWM_CMR_DIMMER_LED_TIME (PWM_CMR_CLOCK_FREQUENCY/400)
 
-#define BLINK_INTERVAL_MS (50*portTICK_RATE_MS)
+#define BLINK_INTERVAL_MS (50 / portTICK_RATE_MS)
 
 /**********************************************************************/
 #define SHUFFLE(a,b)    tmp=g_Beacon.datab[a];\
@@ -207,6 +207,22 @@ vnRFtaskRx (void *parameter)
 }
 
 static inline void
+vUpdateDimmer (int Percent)
+{
+    int t;
+    
+    if(Percent<1)
+      Percent=1;
+    else
+	if(Percent>90)
+	    Percent=90;
+	    
+    t = ((PWM_CMR_CLOCK_FREQUENCY*Percent)/(100*100));
+    AT91C_BASE_TC2->TC_RA = t;
+    AT91C_BASE_TC2->TC_RC = t+PWM_CMR_DIMMER_LED_TIME;
+}
+
+static inline void
 vInitDimmer (void)
 {
     /* Enable Peripherals */
@@ -235,9 +251,29 @@ vInitDimmer (void)
 }
 
 void
+vnRFtaskDimmer (void *parameter)
+{
+    int Percent;
+
+    (void) parameter;
+    
+    while(1)
+    {
+	vTaskDelay(100 / portTICK_RATE_MS);	
+	
+	Percent = ((xTaskGetTickCount()*10)/configTICK_RATE_HZ)%90;
+	
+	vUpdateDimmer(Percent);
+    }
+}
+
+void
 vInitProtocolLayer (void)
 {
     vInitDimmer ();
     xTaskCreate (vnRFtaskRx, (signed portCHAR *) "nRF_Rx", TASK_NRF_STACK,
+	NULL, TASK_NRF_PRIORITY, NULL);
+    
+    xTaskCreate (vnRFtaskDimmer, (signed portCHAR *) "Dimmer", TASK_NRF_STACK,
 	NULL, TASK_NRF_PRIORITY, NULL);
 }
