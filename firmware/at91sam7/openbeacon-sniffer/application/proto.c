@@ -136,7 +136,7 @@ DumpStringToUSB (char *text)
 void
 vnRFtaskRx (void *parameter)
 {
-//  u_int16_t crc;
+  u_int16_t crc;
   (void) parameter;
 
   if (!PtInitNRF ())
