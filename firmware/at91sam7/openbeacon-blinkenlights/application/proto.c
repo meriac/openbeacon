@@ -217,7 +217,7 @@ vUpdateDimmer (int Percent)
 	if(Percent>90)
 	    Percent=90;
 	    
-    t = ((PWM_CMR_CLOCK_FREQUENCY*Percent)/(100*100));
+    t = ((PWM_CMR_CLOCK_FREQUENCY*Percent)/(100*120));
     AT91C_BASE_TC2->TC_RA = t;
     AT91C_BASE_TC2->TC_RC = t+PWM_CMR_DIMMER_LED_TIME;
 }
@@ -253,15 +253,21 @@ vInitDimmer (void)
 void
 vnRFtaskDimmer (void *parameter)
 {
-    int Percent;
+    (void) parameter;
+    int Percent=0,Sign=1;
 
     (void) parameter;
     
     while(1)
     {
-	vTaskDelay(100 / portTICK_RATE_MS);	
+	vTaskDelay(20 / portTICK_RATE_MS);	
 	
-	Percent = ((xTaskGetTickCount()*10)/configTICK_RATE_HZ)%90;
+	Percent+=Sign;
+	if(Percent>=70)
+	    Sign=-1;
+	else
+	    if(Percent<=20)
+		Sign=1;
 	
 	vUpdateDimmer(Percent);
     }
