@@ -101,7 +101,7 @@ typedef void (__interrupt __far * pxISR) ();
 #endif
 
 #ifdef SAM7_GCC
-#include "../ARM7_AT91SAM7S/portmacro.h"
+#include "../portmacro.h"
 #endif
 
 #ifdef SAM7_IAR

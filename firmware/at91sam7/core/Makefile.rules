@@ -47,7 +47,7 @@ CFLAGS= \
 -I$(CORE)openbeacon/nRF24L01 \
 -I$(CORE)os/core/include  \
 -I$(CORE)os/usb  \
--I$(CORE)os/core/ARM7_AT91SAM7S  \
+-I$(CORE)os/core/ARM7_AT91SAM7  \
 -Wall  \
 -Werror \
 -Wextra  \
@@ -82,9 +82,9 @@ ARM_SRC= \
   $(CORE)os/core/list.c \
   $(CORE)os/core/queue.c \
   $(CORE)os/core/tasks.c \
-  $(CORE)os/core/ARM7_AT91SAM7S/lib_AT91SAM7.c \
-  $(CORE)os/core/ARM7_AT91SAM7S/port.c \
-  $(CORE)os/core/ARM7_AT91SAM7S/portISR.c \
+  $(CORE)os/core/ARM7_AT91SAM7/lib_AT91SAM7.c \
+  $(CORE)os/core/port.c \
+  $(CORE)os/core/portISR.c \
   $(CORE)os/core/MemMang/heap_2.c \
   $(CORE)os/usb/USB-CDC.c \
   $(CORE)os/usb/USBIsr.c
