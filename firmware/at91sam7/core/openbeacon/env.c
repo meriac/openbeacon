@@ -22,8 +22,6 @@
 */
 
 #include <FreeRTOS.h>
-#include <AT91SAM7.h>
-#include <lib_AT91SAM7.h>
 #include <string.h>
 #include <board.h>
 #include <task.h>

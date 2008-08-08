@@ -54,12 +54,9 @@
 #include <stdlib.h>
 
 /* Scheduler includes. */
-#include "FreeRTOS.h"
-#include "task.h"
+#include <FreeRTOS.h>
+#include <board.h>
 
-/* Processor constants. */
-#include "AT91SAM7.h"
-#include "lib_AT91SAM7.h"
 
 /* Constants required to setup the task context. */
 #define portINITIAL_SPSR				( ( portSTACK_TYPE ) 0x1f )	/* System mode, ARM mode, interrupts enabled. */

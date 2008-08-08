@@ -17,7 +17,6 @@
  *
  */
 
-#include <lib_AT91SAM7.h>
 #include <board.h>
 #include "dbgu.h"
 #ifdef  AT91C_DBGU_BAUD

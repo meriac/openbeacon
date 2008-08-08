@@ -1150,6 +1150,7 @@ typedef struct _AT91S_UDP
 #define AT91C_UDP_RX_DATA_BK0 ((unsigned int) 0x1 <<  1)	// (UDP) Receive Data Bank 0
 #define AT91C_UDP_RXSETUP     ((unsigned int) 0x1 <<  2)	// (UDP) Sends STALL to the Host (Control endpoints)
 #define AT91C_UDP_ISOERROR    ((unsigned int) 0x1 <<  3)	// (UDP) Isochronous error (Isochronous endpoints)
+#define AT91C_UDP_STALLSENT   ((unsigned int) 0x1 <<  3)        // (UDP) Stall Sent (Control endpoints)
 #define AT91C_UDP_TXPKTRDY    ((unsigned int) 0x1 <<  4)	// (UDP) Transmit Packet Ready
 #define AT91C_UDP_FORCESTALL  ((unsigned int) 0x1 <<  5)	// (UDP) Force Stall (used by Control, Bulk and Isochronous endpoints).
 #define AT91C_UDP_RX_DATA_BK1 ((unsigned int) 0x1 <<  6)	// (UDP) Receive Data Bank 1 (only used by endpoints with ping-pong attributes).
@@ -2731,19 +2732,5 @@ typedef struct _AT91S_TDES
 #define AT91C_BASE_AES       ((AT91PS_AES) 	0xFFFA4000)	// (AES) Base Address
 #define AT91C_BASE_PDC_TDES  ((AT91PS_PDC) 	0xFFFA8100)	// (PDC_TDES) Base Address
 #define AT91C_BASE_TDES      ((AT91PS_TDES) 	0xFFFA8000)	// (TDES) Base Address
-
-// *****************************************************************************
-//               MEMORY MAPPING DEFINITIONS FOR AT91SAM7X
-// *****************************************************************************
-
-#if defined(__AT91SAM7X256__)
-#define AT91C_ISRAM_SIZE         ((unsigned int) 0x00010000)    // Internal SRAM size in byte (64 Kbytes)
-#define AT91C_IFLASH_SIZE        ((unsigned int) 0x00040000)    // Internal FLASH size in byte (256 Kbytes)
-#define AT91C_IFLASH_PAGE_SIZE   ((unsigned int) 256)   // Internal FLASH Page Size: 256 bytes
-#define AT91C_IFLASH_PAGE_SHIFT          8
-#define AT91C_IFLASH_NB_OF_LOCK_BITS     ((unsigned int) 16)    // Internal FLASH Number of Lock Bits: 16
-#else
-#error Have to define which __AT91SAM7Xxxx__ type
-#endif
 
 #endif/*__AT91SAM7X_H__*/

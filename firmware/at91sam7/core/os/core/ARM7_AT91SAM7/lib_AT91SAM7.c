@@ -18,8 +18,7 @@
 //*
 
 #include <sys/types.h>
-#include <AT91SAM7.h>
-#include <lib_AT91SAM7.h>
+#include <board.h>
 
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_AIC_ConfigureIt
