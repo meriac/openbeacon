@@ -34,6 +34,13 @@
 #include <board.h>
 #include <beacontypes.h>
 
+#ifndef AT91C_BASE_SPI
+#define AT91C_BASE_SPI AT91C_BASE_SPI0
+#define AT91C_BASE_PDC_SPI AT91C_BASE_PDC_SPI0
+#define AT91C_ID_SPI AT91C_ID_SPI0
+#define AT91F_SPI_CfgPMC AT91F_SPI0_CfgPMC
+#endif/*AT91C_BASE_SPI*/
+
 #define SPI_MAX_XFER_LEN 33
 #define NRFCMD_MACRO_READ 0x80
 static u_int8_t spi_outbuf[SPI_MAX_XFER_LEN];
