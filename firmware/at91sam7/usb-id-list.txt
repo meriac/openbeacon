@@ -5,3 +5,4 @@
 16C0:08AD,"OpenBeacon Estimator",openbeacon-estimator
 16C0:08AE,"OpenBouncer",openbouncer
 16C0:08AF,"OpenBeacon Blinkenlights",openbeacon-blinkenlights
+16C0:08B0,"OpenBeacon Network",openbeacon-network
