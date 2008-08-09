@@ -68,13 +68,13 @@ Changes from V3.2.4
 
 /* The IP address being used. */
 #define emacIPADDR0 10
-#define emacIPADDR1 254
+#define emacIPADDR1 1
 #define emacIPADDR2 0
-#define emacIPADDR3 100
+#define emacIPADDR3 66
 
 /* The gateway address being used. */
 #define emacGATEWAY_ADDR0 10
-#define emacGATEWAY_ADDR1 254
+#define emacGATEWAY_ADDR1 1
 #define emacGATEWAY_ADDR2 0
 #define emacGATEWAY_ADDR3 1
 
