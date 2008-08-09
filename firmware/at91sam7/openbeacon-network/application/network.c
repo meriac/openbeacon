@@ -76,9 +76,9 @@ vNetworkThread (void *pvParameters)
   netif_set_default (&EMAC_if);
 
   /* dhcp kick-off */
-/*  dhcp_coarse_tmr ();
+  dhcp_coarse_tmr ();
   dhcp_fine_tmr ();
-  dhcp_start (&EMAC_if);*/
+  dhcp_start (&EMAC_if);
 
   /* bring it up */
   netif_set_up (&EMAC_if);
@@ -90,8 +90,6 @@ vNetworkThread (void *pvParameters)
 
   while (pdTRUE)
     {
-      vTaskDelay (1000 / portTICK_RATE_MS);
-      stats_display();
     }
 }
 
