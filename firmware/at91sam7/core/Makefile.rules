@@ -57,8 +57,6 @@ CFLAGS= \
 -Wno-strict-aliasing  \
 -D SAM7_GCC  \
 -mcpu=arm7tdmi  \
--ffunction-sections \
--fdata-sections \
 -T$(LDSCRIPT) \
 $(DEBUG)  \
 $(OPTIM) \
@@ -67,7 +65,10 @@ $(APP_CFLAGS) \
 
 CRT0=$(CORE)os/boot/boot.s
 
-LINKER_FLAGS=-Xlinker -s -Xlinker -static -Xlinker --gc-sections -Xlinker -o$(TARGET).elf -Xlinker -M -Xlinker -Map=$(TARGET).map
+#-ffunction-sections \
+#-fdata-sections \
+#LINKER_FLAGS=-Xlinker -s -Xlinker -static -Xlinker --gc-sections -Xlinker -o$(TARGET).elf -Xlinker -M -Xlinker -Map=$(TARGET).map
+LINKER_FLAGS=-Xlinker -o$(TARGET).elf -Xlinker -M -Xlinker -Map=$(TARGET).map
 
 #
 # Source files that must be built to ARM mode.
