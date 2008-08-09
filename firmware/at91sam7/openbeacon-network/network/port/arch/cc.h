@@ -52,6 +52,6 @@ typedef int sys_prot_t;
 extern int debug_printf (const char *fmt, ...);
 
 #define LWIP_PLATFORM_ASSERT debug_printf
-#define LWIP_PLATFORM_DIAG debug_printf
+#define LWIP_PLATFORM_DIAG(x) debug_printf x
 
 #endif /* __CC_H__ */

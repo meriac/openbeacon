@@ -40,7 +40,6 @@
 #include "SAM7_EMAC.h"
 
 /* lwIP includes. */
-#include "lwip/init.h"
 #include "lwip/api.h"
 #include "lwip/tcpip.h"
 #include "lwip/memp.h"
@@ -59,9 +58,9 @@ vNetworkThread (void *pvParameters)
   (void) pvParameters;
   static struct netif EMAC_if;
   static struct ip_addr xIpAddr, xNetMask, xGateway;
-
+  
   /* Initialize lwIP and its interface layer. */
-  lwip_init ();
+  tcpip_init ( NULL,NULL );
 
   /* Create and configure the EMAC interface. */
   IP4_ADDR (&xIpAddr, emacIPADDR0, emacIPADDR1, emacIPADDR2, emacIPADDR3);
@@ -79,9 +78,9 @@ vNetworkThread (void *pvParameters)
   dhcp_coarse_tmr ();
   dhcp_fine_tmr ();
   dhcp_start (&EMAC_if);
-
+  
   /* bring it up */
-  netif_set_up (&EMAC_if);
+//  netif_set_up (&EMAC_if);
 
   debug_printf ("FreeRTOS based WMCU firmware version %s starting.\n",
 		VERSION);
@@ -90,6 +89,7 @@ vNetworkThread (void *pvParameters)
 
   while (pdTRUE)
     {
+	vTaskDelay ( 100 / portTICK_RATE_MS );
     }
 }
 
