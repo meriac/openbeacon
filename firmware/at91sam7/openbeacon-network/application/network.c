@@ -90,10 +90,8 @@ vNetworkThread (void *pvParameters)
 
   while (pdTRUE)
     {
-      vTaskDelay (500 / portTICK_RATE_MS);
-      vLedSetRed (1);
-      vTaskDelay (500 / portTICK_RATE_MS);
-      vLedSetRed (0);
+      vTaskDelay (1000 / portTICK_RATE_MS);
+      stats_display();
     }
 }
 

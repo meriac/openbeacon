@@ -491,51 +491,6 @@
 
 /*
    ----------------------------------
-   ---------- SNMP options ----------
-   ----------------------------------
-*/
-/**
- * LWIP_SNMP==1: Turn on SNMP module. UDP must be available for SNMP
- * transport.
- */
-#ifndef LWIP_SNMP
-#define LWIP_SNMP                       0
-#endif
-
-/**
- * SNMP_CONCURRENT_REQUESTS: Number of concurrent requests the module will
- * allow. At least one request buffer is required. 
- */
-#ifndef SNMP_CONCURRENT_REQUESTS
-#define SNMP_CONCURRENT_REQUESTS        1
-#endif
-
-/**
- * SNMP_TRAP_DESTINATIONS: Number of trap destinations. At least one trap
- * destination is required
- */
-#ifndef SNMP_TRAP_DESTINATIONS
-#define SNMP_TRAP_DESTINATIONS          1
-#endif
-
-/**
- * SNMP_PRIVATE_MIB: 
- */
-#ifndef SNMP_PRIVATE_MIB
-#define SNMP_PRIVATE_MIB                0
-#endif
-
-/**
- * Only allow SNMP write actions that are 'safe' (e.g. disabeling netifs is not
- * a safe action and disabled when SNMP_SAFE_REQUESTS = 1).
- * Unsafe requests are disabled by default!
- */
-#ifndef SNMP_SAFE_REQUESTS
-#define SNMP_SAFE_REQUESTS              1
-#endif
-
-/*
-   ----------------------------------
    ---------- IGMP options ----------
    ----------------------------------
 */
@@ -1628,20 +1583,6 @@
  */
 #ifndef AUTOIP_DEBUG
 #define AUTOIP_DEBUG                    LWIP_DBG_OFF
-#endif
-
-/**
- * SNMP_MSG_DEBUG: Enable debugging for SNMP messages.
- */
-#ifndef SNMP_MSG_DEBUG
-#define SNMP_MSG_DEBUG                  LWIP_DBG_OFF
-#endif
-
-/**
- * SNMP_MIB_DEBUG: Enable debugging for SNMP MIBs.
- */
-#ifndef SNMP_MIB_DEBUG
-#define SNMP_MIB_DEBUG                  LWIP_DBG_OFF
 #endif
 
 /**

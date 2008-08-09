@@ -44,7 +44,6 @@
 #include "lwip/inet.h"
 #include "lwip/inet_chksum.h"
 #include "lwip/netif.h"
-#include "lwip/snmp.h"
 #include "lwip/stats.h"
 #include "lwip/icmp.h"
 
@@ -166,7 +165,6 @@ ip_reass_free_complete_datagram (struct ip_reassdata *ipr,
       LWIP_ASSERT ("prev->next == ipr", prev->next == ipr);
     }
 
-  snmp_inc_ipreasmfails ();
 #if LWIP_ICMP
   iprh = (struct ip_reass_helper *) ipr->p->payload;
   if (iprh->start == 0)
@@ -531,7 +529,6 @@ ip_reass (struct pbuf *p)
   struct ip_reassdata *ipr_prev = NULL;
 
   IPFRAG_STATS_INC (ip_frag.recv);
-  snmp_inc_ipreasmreqds ();
 
   fraghdr = (struct ip_hdr *) p->payload;
 
@@ -834,7 +831,6 @@ ip_frag (struct pbuf *p, struct netif *netif, struct ip_addr *dest)
 	  pbuf_chain (header, rambuf);
 	  netif->output (netif, header, dest);
 	  IPFRAG_STATS_INC (ip_frag.xmit);
-	  snmp_inc_ipfragcreates ();
 	  pbuf_free (header);
 	}
       else
@@ -866,7 +862,6 @@ ip_frag (struct pbuf *p, struct netif *netif, struct ip_addr *dest)
 #if IP_FRAG_USES_STATIC_BUF
   pbuf_free (rambuf);
 #endif /* IP_FRAG_USES_STATIC_BUF */
-  snmp_inc_ipfragoks ();
   return ERR_OK;
 }
 #endif /* IP_FRAG */

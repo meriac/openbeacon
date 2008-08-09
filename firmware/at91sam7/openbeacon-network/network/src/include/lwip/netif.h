@@ -143,23 +143,6 @@ extern "C"
     char name[2];
   /** number of this interface */
     u8_t num;
-#if LWIP_SNMP
-  /** link type (from "snmp_ifType" enum from snmp.h) */
-    u8_t link_type;
-  /** (estimate) link speed */
-    u32_t link_speed;
-  /** timestamp at last change made (up/down) */
-    u32_t ts;
-  /** counters */
-    u32_t ifinoctets;
-    u32_t ifinucastpkts;
-    u32_t ifinnucastpkts;
-    u32_t ifindiscards;
-    u32_t ifoutoctets;
-    u32_t ifoutucastpkts;
-    u32_t ifoutnucastpkts;
-    u32_t ifoutdiscards;
-#endif				/* LWIP_SNMP */
 #if LWIP_IGMP
     /* This function could be called to add or delete a entry in the multicast filter table of the ethernet MAC. */
       err_t (*igmp_mac_filter) (struct netif * netif, struct ip_addr * group,
@@ -169,26 +152,6 @@ extern "C"
     u8_t *addr_hint;
 #endif				/* LWIP_NETIF_HWADDRHINT */
   };
-
-#if LWIP_SNMP
-#define NETIF_INIT_SNMP(netif, type, speed) \
-  /* use "snmp_ifType" enum from snmp.h for "type", snmp_ifType_ethernet_csmacd by example */ \
-  netif->link_type = type;    \
-  /* your link speed here (units: bits per second) */  \
-  netif->link_speed = speed;  \
-  netif->ts = 0;              \
-  netif->ifinoctets = 0;      \
-  netif->ifinucastpkts = 0;   \
-  netif->ifinnucastpkts = 0;  \
-  netif->ifindiscards = 0;    \
-  netif->ifoutoctets = 0;     \
-  netif->ifoutucastpkts = 0;  \
-  netif->ifoutnucastpkts = 0; \
-  netif->ifoutdiscards = 0
-#else				/* LWIP_SNMP */
-#define NETIF_INIT_SNMP(netif, type, speed)
-#endif				/* LWIP_SNMP */
-
 
 /** The list of network interfaces. */
   extern struct netif *netif_list;

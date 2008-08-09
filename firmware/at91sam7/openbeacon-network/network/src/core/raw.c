@@ -49,7 +49,6 @@
 #include "lwip/netif.h"
 #include "lwip/raw.h"
 #include "lwip/stats.h"
-#include "lwip/snmp.h"
 #include "arch/perf.h"
 
 #include <string.h>

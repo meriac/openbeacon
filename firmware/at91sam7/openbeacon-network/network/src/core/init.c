@@ -67,9 +67,6 @@
 #if (!LWIP_UDP && LWIP_UDPLITE)
 #error "If you want to use UDP Lite, you have to define LWIP_UDP=1 in your lwipopts.h"
 #endif
-#if (!LWIP_UDP && LWIP_SNMP)
-#error "If you want to use SNMP, you have to define LWIP_UDP=1 in your lwipopts.h"
-#endif
 #if (!LWIP_UDP && LWIP_DHCP)
 #error "If you want to use DHCP, you have to define LWIP_UDP=1 in your lwipopts.h"
 #endif
@@ -132,12 +129,6 @@
 #endif
 #if (!LWIP_ARP && LWIP_AUTOIP)
 #error "If you want to use AUTOIP, you have to define LWIP_ARP=1 in your lwipopts.h"
-#endif
-#if (LWIP_SNMP && (SNMP_CONCURRENT_REQUESTS<=0))
-#error "If you want to use SNMP, you have to define SNMP_CONCURRENT_REQUESTS>=1 in your lwipopts.h"
-#endif
-#if (LWIP_SNMP && (SNMP_TRAP_DESTINATIONS<=0))
-#error "If you want to use SNMP, you have to define SNMP_TRAP_DESTINATIONS>=1 in your lwipopts.h"
 #endif
 #if (LWIP_TCP && ((LWIP_EVENT_API && LWIP_CALLBACK_API) || (!LWIP_EVENT_API && !LWIP_CALLBACK_API)))
 #error "One and exactly one of LWIP_EVENT_API and LWIP_CALLBACK_API has to be enabled in your lwipopts.h"

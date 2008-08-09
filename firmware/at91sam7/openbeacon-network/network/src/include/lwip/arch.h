@@ -59,7 +59,6 @@ extern "C"
 #define PACK_STRUCT_FIELD(x) x
 #endif				/* PACK_STRUCT_FIELD */
 
-
 #ifndef LWIP_UNUSED_ARG
 #define LWIP_UNUSED_ARG(x) (void)x
 #endif				/* LWIP_UNUSED_ARG */

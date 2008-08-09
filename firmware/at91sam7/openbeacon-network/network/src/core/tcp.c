@@ -47,7 +47,6 @@
 #include "lwip/def.h"
 #include "lwip/mem.h"
 #include "lwip/memp.h"
-#include "lwip/snmp.h"
 #include "lwip/tcp.h"
 
 #include <string.h>
@@ -144,31 +143,21 @@ tcp_close (struct tcp_pcb *pcb)
       tcp_pcb_remove (&tcp_active_pcbs, pcb);
       memp_free (MEMP_TCP_PCB, pcb);
       pcb = NULL;
-      snmp_inc_tcpattemptfails ();
       break;
     case SYN_RCVD:
       err = tcp_send_ctrl (pcb, TCP_FIN);
       if (err == ERR_OK)
-	{
-	  snmp_inc_tcpattemptfails ();
 	  pcb->state = FIN_WAIT_1;
-	}
       break;
     case ESTABLISHED:
       err = tcp_send_ctrl (pcb, TCP_FIN);
       if (err == ERR_OK)
-	{
-	  snmp_inc_tcpestabresets ();
 	  pcb->state = FIN_WAIT_1;
-	}
       break;
     case CLOSE_WAIT:
       err = tcp_send_ctrl (pcb, TCP_FIN);
       if (err == ERR_OK)
-	{
-	  snmp_inc_tcpestabresets ();
 	  pcb->state = LAST_ACK;
-	}
       break;
     default:
       /* Has already been closed, do nothing. */
@@ -571,8 +560,6 @@ tcp_connect (struct tcp_pcb * pcb, struct ip_addr * ipaddr, u16_t port,
 #endif /* LWIP_CALLBACK_API */
   TCP_RMV (&tcp_bound_pcbs, pcb);
   TCP_REG (&tcp_active_pcbs, pcb);
-
-  snmp_inc_tcpactiveopens ();
 
   /* Build an MSS option */
   optdata = TCP_BUILD_MSS_OPTION ();

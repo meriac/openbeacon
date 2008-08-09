@@ -52,7 +52,6 @@
 #include "lwip/inet.h"
 #include "lwip/inet_chksum.h"
 #include "lwip/stats.h"
-#include "lwip/snmp.h"
 
 #include <string.h>
 
@@ -700,9 +699,6 @@ tcp_output_segment (struct tcp_seg *seg, struct tcp_pcb *pcb)
   u16_t len;
   struct netif *netif;
 
-  /** @bug Exclude retransmitted segments from this count. */
-  snmp_inc_tcpoutsegs ();
-
   /* The TCP header has already been constructed, but the ackno and
      wnd fields remain. */
   seg->tcphdr->ackno = htonl (pcb->rcv_nxt);
@@ -826,7 +822,6 @@ tcp_rst (u32_t seqno, u32_t ackno,
 				       IP_PROTO_TCP, p->tot_len);
 #endif
   TCP_STATS_INC (tcp.xmit);
-  snmp_inc_tcpoutrsts ();
   /* Send output with hardcoded TTL since we have no access to the pcb */
   ip_output (p, local_ip, remote_ip, TCP_TTL, 0, IP_PROTO_TCP);
   pbuf_free (p);
@@ -903,7 +898,6 @@ tcp_rexmit (struct tcp_pcb *pcb)
   pcb->rttest = 0;
 
   /* Do the actual retransmission. */
-  snmp_inc_tcpretranssegs ();
   tcp_output (pcb);
 }
 

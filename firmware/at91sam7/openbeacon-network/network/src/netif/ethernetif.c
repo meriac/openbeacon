@@ -31,6 +31,8 @@
  */
 
 /* lwIP includes. */
+#include <board.h>
+#include <led.h>
 #include <string.h>
 #include "lwip/opt.h"
 #include "lwip/def.h"
@@ -372,13 +374,6 @@ ethernetif_init (struct netif *netif)
   low_level_init (netif);
   etharp_init ();
   sys_timeout (ARP_TMR_INTERVAL, arp_timer, NULL);
-
-  /*
-   * Initialize the snmp variables and counters inside the struct netif.
-   * The last argument should be replaced with your link speed, in units
-   * of bits per second.
-   */
-  NETIF_INIT_SNMP (netif, snmp_ifType_ethernet_csmacd, ? ? ?);
 
   return ERR_OK;
 }

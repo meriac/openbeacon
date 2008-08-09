@@ -51,7 +51,6 @@
 #include "lwip/raw.h"
 #include "lwip/udp.h"
 #include "lwip/tcp.h"
-#include "lwip/snmp.h"
 #include "lwip/dhcp.h"
 #include "lwip/stats.h"
 #include "arch/perf.h"
@@ -88,7 +87,6 @@ ip_route (struct ip_addr *dest)
       LWIP_DEBUGF (IP_DEBUG | 2,
 		   ("ip_route: No route to 0x%" X32_F "\n", dest->addr));
       IP_STATS_INC (ip.rterr);
-      snmp_inc_ipoutnoroutes ();
       return NULL;
     }
   /* no matching netif found, use default netif */
@@ -119,7 +117,6 @@ ip_forward (struct pbuf *p, struct ip_hdr *iphdr, struct netif *inp)
       LWIP_DEBUGF (IP_DEBUG,
 		   ("ip_forward: no forwarding route for 0x%" X32_F
 		    " found\n", iphdr->dest.addr));
-      snmp_inc_ipoutnoroutes ();
       return (struct netif *) NULL;
     }
   /* Do not forward packets onto the same network interface on which
@@ -128,7 +125,6 @@ ip_forward (struct pbuf *p, struct ip_hdr *iphdr, struct netif *inp)
     {
       LWIP_DEBUGF (IP_DEBUG,
 		   ("ip_forward: not bouncing packets back on incoming interface.\n"));
-      snmp_inc_ipoutnoroutes ();
       return (struct netif *) NULL;
     }
 
@@ -137,7 +133,6 @@ ip_forward (struct pbuf *p, struct ip_hdr *iphdr, struct netif *inp)
   /* send ICMP if TTL == 0 */
   if (IPH_TTL (iphdr) == 0)
     {
-      snmp_inc_ipinhdrerrors ();
 #if LWIP_ICMP
       /* Don't send ICMP messages in response to ICMP messages */
       if (IPH_PROTO (iphdr) != IP_PROTO_ICMP)
@@ -163,7 +158,6 @@ ip_forward (struct pbuf *p, struct ip_hdr *iphdr, struct netif *inp)
 
   IP_STATS_INC (ip.fw);
   IP_STATS_INC (ip.xmit);
-  snmp_inc_ipforwdatagrams ();
 
   PERF_STOP ("ip_forward");
   /* transmit pbuf on chosen interface */
@@ -198,7 +192,6 @@ ip_input (struct pbuf * p, struct netif * inp)
 #endif /* LWIP_DHCP */
 
   IP_STATS_INC (ip.recv);
-  snmp_inc_ipinreceives ();
 
   /* identify the IP header */
   iphdr = p->payload;
@@ -211,7 +204,6 @@ ip_input (struct pbuf * p, struct netif * inp)
       pbuf_free (p);
       IP_STATS_INC (ip.err);
       IP_STATS_INC (ip.drop);
-      snmp_inc_ipinhdrerrors ();
       return ERR_OK;
     }
 
@@ -238,7 +230,6 @@ ip_input (struct pbuf * p, struct netif * inp)
       pbuf_free (p);
       IP_STATS_INC (ip.lenerr);
       IP_STATS_INC (ip.drop);
-      snmp_inc_ipindiscards ();
       return ERR_OK;
     }
 
@@ -254,7 +245,6 @@ ip_input (struct pbuf * p, struct netif * inp)
       pbuf_free (p);
       IP_STATS_INC (ip.chkerr);
       IP_STATS_INC (ip.drop);
-      snmp_inc_ipinhdrerrors ();
       return ERR_OK;
     }
 #endif
@@ -369,8 +359,6 @@ ip_input (struct pbuf * p, struct netif * inp)
 	  /* free (drop) packet pbufs */
 	  pbuf_free (p);
 	  IP_STATS_INC (ip.drop);
-	  snmp_inc_ipinaddrerrors ();
-	  snmp_inc_ipindiscards ();
 	  return ERR_OK;
 	}
     }
@@ -388,12 +376,7 @@ ip_input (struct pbuf * p, struct netif * inp)
 	  /* try to forward IP packet on (other) interfaces */
 	  ip_forward (p, iphdr, inp);
 	}
-      else
 #endif /* IP_FORWARD */
-	{
-	  snmp_inc_ipinaddrerrors ();
-	  snmp_inc_ipindiscards ();
-	}
       pbuf_free (p);
       return ERR_OK;
     }
@@ -425,7 +408,6 @@ ip_input (struct pbuf * p, struct netif * inp)
       IP_STATS_INC (ip.opterr);
       IP_STATS_INC (ip.drop);
       /* unsupported protocol feature */
-      snmp_inc_ipinunknownprotos ();
       return ERR_OK;
 #endif /* IP_REASSEMBLY */
     }
@@ -446,7 +428,6 @@ ip_input (struct pbuf * p, struct netif * inp)
       IP_STATS_INC (ip.opterr);
       IP_STATS_INC (ip.drop);
       /* unsupported protocol feature */
-      snmp_inc_ipinunknownprotos ();
       return ERR_OK;
     }
 #endif /* IP_OPTIONS_ALLOWED == 0 */
@@ -471,19 +452,16 @@ ip_input (struct pbuf * p, struct netif * inp)
 #if LWIP_UDPLITE
 	case IP_PROTO_UDPLITE:
 #endif /* LWIP_UDPLITE */
-	  snmp_inc_ipindelivers ();
 	  udp_input (p, inp);
 	  break;
 #endif /* LWIP_UDP */
 #if LWIP_TCP
 	case IP_PROTO_TCP:
-	  snmp_inc_ipindelivers ();
 	  tcp_input (p, inp);
 	  break;
 #endif /* LWIP_TCP */
 #if LWIP_ICMP
 	case IP_PROTO_ICMP:
-	  snmp_inc_ipindelivers ();
 	  icmp_input (p, inp);
 	  break;
 #endif /* LWIP_ICMP */
@@ -510,7 +488,6 @@ ip_input (struct pbuf * p, struct netif * inp)
 
 	  IP_STATS_INC (ip.proterr);
 	  IP_STATS_INC (ip.drop);
-	  snmp_inc_ipinunknownprotos ();
 	}
     }
 
@@ -549,8 +526,6 @@ ip_output_if (struct pbuf * p, struct ip_addr * src, struct ip_addr * dest,
   struct ip_hdr *iphdr;
   static u16_t ip_id = 0;
 
-  snmp_inc_ipoutrequests ();
-
   /* Should the IP header be generated or is it already included in p? */
   if (dest != IP_HDRINCL)
     {
@@ -561,7 +536,6 @@ ip_output_if (struct pbuf * p, struct ip_addr * src, struct ip_addr * dest,
 		       ("ip_output: not enough room for IP header in pbuf\n"));
 
 	  IP_STATS_INC (ip.err);
-	  snmp_inc_ipoutdiscards ();
 	  return ERR_BUF;
 	}
 

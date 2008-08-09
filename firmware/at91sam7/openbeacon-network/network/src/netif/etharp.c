@@ -51,7 +51,6 @@
 #include "lwip/inet.h"
 #include "lwip/ip.h"
 #include "lwip/stats.h"
-#include "lwip/snmp.h"
 #include "lwip/dhcp.h"
 #include "lwip/autoip.h"
 #include "netif/etharp.h"
@@ -189,8 +188,6 @@ etharp_tmr (void)
 			ETHARP_STATE_STABLE ? "stable" : "pending",
 			(u16_t) i));
 	  /* clean up entries that have just been expired */
-	  /* remove from SNMP ARP index tree */
-	  snmp_delete_arpidx_tree (arp_table[i].netif, &arp_table[i].ipaddr);
 #if ARP_QUEUEING
 	  /* and empty packet queue */
 	  if (arp_table[i].q != NULL)
@@ -456,10 +453,6 @@ find_entry (struct ip_addr *ipaddr, u8_t flags)
   /* { empty or recyclable entry found } */
   LWIP_ASSERT ("i < ARP_TABLE_SIZE", i < ARP_TABLE_SIZE);
 
-  if (arp_table[i].state != ETHARP_STATE_EMPTY)
-    {
-      snmp_delete_arpidx_tree (arp_table[i].netif, &arp_table[i].ipaddr);
-    }
   /* recycle entry (no-op for an already empty entry) */
   arp_table[i].state = ETHARP_STATE_EMPTY;
 
@@ -569,9 +562,6 @@ update_arp_entry (struct netif *netif, struct ip_addr *ipaddr,
   arp_table[i].state = ETHARP_STATE_STABLE;
   /* record network interface */
   arp_table[i].netif = netif;
-
-  /* insert in SNMP ARP index tree */
-  snmp_insert_arpidx_tree (netif, &arp_table[i].ipaddr);
 
   LWIP_DEBUGF (ETHARP_DEBUG | LWIP_DBG_TRACE,
 	       ("update_arp_entry: updating stable entry %" S16_F "\n",

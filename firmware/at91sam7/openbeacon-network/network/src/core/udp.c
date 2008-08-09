@@ -59,7 +59,6 @@
 #include "lwip/netif.h"
 #include "lwip/icmp.h"
 #include "lwip/stats.h"
-#include "lwip/snmp.h"
 #include "arch/perf.h"
 #include "lwip/dhcp.h"
 
@@ -108,7 +107,6 @@ udp_input (struct pbuf *p, struct netif *inp)
 		    " bytes) discarded\n", p->tot_len));
       UDP_STATS_INC (udp.lenerr);
       UDP_STATS_INC (udp.drop);
-      snmp_inc_udpinerrors ();
       pbuf_free (p);
       goto end;
     }
@@ -256,7 +254,6 @@ udp_input (struct pbuf *p, struct netif *inp)
 		     checksum! (Again, see RFC 3828 chap. 3.1) */
 		  UDP_STATS_INC (udp.chkerr);
 		  UDP_STATS_INC (udp.drop);
-		  snmp_inc_udpinerrors ();
 		  pbuf_free (p);
 		  goto end;
 		}
@@ -270,7 +267,6 @@ udp_input (struct pbuf *p, struct netif *inp)
 			   ("udp_input: UDP Lite datagram discarded due to failing checksum\n"));
 	      UDP_STATS_INC (udp.chkerr);
 	      UDP_STATS_INC (udp.drop);
-	      snmp_inc_udpinerrors ();
 	      pbuf_free (p);
 	      goto end;
 	    }
@@ -290,7 +286,6 @@ udp_input (struct pbuf *p, struct netif *inp)
 			       ("udp_input: UDP datagram discarded due to failing checksum\n"));
 		  UDP_STATS_INC (udp.chkerr);
 		  UDP_STATS_INC (udp.drop);
-		  snmp_inc_udpinerrors ();
 		  pbuf_free (p);
 		  goto end;
 		}
@@ -302,13 +297,11 @@ udp_input (struct pbuf *p, struct netif *inp)
 	  /* Can we cope with this failing? Just assert for now */
 	  LWIP_ASSERT ("pbuf_header failed\n", 0);
 	  UDP_STATS_INC (udp.drop);
-	  snmp_inc_udpinerrors ();
 	  pbuf_free (p);
 	  goto end;
 	}
       if (pcb != NULL)
 	{
-	  snmp_inc_udpindatagrams ();
 	  /* callback */
 	  if (pcb->recv != NULL)
 	    {
@@ -341,7 +334,6 @@ udp_input (struct pbuf *p, struct netif *inp)
 #endif /* LWIP_ICMP */
 	  UDP_STATS_INC (udp.proterr);
 	  UDP_STATS_INC (udp.drop);
-	  snmp_inc_udpnoports ();
 	  pbuf_free (p);
 	}
     }
@@ -614,9 +606,6 @@ udp_sendto_if (struct udp_pcb * pcb, struct pbuf * p,
       netif->addr_hint = NULL;
 #endif /* LWIP_NETIF_HWADDRHINT */
     }
-  /* TODO: must this be increased even if error occured? */
-  snmp_inc_udpoutdatagrams ();
-
   /* did we chain a separate header pbuf earlier? */
   if (q != p)
     {
@@ -726,7 +715,6 @@ udp_bind (struct udp_pcb * pcb, struct ip_addr * ipaddr, u16_t port)
 	}
     }
   pcb->local_port = port;
-  snmp_insert_udpidx_tree (pcb);
   /* pcb not active yet? */
   if (rebind == 0)
     {
@@ -873,7 +861,6 @@ udp_remove (struct udp_pcb *pcb)
 {
   struct udp_pcb *pcb2;
 
-  snmp_delete_udpidx_tree (pcb);
   /* pcb to be removed is first in list? */
   if (udp_pcbs == pcb)
     {
