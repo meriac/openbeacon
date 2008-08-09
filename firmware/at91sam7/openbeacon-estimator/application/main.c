@@ -29,7 +29,7 @@
 #include <stdio.h>
 
 #include <FreeRTOS.h>
-#include <AT91SAM7S.h>
+#include <AT91SAM7.h>
 #include <USB-CDC.h>
 #include <task.h>
 #include <beacontypes.h>
