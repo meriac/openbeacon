@@ -67,16 +67,16 @@ Changes from V3.2.4
 #define emacETHADDR5 0x22
 
 /* The IP address being used. */
-#define emacIPADDR0 172
-#define emacIPADDR1 25
-#define emacIPADDR2 218
-#define emacIPADDR3 205
+#define emacIPADDR0 10
+#define emacIPADDR1 254
+#define emacIPADDR2 0
+#define emacIPADDR3 100
 
 /* The gateway address being used. */
-#define emacGATEWAY_ADDR0 172
-#define emacGATEWAY_ADDR1 25
-#define emacGATEWAY_ADDR2 218
-#define emacGATEWAY_ADDR3 3
+#define emacGATEWAY_ADDR0 10
+#define emacGATEWAY_ADDR1 254
+#define emacGATEWAY_ADDR2 0
+#define emacGATEWAY_ADDR3 1
 
 /* The network mask being used. */
 #define emacNET_MASK0 255

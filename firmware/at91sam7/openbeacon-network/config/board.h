@@ -73,7 +73,7 @@
 /* utils settings                */
 /*-------------------------------*/
 
-#define DISABLE_WATCHDOG
+//#define DISABLE_WATCHDOG
 #define CONFIG_TEA_ENABLEDECODE
 
 /*-------------------------------*/

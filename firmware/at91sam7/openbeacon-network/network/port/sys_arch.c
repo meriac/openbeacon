@@ -97,16 +97,17 @@ sys_mbox_post (sys_mbox_t mbox, void *data)
 err_t
 sys_mbox_trypost (sys_mbox_t mbox, void *data)
 {
-  return (xQueueSend (mbox, &data, (portTickType) 0) == errQUEUE_FULL) ? ERR_MEM : ERR_OK;
+  return (xQueueSend (mbox, &data, (portTickType) 0) ==
+	  errQUEUE_FULL) ? ERR_MEM : ERR_OK;
 }
 
 u32_t
 sys_arch_mbox_tryfetch (sys_mbox_t mbox, void **msg)
 {
   void *dummyptr;
-  
+
   if (msg == NULL)
-      msg = &dummyptr;
+    msg = &dummyptr;
 
   return xQueueReceive (mbox, &(*msg), 0) ? 0 : SYS_MBOX_EMPTY;
 }
@@ -135,7 +136,7 @@ sys_arch_mbox_fetch (sys_mbox_t mbox, void **msg, u32_t timeout)
   StartTime = xTaskGetTickCount ();
 
   if (msg == NULL)
-      msg = &dummyptr;
+    msg = &dummyptr;
 
   if (timeout != 0)
 
@@ -351,14 +352,15 @@ sys_arch_timeouts (void)
   the priority are system dependent.
 */
 sys_thread_t
-sys_thread_new (char *name, void (*thread) (void *arg), void *arg, int stacksize, int prio)
+sys_thread_new (char *name, void (*thread) (void *arg), void *arg,
+		int stacksize, int prio)
 {
   xTaskHandle CreatedTask;
   int result;
 
   /* The first time this is called we are creating the lwIP handler. */
   result = xTaskCreate (thread, (signed portCHAR *) name, stacksize,
-    arg, prio, &CreatedTask);
+			arg, prio, &CreatedTask);
 
   // For each task created, store the task handle (pid) in the timers array.
   // This scheme doesn't allow for threads to be deleted

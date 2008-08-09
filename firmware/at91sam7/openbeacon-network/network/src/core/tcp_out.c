@@ -148,10 +148,12 @@ tcp_enqueue (struct tcp_pcb * pcb, void *arg, u16_t len,
 		(u16_t) flags, (u16_t) apiflags));
   LWIP_ERROR
     ("tcp_enqueue: len == 0 || optlen == 0 (programmer violates API)",
-     ((len == 0) || (optlen == 0)), return ERR_ARG;);
+     ((len == 0) || (optlen == 0)), return ERR_ARG;
+    );
   LWIP_ERROR
     ("tcp_enqueue: arg == NULL || optdata == NULL (programmer violates API)",
-     ((arg == NULL) || (optdata == NULL)), return ERR_ARG;);
+     ((arg == NULL) || (optdata == NULL)), return ERR_ARG;
+    );
   /* fail on too much data */
   if (len > pcb->snd_buf)
     {

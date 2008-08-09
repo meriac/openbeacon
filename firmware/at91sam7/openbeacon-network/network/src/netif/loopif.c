@@ -72,7 +72,8 @@ loopif_poll (struct netif *netif)
   struct pbuf *in, *in_end;
   struct loopif_private *priv = (struct loopif_private *) netif->state;
 
-  LWIP_ERROR ("priv != NULL", (priv != NULL), return;);
+  LWIP_ERROR ("priv != NULL", (priv != NULL), return;
+    );
 
   do
     {

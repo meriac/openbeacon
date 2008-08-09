@@ -115,7 +115,7 @@ extern "C"
 #ifdef PACK_STRUCT_USE_INCLUDES
 #  include "arch/bpstruct.h"
 #endif
-    PACK_STRUCT_BEGIN struct ip_hdr
+  PACK_STRUCT_BEGIN struct ip_hdr
   {
     /* version / header length / type of service */
     PACK_STRUCT_FIELD (u16_t _v_hl_tos);

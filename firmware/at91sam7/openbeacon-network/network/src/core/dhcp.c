@@ -665,7 +665,8 @@ dhcp_start (struct netif *netif)
   struct dhcp *dhcp;
   err_t result = ERR_OK;
 
-  LWIP_ERROR ("netif != NULL", (netif != NULL), return ERR_ARG;);
+  LWIP_ERROR ("netif != NULL", (netif != NULL), return ERR_ARG;
+    );
   dhcp = netif->dhcp;
   LWIP_DEBUGF (DHCP_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_STATE,
 	       ("dhcp_start(netif=%p) %c%c%" U16_F "\n", (void *) netif,
@@ -820,7 +821,8 @@ dhcp_inform (struct netif *netif)
 void
 dhcp_arp_reply (struct netif *netif, struct ip_addr *addr)
 {
-  LWIP_ERROR ("netif != NULL", (netif != NULL), return;);
+  LWIP_ERROR ("netif != NULL", (netif != NULL), return;
+    );
   LWIP_DEBUGF (DHCP_DEBUG | LWIP_DBG_TRACE | 3, ("dhcp_arp_reply()\n"));
   /* is a DHCP client doing an ARP check? */
   if ((netif->dhcp != NULL) && (netif->dhcp->state == DHCP_CHECKING))
@@ -994,9 +996,11 @@ dhcp_bind (struct netif *netif)
   u32_t timeout;
   struct dhcp *dhcp;
   struct ip_addr sn_mask, gw_addr;
-  LWIP_ERROR ("dhcp_bind: netif != NULL", (netif != NULL), return;);
+  LWIP_ERROR ("dhcp_bind: netif != NULL", (netif != NULL), return;
+    );
   dhcp = netif->dhcp;
-  LWIP_ERROR ("dhcp_bind: dhcp != NULL", (dhcp != NULL), return;);
+  LWIP_ERROR ("dhcp_bind: dhcp != NULL", (dhcp != NULL), return;
+    );
   LWIP_DEBUGF (DHCP_DEBUG | LWIP_DBG_TRACE | 3,
 	       ("dhcp_bind(netif=%p) %c%c%" U16_F "\n", (void *) netif,
 		netif->name[0], netif->name[1], (u16_t) netif->num));
@@ -1304,7 +1308,8 @@ void
 dhcp_stop (struct netif *netif)
 {
   struct dhcp *dhcp = netif->dhcp;
-  LWIP_ERROR ("dhcp_stop: netif != NULL", (netif != NULL), return;);
+  LWIP_ERROR ("dhcp_stop: netif != NULL", (netif != NULL), return;
+    );
 
   LWIP_DEBUGF (DHCP_DEBUG | LWIP_DBG_TRACE | 3, ("dhcp_stop()\n"));
   /* netif is DHCP configured? */
@@ -1412,8 +1417,10 @@ static err_t
 dhcp_unfold_reply (struct dhcp *dhcp)
 {
   u16_t ret;
-  LWIP_ERROR ("dhcp != NULL", (dhcp != NULL), return ERR_ARG;);
-  LWIP_ERROR ("dhcp->p != NULL", (dhcp->p != NULL), return ERR_VAL;);
+  LWIP_ERROR ("dhcp != NULL", (dhcp != NULL), return ERR_ARG;
+    );
+  LWIP_ERROR ("dhcp->p != NULL", (dhcp->p != NULL), return ERR_VAL;
+    );
   /* free any left-overs from previous unfolds */
   dhcp_free_reply (dhcp);
   /* options present? */
@@ -1631,10 +1638,12 @@ dhcp_create_request (struct netif *netif)
   struct dhcp *dhcp;
   u16_t i;
   LWIP_ERROR ("dhcp_create_request: netif != NULL", (netif != NULL),
-	      return ERR_ARG;);
+	      return ERR_ARG;
+    );
   dhcp = netif->dhcp;
   LWIP_ERROR ("dhcp_create_request: dhcp != NULL", (dhcp != NULL),
-	      return ERR_VAL;);
+	      return ERR_VAL;
+    );
   LWIP_ASSERT ("dhcp_create_request: dhcp->p_out == NULL",
 	       dhcp->p_out == NULL);
   LWIP_ASSERT ("dhcp_create_request: dhcp->msg_out == NULL",
@@ -1705,9 +1714,11 @@ static void
 dhcp_delete_request (struct netif *netif)
 {
   struct dhcp *dhcp;
-  LWIP_ERROR ("dhcp_delete_request: netif != NULL", (netif != NULL), return;);
+  LWIP_ERROR ("dhcp_delete_request: netif != NULL", (netif != NULL), return;
+    );
   dhcp = netif->dhcp;
-  LWIP_ERROR ("dhcp_delete_request: dhcp != NULL", (dhcp != NULL), return;);
+  LWIP_ERROR ("dhcp_delete_request: dhcp != NULL", (dhcp != NULL), return;
+    );
   LWIP_ASSERT ("dhcp_delete_request: dhcp->p_out != NULL",
 	       dhcp->p_out != NULL);
   LWIP_ASSERT ("dhcp_delete_request: dhcp->msg_out != NULL",
@@ -1731,7 +1742,8 @@ dhcp_delete_request (struct netif *netif)
 static void
 dhcp_option_trailer (struct dhcp *dhcp)
 {
-  LWIP_ERROR ("dhcp_option_trailer: dhcp != NULL", (dhcp != NULL), return;);
+  LWIP_ERROR ("dhcp_option_trailer: dhcp != NULL", (dhcp != NULL), return;
+    );
   LWIP_ASSERT ("dhcp_option_trailer: dhcp->msg_out != NULL\n",
 	       dhcp->msg_out != NULL);
   LWIP_ASSERT

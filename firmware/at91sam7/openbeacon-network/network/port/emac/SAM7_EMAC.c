@@ -80,7 +80,6 @@ Changes from V4.0.4
 /* Standard includes. */
 #include <FreeRTOS.h>
 #include <board.h>
-#include <led.h>
 #include <string.h>
 /* Scheduler includes. */
 #include <semphr.h>
@@ -92,6 +91,8 @@ Changes from V4.0.4
 /* Hardware specific includes. */
 #include "Emac.h"
 #include "mii.h"
+
+#include <arch/cc.h>
 
 /* USE_RMII_INTERFACE must be defined as 1 to use an RMII interface, or 0
 to use an MII interface. */
@@ -119,23 +120,24 @@ one not be immediately available when trying to transmit a frame. */
 #define emacBLOCK_TIME_WAITING_FOR_INPUT	( ( portTickType ) 100 )
 
 /* Peripheral setup for the EMAC. */
-#define emacPERIPHERAL_A_SETUP 		( ( unsigned portLONG ) AT91C_PB2_ETX0			) | \
-  ((unsigned portLONG) AT91C_PB12_ETXER) | \
-  ((unsigned portLONG) AT91C_PB16_ECOL) | \
-  ((unsigned portLONG) AT91C_PB11_ETX3) | \
-  ((unsigned portLONG) AT91C_PB6_ERX1) | \
-  ((unsigned portLONG) AT91C_PB15_ERXDV) | \
-  ((unsigned portLONG) AT91C_PB13_ERX2) | \
-  ((unsigned portLONG) AT91C_PB3_ETX1) | \
-  ((unsigned portLONG) AT91C_PB8_EMDC) | \
-  ((unsigned portLONG) AT91C_PB5_ERX0) | \
-  ((unsigned portLONG) AT91C_PB14_ERX3) | \
-  ((unsigned portLONG) AT91C_PB4_ECRS_ECRSDV) | \
-  ((unsigned portLONG) AT91C_PB1_ETXEN) | \
-  ((unsigned portLONG) AT91C_PB10_ETX2) | \
+#define emacPERIPHERAL_A_SETUP \
   ((unsigned portLONG) AT91C_PB0_ETXCK_EREFCK) | \
-  ((unsigned portLONG) AT91C_PB9_EMDIO) | \
+  ((unsigned portLONG) AT91C_PB1_ETXEN) | \
+  ((unsigned portLONG) AT91C_PB2_ETX0) | \
+  ((unsigned portLONG) AT91C_PB3_ETX1) | \
+  ((unsigned portLONG) AT91C_PB4_ECRS_ECRSDV) | \
+  ((unsigned portLONG) AT91C_PB5_ERX0) | \
+  ((unsigned portLONG) AT91C_PB6_ERX1) | \
   ((unsigned portLONG) AT91C_PB7_ERXER) | \
+  ((unsigned portLONG) AT91C_PB8_EMDC) | \
+  ((unsigned portLONG) AT91C_PB9_EMDIO) | \
+  ((unsigned portLONG) AT91C_PB10_ETX2) | \
+  ((unsigned portLONG) AT91C_PB11_ETX3) | \
+  ((unsigned portLONG) AT91C_PB12_ETXER) | \
+  ((unsigned portLONG) AT91C_PB13_ERX2) | \
+  ((unsigned portLONG) AT91C_PB14_ERX3) | \
+  ((unsigned portLONG) AT91C_PB15_ERXDV) | \
+  ((unsigned portLONG) AT91C_PB16_ECOL) | \
   ((unsigned portLONG) AT91C_PB17_ERXCK);
 
 /* Misc defines. */
@@ -807,7 +809,7 @@ prvSetupEMACInterrupt (void)
 static portBASE_TYPE
 prvProbePHY (void)
 {
-  unsigned portLONG ulPHYId1, ulPHYId2;//, ulStatus;
+  unsigned portLONG ulPHYId1, ulPHYId2;	//, ulStatus;
   portBASE_TYPE xReturn = pdPASS;
 
   /* Code supplied by Atmel (reformatted) ----------------- */
@@ -826,6 +828,8 @@ prvProbePHY (void)
      Bits 3:0 Revision Number Four bit manufacturer?s revision number.
      0001 stands for Rev. A, etc.
    */
+
+  debug_printf ("PHY_ID1=%04X PHY_ID2=%04X\n", ulPHYId1, ulPHYId2);
 #if 0
   if (((ulPHYId1 << 16) | (ulPHYId2 & 0xfff0)) != MII_DM9161_ID)
 

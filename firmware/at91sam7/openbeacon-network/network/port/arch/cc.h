@@ -49,7 +49,7 @@ typedef int sys_prot_t;
 #define PACK_STRUCT_END
 #define PACK_STRUCT_FIELD(x) x
 
-extern int debug_printf(const char *fmt, ...);
+extern int debug_printf (const char *fmt, ...);
 
 #define LWIP_PLATFORM_ASSERT debug_printf
 #define LWIP_PLATFORM_DIAG debug_printf

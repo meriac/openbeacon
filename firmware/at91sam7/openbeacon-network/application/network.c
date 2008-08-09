@@ -49,54 +49,59 @@
 #include "netif/loopif.h"
 #include "env.h"
 /*------------------------------------------------------------*/
-extern err_t ethernetif_init( struct netif *netif );
+extern err_t ethernetif_init (struct netif *netif);
 /*------------------------------------------------------------*/
-
 
 /*------------------------------------------------------------*/
 void
 vNetworkThread (void *pvParameters)
 {
+  (void) pvParameters;
   static struct netif EMAC_if;
-  struct ip_addr xIpAddr, xNetMask, xGateway;
-  
-  (void)pvParameters;
+  static struct ip_addr xIpAddr, xNetMask, xGateway;
+
+  /* Initialize lwIP and its interface layer. */
+  lwip_init ();
 
   /* Create and configure the EMAC interface. */
-  netif_add(&EMAC_if, &xIpAddr, &xNetMask, &xGateway, NULL, ethernetif_init, tcpip_input);
-  
+  IP4_ADDR (&xIpAddr, emacIPADDR0, emacIPADDR1, emacIPADDR2, emacIPADDR3);
+  IP4_ADDR (&xNetMask, emacNET_MASK0, emacNET_MASK1, emacNET_MASK2,
+	    emacNET_MASK3);
+  IP4_ADDR (&xGateway, emacGATEWAY_ADDR0, emacGATEWAY_ADDR1,
+	    emacGATEWAY_ADDR2, emacGATEWAY_ADDR3);
+  netif_add (&EMAC_if, &xIpAddr, &xNetMask, &xGateway, NULL, ethernetif_init,
+	     tcpip_input);
+
   /* make it the default interface */
   netif_set_default (&EMAC_if);
 
   /* dhcp kick-off */
-  dhcp_coarse_tmr ();
+/*  dhcp_coarse_tmr ();
   dhcp_fine_tmr ();
-  dhcp_start (&EMAC_if);
+  dhcp_start (&EMAC_if);*/
 
   /* bring it up */
   netif_set_up (&EMAC_if);
 
   debug_printf ("FreeRTOS based WMCU firmware version %s starting.\n",
 		VERSION);
-//  debug_printf ("configured to line %d\n", env.e.assigned_line);
-  
-  while	(pdTRUE)
-  {
-    vTaskDelay (500 / portTICK_RATE_MS);
-    vLedSetRed(1);
-    vTaskDelay (500 / portTICK_RATE_MS);
-    vLedSetRed(0);
-  }
+		
+  vLedSetGreen (1);
+
+  while (pdTRUE)
+    {
+      vTaskDelay (500 / portTICK_RATE_MS);
+      vLedSetRed (1);
+      vTaskDelay (500 / portTICK_RATE_MS);
+      vLedSetRed (0);
+    }
 }
 
 /*------------------------------------------------------------*/
 void
 vNetworkInit (void)
 {
-  /* Initialize lwIP and its interface layer. */
-  lwip_init ();
-  
-    /* Create the lwIP task.  This uses the lwIP RTOS abstraction layer. */
+  /* Create the lwIP task.  This uses the lwIP RTOS abstraction layer. */
   xTaskCreate (vNetworkThread, (signed portCHAR *) "NET",
-    TASK_NET_STACK, NULL, TASK_NET_PRIORITY, NULL);
+	       TASK_NET_STACK, NULL, TASK_NET_PRIORITY, NULL);
 }

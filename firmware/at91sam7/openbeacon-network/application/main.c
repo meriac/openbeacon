@@ -50,9 +50,7 @@ prvSetupHardware (void)
   /*  Enable the peripheral clock. */
   AT91C_BASE_PMC->PMC_PCER =
     (1 << AT91C_ID_PIOA) |
-    (1 << AT91C_ID_PIOB) |
-    (1 << AT91C_ID_EMAC) |
-    (1 << AT91C_ID_SPI1);
+    (1 << AT91C_ID_PIOB) | (1 << AT91C_ID_EMAC) | (1 << AT91C_ID_SPI1);
 
 }
 
@@ -63,7 +61,7 @@ vApplicationIdleHook (void)
 #ifndef DISABLE_WATCHDOG
   /* Restart watchdog, has been enabled in Cstartup_SAM7.c */
   AT91F_WDTRestart (AT91C_BASE_WDTC);
-#endif/*DISABLE_WATCHDOG*/
+#endif /*DISABLE_WATCHDOG */
 }
 
 /**********************************************************************/
@@ -73,15 +71,13 @@ main (void)
   prvSetupHardware ();
 
   vLedInit ();
- 
+
   vNetworkInit ();
 
   xTaskCreate (vUSBCDCTask, (signed portCHAR *) "USB", TASK_USB_STACK,
 	       NULL, TASK_USB_PRIORITY, NULL);
 
   vInitProtocolLayer ();
-
-//  vLedSetGreen (1);
 
   vTaskStartScheduler ();
 

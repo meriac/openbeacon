@@ -35,6 +35,15 @@
 #define LWIP_NOASSERT 1		// To suppress some errors for now (no debug output)
 #define SYS_LIGHTWEIGHT_PROT            1
 
+#define LWIP_DEBUG DBG_OFF
+
+#define S16_F "i"
+#define U16_F "u"
+#define X16_F "x"
+#define X32_F "x"
+#define U32_F "u"
+#define S32_F "i"
+
 #define TCPIP_THREAD_PRIO	3
 
 /* ---------- Memory options ---------- */

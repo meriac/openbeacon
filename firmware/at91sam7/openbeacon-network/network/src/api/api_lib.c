@@ -137,7 +137,8 @@ enum netconn_type
 netconn_type (struct netconn *conn)
 {
   LWIP_ERROR ("netconn_type: invalid conn", (conn != NULL),
-	      return NETCONN_INVALID;);
+	      return NETCONN_INVALID;
+    );
   return conn->type;
 }
 
@@ -158,12 +159,12 @@ netconn_getaddr (struct netconn * conn, struct ip_addr * addr, u16_t * port,
 {
   struct api_msg msg;
 
-  LWIP_ERROR ("netconn_getaddr: invalid conn", (conn != NULL),
-	      return ERR_ARG;);
-  LWIP_ERROR ("netconn_getaddr: invalid addr", (addr != NULL),
-	      return ERR_ARG;);
-  LWIP_ERROR ("netconn_getaddr: invalid port", (port != NULL),
-	      return ERR_ARG;);
+  LWIP_ERROR ("netconn_getaddr: invalid conn", (conn != NULL), return ERR_ARG;
+    );
+  LWIP_ERROR ("netconn_getaddr: invalid addr", (addr != NULL), return ERR_ARG;
+    );
+  LWIP_ERROR ("netconn_getaddr: invalid port", (port != NULL), return ERR_ARG;
+    );
 
   msg.function = do_getaddr;
   msg.msg.conn = conn;
@@ -190,7 +191,8 @@ netconn_bind (struct netconn * conn, struct ip_addr * addr, u16_t port)
 {
   struct api_msg msg;
 
-  LWIP_ERROR ("netconn_bind: invalid conn", (conn != NULL), return ERR_ARG;);
+  LWIP_ERROR ("netconn_bind: invalid conn", (conn != NULL), return ERR_ARG;
+    );
 
   msg.function = do_bind;
   msg.msg.conn = conn;
@@ -213,8 +215,8 @@ netconn_connect (struct netconn * conn, struct ip_addr * addr, u16_t port)
 {
   struct api_msg msg;
 
-  LWIP_ERROR ("netconn_connect: invalid conn", (conn != NULL),
-	      return ERR_ARG;);
+  LWIP_ERROR ("netconn_connect: invalid conn", (conn != NULL), return ERR_ARG;
+    );
 
   msg.function = do_connect;
   msg.msg.conn = conn;
@@ -237,7 +239,8 @@ netconn_disconnect (struct netconn * conn)
   struct api_msg msg;
 
   LWIP_ERROR ("netconn_disconnect: invalid conn", (conn != NULL),
-	      return ERR_ARG;);
+	      return ERR_ARG;
+    );
 
   msg.function = do_disconnect;
   msg.msg.conn = conn;
@@ -261,8 +264,8 @@ netconn_listen_with_backlog (struct netconn * conn, u8_t backlog)
   /* This does no harm. If TCP_LISTEN_BACKLOG is off, backlog is unused. */
   LWIP_UNUSED_ARG (backlog);
 
-  LWIP_ERROR ("netconn_listen: invalid conn", (conn != NULL),
-	      return ERR_ARG;);
+  LWIP_ERROR ("netconn_listen: invalid conn", (conn != NULL), return ERR_ARG;
+    );
 
   msg.function = do_listen;
   msg.msg.conn = conn;
@@ -284,9 +287,11 @@ netconn_accept (struct netconn *conn)
 {
   struct netconn *newconn;
 
-  LWIP_ERROR ("netconn_accept: invalid conn", (conn != NULL), return NULL;);
+  LWIP_ERROR ("netconn_accept: invalid conn", (conn != NULL), return NULL;
+    );
   LWIP_ERROR ("netconn_accept: invalid acceptmbox",
-	      (conn->acceptmbox != SYS_MBOX_NULL), return NULL;);
+	      (conn->acceptmbox != SYS_MBOX_NULL), return NULL;
+    );
 
 #if LWIP_SO_RCVTIMEO
   if (sys_arch_mbox_fetch
@@ -332,7 +337,8 @@ netconn_recv (struct netconn *conn)
   struct pbuf *p;
   u16_t len;
 
-  LWIP_ERROR ("netconn_recv: invalid conn", (conn != NULL), return NULL;);
+  LWIP_ERROR ("netconn_recv: invalid conn", (conn != NULL), return NULL;
+    );
 
   if (conn->recvmbox == SYS_MBOX_NULL)
     {
@@ -485,7 +491,8 @@ netconn_send (struct netconn * conn, struct netbuf * buf)
 {
   struct api_msg msg;
 
-  LWIP_ERROR ("netconn_send: invalid conn", (conn != NULL), return ERR_ARG;);
+  LWIP_ERROR ("netconn_send: invalid conn", (conn != NULL), return ERR_ARG;
+    );
 
   LWIP_DEBUGF (API_LIB_DEBUG,
 	       ("netconn_send: sending %d bytes\n", buf->p->tot_len));
@@ -513,9 +520,11 @@ netconn_write (struct netconn * conn, const void *dataptr, int size,
 {
   struct api_msg msg;
 
-  LWIP_ERROR ("netconn_write: invalid conn", (conn != NULL), return ERR_ARG;);
+  LWIP_ERROR ("netconn_write: invalid conn", (conn != NULL), return ERR_ARG;
+    );
   LWIP_ERROR ("netconn_write: invalid conn->type",
-	      (conn->type == NETCONN_TCP), return ERR_VAL;);
+	      (conn->type == NETCONN_TCP), return ERR_VAL;
+    );
 
   msg.function = do_write;
   msg.msg.conn = conn;
@@ -540,7 +549,8 @@ netconn_close (struct netconn * conn)
 {
   struct api_msg msg;
 
-  LWIP_ERROR ("netconn_close: invalid conn", (conn != NULL), return ERR_ARG;);
+  LWIP_ERROR ("netconn_close: invalid conn", (conn != NULL), return ERR_ARG;
+    );
 
   msg.function = do_close;
   msg.msg.conn = conn;
@@ -568,7 +578,8 @@ netconn_join_leave_group (struct netconn * conn,
   struct api_msg msg;
 
   LWIP_ERROR ("netconn_join_leave_group: invalid conn", (conn != NULL),
-	      return ERR_ARG;);
+	      return ERR_ARG;
+    );
 
   msg.function = do_join_leave_group;
   msg.msg.conn = conn;
@@ -599,9 +610,11 @@ netconn_gethostbyname (const char *name, struct ip_addr * addr)
   sys_sem_t sem;
 
   LWIP_ERROR ("netconn_gethostbyname: invalid name", (name != NULL),
-	      return ERR_ARG;);
+	      return ERR_ARG;
+    );
   LWIP_ERROR ("netconn_gethostbyname: invalid addr", (addr != NULL),
-	      return ERR_ARG;);
+	      return ERR_ARG;
+    );
 
   sem = sys_sem_new (0);
   if (sem == SYS_SEM_NULL)

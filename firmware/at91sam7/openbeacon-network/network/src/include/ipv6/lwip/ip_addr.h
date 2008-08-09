@@ -79,15 +79,11 @@ extern "C"
   u8_t ip_addr_isany (struct ip_addr *addr);
 
 #define ip_addr_debug_print(debug, ipaddr) \
-        LWIP_DEBUGF(debug, ("%"X32_F":%"X32_F":%"X32_F":%"X32_F":%"X32_F":%"X32_F":%"X32_F":%"X32_F"\n", \
-         (ntohl(ipaddr->addr[0]) >> 16) & 0xffff, \
-         ntohl(ipaddr->addr[0]) & 0xffff, \
-         (ntohl(ipaddr->addr[1]) >> 16) & 0xffff, \
-         ntohl(ipaddr->addr[1]) & 0xffff, \
-         (ntohl(ipaddr->addr[2]) >> 16) & 0xffff, \
-         ntohl(ipaddr->addr[2]) & 0xffff, \
-         (ntohl(ipaddr->addr[3]) >> 16) & 0xffff, \
-         ntohl(ipaddr->addr[3]) & 0xffff));
+        LWIP_DEBUGF(debug, ("%i.%i.%i.%i\n", \
+         ntohl(ipaddr->addr[0]), \
+         ntohl(ipaddr->addr[1]), \
+         ntohl(ipaddr->addr[2]), \
+         ntohl(ipaddr->addr[3])))
 
 #ifdef __cplusplus
 }
