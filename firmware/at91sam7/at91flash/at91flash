@@ -20,6 +20,7 @@ if [[ -a $1 ]]; then
 set_clock
 unlock_regions
 flash $1
+boot_from_flash
 ENDOFMYTEXT
     echo '10. done!'
 else
