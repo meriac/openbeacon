@@ -733,14 +733,14 @@
  * field.
  */
 #ifndef LWIP_NETIF_HOSTNAME
-#define LWIP_NETIF_HOSTNAME             0
+#define LWIP_NETIF_HOSTNAME             1
 #endif
 
 /**
  * LWIP_NETIF_API==1: Support netif api (in netifapi.c)
  */
 #ifndef LWIP_NETIF_API
-#define LWIP_NETIF_API                  0
+#define LWIP_NETIF_API                  1
 #endif
 
 /**
@@ -748,7 +748,7 @@
  * changes its up/down status (i.e., due to DHCP IP acquistion)
  */
 #ifndef LWIP_NETIF_STATUS_CALLBACK
-#define LWIP_NETIF_STATUS_CALLBACK      0
+#define LWIP_NETIF_STATUS_CALLBACK      1
 #endif
 
 /**
@@ -756,7 +756,7 @@
  * whenever the link changes (i.e., link down)
  */
 #ifndef LWIP_NETIF_LINK_CALLBACK
-#define LWIP_NETIF_LINK_CALLBACK        0
+#define LWIP_NETIF_LINK_CALLBACK        1
 #endif
 
 /**
@@ -816,7 +816,7 @@
  * sys_thread_new() when the thread is created.
  */
 #ifndef TCPIP_THREAD_STACKSIZE
-#define TCPIP_THREAD_STACKSIZE          0
+#define TCPIP_THREAD_STACKSIZE          512
 #endif
 
 /**
@@ -977,7 +977,7 @@
  * LWIP_SOCKET==1: Enable Socket API (require to use sockets.c)
  */
 #ifndef LWIP_SOCKET
-#define LWIP_SOCKET                     1
+#define LWIP_SOCKET                     0
 #endif
 
 /**
@@ -985,7 +985,7 @@
  * (only used if you use sockets.c)
  */
 #ifndef LWIP_COMPAT_SOCKETS
-#define LWIP_COMPAT_SOCKETS             1
+#define LWIP_COMPAT_SOCKETS             0
 #endif
 
 /**
@@ -994,7 +994,7 @@
  * names (read, write & close). (only used if you use sockets.c)
  */
 #ifndef LWIP_POSIX_SOCKETS_IO_NAMES
-#define LWIP_POSIX_SOCKETS_IO_NAMES     1
+#define LWIP_POSIX_SOCKETS_IO_NAMES     0
 #endif
 
 /**
