@@ -28,7 +28,7 @@
 #include "usbio.h"
 #include "commandline.h"
 #include "cmd_main.h"
-
+#include "BurgWaechter_TSE_3000/lock.h"
 
 #define SecureKeyLen 16		// 16 Byte = 128 Bit
 
@@ -49,6 +49,8 @@ tCmdlineMenu cmdlineMenuKey[] = {
   {"count", cmd_Key_Count}
   ,
   {"dump", cmd_Key_Dump}
+  ,
+  {"open", cmd_Key_Open}
 };
 
 /**********************************************************************/
@@ -56,7 +58,7 @@ tCmdlineMenu cmdlineMenuKey[] = {
 void
 cmd_Key_init (void)
 {
-  CmdlineMenuAnzahl = 6;
+  CmdlineMenuAnzahl = 8;
   strcpy ((char *) (CmdlineMenuPrompt), "key>");
   CmdlineMenuItem = cmdlineMenuKey;
 }
@@ -128,4 +130,13 @@ void
 cmd_Key_Dump (void)
 {
   DumpStringToUSB ("*dump...#\n\r");
+}
+
+/**********************************************************************/
+
+void
+cmd_Key_Open (void)
+{
+  DumpStringToUSB ("open...#\n\r");
+  vOpenLock ();
 }

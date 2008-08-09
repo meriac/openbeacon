@@ -16,7 +16,8 @@ APP_SRC= \
   application/cmd/login.c \
   application/cmd/usbio.c \
   application/cmd/vsprintf.c \
-  application/cmd/vt100.c  
+  application/cmd/vt100.c \
+  application/BurgWaechter_TSE_3000/lock.c
   
 all: $(TARGET).bin
   

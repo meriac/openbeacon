@@ -19,16 +19,9 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
+#ifndef LOCK_H_
+#define LOCK_H_
+void vOpenLock (void);
+portBASE_TYPE vLockInit (void);
 
-#ifndef CMD_KEY_H_
-#define CMD_KEY_H_
-
-void cmd_Key_init (void);
-void cmd_Key_F_help (void);
-void cmd_Key_Add (void);
-void cmd_Key_Del (void);
-void cmd_Key_Count (void);
-void cmd_Key_Dump (void);
-void cmd_Key_Open (void);
-
-#endif /*CMD_KEY_H_ */
+#endif /*LOCK_H_ */

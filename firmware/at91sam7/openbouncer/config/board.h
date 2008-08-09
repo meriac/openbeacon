@@ -53,6 +53,12 @@
 #define LED_RED		(1L<<20)
 #define LED_MASK	(LED_GREEN|LED_RED)
 
+/*-----------------*/
+/* Lock Cylinder   */
+/*-----------------*/
+
+#define CYLINDER_IO	(1L<<17)
+
 /*-------------------------------*/
 /* nRF declaration               */
 /*-------------------------------*/
