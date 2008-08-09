@@ -29,6 +29,7 @@
 #	***************************************************************************
 
 CC=$(CROSS)arm-elf-gcc
+LD=$(CROSS)arm-elf-ld
 OBJCOPY=$(CROSS)arm-elf-objcopy
 OBJDUMP=$(CROSS)arm-elf-objdump
 AR=$(CROSS)arm-elf-ar
@@ -66,7 +67,7 @@ $(APP_CFLAGS) \
 
 CRT0=$(CORE)os/boot/boot.s
 
-LINKER_FLAGS=-Xlinker -o$(TARGET).elf -Xlinker -M -Xlinker -Map=$(TARGET).map
+LINKER_FLAGS=-Xlinker -s -Xlinker -static -Xlinker --gc-sections -Xlinker -o$(TARGET).elf -Xlinker -M -Xlinker -Map=$(TARGET).map
 
 #
 # Source files that must be built to ARM mode.
