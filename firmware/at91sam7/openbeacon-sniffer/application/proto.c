@@ -181,7 +181,6 @@ vnRFtaskRx (void *parameter)
 	  while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
 
 	  vLedSetRed (0);
-	  nRFAPI_GetFifoStatus ();
 	}
       nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
     }
