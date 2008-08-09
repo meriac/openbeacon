@@ -35,7 +35,10 @@
 #define LWIP_NOASSERT 1		// To suppress some errors for now (no debug output)
 #define SYS_LIGHTWEIGHT_PROT            1
 
-#define LWIP_DEBUG DBG_OFF
+#define LWIP_DEBUG
+//#define IP_DEBUG (LWIP_DBG_ON|LWIP_DBG_LEVEL_WARNING)
+//#define ETHARP_DEBUG (LWIP_DBG_ON|LWIP_DBG_LEVEL_WARNING)
+#define ICMP_DEBUG LWIP_DBG_ON
 
 #define S16_F "i"
 #define U16_F "u"
@@ -128,14 +131,14 @@ a lot of data that needs to be copied, this should be set high. */
 #define TCP_SYNMAXRTX           4
 
 /* ---------- ARP options ---------- */
-#define ARP_TABLE_SIZE 10
+#define ARP_TABLE_SIZE 16
 #define ARP_QUEUEING 1
 
 /* ---------- IP options ---------- */
 /* Define IP_FORWARD to 1 if you wish to have the ability to forward
    IP packets across network interfaces. If you are going to run lwIP
    on a device with only one network interface, define this to 0. */
-#define IP_FORWARD              1
+#define IP_FORWARD              0
 
 /* If defined to 1, IP options are allowed (but not parsed). If
    defined to 0, all packets with IP options are dropped. */
@@ -149,12 +152,16 @@ a lot of data that needs to be copied, this should be set high. */
 /* Define LWIP_DHCP to 1 if you want DHCP configuration of
    interfaces. DHCP is not implemented in lwIP 0.5.1, however, so
    turning this on does currently not work. */
-#define LWIP_DHCP               1
+#define LWIP_DHCP               0
 #define LWIP_ARP                1
+#define LWIP_ICMP               1
+#define LWIP_UDP                1
+#define LWIP_SOCKET             0
+
 
 /* 1 if you want to do an ARP check on the offered address
    (recommended). */
-#define DHCP_DOES_ARP_CHECK     1
+#define DHCP_DOES_ARP_CHECK     0
 
 /* ---------- UDP options ---------- */
 #define LWIP_UDP                1
@@ -190,7 +197,7 @@ a lot of data that needs to be copied, this should be set high. */
          (((a) << 8) & 0xff00))
 
 /* ---------- Statistics options ---------- */
-#define STATS
+//#define STATS
 
 #ifdef STATS
 #define LINK_STATS 1

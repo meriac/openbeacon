@@ -75,12 +75,12 @@ vNetworkThread (void *pvParameters)
   netif_set_default (&EMAC_if);
 
   /* dhcp kick-off */
-  dhcp_coarse_tmr ();
+/*  dhcp_coarse_tmr ();
   dhcp_fine_tmr ();
-  dhcp_start (&EMAC_if);
+  dhcp_start (&EMAC_if);*/
   
   /* bring it up */
-//  netif_set_up (&EMAC_if);
+  netif_set_up (&EMAC_if);
 
   debug_printf ("FreeRTOS based WMCU firmware version %s starting.\n",
 		VERSION);
