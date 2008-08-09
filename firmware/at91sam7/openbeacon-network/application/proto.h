@@ -39,5 +39,7 @@ extern TBeaconEnvelope g_Beacon;
 extern void vInitProtocolLayer (void);
 extern int PtSetFifoLifetimeSeconds (int Seconds);
 extern int PtGetFifoLifetimeSeconds (void);
+extern void PtDumpUIntToUSB (unsigned int data);
+extern void PtDumpStringToUSB (const char *text);
 
 #endif/*__PROTO_H__*/

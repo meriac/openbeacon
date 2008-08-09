@@ -105,8 +105,8 @@ crc16 (const unsigned char *buffer, int size)
   return crc;
 }
 
-static inline void
-DumpUIntToUSB (unsigned int data)
+void
+PtDumpUIntToUSB (unsigned int data)
 {
   int i = 0;
   unsigned char buffer[10], *p = &buffer[sizeof (buffer)];
@@ -123,8 +123,8 @@ DumpUIntToUSB (unsigned int data)
     vUSBSendByte (*p++);
 }
 
-static inline void
-DumpStringToUSB (char *text)
+void
+PtDumpStringToUSB (const char *text)
 {
   unsigned char data;
 
@@ -142,7 +142,7 @@ vnRFtaskRx (void *parameter)
   if (!PtInitNRF ())
     return;
 
-  DumpStringToUSB ("INFO: 'RX: oid,seq,strength,flags'");
+  PtDumpStringToUSB ("INFO: 'RX: oid,seq,strength,flags'");
 
   for (;;)
     {
@@ -167,15 +167,15 @@ vnRFtaskRx (void *parameter)
 		       sizeof (g_Beacon) - sizeof (g_Beacon.pkt.crc));
 	      if ((swapshort (g_Beacon.pkt.crc) == crc))
 		{
-		  DumpStringToUSB ("RX: ");
-		  DumpUIntToUSB (swaplong (g_Beacon.pkt.oid));
-		  DumpStringToUSB (",");
-		  DumpUIntToUSB (swaplong (g_Beacon.pkt.seq));
-		  DumpStringToUSB (",");
-		  DumpUIntToUSB (g_Beacon.pkt.strength);
-		  DumpStringToUSB (",");
-		  DumpUIntToUSB (g_Beacon.pkt.flags);
-		  DumpStringToUSB ("\n\r");
+		  PtDumpStringToUSB ("RX: ");
+		  PtDumpUIntToUSB (swaplong (g_Beacon.pkt.oid));
+		  PtDumpStringToUSB (",");
+		  PtDumpUIntToUSB (swaplong (g_Beacon.pkt.seq));
+		  PtDumpStringToUSB (",");
+		  PtDumpUIntToUSB (g_Beacon.pkt.strength);
+		  PtDumpStringToUSB (",");
+		  PtDumpUIntToUSB (g_Beacon.pkt.flags);
+		  PtDumpStringToUSB ("\n\r");
 		}
 	    }
 	  while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);

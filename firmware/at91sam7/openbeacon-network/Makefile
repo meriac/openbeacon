@@ -3,17 +3,56 @@ ARCH=AT91SAM7X256
 DEBUG=-g
 OPTIM=-O2
 
-APP_CFLAGS=-Iapplication
+APP_CFLAGS= \
+    -Iapplication \
+    -Inetwork/src/include \
+    -Inetwork/src/include/ipv4 \
+    -Inetwork/port \
+    -Inetwork/port/emac
+
+NETWORK_SRC= \
+  network/port/emac/SAM7_EMAC.c \
+  network/port/emac/SAM7_EMAC_ISR.c \
+  network/port/sys_arch.c \
+  network/src/api/api_lib.c \
+  network/src/api/api_msg.c \
+  network/src/api/err.c \
+  network/src/api/netbuf.c \
+  network/src/api/sockets.c \
+  network/src/api/tcpip.c \
+  network/src/core/dhcp.c \
+  network/src/core/init.c \
+  network/src/core/ipv4/icmp.c \
+  network/src/core/ipv4/inet_chksum.c \
+  network/src/core/ipv4/ip_addr.c \
+  network/src/core/ipv4/ip.c \
+  network/src/core/ipv4/ip_frag.c \
+  network/src/core/mem.c \
+  network/src/core/memp.c \
+  network/src/core/netif.c \
+  network/src/core/pbuf.c \
+  network/src/core/raw.c \
+  network/src/core/stats.c \
+  network/src/core/sys.c \
+  network/src/core/tcp.c \
+  network/src/core/tcp_in.c \
+  network/src/core/tcp_out.c \
+  network/src/core/udp.c \
+  network/src/netif/etharp.c \
+  network/src/netif/ethernetif.c
 
 APP_SRC= \
-  application/main.c \
+  application/debug_printf.c \
   application/led.c \
+  application/main.c \
+  application/network.c \
   application/proto.c \
-  application/xxtea.c
+  application/xxtea.c \
+  $(NETWORK_SRC)
   
 all: $(TARGET).bin
   
 app_clean:
-	find application -name '*.o' -exec rm \{\} \;
+	find application network -name '*.o' -exec rm \{\} \;
 
 include ../core/Makefile.rules

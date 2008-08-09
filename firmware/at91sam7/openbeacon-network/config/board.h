@@ -28,6 +28,8 @@
 #include <lib_AT91SAM7X.h>
 #include <beacontypes.h>
 
+#define VERSION "0.3"
+
 /*---------------------------------*/
 /* SAM7Board Memories Definition   */
 /*                                 */
@@ -71,14 +73,15 @@
 /* utils settings                */
 /*-------------------------------*/
 
+#define DISABLE_WATCHDOG
 #define CONFIG_TEA_ENABLEDECODE
 
 /*-------------------------------*/
 /* task priorities               */
 /*-------------------------------*/
 
-#define TASK_CMD_PRIORITY	( tskIDLE_PRIORITY + 1 )
-#define TASK_CMD_STACK		( 512 )
+#define TASK_NET_PRIORITY	( tskIDLE_PRIORITY + 1 )
+#define TASK_NET_STACK		( 1024 )
 
 #define TASK_USB_PRIORITY	( tskIDLE_PRIORITY + 2 )
 #define TASK_USB_STACK		( 512 )

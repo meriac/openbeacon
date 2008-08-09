@@ -6,6 +6,8 @@ MEMORY
 
 __stack_end__ = 0x00200000 + 64K - 4;
 
+ENTRY(start)
+
 SECTIONS 
 {
 	. = 0;
