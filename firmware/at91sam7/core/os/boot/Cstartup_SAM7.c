@@ -33,8 +33,10 @@ void AT91F_LowLevelInit (void)
     //  if MCK = 47923200 I have 50 Cycle for 1 useconde ( flied MC_FMR->FMCN
     AT91C_BASE_MC->MC_FMR = ((AT91C_MC_FMCN) & (75 << 16)) | AT91C_MC_FWS_1FWS;
 
+#ifndef DISABLE_WATCHDOG
     //* Watchdog Enable
     AT91C_BASE_WDTC->WDTC_WDMR = (0x80 << 16) | AT91C_WDTC_WDRSTEN | 0x80;
+#endif/*DISABLE_WATCHDOG*/
 
     //* Set MCK at 47 923 200
     // 1 Enabling the Main Oscillator:
