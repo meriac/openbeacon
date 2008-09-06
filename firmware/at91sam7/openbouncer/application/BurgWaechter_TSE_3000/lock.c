@@ -40,7 +40,7 @@ int cylinderTelegram[cylinderTelegramLen] = { 0x02, 0x12, 0x34, 0x56,
 };
 
 //#define TICKS_PER_50_MSECOND                  0.0005*MCK/2
-#define TICKS_PER_50_MSECOND			8986
+#define TICKS_PER_500_MSECOND			11981
 
 xSemaphoreHandle waitSemaphore;
 
@@ -48,35 +48,16 @@ xSemaphoreHandle waitSemaphore;
 
 /* Write cylinder status */
 void
-vWait50ms (void)
+vWait500ms (void)
 {
-  AT91F_PMC_EnablePeriphClock (AT91C_BASE_PMC,
-			       ((unsigned int) 1 << AT91C_ID_TC0));
-
-  AT91C_BASE_TCB->TCB_BMR = 0;
-  AT91C_BASE_TC0->TC_CMR = AT91C_TC_CLKS_TIMER_DIV1_CLOCK	// MCK/2
-    | AT91C_TC_BURST_NONE	// The clock is not gated by an external signal
-    | AT91C_TC_CPCSTOP		// Counter Clock Stopped with RC Compare
-    | AT91C_TC_WAVESEL_UP_AUTO;	// UP mode with automatic trigger on RC Compare
-  AT91C_BASE_TC0->TC_RC = TICKS_PER_50_MSECOND;	// TC0 Timer interval 50ms
-
+  xSemaphoreTake(waitSemaphore, 0); // Clear semaphore 
   AT91C_BASE_TC0->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG;	// start counter
-//  int i=0; while(i++<300);
-//  DumpUIntToUSB(AT91C_BASE_TC0->TC_CV);
-//  DumpStringToUSB("\n\r");
-//  DumpUIntToUSB(AT91C_BASE_TC0->TC_SR);
-//  AT91F_AIC_ClearIt(AT91C_ID_TC0);
-//  AT91F_AIC_EnableIt(AT91C_ID_TC0);
-//  xSemaphoreTake(waitSemaphore, portTICK_RATE_MS); // Will wait for the semaphore to be free again
-//  DumpStringToUSB("\n\r");
-//  DumpUIntToUSB(AT91C_BASE_TC0->TC_SR);
-//  DumpStringToUSB("\n\r");
+  AT91F_AIC_ClearIt(AT91C_ID_TC0);
+  AT91F_AIC_EnableIt(AT91C_ID_TC0);
+  xSemaphoreTake(waitSemaphore, 10*portTICK_RATE_MS); // Will wait for the semaphore to be free again
+  vLedSetGreen(0);
   AT91F_AIC_DisableIt (AT91C_ID_TC0);
-
-  while ((AT91C_BASE_TC0->TC_SR & AT91C_TC_CPCS) == 0);
-  //{
-//          DumpStringToUSB ("#");
-  //}
+  AT91C_BASE_TC0->TC_CCR = AT91C_TC_CLKDIS;
 }
 
 void
@@ -85,6 +66,7 @@ vTimerWaitISR (void)
   portBASE_TYPE taskWoken = pdFALSE;
   if (AT91C_BASE_TC0->TC_SR & AT91C_TC_CPCS)
     xSemaphoreGiveFromISR (waitSemaphore, &taskWoken);
+  vLedSetGreen(1);
   AT91F_AIC_AcknowledgeIt ();
   if (taskWoken == pdTRUE)
     portYIELD_FROM_ISR ();
@@ -113,7 +95,7 @@ vWriteCylinderLine (int status)
       AT91F_PIO_CfgOutput (AT91C_BASE_PIOA, CYLINDER_IO);	/* Line low */
     }
 //for( i=0; i<1400; i++);
-  vWait50ms ();
+  vWait500ms ();
   return;
 }
 
@@ -130,9 +112,10 @@ sendCylinderTelegram (int *telegram, int length)
   vWriteCylinderLine (1);
   /* generate logical LOW */
   vWriteCylinderLine (0);
+  vWriteCylinderLine (0);
   /* generate logical HIGH */
   vWriteCylinderLine (1);
-  vTaskDelay (1000);		// in ms
+  vTaskDelay (60);		// in ms
 
   /* Telegram */
   for (j = 0; j <= length; j++)
@@ -187,6 +170,16 @@ vLockInit (void)
 
   AT91F_AIC_ConfigureIt (AT91C_ID_TC0, 4, AT91C_AIC_SRCTYPE_INT_POSITIVE_EDGE,
 			 vTimerWaitISR_Handler);
+  AT91F_PMC_EnablePeriphClock (AT91C_BASE_PMC,
+			       ((unsigned int) 1 << AT91C_ID_TC0));
+
+  AT91C_BASE_TCB->TCB_BMR = 0;
+  AT91C_BASE_TC0->TC_CMR = AT91C_TC_CLKS_TIMER_DIV1_CLOCK	// MCK/2
+    | AT91C_TC_BURST_NONE	// The clock is not gated by an external signal
+    | AT91C_TC_CPCSTOP		// Counter Clock Stopped with RC Compare
+    | AT91C_TC_WAVESEL_UP_AUTO;	// UP mode with automatic trigger on RC Compare
+  AT91C_BASE_TC0->TC_RC = TICKS_PER_500_MSECOND;	// TC0 Timer interval 500ms
+  AT91C_BASE_TC0->TC_CCR = AT91C_TC_CLKDIS;
   AT91C_BASE_TC0->TC_IER = AT91C_TC_CPCS;
   return 0;
 }
