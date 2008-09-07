@@ -63,7 +63,7 @@ typedef struct
 typedef union
 {
   u_int32_t block[BOUNCERPKT_XXTEA_BLOCK_COUNT];
-  u_int8_t data[BOUNCERPKT_XXTEA_BLOCK_COUNT * 4];
+  u_int8_t data_b[BOUNCERPKT_XXTEA_BLOCK_COUNT * 4];
   TSaltGeneration rnd;
   TEntropy entropy;
   TResponse response;
@@ -197,9 +197,9 @@ protocol_setup_response (void)
   g_MacroBeacon.cmd.hdr.flags = 0;
   g_MacroBeacon.cmd.response.salt_b = xxtea.entropy.salt_b;
   
-  for(i=0; i<BOUNCERPKT_PICKS_LIST_SIZE; i++)
+  for(i=0; i<BOUNCERPKT_PICKS_COUNT; i++)
   {
     t = g_MacroBeacon.cmd.challenge.picks[i];
-    g_MacroBeacon.cmd.response.picks[i] = (t<sizeof(xxtea.data)) ? xxtea.data[t] : 0;    
+    g_MacroBeacon.cmd.response.picks[i] = (t<sizeof(xxtea.data_b)) ? xxtea.data_b[t] : 0;    
   }
 }
