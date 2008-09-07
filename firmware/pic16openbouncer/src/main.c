@@ -62,11 +62,12 @@ main (void)
 
   // light LED during transmission
   CONFIG_PIN_LED = 1;
-
   protocol_setup_hello();
   // send it away
   nRFCMD_Macro ((u_int8_t*) &g_MacroBeacon);
   nRFCMD_Execute ();
+  
+  protocol_calc_secret();
 
   CONFIG_PIN_LED = 0;
   // rest in peace

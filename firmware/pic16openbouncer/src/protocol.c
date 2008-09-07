@@ -49,14 +49,24 @@ typedef struct
   u_int32_t salt_b;
   u_int32_t reserved[2];
   u_int32_t new_flashsalt[FLASHSALT_BLOCKS];
-} TResponsePool;
+} TEntropy;
+
+typedef struct
+{
+  u_int32_t salt_a;
+  u_int32_t salt_b;
+  u_int32_t challenge[2];
+  u_int32_t lock_id;
+  u_int32_t zero[3];
+} TResponse;
 
 typedef union
 {
   u_int32_t block[BOUNCERPKT_XXTEA_BLOCK_COUNT];
   u_int8_t data[BOUNCERPKT_XXTEA_BLOCK_COUNT * 4];
   TSaltGeneration rnd;
-  TResponsePool res;
+  TEntropy entropy;
+  TResponse response;
 } TXXTEAEncryption;
 
 static eeprom u_int32_t ee_counter = 0xFFFFFFFF;
@@ -73,6 +83,7 @@ static bank1 TXXTEAEncryption xxtea;
 static u_int32_t xxtea_salt_b;
 static u_int8_t xxtea_retries = 0;
 
+#define ntohl htonl
 static u_int32_t
 htonl (u_int32_t src)
 {
@@ -86,6 +97,7 @@ htonl (u_int32_t src)
   return res;
 }
 
+#define htons ntohs
 static u_int16_t
 htons (u_int16_t src)
 {
@@ -151,13 +163,25 @@ protocol_setup_hello (void)
   g_MacroBeacon.cmd.hdr.command = BOUNCERPKT_CMD_HELLO;
   g_MacroBeacon.cmd.hdr.value = xxtea_retries++;;
   g_MacroBeacon.cmd.hdr.flags = 0;
-  g_MacroBeacon.cmd.hello.salt_a = htonl(xxtea.res.salt_a);
+  g_MacroBeacon.cmd.hello.salt_a = htonl (xxtea.entropy.salt_a);
+  xxtea_salt_b = xxtea.entropy.salt_b;
   g_MacroBeacon.cmd.hello.reserved[0] = 0;
   g_MacroBeacon.cmd.hello.reserved[1] = 0;
 }
 
 void
-protocol_setup_response_from_challenge (void)
+protocol_calc_secret (void)
 {
+  /* salt_a and salt_b set in xxtea during previous setup_hello */
+  xxtea.response.challenge[0] =
+    ntohl (g_MacroBeacon.cmd.challenge_setup.challenge[0]);
+  xxtea.response.challenge[1] =
+    ntohl (g_MacroBeacon.cmd.challenge_setup.challenge[1]);
+  xxtea.response.lock_id = ntohl (g_MacroBeacon.cmd.challenge_setup.src_mac);
+  xxtea.response.zero[0] = 0;
+  xxtea.response.zero[1] = 0;
+  xxtea.response.zero[2] = 0;
 
+  /* calculate response over (salt_a || salt_b || challenge || lock_id || 0 ... ) */
+  xxtea_encode ();
 }

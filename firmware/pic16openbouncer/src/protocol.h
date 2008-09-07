@@ -27,6 +27,6 @@
 #define __PROTOCOL_H__
 
 extern void protocol_setup_hello (void);
-extern void protocol_setup_response_from_challenge (void);
+extern void protocol_calc_secret (void);
 
 #endif/*__PROTOCOL_H__*/
