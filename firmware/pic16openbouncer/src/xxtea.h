@@ -26,6 +26,6 @@
 #ifndef __XXTEA_H__
 #define __XXTEA_H__
 
-extern void xxtea_encode (void);
+extern void xxtea_setup_hello (void);
 
 #endif/*__XXTEA_H__*/

@@ -29,9 +29,8 @@
 
 typedef struct
 {
-  u_int8_t size1, opcode1, rf_setup;
-  u_int8_t size2, opcode2;
-  TBouncerEnvelope env;
+  u_int8_t size, opcode;
+  TBouncerEnvelope cmd;
   u_int8_t eot;
 } TMacroBeacon;
 

@@ -27,7 +27,8 @@
 
 #define BOUNCERPKT_VERSION 0x01
 #define BOUNCERPKT_PICKS_COUNT 8
-#define BOUNCERPKT_PICKS_LIST_SIZE 32
+#define BOUNCERPKT_XXTEA_BLOCK_COUNT 8
+#define BOUNCERPKT_PICKS_LIST_SIZE (BOUNCERPKT_XXTEA_BLOCK_COUNT*4)
 
 #define BOUNCERPKT_CMD_HELLO           0x01
 #define BOUNCERPKT_CMD_CHALLENGE_SETUP 0x02
@@ -73,6 +74,7 @@ typedef struct {
 typedef struct {  
   TBouncerCmdHeader hdr;
   u_int32_t salt_a;
+  u_int32_t reserved[2];
 } TBouncerCmdHello;
 
 /* 
@@ -145,11 +147,12 @@ typedef struct {
 
 typedef union
 {
-  TBouncerCmdHeader Header;
-  TBouncerCmdHello Hello;
-  TBouncerCmdChallengeSetup ChallengeSetup;
-  TBouncerCmdChallenge Challenge;
-  TBouncerCmdResponse Response;
+  TBouncerCmdHeader hdr;
+  TBouncerCmdHello hello;
+  TBouncerCmdChallengeSetup challenge_setup;
+  TBouncerCmdChallenge challenge;
+  TBouncerCmdResponse response;
+  
 }
 TBouncerEnvelope;
 
