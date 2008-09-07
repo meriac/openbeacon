@@ -1,15 +1,14 @@
 /***************************************************************
  *
- * OpenBeacon.org - XXTEA based block encryption
- *
- * based on "correction to XTEA" by David J. Wheeler and
- * Roger M. Needham.
- * Computer Laboratory - Cambridge University in 1998
+ * OpenBeacon.org -  OpenBouncer protocol implementation
  *
  * Copyright 2006 Milosch Meriac <meriac@openbeacon.de>
  *
- * ripped into pieces - optimized for 8 bit PIC microcontroller
- * to increase speed and to decrease memory consumption
+ * XXTEA encryption as seen in "correction to XTEA"
+ * by David J. Wheeler and Roger M. Needham.
+ * Computer Laboratory - Cambridge University in 1998
+ * but optimized for microcontroller usage and low memory
+ * and code footprint
  *
 /***************************************************************
 
@@ -31,7 +30,7 @@
 
 #include "config.h"
 #include "openbouncer.h"
-#include "xxtea.h"
+#include "PROTOCOL.h"
 #include "main.h"
 
 #define FLASHSALT_BLOCKS 3
@@ -127,7 +126,7 @@ xxtea_encode (void)
 }
 
 void
-xxtea_setup_hello (void)
+protocol_setup_hello (void)
 {
   u_int8_t i;
 
@@ -158,7 +157,7 @@ xxtea_setup_hello (void)
 }
 
 void
-xxtea_setup_response_from_challenge (void)
+protocol_setup_response_from_challenge (void)
 {
 
 }

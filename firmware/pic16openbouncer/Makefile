@@ -6,7 +6,7 @@ CONFIG=0x3d4
 CHIP=16F684
 PROGNAME=openbeacontag
 
-SRCS=main.c timer.c nRF_CMD.c xxtea.c
+SRCS=main.c timer.c nRF_CMD.c protocol.c
 
 PROG_EXTS=cof hxl map mum sym
 PROG_FILES=$(patsubst %, obj/$(PROGNAME).%, $(PROG_EXTS))

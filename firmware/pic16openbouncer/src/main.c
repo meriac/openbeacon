@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include "config.h"
 #include "timer.h"
-#include "xxtea.h"
+#include "protocol.h"
 #include "nRF_CMD.h"
 #include "nRF_HW.h"
 #include "main.h"
@@ -63,7 +63,7 @@ main (void)
   // light LED during transmission
   CONFIG_PIN_LED = 1;
 
-  xxtea_setup_hello ();
+  protocol_setup_hello();
   // send it away
   nRFCMD_Macro ((u_int8_t*) &g_MacroBeacon);
   nRFCMD_Execute ();

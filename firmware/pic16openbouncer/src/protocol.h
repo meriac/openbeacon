@@ -23,9 +23,10 @@
 
 */
 
-#ifndef __XXTEA_H__
-#define __XXTEA_H__
+#ifndef __PROTOCOL_H__
+#define __PROTOCOL_H__
 
-extern void xxtea_setup_hello (void);
+extern void protocol_setup_hello (void);
+extern void protocol_setup_response_from_challenge (void);
 
-#endif/*__XXTEA_H__*/
+#endif/*__PROTOCOL_H__*/
