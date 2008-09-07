@@ -121,7 +121,10 @@ xxtea_encode (void)
   z = xxtea.block[BOUNCERPKT_XXTEA_BLOCK_COUNT - 1];
   sum = 0;
 
+  /* setup rounds counter */
   q = (6 + 52 / BOUNCERPKT_XXTEA_BLOCK_COUNT);
+
+  /* start encryption */
   while (q--)
     {
       sum += 0x9E3779B9UL;
@@ -174,6 +177,8 @@ protocol_setup_hello (void)
 void
 protocol_calc_secret (void)
 {
+  u_int8_t i;
+
   /* salt_a and salt_b set in xxtea during previous setup_hello */
   xxtea.response.challenge[0] =
     ntohl (g_MacroBeacon.cmd.challenge_setup.challenge[0]);
@@ -186,22 +191,27 @@ protocol_calc_secret (void)
 
   /* calculate response over (salt_a || salt_b || challenge || lock_id || 0 ... ) */
   xxtea_encode ();
+
+  /* fix endianess so picks byte array is architecture independent */
+  for (i = 0; i < BOUNCERPKT_XXTEA_BLOCK_COUNT; i++)
+    xxtea.block[i] = htonl (xxtea.block[i]);
 }
 
 void
 protocol_setup_response (void)
 {
-  u_int8_t i,t;
+  u_int8_t i, t;
 
   g_MacroBeacon.cmd.hdr.version = BOUNCERPKT_VERSION;
   g_MacroBeacon.cmd.hdr.command = BOUNCERPKT_CMD_RESPONSE;
   g_MacroBeacon.cmd.hdr.value = BOUNCERPKT_PICKS_LIST_SIZE;
   g_MacroBeacon.cmd.hdr.flags = 0;
   g_MacroBeacon.cmd.response.salt_b = xxtea_salt_b;
-  
-  for(i=0; i<BOUNCERPKT_PICKS_COUNT; i++)
-  {
-    t = g_MacroBeacon.cmd.challenge.picks[i];
-    g_MacroBeacon.cmd.response.picks[i] = (t<sizeof(xxtea.data_b)) ? xxtea.data_b[t] : 0;    
-  }
+
+  for (i = 0; i < BOUNCERPKT_PICKS_COUNT; i++)
+    {
+      t = g_MacroBeacon.cmd.challenge.picks[i];
+      g_MacroBeacon.cmd.response.picks[i] =
+	(t < sizeof (xxtea.data_b)) ? xxtea.data_b[t] : 0;
+    }
 }
