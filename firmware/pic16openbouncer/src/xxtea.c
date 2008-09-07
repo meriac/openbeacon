@@ -35,60 +35,68 @@
 
 #define XXTEA_BLOCK_COUNT (BOUNCERPKT_PICKS_LIST_SIZE/4)
 
-typedef union {
+typedef union
+{
   u_int32_t block[XXTEA_BLOCK_COUNT];
   u_int8_t data[BOUNCERPKT_PICKS_LIST_SIZE];
 } TXxteaEncryption;
 
-static const bank1 u_int32_t tea_key[4] = {0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF};
+static const bank1 u_int32_t tea_key[4] =
+  { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
 static bank1 TXxteaEncryption xxtea;
 
 static void
 xxtea_shuffle_byte_order (void)
 {
-  u_int8_t t,i,*p;
-  
-  p=xxtea.data;
-  i=BOUNCERPKT_PICKS_LIST_SIZE;
-  while(i--)
-  {
-    t   = *p;
-    *p  = p[3];
-    p[3]= t;
-    p++;
+  u_int8_t t, i, *p;
 
-    t   = *p;
-    *p  = p[1];
-    p[1]= t;
+  p = xxtea.data;
+  i = BOUNCERPKT_PICKS_LIST_SIZE;
+  while (i--)
+    {
+      t = *p;
+      *p = p[3];
+      p[3] = t;
+      p++;
 
-    p+=3;
-  }
+      t = *p;
+      *p = p[1];
+      p[1] = t;
+
+      p += 3;
+    }
 }
 
 void
 xxtea_encode (void)
 {
   u_int32_t z, y, sum, mx;
-  u_int8_t p,q,e;
-  
-  xxtea_shuffle_byte_order();
-  
+  u_int8_t p, q, e;
+
+  /* adjust byte order to match network byte order for transmission */
+  xxtea_shuffle_byte_order ();
+
+  /* prepare first XXTEA round */
   z = xxtea.block[XXTEA_BLOCK_COUNT - 1];
   sum = 0;
 
-  q = (6+52/XXTEA_BLOCK_COUNT);
-  while (q-- > 0)
+  q = (6 + 52 / XXTEA_BLOCK_COUNT);
+  while (q--)
     {
       sum += 0x9E3779B9UL;
-      e = sum >> 2 & 3;
-      
-      for(p=0; p<XXTEA_BLOCK_COUNT; p++)
-      {
-        y = xxtea.block[(p+1)&(XXTEA_BLOCK_COUNT-1)];
-	z = xxtea.block[p] + ((z>>5^y<<2)+(y>>3^z<<4)^(sum^y)+(tea_key[p&3^e]^z));
-        xxtea.block[p] = z;
-      }
+      e = (sum >> 2) & 3;
+
+      for (p = 0; p < XXTEA_BLOCK_COUNT; p++)
+	{
+	  y = xxtea.block[(p + 1) & (XXTEA_BLOCK_COUNT - 1)];
+	  z =
+	    xxtea.block[p] + ((z >> 5 ^ y << 2) +
+			      (y >> 3 ^ z << 4) ^ (sum ^ y) +
+			      (tea_key[p & 3 ^ e] ^ z));
+	  xxtea.block[p] = z;
+	}
     }
 
-  xxtea_shuffle_byte_order();
+  /* adjust byte order to match network byte order for transmission */
+  xxtea_shuffle_byte_order ();
 }
