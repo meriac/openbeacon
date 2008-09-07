@@ -97,6 +97,7 @@ htonl (u_int32_t src)
   return res;
 }
 
+/*
 #define htons ntohs
 static u_int16_t
 htons (u_int16_t src)
@@ -108,6 +109,7 @@ htons (u_int16_t src)
 
   return res;
 }
+*/
 
 static void
 xxtea_encode (void)
