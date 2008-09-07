@@ -195,7 +195,7 @@ protocol_setup_response (void)
   g_MacroBeacon.cmd.hdr.command = BOUNCERPKT_CMD_RESPONSE;
   g_MacroBeacon.cmd.hdr.value = BOUNCERPKT_PICKS_LIST_SIZE;
   g_MacroBeacon.cmd.hdr.flags = 0;
-  g_MacroBeacon.cmd.response.salt_b = xxtea.entropy.salt_b;
+  g_MacroBeacon.cmd.response.salt_b = xxtea_salt_b;
   
   for(i=0; i<BOUNCERPKT_PICKS_COUNT; i++)
   {
