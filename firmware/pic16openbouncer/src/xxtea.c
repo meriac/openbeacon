@@ -41,71 +41,30 @@ typedef union {
   u_int8_t data[BOUNCERPKT_PICKS_LIST_SIZE];
 } TXxteaEncryption;
 
-const long tea_key[4] = {0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF};
+const bank1 u_int32_t tea_key[4] = {0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF};
 static bank1 TXxteaEncryption xxtea;
-static u_int32_t z, y, sum, tmp, mx;
-static u_int8_t q,e;
-
-#define TEA_ROUNDS_COUNT (6+52/XXTEA_BLOCK_COUNT)
-#define MX ((z>>5^y<<2)+(y>>3^z<<4)^(sum^y)+(tea_key[p&3^e]^z))
-#define DELTA 0x9E3779B9L
-
-void
-mx_encode (unsigned char p)
-{
-  z = tmp + MX;
-}
 
 void
 xxtea_encode (void)
 {
+  u_int32_t z, y, sum, tmp, mx;
+  u_int8_t p,q,e;
+
   z = xxtea.block[XXTEA_BLOCK_COUNT - 1];
   sum = 0;
 
-  q = TEA_ROUNDS_COUNT;
+  q = (6+52/XXTEA_BLOCK_COUNT);
   while (q-- > 0)
     {
-      sum += DELTA;
+      sum += 0x9E3779B9UL;
       e = sum >> 2 & 3;
-
-      y = xxtea.block[1];
-      tmp = xxtea.block[0];
-      mx_encode (0);
-      xxtea.block[0] = z;
-
-      y = xxtea.block[2];
-      tmp = xxtea.block[1];
-      mx_encode (1);
-      xxtea.block[1] = z;
-
-      y = xxtea.block[3];
-      tmp = xxtea.block[2];
-      mx_encode (2);
-      xxtea.block[2] = z;
-
-      y = xxtea.block[4];
-      tmp = xxtea.block[3];
-      mx_encode (3);
-      xxtea.block[3] = z;
-
-      y = xxtea.block[5];
-      tmp = xxtea.block[4];
-      mx_encode (4);
-      xxtea.block[4] = z;
-
-      y = xxtea.block[6];
-      tmp = xxtea.block[5];
-      mx_encode (5);
-      xxtea.block[5] = z;
-
-      y = xxtea.block[7];
-      tmp = xxtea.block[6];
-      mx_encode (6);
-      xxtea.block[6] = z;
-
-      y = xxtea.block[0];
-      tmp = xxtea.block[7];
-      mx_encode (7);
-      xxtea.block[7] = z;
+      
+      for(p=0; p<XXTEA_BLOCK_COUNT; p++)
+      {
+        y = xxtea.block[(p+1)&(XXTEA_BLOCK_COUNT-1)];
+        tmp = xxtea.block[p];
+	z = tmp + ((z>>5^y<<2)+(y>>3^z<<4)^(sum^y)+(tea_key[p&3^e]^z));
+        xxtea.block[p] = z;
+      }
     }
 }
