@@ -25,13 +25,13 @@
 #ifndef __OPENBEACON_MAIN_H__
 #define __OPENBEACON_MAIN_H__
 
-#include "openbeacon.h"
+#include "openbouncer.h"
 
 typedef struct
 {
   u_int8_t size1, opcode1, rf_setup;
   u_int8_t size2, opcode2;
-  TBeaconEnvelope env;
+  TBouncerEnvelope env;
   u_int8_t eot;
 } TMacroBeacon;
 

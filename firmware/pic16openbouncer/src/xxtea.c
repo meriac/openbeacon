@@ -37,16 +37,16 @@
 #define XXTEA_BLOCK_COUNT (BOUNCERPKT_PICKS_LIST_SIZE/4)
 
 typedef union {
-  u_int32_t long block[XXTEA_BLOCK_COUNT];
+  u_int32_t block[XXTEA_BLOCK_COUNT];
   u_int8_t data[BOUNCERPKT_PICKS_LIST_SIZE];
 } TXxteaEncryption;
 
 const long tea_key[4] = {0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF};
-static TXxteaEncryption xxtea;
-u_int32_t z, y, sum, tmp, mx;
-u_int8_t e;
+static bank1 TXxteaEncryption xxtea;
+static u_int32_t z, y, sum, tmp, mx;
+static u_int8_t q,e;
 
-#define TEA_ROUNDS_COUNT (6+52/CONFIG_TEA_ENCRYPTION_BLOCK_COUNT)
+#define TEA_ROUNDS_COUNT (6+52/XXTEA_BLOCK_COUNT)
 #define MX ((z>>5^y<<2)+(y>>3^z<<4)^(sum^y)+(tea_key[p&3^e]^z))
 #define DELTA 0x9E3779B9L
 
@@ -59,9 +59,7 @@ mx_encode (unsigned char p)
 void
 xxtea_encode (void)
 {
-  u_int8_t q;
-
-  z = xxtea.block[CONFIG_TEA_ENCRYPTION_BLOCK_COUNT - 1];
+  z = xxtea.block[XXTEA_BLOCK_COUNT - 1];
   sum = 0;
 
   q = TEA_ROUNDS_COUNT;

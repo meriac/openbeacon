@@ -53,7 +53,7 @@ typedef struct {
   u_int8_t command;
   u_int8_t value;
   u_int8_t flags;
-} TBouncerHeader;
+} TBouncerCmdHeader;
 
 
 /* 
@@ -67,11 +67,11 @@ typedef struct {
  * hdr.command = BOUNCERPKT_CMD_HELLO
  * hdr.value   = amount of retries of hello packet
  * hdr.flags   = RFU
- * salt_a      = first part of 64 bit tag generated salt
+ * salt_a      = first part of tag generated salt
  *
  */
 typedef struct {  
-  TBouncerHeader hdr;
+  TBouncerCmdHeader hdr;
   u_int32_t salt_a;
 } TBouncerCmdHello;
 
@@ -91,7 +91,7 @@ typedef struct {
  *
  */
 typedef struct {  
-  TBouncerHeader hdr;
+  TBouncerCmdHeader hdr;
   u_int32_t src_mac;
   u_int32_t challenge[2];
 } TBouncerCmdChallengeSetup;
@@ -114,7 +114,7 @@ typedef struct {
  *
  */
 typedef struct {  
-  TBouncerHeader hdr;
+  TBouncerCmdHeader hdr;
   u_int32_t src_mac;
   u_int8_t picks[BOUNCERPKT_PICKS_COUNT];
 } TBouncerCmdChallenge;
@@ -130,7 +130,7 @@ typedef struct {
  * hdr.command = BOUNCERPKT_CMD_RESPONSE
  * hdr.value   = BOUNCERPKT_PICKS_LIST_SIZE
  * hdr.flags   = RFU
- * salt_b      = second part of 64 bit tag generated salt
+ * salt_b      = second part of tag generated salt
  * picks       = list of BOUNCERPKT_PICKS_COUNT bytes
  *               out of BOUNCERPKT_PICKS_LIST_SIZE sized
  *               byte array of calculated tag response
@@ -138,15 +138,18 @@ typedef struct {
  *
  */
 typedef struct {  
-  TBouncerHeader hdr;
+  TBouncerCmdHeader hdr;
   u_int32_t salt_b;
   u_int8_t picks[BOUNCERPKT_PICKS_COUNT];
 } TBouncerCmdResponse;
 
 typedef union
 {
-  TBouncerHeader pkt_hdr;
-  TBouncerChallengeSetup pkt_challenge_setup;
+  TBouncerCmdHeader Header;
+  TBouncerCmdHello Hello;
+  TBouncerCmdChallengeSetup ChallengeSetup;
+  TBouncerCmdChallenge Challenge;
+  TBouncerCmdResponse Response;
 }
 TBouncerEnvelope;
 
