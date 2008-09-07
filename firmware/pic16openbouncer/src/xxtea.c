@@ -33,17 +33,63 @@
 #include "xxtea.h"
 #include "main.h"
 
+#define FLASH_SALT_COUNT 12
+#define LAST_RND_COUNT 16
 #define XXTEA_BLOCK_COUNT (BOUNCERPKT_PICKS_LIST_SIZE/4)
+
+eeprom u_int8_t ee_counter_init = 0xFF;
+eeprom u_int32_t ee_counter;
+eeprom u_int8_t ee_last_rnd[LAST_RND_COUNT];
+eeprom u_int8_t ee_salt[LAST_RND_COUNT];
+
+static volatile const u_int32_t XXTeaKey[4] =
+  { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
+
+static volatile const def_ee_counter = 0xFFFFFFFF;
+static volatile const u_int8_t flash_salt[FLASH_SALT_COUNT] = {
+    0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF
+};
+
+typedef struct
+{
+  u_int8_t last_rnd[LAST_RND_COUNT];
+  u_int32_t counter;
+  u_int8_t salt[FLASH_SALT_COUNT];
+} TSaltGeneration;
 
 typedef union
 {
   u_int32_t block[XXTEA_BLOCK_COUNT];
   u_int8_t data[BOUNCERPKT_PICKS_LIST_SIZE];
-} TXxteaEncryption;
+  TSaltGeneration rnd;
+} TXXTEAEncryption;
+  
+static bank1 TXXTEAEncryption xxtea;
 
-static const bank1 u_int32_t tea_key[4] =
-  { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
-static bank1 TXxteaEncryption xxtea;
+static void
+xxtea_memcpy(void* dest,const void *src,u_int8_t size)
+{
+}
+
+static void
+xxtea_init_salt (void)
+{    
+  u_int32_t temp;
+  
+  if(ee_counter_init)
+  {
+    ee_counter=def_ee_counter;
+    ee_counter_init=0;
+  }
+  
+  temp=ee_counter;
+  ee_counter=temp+1;
+    
+  xxtea_memcpy(&xxtea.rnd.salt,&flash_salt,sizeof(xxtea.rnd.salt));
+  xxtea_memcpy(&xxtea.rnd.counter,&temp,sizeof(xxtea.rnd.counter));  
+}
 
 static void
 xxtea_shuffle_byte_order (void)
@@ -92,7 +138,7 @@ xxtea_encode (void)
 	  z =
 	    xxtea.block[p] + ((z >> 5 ^ y << 2) +
 			      (y >> 3 ^ z << 4) ^ (sum ^ y) +
-			      (tea_key[p & 3 ^ e] ^ z));
+			      (XXTeaKey[p & 3 ^ e] ^ z));
 	  xxtea.block[p] = z;
 	}
     }
