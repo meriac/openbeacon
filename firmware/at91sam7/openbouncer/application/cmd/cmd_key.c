@@ -137,6 +137,9 @@ cmd_Key_Dump (void)
 void
 cmd_Key_Open (void)
 {
-  DumpStringToUSB ("open...#\n\r");
-  vOpenLock ();
+  DumpStringToUSB ("open... ");
+  if (vOpenLock ())
+    DumpStringToUSB ("ok\n\r");
+  else
+    DumpStringToUSB ("not ok\n\r");
 }

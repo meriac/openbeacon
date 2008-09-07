@@ -21,7 +21,7 @@
 */
 #ifndef LOCK_H_
 #define LOCK_H_
-void vOpenLock (void);
-portBASE_TYPE vLockInit (void);
+extern int vOpenLock (void);
+extern portBASE_TYPE vLockInit (void);
 
 #endif /*LOCK_H_ */
