@@ -40,7 +40,7 @@ $$\textnormal{EEPROM}(\textnormal{LastRND})^{16} = \textnormal{RND}[16\ldots31]^
 \paragraph{EEPROM} $D$, LastRND and Counter are initialized to random confidential data at production
 
 \begin{tabular}{|*{2}{l|l||}c||l|l||l||l|}\hline
-  4 & 8 & 4 & 8 & \ldots & 4 & 8 & 4 & 12 \\\hline
+  4 & 8 & 4 & 8 & \ldots & 4 & 8 & 16 & 4 \\\hline
   $\textnormal{ID}_0$ & $\textnormal{Key}(\textnormal{ID}_0) \oplus D$ &
   $\textnormal{ID}_1$ & $\textnormal{Key}(\textnormal{ID}_1) \oplus D$ & \ldots &
   \verb|0xFFFF| & D &
