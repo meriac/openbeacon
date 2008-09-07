@@ -15,24 +15,37 @@
 
 \end{abstract}
 
-\section{}
+\section{Protocol}
 
 \paragraph{Tag} $$\textnormal{RND}^{32} = \textnormal{xxTea}_D\left(\textnormal{EEPROM}(\textnormal{LastRND})^{16} \parallel \textnormal{EEPROM}(\textnormal{Counter}++)^{4} \parallel \textnormal{Flash}(\textnormal{FlashSalt})^{12} \right)$$
 $$\textnormal{Salt}_A^{4} = \textnormal{RND}[0\ldots3]^{4}$$
 $$\textnormal{Salt}_B^{4} = \textnormal{RND}[4\ldots7]^{4}$$
 $$\textnormal{EEPROM}(\textnormal{LastRND})^{16} = \textnormal{RND}[16\ldots31]^{16}$$
 
-\paragraph{Tag to Door} $\textnormal{HELLO}(\textnormal{Salt}_A^{4})$
+\paragraph{Tag to Door} $\textnormal{HELLO}(\textnormal{Retrycounter}^1,\textnormal{Salt}_A^{4})$
 
 \paragraph{Door to Tag} $\textnormal{SETUP}(\textnormal{ID}^{4}, \textnormal{Challenge}^{8})$
 (door: wait $\delta t > 42\,\textnormal{ms}$)
 
-\paragraph{Tag} $$\textnormal{Response}^{32} = \textnormal{xxTea}_{\textnormal{\scriptsize{Schlüssel}}(\textnormal{\scriptsize{ID})}}\left( \textnormal{Salt}_A^4 \parallel \textnormal{Salt}_B^4 \parallel \textnormal{Challenge}^8 \parallel \textnormal{ID}^4 \parallel \overrightarrow{0}^{12} \right)$$
+\paragraph{Tag} $$\textnormal{Response}^{32} = \textnormal{xxTea}_{\textnormal{\scriptsize{Key}}(\textnormal{\scriptsize{ID})}}\left( \textnormal{Salt}_A^4 \parallel \textnormal{Salt}_B^4 \parallel \textnormal{Challenge}^8 \parallel \textnormal{ID}^4 \parallel \overrightarrow{0}^{12} \right)$$
 
 \paragraph{Door to Tag} $\textnormal{CHALLENGE}(i_0^1, i_1^1, i_2^1, \ldots, i_7^1)$
 (door: start timer)
 
 \paragraph{Tag to Door} $\textnormal{RESPONSE}( Response[i_0]^1, Response[i_1]^1, Response[i_2]^1, \ldots Response[i_7]^1, \textnormal{Salt}_B^4 )$
-(door: stop timer)
+(door: stop timer, check that $\delta t < 1\,\textnormal{ms}$)
+
+\section{Data stored in tag}
+\paragraph{Flash} $\textnormal{FlashSalt}^{12}$: random confidential data, generated at production
+\paragraph{EEPROM} $D$, LastRND and Counter are initialized to random confidential data at production
+
+\begin{tabular}{|*{2}{l|l||}c||l|l||l||l|}\hline
+  4 & 8 & 4 & 8 & \ldots & 4 & 8 & 4 & 12 \\\hline
+  $\textnormal{ID}_0$ & $\textnormal{Key}(\textnormal{ID}_0) \oplus D$ &
+  $\textnormal{ID}_1$ & $\textnormal{Key}(\textnormal{ID}_1) \oplus D$ & \ldots &
+  \verb|0xFFFF| & D &
+  LastRND & Counter \\\hline
+\end{tabular}
+
 
 \end{document}
