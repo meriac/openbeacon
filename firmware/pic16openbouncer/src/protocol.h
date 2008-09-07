@@ -28,5 +28,6 @@
 
 extern void protocol_setup_hello (void);
 extern void protocol_calc_secret (void);
+extern void protocol_setup_response (void);
 
 #endif/*__PROTOCOL_H__*/

@@ -53,7 +53,7 @@ main (void)
   OSCCON = CONFIG_CPU_OSCCON;
 
   timer1_init ();
-  
+
   sleep_jiffies (0xFFFF);
 
   nRFCMD_Init ();
@@ -62,12 +62,13 @@ main (void)
 
   // light LED during transmission
   CONFIG_PIN_LED = 1;
-  protocol_setup_hello();
+  protocol_setup_hello ();
   // send it away
-  nRFCMD_Macro ((u_int8_t*) &g_MacroBeacon);
+  nRFCMD_Macro ((u_int8_t *) & g_MacroBeacon);
   nRFCMD_Execute ();
-  
-  protocol_calc_secret();
+
+  protocol_calc_secret ();
+  protocol_setup_response ();
 
   CONFIG_PIN_LED = 0;
   // rest in peace
