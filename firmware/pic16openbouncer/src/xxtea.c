@@ -8,8 +8,7 @@
  *
  * Copyright 2006 Milosch Meriac <meriac@openbeacon.de>
  *
- * ripped into pieces - optimized for the special case
- * where 16 bytes are regarded for encryption and decryption
+ * ripped into pieces - optimized for 8 bit PIC microcontroller
  * to increase speed and to decrease memory consumption
  *
 /***************************************************************
@@ -47,7 +46,7 @@ static bank1 TXxteaEncryption xxtea;
 void
 xxtea_encode (void)
 {
-  u_int32_t z, y, sum, tmp, mx;
+  u_int32_t z, y, sum, mx;
   u_int8_t p,q,e;
 
   z = xxtea.block[XXTEA_BLOCK_COUNT - 1];
@@ -62,8 +61,7 @@ xxtea_encode (void)
       for(p=0; p<XXTEA_BLOCK_COUNT; p++)
       {
         y = xxtea.block[(p+1)&(XXTEA_BLOCK_COUNT-1)];
-        tmp = xxtea.block[p];
-	z = tmp + ((z>>5^y<<2)+(y>>3^z<<4)^(sum^y)+(tea_key[p&3^e]^z));
+	z = xxtea.block[p] + ((z>>5^y<<2)+(y>>3^z<<4)^(sum^y)+(tea_key[p&3^e]^z));
         xxtea.block[p] = z;
       }
     }
