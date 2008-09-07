@@ -161,10 +161,10 @@ protocol_setup_hello (void)
 
   g_MacroBeacon.cmd.hdr.version = BOUNCERPKT_VERSION;
   g_MacroBeacon.cmd.hdr.command = BOUNCERPKT_CMD_HELLO;
-  g_MacroBeacon.cmd.hdr.value = xxtea_retries++;;
+  g_MacroBeacon.cmd.hdr.value = xxtea_retries++;
   g_MacroBeacon.cmd.hdr.flags = 0;
   g_MacroBeacon.cmd.hello.salt_a = htonl (xxtea.entropy.salt_a);
-  xxtea_salt_b = xxtea.entropy.salt_b;
+  xxtea_salt_b = htonl (xxtea.entropy.salt_b);
   g_MacroBeacon.cmd.hello.reserved[0] = 0;
   g_MacroBeacon.cmd.hello.reserved[1] = 0;
 }
@@ -184,4 +184,22 @@ protocol_calc_secret (void)
 
   /* calculate response over (salt_a || salt_b || challenge || lock_id || 0 ... ) */
   xxtea_encode ();
+}
+
+void
+protocol_setup_response (void)
+{
+  u_int8_t i,t;
+
+  g_MacroBeacon.cmd.hdr.version = BOUNCERPKT_VERSION;
+  g_MacroBeacon.cmd.hdr.command = BOUNCERPKT_CMD_RESPONSE;
+  g_MacroBeacon.cmd.hdr.value = BOUNCERPKT_PICKS_LIST_SIZE;
+  g_MacroBeacon.cmd.hdr.flags = 0;
+  g_MacroBeacon.cmd.response.salt_b = xxtea.entropy.salt_b;
+  
+  for(i=0; i<BOUNCERPKT_PICKS_LIST_SIZE; i++)
+  {
+    t = g_MacroBeacon.cmd.challenge.picks[i];
+    g_MacroBeacon.cmd.response.picks[i] = (t<sizeof(xxtea.data)) ? xxtea.data[t] : 0;    
+  }
 }

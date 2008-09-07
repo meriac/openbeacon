@@ -67,7 +67,7 @@ typedef struct {
  * hdr.version = BOUNCERPKT_VERSION
  * hdr.command = BOUNCERPKT_CMD_HELLO
  * hdr.value   = amount of retries of hello packet
- * hdr.flags   = RFU
+ * hdr.flags   = 0
  * salt_a      = first part of tag generated salt
  *
  */
@@ -86,8 +86,8 @@ typedef struct {
  *
  * hdr.version = BOUNCERPKT_VERSION
  * hdr.command = BOUNCERPKT_CMD_CHALLENGE_SETUP
- * hdr.value   = RFU
- * hdr.flags   = RFU
+ * hdr.value   = 0
+ * hdr.flags   = 0
  * src_mac     = mac address of lock
  * challenge   = 64 bit challenge for lock
  *
@@ -108,7 +108,7 @@ typedef struct {
  * hdr.version = BOUNCERPKT_VERSION
  * hdr.command = BOUNCERPKT_CMD_CHALLENGE
  * hdr.value   = BOUNCERPKT_PICKS_LIST_SIZE
- * hdr.flags   = RFU
+ * hdr.flags   = 0
  * src_mac     = mac address of lock
  * picks       = list of BOUNCERPKT_PICKS_COUNT offsets
  *               out of BOUNCERPKT_PICKS_LIST_SIZE sized
@@ -131,7 +131,7 @@ typedef struct {
  * hdr.version = BOUNCERPKT_VERSION
  * hdr.command = BOUNCERPKT_CMD_RESPONSE
  * hdr.value   = BOUNCERPKT_PICKS_LIST_SIZE
- * hdr.flags   = RFU
+ * hdr.flags   = 0
  * salt_b      = second part of tag generated salt
  * picks       = list of BOUNCERPKT_PICKS_COUNT bytes
  *               out of BOUNCERPKT_PICKS_LIST_SIZE sized
