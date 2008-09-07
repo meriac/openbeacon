@@ -40,15 +40,39 @@ typedef union {
   u_int8_t data[BOUNCERPKT_PICKS_LIST_SIZE];
 } TXxteaEncryption;
 
-const bank1 u_int32_t tea_key[4] = {0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF};
+static const bank1 u_int32_t tea_key[4] = {0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF};
 static bank1 TXxteaEncryption xxtea;
+
+static void
+xxtea_shuffle_byte_order (void)
+{
+  u_int8_t t,i,*p;
+  
+  p=xxtea.data;
+  i=BOUNCERPKT_PICKS_LIST_SIZE;
+  while(i--)
+  {
+    t   = *p;
+    *p  = p[3];
+    p[3]= t;
+    p++;
+
+    t   = *p;
+    *p  = p[1];
+    p[1]= t;
+
+    p+=3;
+  }
+}
 
 void
 xxtea_encode (void)
 {
   u_int32_t z, y, sum, mx;
   u_int8_t p,q,e;
-
+  
+  xxtea_shuffle_byte_order();
+  
   z = xxtea.block[XXTEA_BLOCK_COUNT - 1];
   sum = 0;
 
@@ -65,4 +89,6 @@ xxtea_encode (void)
         xxtea.block[p] = z;
       }
     }
+
+  xxtea_shuffle_byte_order();
 }
