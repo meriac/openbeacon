@@ -4,7 +4,7 @@ CC=$(COMPILER_PATH)/bin/picc
 
 CONFIG=0x3d4
 CHIP=16F684
-PROGNAME=openbeacontag
+PROGNAME=openbouncer
 
 SRCS=main.c timer.c nRF_CMD.c protocol.c
 
