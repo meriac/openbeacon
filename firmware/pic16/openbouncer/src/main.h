@@ -1,6 +1,7 @@
 /***************************************************************
  *
- * OpenBeacon.org - definitions nRF opcode chunk
+ * OpenBeacon.org - OpenBoucer cryptographic door lock system
+ *                  main entry, CRC, behaviour
  *
  * Copyright 2006 Milosch Meriac <meriac@openbeacon.de>
  *

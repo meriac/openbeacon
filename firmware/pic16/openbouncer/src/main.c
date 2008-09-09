@@ -1,6 +1,7 @@
 /***************************************************************
  *
- * OpenBeacon.org - main entry, CRC, behaviour
+ * OpenBeacon.org - OpenBoucer cryptographic door lock system
+ *                  main entry, CRC, behaviour
  *
  * Copyright 2006 Milosch Meriac <meriac@openbeacon.de>
  *
@@ -156,12 +157,11 @@ main (void)
 	    {
 	      protocol_calc_secret ();
 	      protocol_setup_response ();
-	      switch_to_txmode ();
-	      packet_tx ();
+//            packet_tx ();
 	    }
 
 	  /* switch to TX mode */
-	  nRFCMD_DoRX (0);
+	  switch_to_txmode ();
 	  /* turn off LED */
 	  CONFIG_PIN_LED = 0;
 	}

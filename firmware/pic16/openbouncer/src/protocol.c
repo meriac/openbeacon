@@ -1,6 +1,7 @@
 /***************************************************************
  *
- * OpenBeacon.org -  OpenBouncer protocol implementation
+ * OpenBeacon.org -  OpenBouncer cryptographic door lock
+ *                   protocol implementation
  *
  * Copyright 2006 Milosch Meriac <meriac@openbeacon.de>
  *
@@ -96,20 +97,6 @@ htonl (u_int32_t src)
 
   return res;
 }
-
-/*
-#define htons ntohs
-static u_int16_t
-htons (u_int16_t src)
-{
-  u_int16_t res;
-
-  ((u_int8_t *) & res)[0] = ((u_int8_t *) & src)[1];
-  ((u_int8_t *) & res)[1] = ((u_int8_t *) & src)[0];
-
-  return res;
-}
-*/
 
 static void
 xxtea_encode (void)
