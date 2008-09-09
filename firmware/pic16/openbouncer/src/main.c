@@ -42,27 +42,6 @@ TMacroBeacon g_MacroBeacon = {
   WR_TX_PLOAD			// Transmit Packet Opcode
 };
 
-/* switch to rx mode */
-static void
-switch_to_rxmode (void)
-{
-  nRFCMD_RegExec (FLUSH_RX);
-  nRFCMD_ClearIRQ (MASK_IRQ_FLAGS);
-  nRFCMD_DoRX (1);
-  CONFIG_PIN_CE = 1;
-}
-
-/* switch to tx mode */
-static void
-switch_to_txmode (void)
-{
-  CONFIG_PIN_CE = 0;
-  sleep_2ms ();
-  nRFCMD_DoRX (0);
-  nRFCMD_RegExec (FLUSH_RX);
-  nRFCMD_ClearIRQ (MASK_IRQ_FLAGS);
-}
-
 /* send away g_MacroBeacon.cmd packet */
 static void
 packet_tx (void)
@@ -76,36 +55,38 @@ static unsigned char
 packet_rx (unsigned char cmd)
 {
   unsigned char res = 0;
+  volatile unsigned short i = 0xFFFF;
 
-  /* read every packet from FIFO */
-  while ((nRFCMD_GetFifoStatus () & FIFO_RX_EMPTY) == 0)
+  while (CONFIG_PIN_IRQ && i--);
+
+  if (!CONFIG_PIN_IRQ)
     {
-      /* read packet from nRF chip */
-      nRFCMD_RegRead (RD_RX_PLOAD,
-		      (unsigned char *) &g_MacroBeacon.cmd,
-		      sizeof (g_MacroBeacon.cmd));
-
-      /* search for BOUNCERPKT_CMD_CHALLENGE_SETUP */
-      if ((g_MacroBeacon.cmd.hdr.version == BOUNCERPKT_VERSION) &&
-	  (g_MacroBeacon.cmd.hdr.command == cmd))
+      /* read every packet from FIFO */
+      while ((nRFCMD_GetFifoStatus () & FIFO_RX_EMPTY) == 0)
 	{
-	  /* turn on LED */
-	  CONFIG_PIN_LED = 1;
+	  /* read packet from nRF chip */
+	  nRFCMD_RegRead (RD_RX_PLOAD,
+			  (unsigned char *) &g_MacroBeacon.cmd,
+			  sizeof (g_MacroBeacon.cmd));
 
-	  res = 1;
-	  /* clear RX fifo */
-	  nRFCMD_RegExec (FLUSH_RX);
-	  /* leave while loop */
-	  break;
-	}
+	  /* search for BOUNCERPKT_CMD_CHALLENGE_SETUP */
+	  if ((g_MacroBeacon.cmd.hdr.version == BOUNCERPKT_VERSION) &&
+	      (g_MacroBeacon.cmd.hdr.command == cmd))
+	    {
+	      /* turn on LED */
+	      CONFIG_PIN_LED = 1;
+	      res = 1;
+	      /* leave while loop */
+	      break;
+	    }
 
-    };
+	};
 
-  /* clear status */
-  nRFCMD_ClearIRQ (MASK_IRQ_FLAGS);
-  /* turn off LED */
-  CONFIG_PIN_LED = 0;
-
+      /* clear status */
+      nRFCMD_ClearIRQ (MASK_IRQ_FLAGS);
+      /* turn off LED */
+      CONFIG_PIN_LED = 0;
+    }
   return res;
 }
 
@@ -144,24 +125,38 @@ main (void)
       /* prepare and send hello packet */
       if (protocol_setup_hello ())
 	{
+	  /* clear RX fifo */
+	  nRFCMD_RegExec (FLUSH_RX);
 	  /* send away HELLO packet */
 	  packet_tx ();
 	  /* switch to rx mode */
-	  switch_to_rxmode ();
-	  /* listen for BOUNCERPKT_CMD_CHALLENGE_SETUP packets */
-	  sleep_jiffies (50 * TIMER1_JIFFIES_PER_MS);
-	  /* disable RX mode */
-	  CONFIG_PIN_CE = 0;
+	  nRFCMD_DoRX (1);
+	  CONFIG_PIN_CE = 1;
 
+	  /* listen for BOUNCERPKT_CMD_CHALLENGE_SETUP packets */
 	  if (packet_rx (BOUNCERPKT_CMD_CHALLENGE_SETUP))
 	    {
 	      protocol_calc_secret ();
-	      protocol_setup_response ();
-	      packet_tx ();
+
+	      /* listen for BOUNCERPKT_CMD_CHALLENGE */
+	      if (packet_rx (BOUNCERPKT_CMD_CHALLENGE))
+		{
+		  CONFIG_PIN_CE = 0;
+		  nRFCMD_DoRX (0);
+		  protocol_setup_response ();
+		  packet_tx ();
+		}
+	    }
+	  else
+	    {
+	      CONFIG_PIN_CE = 0;
+	      nRFCMD_DoRX (0);
 	    }
 
 	  /* switch to TX mode */
-	  switch_to_txmode ();
+	  nRFCMD_RegExec (FLUSH_RX);
+	  nRFCMD_RegExec (FLUSH_TX);
+	  CONFIG_PIN_CE = 0;
 	  /* turn off LED */
 	  CONFIG_PIN_LED = 0;
 	}
