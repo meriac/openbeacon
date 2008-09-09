@@ -43,21 +43,25 @@ const long tea_key[4] = { 0xbb5b1e88, 0x5269abf5, 0x6676bb17, 0x3230bab1 };
 
 #ifdef CONFIG_TEA_ENABLEENCODE
 
-void RAMFUNC xxtea_encode(long* v, long length) {
-  unsigned long z /* = v[length-1] */, y=v[0], sum=0, e, DELTA=0x9e3779b9;
-  long p, q ;
-    
-  z=v[length-1];
-  q = 6 + 52/length;
-  while (q--) {
-    sum += DELTA;
-    e = (sum >> 2) & 3;
-    for (p=0; p<length-1; p++)
-      y = v[p+1], z = v[p] += MX;
+void RAMFUNC
+xxtea_encode (long *v, long length)
+{
+  unsigned long z /* = v[length-1] */ , y = v[0], sum = 0, e, DELTA =
+    0x9e3779b9;
+  long p, q;
 
-    y = v[0];
-    z = v[length-1] += MX;
-  }
+  z = v[length - 1];
+  q = 6 + 52 / length;
+  while (q--)
+    {
+      sum += DELTA;
+      e = (sum >> 2) & 3;
+      for (p = 0; p < length - 1; p++)
+	y = v[p + 1], z = v[p] += MX;
+
+      y = v[0];
+      z = v[length - 1] += MX;
+    }
 }
 
 #endif /* CONFIG_TEA_ENABLEENCODE */
@@ -65,21 +69,25 @@ void RAMFUNC xxtea_encode(long* v, long length) {
 
 #ifdef CONFIG_TEA_ENABLEDECODE
 
-void RAMFUNC xxtea_decode(long* v, long length) {
-  unsigned long z /* = v[length-1] */, y=v[0], sum=0, e, DELTA=0x9e3779b9;
-  long p, q ;
-    
-  q = 6 + 52/length;
-  sum = q*DELTA;
-  while (sum) {
-    e = (sum >> 2) & 3;
-    for (p=length-1; p>0; p--)
-      z = v[p-1], y = v[p] -= MX;
- 
-    z = v[length-1];
-    y = v[0] -= MX;
-    sum -= DELTA;
-  }
+void RAMFUNC
+xxtea_decode (long *v, long length)
+{
+  unsigned long z /* = v[length-1] */ , y = v[0], sum = 0, e, DELTA =
+    0x9e3779b9;
+  long p, q;
+
+  q = 6 + 52 / length;
+  sum = q * DELTA;
+  while (sum)
+    {
+      e = (sum >> 2) & 3;
+      for (p = length - 1; p > 0; p--)
+	z = v[p - 1], y = v[p] -= MX;
+
+      z = v[length - 1];
+      y = v[0] -= MX;
+      sum -= DELTA;
+    }
 }
 
 #endif /*CONFIG_TEA_ENABLEDECODE */
