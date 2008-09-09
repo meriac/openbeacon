@@ -9,6 +9,9 @@
 \usepackage{mathpazo}
 \usepackage[T1]{fontenc}
 
+\floatstyle{ruled}
+\restylefloat{figure}
+
 \newcommand{\openbouncer}{\textsc{OpenBouncer}}
 %opening
 \title{\openbouncer{} Authentication Protocol}
@@ -84,19 +87,19 @@ FlashSalt represents real entropy that was generated at tag production time. $D_
 
 \begin{figure}[h]
   \centering \caption{EEPROM memory map}
-  \begin{tabular}{r|r|l|}
-    \multicolumn{1}{r}{Offset} & \multicolumn{1}{r}{Length} & \multicolumn{1}{l}{Contents} \\\cline{2-3}
-    0 & 4 & $\texttt{ID}_0$ \\\cline{2-3}
-    4 & 8 & $\textnormal{Key}(\texttt{ID}_0,T) \oplus D_T$ \\\cline{2-3}
-   12 & 4 & $\texttt{ID}_1$ \\\cline{2-3}
-   16 & 8 & $\textnormal{Key}(\texttt{ID}_1,T) \oplus D_T$ \\\cline{2-3}
-   $\vdots$ &\multicolumn{2}{|c|}{$\vdots$} \\\cline{2-3}
-   84 & 4 & $\texttt{ID}_7$ \\\cline{2-3}
-   88 & 8 & $\textnormal{Key}(\texttt{ID}_7,T) \oplus D_T$ \\\cline{2-3}
-   96 & 4 & $\texttt{ID}_D$ \\\cline{2-3}
-  100 & 8 & $D_T$ \\\cline{2-3}
-  108 & 16 & $\textnormal{LastRND}_T$ \\\cline{2-3}
-  124 & 4 & $\textnormal{Counter}_T$ \\\cline{2-3}
+  \begin{tabular}{rr|l|}
+    \multicolumn{1}{r}{Offset} & \multicolumn{1}{r}{Length} & \multicolumn{1}{l}{Contents} \\\cline{3-3}
+    0 & 4 & $\texttt{ID}_0$ \\\cline{3-3}
+    4 & 8 & $\textnormal{Key}(\texttt{ID}_0,T) \oplus D_T$ \\\cline{3-3}
+   12 & 4 & $\texttt{ID}_1$ \\\cline{3-3}
+   16 & 8 & $\textnormal{Key}(\texttt{ID}_1,T) \oplus D_T$ \\\cline{3-3}
+   $\vdots$ & $\vdots$ & \multicolumn{1}{|c|}{$\vdots$} \\\cline{3-3}
+   84 & 4 & $\texttt{ID}_7$ \\\cline{3-3}
+   88 & 8 & $\textnormal{Key}(\texttt{ID}_7,T) \oplus D_T$ \\\cline{3-3}
+   96 & 4 & $\texttt{ID}_D$ \\\cline{3-3}
+  100 & 8 & $D_T$ \\\cline{3-3}
+  108 & 16 & $\textnormal{LastRND}_T$ \\\cline{3-3}
+  124 & 4 & $\textnormal{Counter}_T$ \\\cline{3-3}
   \end{tabular}
 \end{figure}
 
