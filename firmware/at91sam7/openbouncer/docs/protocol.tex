@@ -1,14 +1,21 @@
 \documentclass[a4paper,10pt]{scrartcl}
 \usepackage[utf8]{inputenc}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\usepackage{lmodern}
+\usepackage[scaled=.90]{helvet}
+\usepackage{courier}
+\usepackage{mathpazo}
 \usepackage[T1]{fontenc}
 
 \newcommand{\openbouncer}{\textsc{OpenBouncer}}
 %opening
 \title{\openbouncer{} Authentication Protocol}
-\author{}
+\author{Milosch Meriac \and Henryk Plötz}
 
+\def\thefootnote{\fnsymbol{footnote}}
 \begin{document}
-
 \maketitle
 
 \begin{abstract}
@@ -17,36 +24,117 @@
 
 \section{Protocol}
 
-\paragraph{Tag} $$\textnormal{RND}^{32} \leftarrow \textnormal{xxTea}_{D_T}\left(\textnormal{EEPROM}(\textnormal{LastRND}_T)^{16} \parallel \textnormal{EEPROM}(\textnormal{Counter}_T++)^{4} \parallel \textnormal{Flash}(\textnormal{FlashSalt}_T)^{12} \right)$$
-$$\textnormal{Salt}_A^{4} \leftarrow \textnormal{RND}[0\ldots3]^{4}$$
-$$\textnormal{Salt}_B^{4} \leftarrow \textnormal{RND}[4\ldots7]^{4}$$
-$$\textnormal{EEPROM}(\textnormal{LastRND}_T)^{16} \leftarrow \textnormal{RND}[16\ldots31]^{16}$$
+The door (identified by 32 bit identifier \verb|ID|) and the tag (not explicitly identified, herein referred to as $T$) share a common key $\textnormal{Key}(\texttt{ID}, T)$. The tag can store multiple $(\texttt{ID}, \textnormal{Key}(\texttt{ID}, T))$ pairs to be used for multiple different doors. The door will store multiple $\textnormal{Key}(\texttt{ID}, x)$ for all tags $x$ in the set of allowed tags. No explicit tag identifier is used in the protocol or stored on the tag and it's up to the key management at the door to provide a set of keys for all allowed tags (and allow to remove specific tags from this set).
 
-\paragraph{Tag to Door} $\textnormal{HELLO}(\textnormal{Retrycounter}^1,\textnormal{Salt}_A^{4})$
+The tag authenticates to the door with the shared key in a challenge/response scheme. The main cryptographic primitive used for the protocol is xxTea, used as a keyed hash function.
 
-\paragraph{Door to Tag} $\textnormal{SETUP}(\textnormal{ID}^{4}, \textnormal{Challenge}^{8})$
-(door: wait $\delta t > 42\,\textnormal{ms}$)
+\subsection{Protocol goals}
+The challenge/response protocol should provide the following (all are assuming that the attacker does not possess the relevant keys):
+\begin{description}
+  \item[Authentication] An attacker can not successfully perform the protocol.
+  \item[Freshness] An attacker can not simply replay a tag's response to authenticate to the door.
+  \item[Anonymity on the radio channel] \begin{enumerate} \item An attacker that passively listens in on successful door/tag transactions can not distinguish between different tags or recognize the identity of any tag. \item An attacker that actively interrogates tags can not distinguish between different tags or recognize the identity of any tag. \end{enumerate}
+  \item[Limited protection against forwarding] An attacker can not successfully convince the door that a tag is in radio range of the door when it in reality is not, without using advanced equipment.
+  \item[Protection of the door associations] An attacker that is in possession of a tag can not determine whether that tag shares a common key with a specific door without trying to use that tag at that door.
+\end{description}
 
-\paragraph{Tag} $$\textnormal{Response}_T^{32} \leftarrow \textnormal{xxTea}_{\textnormal{\scriptsize{Key}}(\textnormal{\scriptsize{ID}},T)}\left( \textnormal{Salt}_A^4 \parallel \textnormal{Salt}_B^4 \parallel \textnormal{Challenge}^8 \parallel \textnormal{ID}^4 \parallel \overrightarrow{0}^{12} \right)$$
+\subsection{Protocol description}
+\paragraph{Idea} Door and tag each generate and exchange a 64 bit nonce, the door nonce is called challenge, the tag nonce is called salt. The tag uses xxTea with the door specific key $\textnormal{Key}(\texttt{ID}, T)$ to encrypt a concatenation of the tag salt, door challenge and door identifier into a 256 bit (32 bytes) response. This response is never fully transmitted over the air. Instead the door generates 8 random byte offsets  into the response ($i_0$ through $i_7$) and transmits this list of offsets to the tag. The tag responds immediately by transmitting the 8 (out of 32) bytes of the precomputed response indicated by these offsets (and then overwrites the full response in its memory). Under no circumstance will the tag transmit more than 8 bytes of response per protocol run. The door measures the response time between sending the offset list and receiving the response bytes and rejects all responses that take `too long' (how long exactly is `too long' remains to be determined, but it is expected that this time does not exceed 1\,ms, since no additional cryptographic operations are necessary on the tag).
 
-\paragraph{Door to Tag} $\textnormal{CHALLENGE}(i_0^1, i_1^1, i_2^1, \ldots, i_7^1)$
-(door: start timer)
+The door should then determine if the tag is in the list of allowed tags by replicating this computation for all stored tag keys.
 
-\paragraph{Tag to Door} $\textnormal{RESPONSE}( Response_T[i_0]^1, Response_T[i_1]^1, Response_T[i_2]^1, \ldots Response_T[i_7]^1, \textnormal{Salt}_B^4 )$
-(door: stop timer)
+Note: Care should be taken to ensure that all calculations on tag and door do not differ in timing or power consumption for the different cases of ``tag has a matching key for the door \texttt{ID} (or not)'' and ``door has a matching key for the tag response (or not)''. See the section \ref{sec:tag-lookup}.
 
-\paragraph{Door} check that $\delta t < 1\,\textnormal{ms}$, perform the calculation of $\textnormal{Response}_x^{32}$ for all Tags $x$ in the list of acceptable tags, check that $\exists x ((Response_x[i_0]^1, Response_x[i_1]^1, \ldots Response_x[i_7]^1) = (Response_T[i_0]^1, Response_T[i_1]^1, \ldots Response_T[i_7]^1))$
+\paragraph{Protocol run} A successful run of the protocol is as follows\footnote{All superscripts indicate the length of the respective field in bytes; square brackets indicate a selection of indexed byte offsets from a larger field; $\overrightarrow{0}$ is a sequence of zero bytes of the indicated length}:
+\begin{enumerate}
+\item \emph{Tag} comes up with random numbers $\textnormal{Salt}_A^{4}$ and $\textnormal{Salt}_B^{4}$, see section \ref{sec:tag-rng}
+\item \emph{Tag} transmits to \emph{Door} $$\texttt{HELLO}(\textnormal{Retrycounter}^1,\textnormal{Salt}_A^{4})$$
+\item \emph{Door} transmits to \emph{Tag} $$\texttt{SETUP}(\texttt{ID}^{4}, \textnormal{Challenge}^{8})$$
+\item \emph{Door} waits $\delta t > 42\,\textnormal{ms}$, while
+\item \emph{Tag} computes $$\textnormal{Response}_T^{32} \leftarrow \textnormal{xxTea}_{\textnormal{\scriptsize{Key}}(\texttt{\scriptsize{ID}},T)}\left( \textnormal{Salt}_A^4 \parallel \textnormal{Salt}_B^4 \parallel \textnormal{Challenge}^8 \parallel \texttt{ID}^4 \parallel \overrightarrow{0}^{12} \right)$$
+\item \emph{Door} transmits to \emph{Tag} $$\texttt{CHALLENGE}(i_0^1, i_1^1, i_2^1, \ldots, i_7^1)$$
+\item \emph{Door} starts timer
+\item \emph{Tag} transmits to \emph{Door} $$\texttt{RESPONSE}( \textnormal{Response}_T[i_0]^1, \textnormal{Response}_T[i_1]^1, \ldots \textnormal{Response}_T[i_7]^1, \textnormal{Salt}_B^4 )$$
+\item \emph{Door} stops timer and checks that $\delta t < 1\,\textnormal{ms}$
+\item \emph{Door} calculates $\textnormal{Response}_x^{32}$ for all Tags in the list of acceptable tags and checks that there is exists an allowed Tag $x$ for which $$(\textnormal{Response}_x[i_0]^1, \textnormal{Response}_x[i_1]^1, \ldots \textnormal{Response}_x[i_7]^1)$$ matches what the Tag sent in its \texttt{RESPONSE} message.
+\end{enumerate}
 
-\section{Data stored in tag $T$}
+\paragraph{Retries}
+It is assumed that the tag will always transmit at full transmit power, while the receive sensitivity on the door side can be reduced if necessary. Radio transmissions from door to tag will not be protected specially (the door will eventually just time out), while all transmissions from tag to door will be protected with the automatic acknowledgement mechanism of the underlying radio protocol. This ensures that the tag will detect when either the \texttt{HELLO} or the \texttt{RESPONSE} packet were not received by the door.
+
+If the \texttt{HELLO} packet is not acknowledged it can be retransmitted until it is either received or the attempt times out. If the \texttt{RESPONSE} packet is not acknowledged it can \emph{not} be retransmitted. Instead the tag should start a new protocol run with new random numbers and a new \texttt{HELLO} packet. In this case the tag will increment the Retrycounter field in the \texttt{HELLO} packet (which otherwise is set to $0$) so that the door is informed about the aborted previous attempt (which might indicate poor radio reception or other causes that should be investigated).
+
+\section{Tag considerations}
+\subsection{Random number generator} \label{sec:tag-rng}
+Since the tag most likely does not have a proper physical random number generator it will use the xxTea cryptographic primitive with a counter stored in EEPROM and secret data from EEPROM ($D_T$, Counter and LastRND) and Flash (FlashSalt):
+
+\begin{eqnarray*}
+\textnormal{RND}^{32} &\leftarrow& \textnormal{xxTea}_{D_T}\left(\textnormal{LastRND}_T^{16} \parallel \textnormal{Counter}_T^{4} \parallel \textnormal{FlashSalt}_T^{12} \right) \\
+\textnormal{Counter}_T^{4} &\leftarrow& \textnormal{Counter}_T^{4} + 1 \\
+\textnormal{LastRND}_T^{16} &\leftarrow& \textnormal{RND}[16\ldots31]^{16} \\
+\textnormal{Salt}_A^{4} &\leftarrow& \textnormal{RND}[0\ldots3]^{4} \\
+\textnormal{Salt}_B^{4} &\leftarrow& \textnormal{RND}[4\ldots7]^{4} \\
+\end{eqnarray*}
+
+FlashSalt represents real entropy that was generated at tag production time. $D_T$ is the dummy door key (see section \ref{sec:tag-lookup}). LastRND and Counter together are the state of this pseudo-random number sequence (where Counter should guarantee a minimum sequence length of $2^{32}$).
+
+\subsection{Data stored in tag $T$}
 \paragraph{Flash} $\textnormal{FlashSalt}_T^{12}$: random confidential data, generated at production
-\paragraph{EEPROM} $D$, LastRND and Counter are initialized to random confidential data at production
+\paragraph{EEPROM} $D_T$, LastRND and Counter are initialized to random confidential data at production. $\texttt{ID}_D$ is fixed to \verb|0xFFFFFFFF|, all unused $\texttt{ID}_x$ fields are initialized to \verb|0x00000000|.
 
-\begin{tabular}{|*{2}{l|l||}c||l|l||l||l|}\hline
-  4 & 8 & 4 & 8 & \ldots & 4 & 8 & 16 & 4 \\\hline
-  $\textnormal{ID}_0$ & $\textnormal{Key}(\textnormal{ID}_0,T) \oplus D_T$ &
-  $\textnormal{ID}_1$ & $\textnormal{Key}(\textnormal{ID}_1,T) \oplus D_T$ & \ldots &
-  \verb|0xFFFFFFFF| & $D_T$ &
-  $\textnormal{LastRND}_T$ & $\textnormal{Counter}_T$ \\\hline
-\end{tabular}
+\begin{figure}[h]
+  \centering \caption{EEPROM memory map}
+  \begin{tabular}{r|r|l|}
+    \multicolumn{1}{r}{Offset} & \multicolumn{1}{r}{Length} & \multicolumn{1}{l}{Contents} \\\cline{2-3}
+    0 & 4 & $\texttt{ID}_0$ \\\cline{2-3}
+    4 & 8 & $\textnormal{Key}(\texttt{ID}_0,T) \oplus D_T$ \\\cline{2-3}
+   12 & 4 & $\texttt{ID}_1$ \\\cline{2-3}
+   16 & 8 & $\textnormal{Key}(\texttt{ID}_1,T) \oplus D_T$ \\\cline{2-3}
+   $\vdots$ &\multicolumn{2}{|c|}{$\vdots$} \\\cline{2-3}
+   84 & 4 & $\texttt{ID}_7$ \\\cline{2-3}
+   88 & 8 & $\textnormal{Key}(\texttt{ID}_7,T) \oplus D_T$ \\\cline{2-3}
+   96 & 4 & $\texttt{ID}_D$ \\\cline{2-3}
+  100 & 8 & $D_T$ \\\cline{2-3}
+  108 & 16 & $\textnormal{LastRND}_T$ \\\cline{2-3}
+  124 & 4 & $\textnormal{Counter}_T$ \\\cline{2-3}
+  \end{tabular}
+\end{figure}
+
+\subsection{Door lookup on tag} \label{sec:tag-lookup}
+In order not to leak information about whether a given tag has an association with a given door (identified by \texttt{ID}), even when the attacker is in physical possession of the tag and can interrogate it, the door lookup algorithm (described in algorithm \ref{alg:tag-lookup}) is used.
+\begin{algorithm}
+  \centering \caption{Door lookup algorithm on tag} \label{alg:tag-lookup}
+  \begin{algorithmic}
+    \Function {LookupDoorKey}{\texttt{ID}}
+      \If {\texttt{ID} $=$ \texttt{0x00000000}}
+        \State \Return Failure
+      \EndIf
+      \If {\texttt{ID} $=$ \texttt{0xFFFFFFFF}}
+        \State \Return Failure
+      \EndIf
+      \State $a \gets 0$
+      \State $b \gets 0$
+      \For {$(i, k) \in $ Associations} \Comment Not including dummy association $(\texttt{ID}_D, D_T)$
+        \If {$i = \texttt{ID}$}
+          \State $a \gets k$ \Comment $a$ is now $\textnormal{Key}(\texttt{ID},T) \oplus D_T$
+        \Else \Comment Both alternatives shall take exactly the same execution time
+          \State $b \gets k$
+        \EndIf
+      \EndFor
+      \State $a \gets a \oplus D_T$ \Comment $a$ is now the door key or $D_T$ if the door is not associated
+      \State \Return $a$
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+This algorithm guarantees two things: \begin{itemize}
+  \item The lookup takes the same time, regardless of whether an association for the requested \texttt{ID} is stored or not (except for two well-known invalid \texttt{ID}s).
+  \item If no association for the requested \texttt{ID} is stored then the lookup returns a dummy key (random, confidential, generated at tag production time) that is unknown to the attacker. (And not, for example, a well-known key consisting only of zeros.)
+\end{itemize}
+
+ 
+\section{Door considerations}
+
+\section{Attacks and defenses}
 
 \end{document}
