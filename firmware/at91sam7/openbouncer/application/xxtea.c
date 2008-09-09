@@ -32,7 +32,6 @@
 #include <beacontypes.h>
 #include <board.h>
 #include "xxtea.h"
-#include "proto.h"
 
 //
 // Dummy TEA encryption key of the tag - please change for real applications!
