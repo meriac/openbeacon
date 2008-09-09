@@ -69,37 +69,34 @@ If the \texttt{HELLO} packet is not acknowledged it can be retransmitted until i
 
 \section{Tag considerations}
 \subsection{Random number generator} \label{sec:tag-rng}
-Since the tag most likely does not have a proper physical random number generator it will use the xxTea cryptographic primitive with a counter stored in EEPROM and secret data from EEPROM ($D_T$, Counter and LastRND) and Flash (FlashSalt):
+Since the tag most likely does not have a proper physical random number generator it will use the xxTea cryptographic primitive with a counter stored in EEPROM and secret data from EEPROM ($D_T$ and Counter) and Flash (FlashSalt):
 
 \begin{eqnarray*}
-\textnormal{RND}^{32} &\leftarrow& \textnormal{xxTea}_{D_T}\left(\textnormal{LastRND}_T^{16} \parallel \textnormal{Counter}_T^{4} \parallel \textnormal{FlashSalt}_T^{12} \right) \\
+\textnormal{RND}^{32} &\leftarrow& \textnormal{xxTea}_{D_T}\left(\textnormal{Counter}_T^{4} \parallel \textnormal{FlashSalt}_T^{28} \right) \\
 \textnormal{Counter}_T^{4} &\leftarrow& \textnormal{Counter}_T^{4} + 1 \\
-\textnormal{LastRND}_T^{16} &\leftarrow& \textnormal{RND}[16\ldots31]^{16} \\
 \textnormal{Salt}_A^{4} &\leftarrow& \textnormal{RND}[0\ldots3]^{4} \\
 \textnormal{Salt}_B^{4} &\leftarrow& \textnormal{RND}[4\ldots7]^{4} \\
 \end{eqnarray*}
 
-FlashSalt represents real entropy that was generated at tag production time. $D_T$ is the dummy door key (see section \ref{sec:tag-lookup}). LastRND and Counter together are the state of this pseudo-random number sequence (where Counter should guarantee a minimum sequence length of $2^{32}$).
+FlashSalt represents real entropy that was generated at tag production time. $D_T$ is the dummy door key (see section \ref{sec:tag-lookup}). Counter represents the state of this pseudo-random number sequence (guaranteeing a sequence length of $2^{32}$).
 
 \subsection{Data stored in tag $T$}
 \paragraph{Flash} $\textnormal{FlashSalt}_T^{12}$: random confidential data, generated at production
-\paragraph{EEPROM} $D_T$, LastRND and Counter are initialized to random confidential data at production. $\texttt{ID}_D$ is fixed to \verb|0xFFFFFFFF|, all unused $\texttt{ID}_x$ fields are initialized to \verb|0x00000000|.
+\paragraph{EEPROM} $D_T$ and Counter are initialized to random confidential data at production. All unused $\texttt{ID}_x$ fields are initialized to \verb|0x00000000|.
 
 \begin{figure}[h]
   \centering \caption{EEPROM memory map}
   \begin{tabular}{rr|l|}
     \multicolumn{1}{r}{Offset} & \multicolumn{1}{r}{Length} & \multicolumn{1}{l}{Contents} \\\cline{3-3}
     0 & 4 & $\texttt{ID}_0$ \\\cline{3-3}
-    4 & 8 & $\textnormal{Key}(\texttt{ID}_0,T) \oplus D_T$ \\\cline{3-3}
-   12 & 4 & $\texttt{ID}_1$ \\\cline{3-3}
-   16 & 8 & $\textnormal{Key}(\texttt{ID}_1,T) \oplus D_T$ \\\cline{3-3}
+    4 & 16 & $\textnormal{Key}(\texttt{ID}_0,T) \oplus D_T$ \\\cline{3-3}
+   20 & 4 & $\texttt{ID}_1$ \\\cline{3-3}
+   24 & 16 & $\textnormal{Key}(\texttt{ID}_1,T) \oplus D_T$ \\\cline{3-3}
    $\vdots$ & $\vdots$ & \multicolumn{1}{|c|}{$\vdots$} \\\cline{3-3}
-   84 & 4 & $\texttt{ID}_7$ \\\cline{3-3}
-   88 & 8 & $\textnormal{Key}(\texttt{ID}_7,T) \oplus D_T$ \\\cline{3-3}
-   96 & 4 & $\texttt{ID}_D$ \\\cline{3-3}
-  100 & 8 & $D_T$ \\\cline{3-3}
-  108 & 16 & $\textnormal{LastRND}_T$ \\\cline{3-3}
-  124 & 4 & $\textnormal{Counter}_T$ \\\cline{3-3}
+   80 & 4 & $\texttt{ID}_4$ \\\cline{3-3}
+   84 & 16 & $\textnormal{Key}(\texttt{ID}_4,T) \oplus D_T$ \\\cline{3-3}
+  100 & 16 & $D_T$ \\\cline{3-3}
+  116 & 4 & $\textnormal{Counter}_T$ \\\cline{3-3}
   \end{tabular}
 \end{figure}
 
