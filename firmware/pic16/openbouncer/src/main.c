@@ -157,7 +157,7 @@ main (void)
 	    {
 	      protocol_calc_secret ();
 	      protocol_setup_response ();
-//            packet_tx ();
+	      packet_tx ();
 	    }
 
 	  /* switch to TX mode */
