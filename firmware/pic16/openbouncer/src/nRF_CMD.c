@@ -50,20 +50,27 @@ const unsigned char g_MacroInitialization[] = {
 };
 
 // first byte payload size+1, second byte register, 3..n-th byte payload
-const unsigned char g_MacroStart[] = {
+static const unsigned char g_MacroStartRX[] = {
+  0x02, CONFIG | WRITE_REG, NRF_CONFIG_BYTE | NRF_CONFIG_PWR_UP | NRF_CONFIG_PRIM_RX,
+  0x02, STATUS | WRITE_REG, 0x70,	// reset status
+  0x00
+};
+
+// first byte payload size+1, second byte register, 3..n-th byte payload
+static const unsigned char g_MacroStart[] = {
   0x02, CONFIG | WRITE_REG, NRF_CONFIG_BYTE | NRF_CONFIG_PWR_UP,
   0x02, STATUS | WRITE_REG, 0x70,	// reset status
   0x00
 };
 
 // first byte payload size+1, second byte register, 3..n-th byte payload
-const unsigned char g_MacroStop[] = {
+static const unsigned char g_MacroStop[] = {
   0x02, CONFIG | WRITE_REG, NRF_CONFIG_BYTE,
   0x02, STATUS | WRITE_REG, 0x70,	// reset status
   0x00
 };
 
-unsigned char
+static unsigned char
 nRFCMD_XcieveByte (unsigned char byte)
 {
   unsigned char idx;
@@ -131,9 +138,15 @@ nRFCMD_Stop (void)
 }
 
 void
+nRFCMD_DoRX (unsigned char doRx)
+{
+  nRFCMD_Macro (doRx ? g_MacroStartRX : g_MacroStart);
+}
+
+void
 nRFCMD_Execute (void)
 {
-  nRFCMD_Macro (g_MacroStart);
+  nRFCMD_DoRX (0);
   sleep_jiffies (TIMER1_JIFFIES_PER_MS);
   CONFIG_PIN_CE = 1;
   usleep (12);

@@ -26,8 +26,8 @@
 #ifndef __PROTOCOL_H__
 #define __PROTOCOL_H__
 
-extern void protocol_setup_hello (void);
-extern void protocol_calc_secret (void);
-extern void protocol_setup_response (void);
+extern u_int8_t protocol_setup_hello (void);
+extern u_int8_t protocol_calc_secret (void);
+extern u_int8_t protocol_setup_response (void);
 
 #endif/*__PROTOCOL_H__*/

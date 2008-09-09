@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include "config.h"
 #include "timer.h"
+#include "openbouncer.h"
 #include "protocol.h"
 #include "nRF_CMD.h"
 #include "nRF_HW.h"
@@ -60,17 +61,28 @@ main (void)
 
   IOCA = IOCA | (1 << 0);
 
-  // light LED during transmission
-  CONFIG_PIN_LED = 1;
-  protocol_setup_hello ();
-  // send it away
-  nRFCMD_Macro ((u_int8_t *) & g_MacroBeacon);
-  nRFCMD_Execute ();
+  while (1)
+    {
 
-  protocol_calc_secret ();
-  protocol_setup_response ();
+      // light LED during transmission
+      if (protocol_setup_hello ())
+	{
+	  CONFIG_PIN_LED = 1;
 
-  CONFIG_PIN_LED = 0;
+	  // send it away
+	  nRFCMD_Macro ((u_int8_t *) & g_MacroBeacon);
+	  nRFCMD_Execute ();
+
+	  protocol_calc_secret ();
+	  protocol_setup_response ();
+
+	  CONFIG_PIN_LED = 0;
+	}
+
+      sleep_jiffies (100 * TIMER1_JIFFIES_PER_MS);
+
+    }
+
   // rest in peace
   while (1)
     sleep_jiffies (0xFFFF);
