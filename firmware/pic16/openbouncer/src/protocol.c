@@ -73,10 +73,11 @@ volatile const def_ee_counter = 0xFFFFFFFF;
 volatile const u_int32_t xxtea_key[4] =
   { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
 volatile const u_int32_t flashsalt[FLASHSALT_BLOCKS] = {
-    0xFFFFFFFF, 0xFFFFFFFF,
-    0xFFFFFFFF, 0xFFFFFFFF,
-    0xFFFFFFFF, 0xFFFFFFFF,
-    0xFFFFFFFF };
+  0xFFFFFFFF, 0xFFFFFFFF,
+  0xFFFFFFFF, 0xFFFFFFFF,
+  0xFFFFFFFF, 0xFFFFFFFF,
+  0xFFFFFFFF
+};
 
 static bank1 TXXTEAEncryption xxtea;
 static u_int32_t xxtea_salt_b;
@@ -145,16 +146,16 @@ u_int8_t
 protocol_setup_hello (void)
 {
   u_int8_t i;
-  
-  if(ee_counter==0xFFFF)
+
+  if (ee_counter == 0xFFFF)
     return 0;
 
   xxtea.rnd.counter = ee_counter;
   ee_counter = xxtea.rnd.counter + 1;
-  
+
   for (i = 0; i < FLASHSALT_BLOCKS; i++)
     xxtea.rnd.flashsalt[i] = flashsalt[i];
-    
+
   /* XXTEA over (last_rnd || counter || flash_salt) to calculate
      salt_a, salt_b and to update lastrnd */
   xxtea_encode ();
@@ -167,7 +168,7 @@ protocol_setup_hello (void)
   xxtea_salt_b = htonl (xxtea.entropy.salt_b);
   g_MacroBeacon.cmd.hello.reserved[0] = ee_counter;
   g_MacroBeacon.cmd.hello.reserved[1] = 0;
-  
+
   return 1;
 }
 
@@ -192,7 +193,7 @@ protocol_calc_secret (void)
   /* fix endianess so picks byte array is architecture independent */
   for (i = 0; i < BOUNCERPKT_XXTEA_BLOCK_COUNT; i++)
     xxtea.block[i] = htonl (xxtea.block[i]);
-    
+
   return 1;
 }
 
@@ -213,6 +214,6 @@ protocol_setup_response (void)
       g_MacroBeacon.cmd.response.picks[i] =
 	(t < sizeof (xxtea.data_b)) ? xxtea.data_b[t] : 0;
     }
-    
+
   return 1;
 }

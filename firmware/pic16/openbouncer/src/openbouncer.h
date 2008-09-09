@@ -41,7 +41,7 @@ typedef unsigned long u_int32_t;
 
 /*
  * PROTOCOL ENDIANESS = Network Byte Order
- */ 
+ */
 
 /* 
  * TBouncerHeader
@@ -49,7 +49,8 @@ typedef unsigned long u_int32_t;
  * default header common for all packets
  *
  */
-typedef struct {
+typedef struct
+{
   u_int8_t version;
   u_int8_t command;
   u_int8_t value;
@@ -71,7 +72,8 @@ typedef struct {
  * salt_a      = first part of tag generated salt
  *
  */
-typedef struct {  
+typedef struct
+{
   TBouncerCmdHeader hdr;
   u_int32_t salt_a;
   u_int32_t reserved[2];
@@ -92,7 +94,8 @@ typedef struct {
  * challenge   = 64 bit challenge for lock
  *
  */
-typedef struct {  
+typedef struct
+{
   TBouncerCmdHeader hdr;
   u_int32_t src_mac;
   u_int32_t challenge[2];
@@ -115,7 +118,8 @@ typedef struct {
  *               byte array out of calculated tag response
  *
  */
-typedef struct {  
+typedef struct
+{
   TBouncerCmdHeader hdr;
   u_int32_t src_mac;
   u_int8_t picks[BOUNCERPKT_PICKS_COUNT];
@@ -139,7 +143,8 @@ typedef struct {
  *               that were requested by BOUNCERPKT_CMD_CHALLENGE
  *
  */
-typedef struct {  
+typedef struct
+{
   TBouncerCmdHeader hdr;
   u_int32_t salt_b;
   u_int8_t picks[BOUNCERPKT_PICKS_COUNT];
@@ -152,7 +157,7 @@ typedef union
   TBouncerCmdChallengeSetup challenge_setup;
   TBouncerCmdChallenge challenge;
   TBouncerCmdResponse response;
-  
+
 }
 TBouncerEnvelope;
 

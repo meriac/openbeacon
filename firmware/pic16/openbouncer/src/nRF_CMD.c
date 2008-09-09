@@ -36,22 +36,23 @@
 // first byte payload size+1, second byte register, 3..n-th byte payload
 const unsigned char g_MacroInitialization[] = {
   0x01, OP_NOP,
-  0x02, CONFIG     | WRITE_REG, 0x00,	// stop nRF
-  0x02, EN_AA      | WRITE_REG, 0x00,	// disable ShockBurst(tm)
-  0x02, EN_RXADDR  | WRITE_REG, 0x01,	// enable RX pipe address 0
-  0x02, SETUP_AW   | WRITE_REG, NRF_MAC_SIZE - 2,	// setup MAC address width to NRF_MAC_SIZE
-  0x02, RF_CH      | WRITE_REG, CONFIG_DEFAULT_CHANNEL,	// set channel to 2480MHz
-  0x02, RF_SETUP   | WRITE_REG, NRF_RFOPTIONS,	// update RF options
-  0x02, STATUS     | WRITE_REG, 0x78,	// reset status register
+  0x02, CONFIG | WRITE_REG, 0x00,	// stop nRF
+  0x02, EN_AA | WRITE_REG, 0x00,	// disable ShockBurst(tm)
+  0x02, EN_RXADDR | WRITE_REG, 0x01,	// enable RX pipe address 0
+  0x02, SETUP_AW | WRITE_REG, NRF_MAC_SIZE - 2,	// setup MAC address width to NRF_MAC_SIZE
+  0x02, RF_CH | WRITE_REG, CONFIG_DEFAULT_CHANNEL,	// set channel to 2480MHz
+  0x02, RF_SETUP | WRITE_REG, NRF_RFOPTIONS,	// update RF options
+  0x02, STATUS | WRITE_REG, 0x78,	// reset status register
   0x06, RX_ADDR_P0 | WRITE_REG, 0x01, 0x02, 0x03, 0x02, 0x01,	// set RX_ADDR_P0
-  0x02, RX_PW_P0   | WRITE_REG, 16,	// set payload width of pipe 0 to sizeof(TRfBroadcast)
-  0x06, TX_ADDR    | WRITE_REG, 0x01, 0x02, 0x03, 0x02, 0x01,	// set TX_ADDR
-  0x00					// termination
+  0x02, RX_PW_P0 | WRITE_REG, 16,	// set payload width of pipe 0 to sizeof(TRfBroadcast)
+  0x06, TX_ADDR | WRITE_REG, 0x01, 0x02, 0x03, 0x02, 0x01,	// set TX_ADDR
+  0x00				// termination
 };
 
 // first byte payload size+1, second byte register, 3..n-th byte payload
 static const unsigned char g_MacroStartRX[] = {
-  0x02, CONFIG | WRITE_REG, NRF_CONFIG_BYTE | NRF_CONFIG_PWR_UP | NRF_CONFIG_PRIM_RX,
+  0x02, CONFIG | WRITE_REG,
+    NRF_CONFIG_BYTE | NRF_CONFIG_PWR_UP | NRF_CONFIG_PRIM_RX,
   0x02, STATUS | WRITE_REG, 0x70,	// reset status
   0x00
 };
@@ -172,11 +173,11 @@ nRFCMD_GetFifoStatus (void)
   unsigned char res;
 
   CONFIG_PIN_CSN = 0;
-  nRFCMD_XcieveByte(FIFO_STATUS);
-  res = nRFCMD_XcieveByte(0);
+  nRFCMD_XcieveByte (FIFO_STATUS);
+  res = nRFCMD_XcieveByte (0);
   CONFIG_PIN_CSN = 1;
 
-  return res;  
+  return res;
 }
 
 unsigned char
@@ -185,11 +186,11 @@ nRFCMD_ClearIRQ (unsigned char status)
   unsigned char res;
 
   CONFIG_PIN_CSN = 0;
-  res = nRFCMD_XcieveByte(STATUS | WRITE_REG);
-  nRFCMD_XcieveByte(status & MASK_IRQ_FLAGS);
+  res = nRFCMD_XcieveByte (STATUS | WRITE_REG);
+  nRFCMD_XcieveByte (status & MASK_IRQ_FLAGS);
   CONFIG_PIN_CSN = 1;
-  
-  return res;  
+
+  return res;
 }
 
 unsigned char

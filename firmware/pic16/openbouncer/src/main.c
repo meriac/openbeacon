@@ -45,7 +45,7 @@ void
 main (void)
 {
   unsigned char i;
-  
+
   /* configure CPU peripherals */
   OPTION = CONFIG_CPU_OPTION;
   TRISA = CONFIG_CPU_TRISA;
@@ -64,17 +64,17 @@ main (void)
   IOCA = IOCA | (1 << 0);
 
   nRFCMD_DoRX (1);
-  nRFCMD_ClearIRQ (MASK_IRQ_FLAGS);    
+  nRFCMD_ClearIRQ (MASK_IRQ_FLAGS);
   CONFIG_PIN_CE = 1;
-  
-  for (i=0;i<20;i++)
-  {
+
+  for (i = 0; i < 20; i++)
+    {
       CONFIG_PIN_LED = 1;
       sleep_jiffies (50 * TIMER1_JIFFIES_PER_MS);
       CONFIG_PIN_LED = 0;
-      sleep_jiffies (50 * TIMER1_JIFFIES_PER_MS);      
-  }
- 
+      sleep_jiffies (50 * TIMER1_JIFFIES_PER_MS);
+    }
+
   while (1)
     {
 
@@ -83,18 +83,18 @@ main (void)
       while (CONFIG_PIN_IRQ);
 
       CONFIG_PIN_LED = 1;
-      
+
       do
 	{
 	  /* read packet from nRF chip */
-	  nRFCMD_RegRead (RD_RX_PLOAD, (unsigned char*)&g_MacroBeacon.cmd,
-			     sizeof (g_MacroBeacon.cmd));
+	  nRFCMD_RegRead (RD_RX_PLOAD, (unsigned char *) &g_MacroBeacon.cmd,
+			  sizeof (g_MacroBeacon.cmd));
 
 	}
       while ((nRFCMD_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
-      
+
       nRFCMD_ClearIRQ (MASK_IRQ_FLAGS);
-      
+
 
     }
 
