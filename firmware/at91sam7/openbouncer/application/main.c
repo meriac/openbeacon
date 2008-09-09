@@ -38,6 +38,7 @@
 #include <env.h>
 
 #include "cmd/cmd.h"
+#include "proto.h"
 #include "led.h"
 #include "BurgWaechter_TSE_3000/lock.h"
 
@@ -87,6 +88,8 @@ main (void)
   vCmdInit ();
 
   vLockInit ();
+  
+  vInitProtocolLayer ();
 
   vLedSetGreen (0);
 
