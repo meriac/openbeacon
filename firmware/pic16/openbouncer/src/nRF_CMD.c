@@ -43,9 +43,9 @@ const unsigned char g_MacroInitialization[] = {
   0x02, RF_CH      | WRITE_REG, CONFIG_DEFAULT_CHANNEL,	// set channel to 2480MHz
   0x02, RF_SETUP   | WRITE_REG, NRF_RFOPTIONS,	// update RF options
   0x02, STATUS     | WRITE_REG, 0x78,	// reset status register
-  0x06, RX_ADDR_P0 | WRITE_REG, 'O', 'C', 'A', 'E', 'B',	// set RX_ADDR_P0 to "BEACO"
-  0x06, TX_ADDR    | WRITE_REG, 0x01, 0x02, 0x03, 0x02, 0x01,	// set TX_ADDR
+  0x06, RX_ADDR_P0 | WRITE_REG, 0x01, 0x02, 0x03, 0x02, 0x01,	// set RX_ADDR_P0
   0x02, RX_PW_P0   | WRITE_REG, 16,	// set payload width of pipe 0 to sizeof(TRfBroadcast)
+  0x06, TX_ADDR    | WRITE_REG, 0x01, 0x02, 0x03, 0x02, 0x01,	// set TX_ADDR
   0x00					// termination
 };
 
@@ -164,6 +164,32 @@ nRFCMD_RegExec (unsigned char reg)
   CONFIG_PIN_CSN = 1;
 
   return res;
+}
+
+unsigned char
+nRFCMD_GetFifoStatus (void)
+{
+  unsigned char res;
+
+  CONFIG_PIN_CSN = 0;
+  nRFCMD_XcieveByte(FIFO_STATUS);
+  res = nRFCMD_XcieveByte(0);
+  CONFIG_PIN_CSN = 1;
+
+  return res;  
+}
+
+unsigned char
+nRFCMD_ClearIRQ (unsigned char status)
+{
+  unsigned char res;
+
+  CONFIG_PIN_CSN = 0;
+  res = nRFCMD_XcieveByte(STATUS | WRITE_REG);
+  nRFCMD_XcieveByte(status & MASK_IRQ_FLAGS);
+  CONFIG_PIN_CSN = 1;
+  
+  return res;  
 }
 
 unsigned char

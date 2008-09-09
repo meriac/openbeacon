@@ -40,6 +40,8 @@ extern void nRFCMD_Macro (const unsigned char *macro);
 extern void nRFCMD_Execute (void);
 extern void nRFCMD_DoRX (unsigned char doRx);
 extern void nRFCMD_Stop (void);
+extern unsigned char nRFCMD_GetFifoStatus (void);
+extern unsigned char nRFCMD_ClearIRQ (unsigned char status);
 extern unsigned char nRFCMD_RegExec (unsigned char reg);
 extern unsigned char nRFCMD_RegReadWrite (unsigned char reg,
 					  unsigned char value);
