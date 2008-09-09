@@ -41,6 +41,73 @@ TMacroBeacon g_MacroBeacon = {
   WR_TX_PLOAD			// Transmit Packet Opcode
 };
 
+/* switch to rx mode */
+static void
+switch_to_rxmode (void)
+{
+  nRFCMD_RegExec (FLUSH_RX);
+  nRFCMD_ClearIRQ (MASK_IRQ_FLAGS);
+  nRFCMD_DoRX (1);
+  CONFIG_PIN_CE = 1;
+}
+
+/* switch to tx mode */
+static void
+switch_to_txmode (void)
+{
+  CONFIG_PIN_CE = 0;
+  sleep_2ms ();
+  nRFCMD_DoRX (0);
+  nRFCMD_RegExec (FLUSH_RX);
+  nRFCMD_ClearIRQ (MASK_IRQ_FLAGS);
+}
+
+/* send away g_MacroBeacon.cmd packet */
+static void
+packet_tx (void)
+{
+  nRFCMD_Macro ((unsigned char *) &g_MacroBeacon);
+  nRFCMD_Execute ();
+}
+
+/* try to find specified command in RX fifo */
+static unsigned char
+packet_rx (unsigned char cmd)
+{
+  unsigned char res = 0;
+
+  /* read every packet from FIFO */
+  while ((nRFCMD_GetFifoStatus () & FIFO_RX_EMPTY) == 0)
+    {
+      /* read packet from nRF chip */
+      nRFCMD_RegRead (RD_RX_PLOAD,
+		      (unsigned char *) &g_MacroBeacon.cmd,
+		      sizeof (g_MacroBeacon.cmd));
+
+      /* search for BOUNCERPKT_CMD_CHALLENGE_SETUP */
+      if ((g_MacroBeacon.cmd.hdr.version == BOUNCERPKT_VERSION) &&
+	  (g_MacroBeacon.cmd.hdr.command == cmd))
+	{
+	  /* turn on LED */
+	  CONFIG_PIN_LED = 1;
+
+	  res = 1;
+	  /* clear RX fifo */
+	  nRFCMD_RegExec (FLUSH_RX);
+	  /* leave while loop */
+	  break;
+	}
+
+    };
+
+  /* clear status */
+  nRFCMD_ClearIRQ (MASK_IRQ_FLAGS);
+  /* turn off LED */
+  CONFIG_PIN_LED = 0;
+
+  return res;
+}
+
 void
 main (void)
 {
@@ -63,10 +130,6 @@ main (void)
 
   IOCA = IOCA | (1 << 0);
 
-  nRFCMD_DoRX (1);
-  nRFCMD_ClearIRQ (MASK_IRQ_FLAGS);
-  CONFIG_PIN_CE = 1;
-
   for (i = 0; i < 20; i++)
     {
       CONFIG_PIN_LED = 1;
@@ -77,25 +140,31 @@ main (void)
 
   while (1)
     {
-
-      CONFIG_PIN_LED = 0;
-
-      while (CONFIG_PIN_IRQ);
-
-      CONFIG_PIN_LED = 1;
-
-      do
+      /* prepare and send hello packet */
+      if (protocol_setup_hello ())
 	{
-	  /* read packet from nRF chip */
-	  nRFCMD_RegRead (RD_RX_PLOAD, (unsigned char *) &g_MacroBeacon.cmd,
-			  sizeof (g_MacroBeacon.cmd));
+	  /* send away HELLO packet */
+	  packet_tx ();
+	  /* switch to rx mode */
+	  switch_to_rxmode ();
+	  /* listen for BOUNCERPKT_CMD_CHALLENGE_SETUP packets */
+	  sleep_jiffies (50 * TIMER1_JIFFIES_PER_MS);
+	  /* disable RX mode */
+	  CONFIG_PIN_CE = 0;
 
+	  if (packet_rx (BOUNCERPKT_CMD_CHALLENGE_SETUP))
+	    {
+	      protocol_calc_secret ();
+	      protocol_setup_response ();
+	      switch_to_txmode ();
+	      packet_tx ();
+	    }
+
+	  /* switch to TX mode */
+	  nRFCMD_DoRX (0);
+	  /* turn off LED */
+	  CONFIG_PIN_LED = 0;
 	}
-      while ((nRFCMD_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
-
-      nRFCMD_ClearIRQ (MASK_IRQ_FLAGS);
-
-
     }
 
   // rest in peace
