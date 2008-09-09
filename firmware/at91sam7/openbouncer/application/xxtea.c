@@ -36,14 +36,13 @@
 //
 // Dummy TEA encryption key of the tag - please change for real applications!
 //
-const long tea_key[4] = { 0xbb5b1e88, 0x5269abf5, 0x6676bb17, 0x3230bab1 };
 
-#define MX  ( (((z>>5)^(y<<2))+((y>>3)^(z<<4)))^((sum^y)+(tea_key[(p&3)^e]^z)) )
+#define MX  ( (((z>>5)^(y<<2))+((y>>3)^(z<<4)))^((sum^y)+(key[(p&3)^e]^z)) )
 
 #ifdef CONFIG_TEA_ENABLEENCODE
 
 void RAMFUNC
-xxtea_encode (long *v, long length)
+xxtea_encode (const u_int32_t * key, long *v, long length)
 {
   unsigned long z /* = v[length-1] */ , y = v[0], sum = 0, e, DELTA =
     0x9e3779b9;
@@ -69,7 +68,7 @@ xxtea_encode (long *v, long length)
 #ifdef CONFIG_TEA_ENABLEDECODE
 
 void RAMFUNC
-xxtea_decode (long *v, long length)
+xxtea_decode (const u_int32_t * key, long *v, long length)
 {
   unsigned long z /* = v[length-1] */ , y = v[0], sum = 0, e, DELTA =
     0x9e3779b9;

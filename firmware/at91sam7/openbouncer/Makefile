@@ -8,6 +8,7 @@ APP_CFLAGS=-Iapplication
 APP_SRC= \
   application/main.c \
   application/led.c \
+  application/proto.c \
   application/xxtea.c \
   application/cmd/cmd.c \
   application/cmd/cmd_key.c \

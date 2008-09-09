@@ -163,7 +163,7 @@ sendReply (void)
 
   vTaskDelay (100 / portTICK_RATE_MS);
 
-  memset(&g_Bouncer, 0, sizeof(g_Bouncer));
+  memset (&g_Bouncer, 0, sizeof (g_Bouncer));
   g_Bouncer.hdr.version = BOUNCERPKT_VERSION;
   g_Bouncer.hdr.command = BOUNCERPKT_CMD_CHALLENGE_SETUP;
 
@@ -178,7 +178,7 @@ sendReply (void)
   nRFAPI_SetRxMode (0);
 
   /* upload data to nRF24L01 */
-  nRFAPI_TX ( (unsigned char*)&g_Bouncer, sizeof (g_Bouncer));
+  nRFAPI_TX ((unsigned char *) &g_Bouncer, sizeof (g_Bouncer));
 
   /* transmit data */
   nRFCMD_CE (1);
@@ -209,7 +209,7 @@ vnRFtaskRx (void *parameter)
 	  do
 	    {
 	      // read packet from nRF chip
-	      nRFCMD_RegReadBuf (RD_RX_PLOAD, (unsigned char*)&g_Bouncer,
+	      nRFCMD_RegReadBuf (RD_RX_PLOAD, (unsigned char *) &g_Bouncer,
 				 sizeof (g_Bouncer));
 
 	      // adjust byte order and decode
@@ -219,15 +219,15 @@ vnRFtaskRx (void *parameter)
 	      shuffle_tx_byteorder ();
 #endif
 
-		  DumpStringToUSB ("RX: ");
-		  DumpBufferToUSB ((unsigned char*)&g_Bouncer,
-				   sizeof (g_Bouncer));
-		  DumpStringToUSB ("\n\r");
+	      DumpStringToUSB ("RX: ");
+	      DumpBufferToUSB ((unsigned char *) &g_Bouncer,
+			       sizeof (g_Bouncer));
+	      DumpStringToUSB ("\n\r");
 	    }
 	  while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
-	  vLedSetGreen(1);
-	  sendReply();
-	  vLedSetGreen(0);
+	  vLedSetGreen (1);
+	  sendReply ();
+	  vLedSetGreen (0);
 
 	  vLedSetRed (0);
 	  nRFAPI_GetFifoStatus ();
