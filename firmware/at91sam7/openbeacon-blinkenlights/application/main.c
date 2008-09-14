@@ -38,19 +38,41 @@
 
 #include "led.h"
 #include "proto.h"
+#include "usbshell.h"
+#include "debug_print.h"
+#include "dimmer.h"
+#include "env.h"
 
+/**********************************************************************/
+#define DIMMER_OFFSET (DIMMER_TICKS/5)
 /**********************************************************************/
 static inline void
 prvSetupHardware (void)
 {
+  int i;
+
   /*  When using the JTAG debugger the hardware is not always initialised to
      the correct default state.  This line just ensures that this does not
      cause all interrupts to be masked at the start. */
   AT91C_BASE_AIC->AIC_EOICR = 0;
 
   /*  Enable the peripheral clock. */
-  AT91C_BASE_PMC->PMC_PCER = 1 << AT91C_ID_PIOA;
-  AT91C_BASE_PMC->PMC_PCER = 1 << AT91C_ID_PIOB;
+  AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_PIOA) | (1 << AT91C_ID_PIOB);
+
+  /*  Init LEDs */
+  vLedInit ();
+
+  /* If no previous environment exists - create a new, but don't store it */
+  env_init ();
+  if (!env_load ())
+    {
+      bzero (&env, sizeof (env));
+
+      for (i = 0; i < GAMMA_SIZE; i++)
+	env.e.gamma_table[i] =
+	  DIMMER_OFFSET +
+	  (((DIMMER_TICKS - DIMMER_OFFSET) * i) / (GAMMA_SIZE - 1));
+    }
 }
 
 /**********************************************************************/
@@ -67,12 +89,14 @@ main (void)
 {
   prvSetupHardware ();
 
-  vLedInit ();
-
   xTaskCreate (vUSBCDCTask, (signed portCHAR *) "USB", TASK_USB_STACK,
 	       NULL, TASK_USB_PRIORITY, NULL);
 
   vInitProtocolLayer ();
+
+  vUSBShellInit ();
+
+  vInitDimmer ();
 
   vLedSetGreen (1);
 

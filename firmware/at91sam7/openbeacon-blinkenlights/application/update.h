@@ -1,8 +1,8 @@
 /***************************************************************
  *
- * OpenBeacon.org - OnAir protocol specification and definition
+ * OpenBeacon.org - ATMEL Original Boot Loader Backup
  *
- * Copyright 2006 Milosch Meriac <meriac@openbeacon.de>
+ * Copyright 2007 Milosch Meriac <meriac@openbeacon.de>
  *
  ***************************************************************
 
@@ -18,14 +18,11 @@
     You should have received a copy of the GNU General Public License along
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
 */
 
-#ifndef __OPENBEACON_H__
-#define __OPENBEACON_H__
+#ifndef __UPDATE_H__
+#define __UPDATE_H__
 
-#define RFB_RFOPTIONS 0x0F
-#define RFBPROTO_BLINKENLIGHTS 42
-#define ENABLED_NRF_FEATURES 0x0
+extern void DeviceRevertToUpdateMode (void);
 
-#endif/*__OPENBEACON_H__*/
+#endif/*__UPDATE_H__*/

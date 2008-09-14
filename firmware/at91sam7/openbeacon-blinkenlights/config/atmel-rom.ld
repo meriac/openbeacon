@@ -11,7 +11,10 @@ ENTRY(start)
 SECTIONS 
 {
 	. = 0;
-	startup : { *(.startup)} >flash
+	startup : {
+	    *(.bootloader)
+	    *(.startup)
+	} >flash
 
 	prog : 
 	{

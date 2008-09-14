@@ -1,8 +1,8 @@
 /***************************************************************
  *
- * OpenBeacon.org - OnAir protocol specification and definition
+ * OpenBeacon.org - ATMEL Original Boot Loader Backup
  *
- * Copyright 2006 Milosch Meriac <meriac@openbeacon.de>
+ * Copyright 2007 Milosch Meriac <meriac@openbeacon.de>
  *
  ***************************************************************
 
@@ -18,14 +18,23 @@
     You should have received a copy of the GNU General Public License along
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
 */
 
-#ifndef __OPENBEACON_H__
-#define __OPENBEACON_H__
+.global bootloader
+.global bootloader_orig
+.global bootloader_orig_end
 
-#define RFB_RFOPTIONS 0x0F
-#define RFBPROTO_BLINKENLIGHTS 42
-#define ENABLED_NRF_FEATURES 0x0
+.section .bootloader,"ax"
+         .code 32
+         .align 0
 
-#endif/*__OPENBEACON_H__*/
+bootloader:
+	 .incbin "application/update/AT91SAM7S64-bootloader.bin"
+
+.section .rodata
+         .data 32
+         .align 0
+
+bootloader_orig:
+	 .incbin "application/update/AT91SAM7S64-bootloader-orig.bin"
+bootloader_orig_end:

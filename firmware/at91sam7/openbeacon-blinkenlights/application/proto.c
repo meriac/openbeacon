@@ -2,7 +2,8 @@
  *
  * OpenBeacon.org - OpenBeacon dimmer link layer protocol
  *
- * Copyright 2007 Milosch Meriac <meriac@openbeacon.de>
+ * Copyright 2008 Milosch Meriac <meriac@openbeacon.de>
+ *                Daniel Mack <daniel@caiaq.de>
  *
  ***************************************************************
 
@@ -24,6 +25,7 @@
 #include <semphr.h>
 #include <task.h>
 #include <string.h>
+#include <math.h>
 #include <board.h>
 #include <beacontypes.h>
 #include <USB-CDC.h>
@@ -33,51 +35,26 @@
 #include "nRF24L01/nRF_HW.h"
 #include "nRF24L01/nRF_CMD.h"
 #include "nRF24L01/nRF_API.h"
+#include "dimmer.h"
+#include "env.h"
+#include "update.h"
+#include "debug_print.h"
 
-const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 1, 2, 3, 2, 1 };
-TBeaconEnvelope g_Beacon;
-
-#define PWM_CMR_PRESCALER 0x3
-#define PWM_CMR_CLOCK_FREQUENCY (MCK/(1<<PWM_CMR_PRESCALER))
-
-// set dimmer default brightness to 50%
-#define PWM_CMR_DEFAULT_DIMMER  (PWM_CMR_CLOCK_FREQUENCY/200)
-
-// set LED flash time for triac trigger to 250us
-#define PWM_CMR_DIMMER_LED_TIME (PWM_CMR_CLOCK_FREQUENCY/400)
+static BRFPacket pkg;
+static unsigned long packet_count;
+const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] =
+  { 'D', 'E', 'C', 'A', 'D' };
 
 #define BLINK_INTERVAL_MS (50 / portTICK_RATE_MS)
-
-/**********************************************************************/
-#define SHUFFLE(a,b)    tmp=g_Beacon.datab[a];\
-                        g_Beacon.datab[a]=g_Beacon.datab[b];\
-                        g_Beacon.datab[b]=tmp;
-
-/**********************************************************************/
-void RAMFUNC
-shuffle_tx_byteorder (void)
-{
-  unsigned char tmp;
-
-  SHUFFLE (0 + 0, 3 + 0);
-  SHUFFLE (1 + 0, 2 + 0);
-  SHUFFLE (0 + 4, 3 + 4);
-  SHUFFLE (1 + 4, 2 + 4);
-  SHUFFLE (0 + 8, 3 + 8);
-  SHUFFLE (1 + 8, 2 + 8);
-  SHUFFLE (0 + 12, 3 + 12);
-  SHUFFLE (1 + 12, 2 + 12);
-}
 
 static inline s_int8_t
 PtInitNRF (void)
 {
-  if (!nRFAPI_Init
-      (DEFAULT_CHANNEL, broadcast_mac, sizeof (broadcast_mac),
-       ENABLED_NRF_FEATURES))
+  if (!nRFAPI_Init (DEFAULT_CHANNEL, broadcast_mac,
+		    sizeof (broadcast_mac), ENABLED_NRF_FEATURES))
     return 0;
 
-  nRFAPI_SetPipeSizeRX (0, 16);
+  nRFAPI_SetPipeSizeRX (0, sizeof (pkg));
   nRFAPI_SetTxPower (3);
   nRFAPI_SetRxMode (1);
   nRFCMD_CE (1);
@@ -94,54 +71,157 @@ swapshort (unsigned short src)
 static inline unsigned long
 swaplong (unsigned long src)
 {
-  return (src >> 24) | (src << 24) | ((src >> 8) & 0x0000FF00) | ((src << 8) &
-								  0x00FF0000);
+  return (src >> 24) |
+    (src << 24) | ((src >> 8) & 0x0000FF00) | ((src << 8) & 0x00FF0000);
 }
 
-static inline short
-crc16 (const unsigned char *buffer, int size)
+static void
+shuffle_tx_byteorder (unsigned long *v, int len)
 {
-  unsigned short crc = 0xFFFF;
-
-  if (buffer && size)
-    while (size--)
-      {
-	crc = (crc >> 8) | (crc << 8);
-	crc ^= *buffer++;
-	crc ^= ((unsigned char) crc) >> 4;
-	crc ^= crc << 12;
-	crc ^= (crc & 0xFF) << 5;
-      }
-
-  return crc;
-}
-
-static inline void
-DumpUIntToUSB (unsigned int data)
-{
-  int i = 0;
-  unsigned char buffer[10], *p = &buffer[sizeof (buffer)];
-
-  do
+  while (len--)
     {
-      *--p = '0' + (unsigned char) (data % 10);
-      data /= 10;
-      i++;
+      *v = swaplong (*v);
+      v++;
     }
-  while (data);
-
-  while (i--)
-    vUSBSendByte (*p++);
 }
 
 static inline void
-DumpStringToUSB (char *text)
+sendReply (void)
 {
-  unsigned char data;
+  vTaskDelay (100 / portTICK_RATE_MS);
+  pkg.mac = env.e.mac;
+  pkg.wmcu_id = env.e.wmcu_id;
 
-  if (text)
-    while ((data = *text++) != 0)
-      vUSBSendByte (data);
+  /* mark packet as being sent from an dimmer
+   * so it's ignored by other dimmers */
+  pkg.cmd |= 0x40;
+
+  /* update crc */
+  pkg.crc =
+    env_crc16 ((unsigned char *) &pkg, sizeof (pkg) - sizeof (pkg.crc));
+  pkg.crc = swapshort (pkg.crc);
+
+  /* encrypt data */
+  shuffle_tx_byteorder ((unsigned long *) &pkg, sizeof (pkg) / sizeof (long));
+  xxtea_encode ((long *) &pkg, sizeof (pkg) / sizeof (long));
+  shuffle_tx_byteorder ((unsigned long *) &pkg, sizeof (pkg) / sizeof (long));
+
+  /* disable RX mode */
+  nRFCMD_CE (0);
+
+  /* switch to TX mode */
+  nRFAPI_SetRxMode (0);
+
+  /* upload data to nRF24L01 */
+  nRFAPI_TX ((unsigned char *) &pkg, sizeof (pkg));
+
+  /* transmit data */
+  nRFCMD_CE (1);
+
+  /* wait until packet is transmitted */
+  vTaskDelay (10 / portTICK_RATE_MS);
+
+  /* switch to RX mode again */
+  nRFAPI_SetRxMode (1);
+}
+
+static inline void
+bParsePacket (void)
+{
+  int i, reply;
+
+  /* no MAC set yet? do nothing */
+  //if (!env.e.mac)
+  //  return;
+
+  /* broadcasts have to have the correct wmcu_id set */
+  if (pkg.mac == 0xffff && pkg.wmcu_id != env.e.wmcu_id)
+    return;
+
+  /* for all other packets, we want our mac */
+  if (pkg.mac != 0xffff && pkg.mac != env.e.mac)
+    return;
+
+  /* ignore pakets sent from another dimmer */
+  if (pkg.cmd & 0x40)
+    return;
+
+  reply = pkg.cmd & 0x80;
+  pkg.cmd &= ~0x80;
+
+  switch (pkg.cmd)
+    {
+    case RF_CMD_SET_VALUES:
+      {
+	char v;
+
+	if (env.e.lamp_id * 2 >= RF_PAYLOAD_SIZE)
+	  break;
+
+	v = pkg.payload[env.e.lamp_id / 2];
+	if (env.e.lamp_id & 1)
+	  v >>= 4;
+
+	v &= 0xf;
+
+	//DumpStringToUSB ("new lamp val: ");
+	//DumpUIntToUSB (v);
+	//DumpStringToUSB ("\n\r");
+
+	vUpdateDimmer (v);
+	packet_count++;
+	break;
+      }
+    case RF_CMD_SET_LAMP_ID:
+      DumpStringToUSB ("new lamp id: ");
+      DumpUIntToUSB (pkg.set_lamp_id.id);
+      DumpStringToUSB (", wmcu id: ");
+      DumpUIntToUSB (pkg.set_lamp_id.wmcu_id);
+      DumpStringToUSB ("\n\r");
+
+      env.e.lamp_id = pkg.set_lamp_id.id;
+      env.e.wmcu_id = pkg.set_lamp_id.wmcu_id;
+      vTaskDelay (100);
+      env_store ();
+
+      break;
+    case RF_CMD_SET_GAMMA:
+      if (pkg.set_gamma.block > 1)
+	break;
+
+      for (i = 0; i < 8; i++)
+	vSetDimmerGamma (pkg.set_gamma.block * 8 + i, pkg.set_gamma.val[i]);
+
+      DumpStringToUSB ("new gamme table received\n");
+      break;
+    case RF_CMD_WRITE_CONFIG:
+      env_store ();
+      break;
+    case RF_CMD_SET_JITTER:
+      vSetDimmerJitterUS (pkg.set_jitter.jitter);
+
+      DumpStringToUSB ("new jitter: ");
+      DumpUIntToUSB (vGetDimmerJitterUS ());
+      DumpStringToUSB ("\n");
+
+      break;
+    case RF_CMD_SEND_STATISTICS:
+      pkg.statistics.emi_pulses = vGetEmiPulses ();
+      pkg.statistics.packet_count = packet_count;
+      break;
+    case RF_CMD_ENTER_UPDATE_MODE:
+      if (pkg.payload[0] != 0xDE ||
+	  pkg.payload[1] != 0xAD ||
+	  pkg.payload[2] != 0xBE ||
+	  pkg.payload[3] != 0xEF || pkg.mac == 0xffff)
+	break;
+
+      DumpStringToUSB (" ENTERING UPDATE MODE!\n");
+      DeviceRevertToUpdateMode ();
+    }
+
+  if (reply)
+    sendReply ();
 }
 
 void
@@ -149,137 +229,69 @@ vnRFtaskRx (void *parameter)
 {
   u_int16_t crc;
   (void) parameter;
-  int DidBlink=0;
-  portTickType Ticks=0;
-  
+  int DidBlink = 0;
+  portTickType Ticks = 0;
+  packet_count = 0;
+
   if (!PtInitNRF ())
     return;
 
   for (;;)
     {
-      if (nRFCMD_WaitRx (10))
+      if (!nRFCMD_WaitRx (10))
 	{
-	  if(!DidBlink)
-	  {
-	    vLedSetGreen (1);
-	    Ticks = xTaskGetTickCount();
-	    DidBlink = 1;
-	  }
-
-	  do
-	    {
-	      // read packet from nRF chip
-	      nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.datab,
-				 sizeof (g_Beacon));
-
-	      // adjust byte order and decode
-	      shuffle_tx_byteorder ();
-	      xxtea_decode ();
-	      shuffle_tx_byteorder ();
-
-	      // verify the crc checksum
-	      crc =
-		crc16 (g_Beacon.datab,
-		       sizeof (g_Beacon) - sizeof (g_Beacon.pkt.crc));
-	      if ((swapshort (g_Beacon.pkt.crc) == crc))
-		{
-		  DumpStringToUSB ("RX: ");
-		  DumpUIntToUSB (swaplong (g_Beacon.pkt.oid));
-		  DumpStringToUSB (",");
-		  DumpUIntToUSB (swaplong (g_Beacon.pkt.seq));
-		  DumpStringToUSB (",");
-		  DumpUIntToUSB (g_Beacon.pkt.strength);
-		  DumpStringToUSB (",");
-		  DumpUIntToUSB (g_Beacon.pkt.flags);
-		  DumpStringToUSB ("\n\r");
-		}
-	    }
-	  while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
+	  nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
+	  continue;
 	}
+
+      DumpStringToUSB ("received packet\n");
+
+      do
+	{
+	  /* read packet from nRF chip */
+	  nRFCMD_RegReadBuf (RD_RX_PLOAD, (unsigned char *) &pkg,
+			     sizeof (pkg));
+
+	  /* adjust byte order and decode */
+	  shuffle_tx_byteorder ((unsigned long *) &pkg,
+				sizeof (pkg) / sizeof (long));
+	  xxtea_decode ((long *) &pkg, sizeof (pkg) / sizeof (long));
+	  shuffle_tx_byteorder ((unsigned long *) &pkg,
+				sizeof (pkg) / sizeof (long));
+
+	  /* verify the crc checksum */
+	  crc =
+	    env_crc16 ((unsigned char *) &pkg,
+		       sizeof (pkg) - sizeof (pkg.crc));
+
+	  if (crc != swapshort (pkg.crc))
+	    continue;
+
+	  /* valid paket */
+	  if (!DidBlink)
+	    {
+	      vLedSetGreen (1);
+	      Ticks = xTaskGetTickCount ();
+	      DidBlink = 1;
+	    }
+
+	  bParsePacket ();
+	}
+      while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
+
       nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
-    
-      if( DidBlink && ((xTaskGetTickCount()-Ticks)>BLINK_INTERVAL_MS) )
-      {
-        DidBlink=0;
-	vLedSetGreen(0);
-      }
-    }
-}
 
-static inline void
-vUpdateDimmer (int Percent)
-{
-    int t;
-    
-    if(Percent<1)
-      Percent=1;
-    else
-	if(Percent>90)
-	    Percent=90;
-	    
-    t = ((PWM_CMR_CLOCK_FREQUENCY*Percent)/(100*120));
-    AT91C_BASE_TC2->TC_RA = t;
-    AT91C_BASE_TC2->TC_RC = t+PWM_CMR_DIMMER_LED_TIME;
-}
-
-static inline void
-vInitDimmer (void)
-{
-    /* Enable Peripherals */
-    AT91F_PIO_CfgPeriph(AT91C_BASE_PIOA, 0, TRIGGER_PIN|PHASE_PIN);
-
-    /* Configure Timer/Counter */    
-    AT91F_TC2_CfgPMC();
-    AT91C_BASE_TC2->TC_IDR = 0xFF;
-    AT91C_BASE_TC2->TC_CCR = AT91C_TC_CLKDIS;
-    AT91C_BASE_TC2->TC_CMR =
-	AT91C_TC_CLKS_TIMER_DIV2_CLOCK |
-	AT91C_TC_CPCSTOP |
-	AT91C_TC_EEVTEDG_RISING |
-	AT91C_TC_EEVT_TIOB |
-	AT91C_TC_ENETRG |
-	AT91C_TC_WAVE |
-	AT91C_TC_WAVESEL_UP_AUTO |
-	AT91C_TC_ACPA_SET |
-	AT91C_TC_ACPC_CLEAR;
-    AT91C_BASE_TC2->TC_RA = PWM_CMR_DEFAULT_DIMMER;
-    AT91C_BASE_TC2->TC_RC = PWM_CMR_DEFAULT_DIMMER+PWM_CMR_DIMMER_LED_TIME;
-    AT91C_BASE_TC2->TC_CCR = AT91C_TC_CLKEN;
-
-    AT91C_BASE_TCB->TCB_BCR=AT91C_TCB_SYNC;
-    AT91C_BASE_TCB->TCB_BMR=AT91C_TCB_TC0XC0S_NONE|AT91C_TCB_TC1XC1S_NONE|AT91C_TCB_TC2XC2S_NONE;
-}
-
-void
-vnRFtaskDimmer (void *parameter)
-{
-    (void) parameter;
-    int Percent=0,Sign=1;
-
-    (void) parameter;
-    
-    while(1)
-    {
-	vTaskDelay(20 / portTICK_RATE_MS);	
-	
-	Percent+=Sign;
-	if(Percent>=70)
-	    Sign=-1;
-	else
-	    if(Percent<=20)
-		Sign=1;
-	
-	vUpdateDimmer(Percent);
-    }
+      if (DidBlink && ((xTaskGetTickCount () - Ticks) > BLINK_INTERVAL_MS))
+	{
+	  DidBlink = 0;
+	  vLedSetGreen (0);
+	}
+    }				/* for (;;) */
 }
 
 void
 vInitProtocolLayer (void)
 {
-    vInitDimmer ();
-    xTaskCreate (vnRFtaskRx, (signed portCHAR *) "nRF_Rx", TASK_NRF_STACK,
-	NULL, TASK_NRF_PRIORITY, NULL);
-    
-    xTaskCreate (vnRFtaskDimmer, (signed portCHAR *) "Dimmer", TASK_NRF_STACK,
-	NULL, TASK_NRF_PRIORITY, NULL);
+  xTaskCreate (vnRFtaskRx, (signed portCHAR *) "nRF_Rx", TASK_NRF_STACK,
+	       NULL, TASK_NRF_PRIORITY, NULL);
 }

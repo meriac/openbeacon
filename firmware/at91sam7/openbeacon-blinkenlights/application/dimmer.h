@@ -1,8 +1,8 @@
 /***************************************************************
  *
- * OpenBeacon.org - OnAir protocol specification and definition
+ * OpenBeacon.org - OpenBeacon dimmer link layer protocol
  *
- * Copyright 2006 Milosch Meriac <meriac@openbeacon.de>
+ * Copyright 2008 Milosch Meriac <meriac@openbeacon.de>
  *
  ***************************************************************
 
@@ -21,11 +21,18 @@
 
 */
 
-#ifndef __OPENBEACON_H__
-#define __OPENBEACON_H__
+#ifndef __DIMMER_H__
+#define __DIMMER_H__
 
-#define RFB_RFOPTIONS 0x0F
-#define RFBPROTO_BLINKENLIGHTS 42
-#define ENABLED_NRF_FEATURES 0x0
+#define DIMMER_TICKS 10000
 
-#endif/*__OPENBEACON_H__*/
+extern void vInitDimmer (void);
+extern void vUpdateDimmer (int Percent);
+extern int dimmer_line_hz_enabled (void);
+extern void vSetDimmerGamma (int entry, int val);
+extern int vGetDimmerStep (void);
+extern void vSetDimmerJitterUS (unsigned char us);
+extern unsigned char vGetDimmerJitterUS (void);
+extern int vGetEmiPulses (void);
+
+#endif/*__DIMMER_H__*/

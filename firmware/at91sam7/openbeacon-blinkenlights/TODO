@@ -1,0 +1,9 @@
+1. Delayfunktion - Schicken eine Paketes mit verzögerter Darstellung und der dazugehörigen Deltazeit. Grund:
+Wenn wir ein Paket mehrmals schicken, soll die eignetliche Zeile auf  allen Geräten Gleichzeitig angezeigt werden, unabhängig davon welches Paket durchkommt.
+2. Wireless Watchdog. Wenn ein Dimmer für länger als 10 Sekunde keine Signal empfängt, resettet das Gerät hart.
+3. Sequenznummer in den Paketen mit Vergleich und verwefen "Älterer Pakete"
+Sollte Replay verhindern.
+4. Durchreichen von Wireless-Interface-Konfigurationsbefehlen. Damit kann man die Anlage auf andere Frequenzen umkonfigurieren (z.B  Stockwrkabhängig)
+Wenn kein SIgnal Empfangen, wird, resettet das Geräte sowieso.
+5. Paketstatistiken
+6. Lampen Auschaltmöglichkeit

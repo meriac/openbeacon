@@ -27,6 +27,8 @@
 
 #include "lib_AT91SAM7.h"
 
+#define VERSION "0.5.1"
+
 /*---------------------------------*/
 /* SAM7Board Memories Definition   */
 /*                                 */
@@ -69,8 +71,9 @@
 /* dimmer settings               */
 /*-------------------------------*/
 
-#define TRIGGER_PIN	(1L<<26)
-#define PHASE_PIN	(1L<<27)
+#define TRIGGER_PIN		(1L<<26)
+#define PHASE_PIN		(1L<<27)
+#define CURRENT_SENSE_PIN	(1L<<4)
 
 /*-------------------------------*/
 /* utils settings                */
@@ -83,6 +86,9 @@
 /* task priorities               */
 /*-------------------------------*/
 
+#define TASK_USBSHELL_PRIORITY  ( tskIDLE_PRIORITY + 0)
+#define TASK_USBSHELL_STACK     ( 512 )
+
 #define TASK_CMD_PRIORITY	( tskIDLE_PRIORITY + 1 )
 #define TASK_CMD_STACK		( 512 )
 
@@ -92,18 +98,24 @@
 #define TASK_NRF_PRIORITY	( tskIDLE_PRIORITY + 3 )
 #define TASK_NRF_STACK		( 512 )
 
+
+
 /*-------------------------------*/
 /* configuration structure       */
 /*-------------------------------*/
 
-#define TENVIRONMENT_MAGIC 0x0CCC2007
+#define TENVIRONMENT_MAGIC 0x0CCCBEEF
+#define GAMMA_SIZE 16
 
 typedef struct
 {
-    unsigned int magic,size,crc16;
-    unsigned int mode,speed;
-    unsigned int tag_id;
-} TEnvironment;
+    unsigned int magic, size, crc16;
+    unsigned short mac;
+    unsigned char lamp_id;
+    unsigned char wmcu_id;
+    unsigned short gamma_table[GAMMA_SIZE];
+    unsigned int dimmer_jitter;
+} TEnvironment __attribute__ ((aligned (4)));
 
 /*----------------------------------*/
 /* define debug baud rate if needed */
