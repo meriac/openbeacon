@@ -377,7 +377,7 @@ int
 debug_printf (const char *fmt, ...)
 {
   static char buf[128];
-  char *p,c;
+  char *p, c;
   va_list args;
   int i;
 
@@ -386,43 +386,49 @@ debug_printf (const char *fmt, ...)
   va_end (args);
 
   p = buf;
-  while((c=*p++)!='\0') {
-    vUSBSendByte (c);
-    if (c == '\n')
-      vUSBSendByte('\r');
-  }
+  while ((c = *p++) != '\0')
+    {
+      vUSBSendByte (c);
+      if (c == '\n')
+	vUSBSendByte ('\r');
+    }
 
   return i;
 }
 
-void hex_dump (const unsigned char *buf, unsigned int addr, unsigned int len)
+void
+hex_dump (const unsigned char *buf, unsigned int addr, unsigned int len)
 {
-        unsigned int start, i, j;
-        char c;
+  unsigned int start, i, j;
+  char c;
 
-        start = addr & ~0xf;
+  start = addr & ~0xf;
 
-        for (j=0; j<len; j+=16) {
-                debug_printf("%08x:", start+j);
+  for (j = 0; j < len; j += 16)
+    {
+      debug_printf ("%08x:", start + j);
 
-                for (i=0; i<16; i++) {
-                        if (start+i+j >= addr && start+i+j < addr+len)
-                                debug_printf(" %02x", buf[start+i+j]);
-                        else
-                                debug_printf("   ");
-                }
-                debug_printf("  |");
-                for (i=0; i<16; i++) {
-                        if (start+i+j >= addr && start+i+j < addr+len) {
-                                c = buf[start+i+j];
-                                if (c >= ' ' && c < 127)
-                                        debug_printf("%c", c);
-                                else
-                                        debug_printf(".");
-                        } else
-                                debug_printf(" ");
-                }
-                debug_printf("|\n");
-        }
+      for (i = 0; i < 16; i++)
+	{
+	  if (start + i + j >= addr && start + i + j < addr + len)
+	    debug_printf (" %02x", buf[start + i + j]);
+	  else
+	    debug_printf ("   ");
+	}
+      debug_printf ("  |");
+      for (i = 0; i < 16; i++)
+	{
+	  if (start + i + j >= addr && start + i + j < addr + len)
+	    {
+	      c = buf[start + i + j];
+	      if (c >= ' ' && c < 127)
+		debug_printf ("%c", c);
+	      else
+		debug_printf (".");
+	    }
+	  else
+	    debug_printf (" ");
+	}
+      debug_printf ("|\n");
+    }
 }
-

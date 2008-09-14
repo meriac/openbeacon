@@ -13,6 +13,7 @@
 #define __DEBUG_PRINTF_H__
 
 extern int debug_printf (const char *fmt, ...);
-extern void hex_dump (const unsigned char *buf, unsigned int addr, unsigned int len);
+extern void hex_dump (const unsigned char *buf, unsigned int addr,
+		      unsigned int len);
 
 #endif/*__DEBUG_PRINTF_H__*/

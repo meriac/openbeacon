@@ -60,23 +60,14 @@ vNetworkThread (void *pvParameters)
 {
   (void) pvParameters;
   static struct ip_addr xIpAddr, xNetMask, xGateway;
-  
+
   /* Initialize lwIP and its interface layer. */
   lwip_init ();
 
   /* Create and configure the EMAC interface. */
-  
-#if 1
-  IP4_ADDR (&xIpAddr , 0, 0, 0 ,0);
-  IP4_ADDR (&xNetMask, 0, 0, 0 ,0);
-  IP4_ADDR (&xGateway, 0, 0, 0 ,0);
-#endif
-
-#if 0
-  IP4_ADDR (&xIpAddr , 169, 254, 0x11, 0x22);
-  IP4_ADDR (&xNetMask, 255, 255, 0 ,0);
-  IP4_ADDR (&xGateway, 192, 168, 5 ,1);
-#endif
+  IP4_ADDR (&xIpAddr, 0, 0, 0, 0);
+  IP4_ADDR (&xNetMask, 0, 0, 0, 0);
+  IP4_ADDR (&xGateway, 0, 0, 0, 0);
 
   netif_add (&EMAC_if, &xIpAddr, &xNetMask, &xGateway, NULL, ethernetif_init,
 	     ip_input);
@@ -85,11 +76,9 @@ vNetworkThread (void *pvParameters)
   netif_set_default (&EMAC_if);
 
   /* dhcp kick-off */
-#if 1
   dhcp_coarse_tmr ();
   dhcp_fine_tmr ();
   dhcp_start (&EMAC_if);
-#endif
 
   /* bring it up */
   netif_set_up (&EMAC_if);
@@ -97,12 +86,12 @@ vNetworkThread (void *pvParameters)
   debug_printf ("FreeRTOS based WMCU firmware version %s starting.\n",
 		VERSION);
 
-  bprotocol_init();
+  bprotocol_init ();
   vLedSetGreen (1);
 
   while (pdTRUE)
     {
-      vTaskDelay ( 100 / portTICK_RATE_MS );
+      vTaskDelay (100 / portTICK_RATE_MS);
     }
 }
 
@@ -133,7 +122,7 @@ vNetworkInit (void)
 
   if (networkTaskHandle)
     {
-      debug_printf("killing running network task ...\n");
+      debug_printf ("killing running network task ...\n");
       vTaskDelete (networkTaskHandle);
       networkTaskHandle = NULL;
     }

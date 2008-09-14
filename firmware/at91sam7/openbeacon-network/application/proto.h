@@ -28,7 +28,8 @@
 #define FIFO_DEPTH	256
 #define RF_PAYLOAD_SIZE	26
 
-enum {
+enum
+{
   RF_CMD_SET_VALUES,
   RF_CMD_SET_LAMP_ID,
   RF_CMD_SET_GAMMA,
@@ -44,29 +45,34 @@ typedef struct
   unsigned short mac;
   unsigned char wmcu_id;
 
-  union {
+  union
+  {
     unsigned char payload[RF_PAYLOAD_SIZE];
-    
-    struct {
+
+    struct
+    {
       unsigned char id;
       unsigned char wmcu_id;
     } PACKED set_lamp_id;
 
-    struct {
+    struct
+    {
       unsigned char block;
       unsigned short val[8];
     } PACKED set_gamma;
 
-    struct {
+    struct
+    {
       unsigned short jitter;
     } PACKED set_jitter;
 
-    struct {
+    struct
+    {
       unsigned short emi_pulses;
       unsigned long packet_count;
     } PACKED statistics;
 
-  } PACKED; /* union */
+  } PACKED;			/* union */
 
   unsigned short crc;
 } PACKED BRFPacket;
@@ -81,13 +87,11 @@ static inline unsigned long
 swaplong (unsigned long src)
 {
   return (src >> 24) |
-  	 (src << 24) | 
-	 ((src >> 8) & 0x0000FF00) |
-	 ((src << 8) & 0x00FF0000);
+    (src << 24) | ((src >> 8) & 0x0000FF00) | ((src << 8) & 0x00FF0000);
 }
 
 extern void vInitProtocolLayer (void);
-extern void vnRFTransmitPacket(BRFPacket *pkg);
+extern void vnRFTransmitPacket (BRFPacket * pkg);
 extern int PtSetFifoLifetimeSeconds (int Seconds);
 extern int PtGetFifoLifetimeSeconds (void);
 extern void PtDumpUIntToUSB (unsigned int data);
