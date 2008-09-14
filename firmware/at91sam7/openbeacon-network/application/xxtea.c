@@ -37,7 +37,54 @@
 //
 // Dummy TEA encryption key of the tag - please change for real applications!
 //
-const long tea_key[4] = { 0x9c43725e, 0xad8ec2ab, 0x6ebad8db, 0xf29c3638 };	//{ 0x00112233, 0x44556677, 0x8899AABB, 0xCCDDEEFF };
+const long tea_key[4] = { 0xbb5b1e88, 0x5269abf5, 0x6676bb17, 0x3230bab1 };
+
+#define MX  ( (((z>>5)^(y<<2))+((y>>3)^(z<<4)))^((sum^y)+(tea_key[(p&3)^e]^z)) )
+
+#ifdef CONFIG_TEA_ENABLEENCODE
+
+void RAMFUNC xxtea_encode(long* v, long length) {
+  unsigned long z /* = v[length-1] */, y=v[0], sum=0, e, DELTA=0x9e3779b9;
+  long p, q ;
+    
+  z=v[length-1];
+  q = 6 + 52/length;
+  while (q--) {
+    sum += DELTA;
+    e = (sum >> 2) & 3;
+    for (p=0; p<length-1; p++)
+      y = v[p+1], z = v[p] += MX;
+
+    y = v[0];
+    z = v[length-1] += MX;
+  }
+}
+
+#endif
+
+
+#ifdef CONFIG_TEA_ENABLEDECODE
+
+void RAMFUNC xxtea_decode(long* v, long length) {
+  unsigned long z /* = v[length-1] */, y=v[0], sum=0, e, DELTA=0x9e3779b9;
+  long p, q ;
+    
+  q = 6 + 52/length;
+  sum = q*DELTA;
+  while (sum) {
+    e = (sum >> 2) & 3;
+    for (p=length-1; p>0; p--)
+      z = v[p-1], y = v[p] -= MX;
+ 
+    z = v[length-1];
+    y = v[0] -= MX;
+    sum -= DELTA;
+  }
+}
+
+#endif
+
+#if 0
 
 unsigned long z, y, sum, tmp, mx;
 unsigned char e;
@@ -138,4 +185,6 @@ xxtea_decode (void)
       sum -= DELTA;
     }
 }
+#endif
+
 #endif /*CONFIG_TEA_ENABLEDECODE */

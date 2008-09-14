@@ -37,6 +37,8 @@
 
 #include "led.h"
 #include "proto.h"
+#include "usbshell.h"
+#include "env.h"
 
 /**********************************************************************/
 static inline void
@@ -69,8 +71,12 @@ int
 main (void)
 {
   prvSetupHardware ();
-
   vLedInit ();
+  env_init ();
+  env_load ();
+
+  if (env.e.n_lamps > MAX_LAMPS)
+    env.e.n_lamps = 0;
 
   vNetworkInit ();
 
@@ -78,7 +84,7 @@ main (void)
 	       NULL, TASK_USB_PRIORITY, NULL);
 
   vInitProtocolLayer ();
-
+  vUSBShellInit ();
   vTaskStartScheduler ();
 
   return 0;

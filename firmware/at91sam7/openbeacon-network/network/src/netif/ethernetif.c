@@ -80,12 +80,12 @@ low_level_init (struct netif *netif)
   netif->hwaddr_len = 6;
 
   /* set MAC hardware address */
-  netif->hwaddr[0] = emacETHADDR0;
-  netif->hwaddr[1] = emacETHADDR1;
-  netif->hwaddr[2] = emacETHADDR2;
-  netif->hwaddr[3] = emacETHADDR3;
-  netif->hwaddr[4] = emacETHADDR4;
-  netif->hwaddr[5] = emacETHADDR5;
+  netif->hwaddr[0] = cMACAddress[0];
+  netif->hwaddr[1] = cMACAddress[1];
+  netif->hwaddr[2] = cMACAddress[2];
+  netif->hwaddr[3] = cMACAddress[3];
+  netif->hwaddr[4] = cMACAddress[4];
+  netif->hwaddr[5] = cMACAddress[5];
 
   /* maximum transfer unit */
   netif->mtu = netifMTU;

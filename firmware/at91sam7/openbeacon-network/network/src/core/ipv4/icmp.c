@@ -78,7 +78,6 @@ icmp_input (struct pbuf *p, struct netif *inp)
 
   ICMP_STATS_INC (icmp.recv);
 
-
   iphdr = p->payload;
   hlen = IPH_HL (iphdr) * 4;
   if (pbuf_header (p, -hlen) || (p->tot_len < sizeof (u16_t) * 2))

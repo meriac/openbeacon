@@ -28,7 +28,7 @@
 #include <lib_AT91SAM7X.h>
 #include <beacontypes.h>
 
-#define VERSION "0.3"
+#define VERSION "0.5"
 
 /*---------------------------------*/
 /* SAM7Board Memories Definition   */
@@ -73,15 +73,15 @@
 /* utils settings                */
 /*-------------------------------*/
 
-//#define DISABLE_WATCHDOG
 #define CONFIG_TEA_ENABLEDECODE
+#define CONFIG_TEA_ENABLEENCODE
 
 /*-------------------------------*/
 /* task priorities               */
 /*-------------------------------*/
 
-#define TASK_NET_PRIORITY	( tskIDLE_PRIORITY + 1 )
-#define TASK_NET_STACK		( 1024 )
+#define TASK_USBSHELL_PRIORITY	( tskIDLE_PRIORITY)
+#define TASK_USBSHELL_STACK	( 512 )
 
 #define TASK_USB_PRIORITY	( tskIDLE_PRIORITY + 2 )
 #define TASK_USB_STACK		( 512 )
@@ -89,16 +89,32 @@
 #define TASK_NRF_PRIORITY	( tskIDLE_PRIORITY + 3 )
 #define TASK_NRF_STACK		( 512 )
 
+#define TASK_NET_PRIORITY	( tskIDLE_PRIORITY + 4 )
+#define TASK_NET_STACK		( 1024 )
+
 /*-------------------------------*/
 /* configuration structure       */
 /*-------------------------------*/
 
 #define TENVIRONMENT_MAGIC 0x0DECADE
+#define MAX_LAMPS (26 * 2)
+
+extern unsigned char last_lamp_val[MAX_LAMPS];
+
+typedef struct
+{
+  unsigned short mac;
+  unsigned short screen, x, y;
+} LampMap;
 
 typedef struct
 {
   unsigned int magic, size, crc16;
-} TEnvironment;
+  signed int mcu_id;
+  unsigned char mac_h, mac_l;
+  unsigned int n_lamps;
+  LampMap lamp_map[26 * 2];
+} __attribute__((aligned (8))) TEnvironment;
 
 /*----------------------------------*/
 /* define debug baud rate if needed */

@@ -68,15 +68,6 @@ a lot of data that needs to be copied, this should be set high. */
 #define MEMP_NUM_UDP_PCB        4
 /* MEMP_NUM_TCP_PCB: the number of simulatenously active TCP
    connections. */
-#define MEMP_NUM_TCP_PCB        10
-/* MEMP_NUM_TCP_PCB_LISTEN: the number of listening TCP
-   connections. */
-#define MEMP_NUM_TCP_PCB_LISTEN 8
-/* MEMP_NUM_TCP_SEG: the number of simultaneously queued TCP
-   segments. */
-#define MEMP_NUM_TCP_SEG        8
-/* MEMP_NUM_SYS_TIMEOUT: the number of simulateously active
-   timeouts. */
 #define MEMP_NUM_SYS_TIMEOUT    5
 
 
@@ -104,31 +95,7 @@ a lot of data that needs to be copied, this should be set high. */
 #define PBUF_LINK_HLEN          16
 
 /* ---------- TCP options ---------- */
-#define LWIP_TCP                1
-#define TCP_TTL                 255
-
-/* Controls if TCP should queue segments that arrive out of
-   order. Define to 0 if your device is low on memory. */
-#define TCP_QUEUE_OOSEQ         1
-
-/* TCP Maximum segment size. */
-#define TCP_MSS                 1500
-
-/* TCP sender buffer space (bytes). */
-#define TCP_SND_BUF             1500
-
-/* TCP sender buffer space (pbufs). This must be at least = 2 *
-   TCP_SND_BUF/TCP_MSS for things to work. */
-#define TCP_SND_QUEUELEN        6 * TCP_SND_BUF/TCP_MSS
-
-/* TCP receive window. */
-#define TCP_WND                 1500
-
-/* Maximum number of retransmissions of data segments. */
-#define TCP_MAXRTX              12
-
-/* Maximum number of retransmissions of SYN segments. */
-#define TCP_SYNMAXRTX           4
+#define LWIP_TCP                0
 
 /* ---------- ARP options ---------- */
 #define ARP_TABLE_SIZE 16
@@ -152,7 +119,7 @@ a lot of data that needs to be copied, this should be set high. */
 /* Define LWIP_DHCP to 1 if you want DHCP configuration of
    interfaces. DHCP is not implemented in lwIP 0.5.1, however, so
    turning this on does currently not work. */
-#define LWIP_DHCP               0
+#define LWIP_DHCP               1
 #define LWIP_ARP                1
 #define LWIP_ICMP               1
 #define LWIP_UDP                1

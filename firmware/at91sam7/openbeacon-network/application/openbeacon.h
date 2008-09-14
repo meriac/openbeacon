@@ -37,6 +37,8 @@
 
 #define ENABLED_NRF_FEATURES 0x0
 
+#define PACKED __attribute__ ((packed))
+
 typedef struct
 {
   TBeaconHeader hdr;

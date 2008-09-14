@@ -1,5 +1,6 @@
 TARGET=openbeacon-network
-ARCH=AT91SAM7X256
+ARCH=AT91SAM7X
+CPU=$(ARCH)256
 DEBUG=-g
 OPTIM=-O2
 
@@ -8,25 +9,19 @@ APP_CFLAGS= \
     -Inetwork/src/include \
     -Inetwork/src/include/ipv4 \
     -Inetwork/port \
-    -Inetwork/port/emac
+    -Inetwork/port/emac \
+    -Wno-unused-parameter
 
 NETWORK_SRC= \
   network/port/emac/SAM7_EMAC.c \
   network/port/emac/SAM7_EMAC_ISR.c \
   network/port/sys_arch.c \
-  network/src/api/api_lib.c \
-  network/src/api/api_msg.c \
-  network/src/api/err.c \
-  network/src/api/netbuf.c \
-  network/src/api/sockets.c \
-  network/src/api/tcpip.c \
   network/src/core/dhcp.c \
   network/src/core/init.c \
   network/src/core/ipv4/icmp.c \
   network/src/core/ipv4/inet_chksum.c \
   network/src/core/ipv4/ip_addr.c \
   network/src/core/ipv4/ip.c \
-  network/src/core/ipv4/ip_frag.c \
   network/src/core/mem.c \
   network/src/core/memp.c \
   network/src/core/netif.c \
@@ -34,9 +29,6 @@ NETWORK_SRC= \
   network/src/core/raw.c \
   network/src/core/stats.c \
   network/src/core/sys.c \
-  network/src/core/tcp.c \
-  network/src/core/tcp_in.c \
-  network/src/core/tcp_out.c \
   network/src/core/udp.c \
   network/src/netif/etharp.c \
   network/src/netif/ethernetif.c
@@ -48,6 +40,8 @@ APP_SRC= \
   application/network.c \
   application/proto.c \
   application/xxtea.c \
+  application/bprotocol.c \
+  application/usbshell.c \
   $(NETWORK_SRC)
   
 all: $(TARGET).bin

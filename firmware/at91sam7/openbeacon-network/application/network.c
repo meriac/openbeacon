@@ -38,10 +38,12 @@
 
 #include "network.h"
 #include "SAM7_EMAC.h"
+#include "bprotocol.h"
+#include "debug_printf.h"
 
 /* lwIP includes. */
-#include "lwip/api.h"
-#include "lwip/tcpip.h"
+#include "lwip/ip.h"
+#include "lwip/init.h"
 #include "lwip/memp.h"
 #include "lwip/stats.h"
 #include "lwip/dhcp.h"
@@ -50,54 +52,93 @@
 /*------------------------------------------------------------*/
 extern err_t ethernetif_init (struct netif *netif);
 /*------------------------------------------------------------*/
+struct netif EMAC_if;
 
 /*------------------------------------------------------------*/
 void
 vNetworkThread (void *pvParameters)
 {
   (void) pvParameters;
-  static struct netif EMAC_if;
   static struct ip_addr xIpAddr, xNetMask, xGateway;
   
   /* Initialize lwIP and its interface layer. */
-  tcpip_init ( NULL,NULL );
+  lwip_init ();
 
   /* Create and configure the EMAC interface. */
-  IP4_ADDR (&xIpAddr, emacIPADDR0, emacIPADDR1, emacIPADDR2, emacIPADDR3);
-  IP4_ADDR (&xNetMask, emacNET_MASK0, emacNET_MASK1, emacNET_MASK2,
-	    emacNET_MASK3);
-  IP4_ADDR (&xGateway, emacGATEWAY_ADDR0, emacGATEWAY_ADDR1,
-	    emacGATEWAY_ADDR2, emacGATEWAY_ADDR3);
+  
+#if 1
+  IP4_ADDR (&xIpAddr , 0, 0, 0 ,0);
+  IP4_ADDR (&xNetMask, 0, 0, 0 ,0);
+  IP4_ADDR (&xGateway, 0, 0, 0 ,0);
+#endif
+
+#if 0
+  IP4_ADDR (&xIpAddr , 169, 254, 0x11, 0x22);
+  IP4_ADDR (&xNetMask, 255, 255, 0 ,0);
+  IP4_ADDR (&xGateway, 192, 168, 5 ,1);
+#endif
+
   netif_add (&EMAC_if, &xIpAddr, &xNetMask, &xGateway, NULL, ethernetif_init,
-	     tcpip_input);
+	     ip_input);
 
   /* make it the default interface */
   netif_set_default (&EMAC_if);
 
   /* dhcp kick-off */
-/*  dhcp_coarse_tmr ();
+#if 1
+  dhcp_coarse_tmr ();
   dhcp_fine_tmr ();
-  dhcp_start (&EMAC_if);*/
-  
+  dhcp_start (&EMAC_if);
+#endif
+
   /* bring it up */
   netif_set_up (&EMAC_if);
 
   debug_printf ("FreeRTOS based WMCU firmware version %s starting.\n",
 		VERSION);
-		
+
+  bprotocol_init();
   vLedSetGreen (1);
 
   while (pdTRUE)
     {
-	vTaskDelay ( 100 / portTICK_RATE_MS );
+      vTaskDelay ( 100 / portTICK_RATE_MS );
     }
 }
+
+static xTaskHandle networkTaskHandle = NULL;
 
 /*------------------------------------------------------------*/
 void
 vNetworkInit (void)
 {
+#if 0
+  env_init ();
+  env_load ();
+
+  if ((env.e.mac_l == 0xff && env.e.mac_h == 0xff) ||
+      (env.e.mac_l == 0x00 && env.e.mac_h == 0x00))
+    {
+      debug_printf ("Mac address not set, skipping network intialization\n");
+      debug_printf ("Use the 'mac' command to set it.\n");
+      return;
+    }
+
+  cMACAddress[4] = env.e.mac_h;
+  cMACAddress[5] = env.e.mac_l;
+#endif
+
+  cMACAddress[4] = 0x11;
+  cMACAddress[5] = 0x22;
+
+  if (networkTaskHandle)
+    {
+      debug_printf("killing running network task ...\n");
+      vTaskDelete (networkTaskHandle);
+      networkTaskHandle = NULL;
+    }
+
   /* Create the lwIP task.  This uses the lwIP RTOS abstraction layer. */
   xTaskCreate (vNetworkThread, (signed portCHAR *) "NET",
-	       TASK_NET_STACK, NULL, TASK_NET_PRIORITY, NULL);
+	       TASK_NET_STACK, NULL, TASK_NET_PRIORITY, &networkTaskHandle);
 }

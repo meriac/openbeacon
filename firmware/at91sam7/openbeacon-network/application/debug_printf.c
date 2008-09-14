@@ -9,12 +9,14 @@
  * Wirzenius wrote this portably, Torvalds fucked it up :-)
  */
 
+#include <FreeRTOS.h>
 #include <board.h>
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>
-#include "proto.h"
+#include <stdio.h>
+#include <USB-CDC.h>
 
 unsigned long
 simple_strtoul (const char *cp, char **endp, unsigned int base)
@@ -92,7 +94,9 @@ static char *
 number (char *str, long num, unsigned int base, int size, int precision,
 	int type)
 {
-  char c, sign, tmp[66];
+  char c, sign;
+  static char tmp[66];
+
   const char *digits = "0123456789abcdefghijklmnopqrstuvwxyz";
   int i;
 
@@ -372,15 +376,53 @@ vsprintf (char *buf, const char *fmt, va_list args)
 int
 debug_printf (const char *fmt, ...)
 {
-  char buf[128];
+  static char buf[128];
+  char *p,c;
   va_list args;
   int i;
 
   va_start (args, fmt);
-  i = vsnprintf (buf, sizeof (buf), fmt, args);
+  i = vsprintf (buf, fmt, args);
   va_end (args);
 
-  PtDumpStringToUSB (buf);
+  p = buf;
+  while((c=*p++)!='\0') {
+    vUSBSendByte (c);
+    if (c == '\n')
+      vUSBSendByte('\r');
+  }
 
   return i;
 }
+
+void hex_dump (const unsigned char *buf, unsigned int addr, unsigned int len)
+{
+        unsigned int start, i, j;
+        char c;
+
+        start = addr & ~0xf;
+
+        for (j=0; j<len; j+=16) {
+                debug_printf("%08x:", start+j);
+
+                for (i=0; i<16; i++) {
+                        if (start+i+j >= addr && start+i+j < addr+len)
+                                debug_printf(" %02x", buf[start+i+j]);
+                        else
+                                debug_printf("   ");
+                }
+                debug_printf("  |");
+                for (i=0; i<16; i++) {
+                        if (start+i+j >= addr && start+i+j < addr+len) {
+                                c = buf[start+i+j];
+                                if (c >= ' ' && c < 127)
+                                        debug_printf("%c", c);
+                                else
+                                        debug_printf(".");
+                        } else
+                                debug_printf(" ");
+                }
+                debug_printf("|\n");
+        }
+}
+

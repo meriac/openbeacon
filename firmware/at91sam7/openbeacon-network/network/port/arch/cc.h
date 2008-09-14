@@ -32,6 +32,7 @@
 #ifndef __CC_H__
 #define __CC_H__
 
+#include <debug_printf.h>
 #include "cpu.h"
 
 typedef unsigned char u8_t;
@@ -48,8 +49,6 @@ typedef int sys_prot_t;
 #define PACK_STRUCT_STRUCT __attribute__ ((__packed__))
 #define PACK_STRUCT_END
 #define PACK_STRUCT_FIELD(x) x
-
-extern int debug_printf (const char *fmt, ...);
 
 #define LWIP_PLATFORM_ASSERT debug_printf
 #define LWIP_PLATFORM_DIAG(x) debug_printf x

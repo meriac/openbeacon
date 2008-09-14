@@ -30,5 +30,6 @@
 
 extern void vNetworkInit (void);
 extern void vNetworkThread (void *pvParameters);
+extern struct netif EMAC_if;
 
 #endif/*__NETWORK_H__*/

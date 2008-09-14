@@ -25,21 +25,73 @@
 
 #include "openbeacon.h"
 
-#define FIFO_DEPTH 256
+#define FIFO_DEPTH	256
+#define RF_PAYLOAD_SIZE	26
+
+enum {
+  RF_CMD_SET_VALUES,
+  RF_CMD_SET_LAMP_ID,
+  RF_CMD_SET_GAMMA,
+  RF_CMD_WRITE_CONFIG,
+  RF_CMD_SET_JITTER,
+  RF_CMD_SEND_STATISTICS,
+  RF_CMD_ENTER_UPDATE_MODE = 0x3f
+};
 
 typedef struct
 {
-  u_int16_t tag_oid;
-  u_int8_t tag_strength;
-  u_int8_t packet_count;
-} __attribute__ ((packed)) TBeaconSort;
+  unsigned char cmd;
+  unsigned short mac;
+  unsigned char wmcu_id;
 
-extern TBeaconEnvelope g_Beacon;
+  union {
+    unsigned char payload[RF_PAYLOAD_SIZE];
+    
+    struct {
+      unsigned char id;
+      unsigned char wmcu_id;
+    } PACKED set_lamp_id;
+
+    struct {
+      unsigned char block;
+      unsigned short val[8];
+    } PACKED set_gamma;
+
+    struct {
+      unsigned short jitter;
+    } PACKED set_jitter;
+
+    struct {
+      unsigned short emi_pulses;
+      unsigned long packet_count;
+    } PACKED statistics;
+
+  } PACKED; /* union */
+
+  unsigned short crc;
+} PACKED BRFPacket;
+
+static inline unsigned short
+swapshort (unsigned short src)
+{
+  return (src >> 8) | (src << 8);
+}
+
+static inline unsigned long
+swaplong (unsigned long src)
+{
+  return (src >> 24) |
+  	 (src << 24) | 
+	 ((src >> 8) & 0x0000FF00) |
+	 ((src << 8) & 0x00FF0000);
+}
 
 extern void vInitProtocolLayer (void);
+extern void vnRFTransmitPacket(BRFPacket *pkg);
 extern int PtSetFifoLifetimeSeconds (int Seconds);
 extern int PtGetFifoLifetimeSeconds (void);
 extern void PtDumpUIntToUSB (unsigned int data);
 extern void PtDumpStringToUSB (const char *text);
+void shuffle_tx_byteorder (unsigned long *v, int len);
 
 #endif/*__PROTO_H__*/

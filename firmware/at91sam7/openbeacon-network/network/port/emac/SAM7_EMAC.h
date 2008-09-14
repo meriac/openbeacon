@@ -85,6 +85,12 @@ Changes from V3.2.4
 #define emacNET_MASK3 0
 
 /*
+ * export the MAC address array in order to allow other parts of the code
+ * to change it prior to calling the init code.
+ */
+extern portCHAR cMACAddress[6];
+
+/*
  * Initialise the EMAC driver.  If successful a semaphore is returned that
  * is used by the EMAC ISR to indicate that Rx packets have been received.
  * If the initialisation fails then NULL is returned.

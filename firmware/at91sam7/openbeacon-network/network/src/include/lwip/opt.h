@@ -216,7 +216,7 @@
  * reassembly (whole packets, not fragments!)
  */
 #ifndef MEMP_NUM_REASSDATA
-#define MEMP_NUM_REASSDATA              5
+#define MEMP_NUM_REASSDATA              0
 #endif
 
 /**
@@ -356,7 +356,7 @@
  * via IP_FRAG.
  */
 #ifndef IP_REASSEMBLY
-#define IP_REASSEMBLY                   1
+#define IP_REASSEMBLY                   0
 #endif
 
 /**
@@ -365,7 +365,7 @@
  * controlled via IP_REASSEMBLY.
  */
 #ifndef IP_FRAG
-#define IP_FRAG                         1
+#define IP_FRAG                         0
 #endif
 
 /**
@@ -384,7 +384,7 @@
  * packets even if the maximum amount of fragments is enqueued for reassembly!
  */
 #ifndef IP_REASS_MAX_PBUFS
-#define IP_REASS_MAX_PBUFS              10
+#define IP_REASS_MAX_PBUFS              0
 #endif
 
 /**
@@ -1385,7 +1385,7 @@
  * NETIF_DEBUG: Enable debugging in netif.c.
  */
 #ifndef NETIF_DEBUG
-#define NETIF_DEBUG                     LWIP_DBG_OFF
+#define NETIF_DEBUG                     LWIP_DBG_ON
 #endif
 
 /**
