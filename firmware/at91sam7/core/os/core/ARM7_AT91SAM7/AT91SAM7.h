@@ -34,11 +34,6 @@
 #define AT91C_IFLASH_NB_OF_LOCK_BITS     ((unsigned int) 8)     // Internal FLASH Number of Lock Bits: 8
 
 #elif defined(__AT91SAM7S256__) || defined(__AT91SAM7X256__)
-#if defined(__AT91SAM7X256__)
-#include <AT91SAM7X.h>
-#elif
-#include <AT91SAM7S.h>
-#endif
 #define AT91C_ISRAM_SIZE         ((unsigned int) 0x00010000)    // Internal SRAM size in byte (64 Kbytes)
 #define AT91C_IFLASH_SIZE        ((unsigned int) 0x00040000)    // Internal FLASH size in byte (256 Kbytes)
 #define AT91C_IFLASH_PAGE_SIZE   ((unsigned int) 256)   // Internal FLASH Page Size: 256 bytes
@@ -48,6 +43,17 @@
 #else
 #error Have to define which __AT91SAM7xxx__ type
 #endif
+
+#if   defined(__AT91SAM7X__)
+#include <AT91SAM7X.h>
+
+#elif defined(__AT91SAM7S__)
+#include <AT91SAM7S.h>
+
+#else
+#error Have to define __AT91SAM7?__ architecture type
+#endif
+
 
 #define AT91C_IFLASH_NB_OF_PAGES         (AT91C_IFLASH_SIZE>>AT91C_IFLASH_PAGE_SHIFT)
 #define AT91C_IFLASH_LOCK_REGION_SIZE    (AT91C_IFLASH_SIZE/AT91C_IFLASH_NB_OF_LOCK_BITS)

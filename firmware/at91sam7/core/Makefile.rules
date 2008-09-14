@@ -28,12 +28,14 @@
 #	port sections of the online documentation.
 #	***************************************************************************
 
-CC=$(CROSS)arm-elf-gcc
-LD=$(CROSS)arm-elf-ld
-OBJCOPY=$(CROSS)arm-elf-objcopy
-OBJDUMP=$(CROSS)arm-elf-objdump
-AR=$(CROSS)arm-elf-ar
+CROSS=arm-none-eabi-
+CC=$(CROSS)gcc
+LD=$(CROSS)ld
+OBJCOPY=$(CROSS)objcopy
+OBJDUMP=$(CROSS)objdump
+AR=$(CROSS)ar
 LDSCRIPT=config/atmel-rom.ld
+
 
 CORE=../core/
 
@@ -42,6 +44,7 @@ CORE=../core/
 #
 
 CFLAGS= \
+-D __$(CPU)__ \
 -D __$(ARCH)__ \
 -Iconfig \
 -I$(CORE)openbeacon \
@@ -61,14 +64,14 @@ CFLAGS= \
 $(DEBUG)  \
 $(OPTIM) \
 -fomit-frame-pointer \
-$(APP_CFLAGS) \
+$(APP_CFLAGS)
 
 CRT0=$(CORE)os/boot/boot.s
 
 #-ffunction-sections \
 #-fdata-sections \
 #LINKER_FLAGS=-Xlinker -s -Xlinker -static -Xlinker --gc-sections -Xlinker -o$(TARGET).elf -Xlinker -M -Xlinker -Map=$(TARGET).map
-LINKER_FLAGS=-Xlinker -o$(TARGET).elf -Xlinker -M -Xlinker -Map=$(TARGET).map
+LINKER_FLAGS=$(APP_LDFLAGS) -Xlinker -o$(TARGET).elf -Xlinker -M -Xlinker -Map=$(TARGET).map
 
 #
 # Source files that must be built to ARM mode.
@@ -81,10 +84,10 @@ ARM_SRC= \
   $(CORE)openbeacon/nRF24L01/nRF_API.c \
   $(CORE)openbeacon/nRF24L01/nRF_CMD.c \
   $(CORE)os/boot/Cstartup_SAM7.c \
+  $(CORE)os/core/ARM7_AT91SAM7/lib_AT91SAM7.c \
   $(CORE)os/core/list.c \
   $(CORE)os/core/queue.c \
   $(CORE)os/core/tasks.c \
-  $(CORE)os/core/ARM7_AT91SAM7/lib_AT91SAM7.c \
   $(CORE)os/core/port.c \
   $(CORE)os/core/portISR.c \
   $(CORE)os/core/MemMang/heap_2.c \
@@ -102,8 +105,8 @@ $(TARGET).bin : $(TARGET).elf
 $(TARGET).hex : $(TARGET).elf
 	$(OBJCOPY) $(TARGET).elf -O ihex $(TARGET).hex
 
-$(TARGET).elf : $(ARM_OBJ) $(CRT0) Makefile config/FreeRTOSConfig.h
-	$(CC) $(CFLAGS) $(ARM_OBJ) -nostartfiles $(CRT0) $(LINKER_FLAGS)
+$(TARGET).elf : $(ARM_OBJ) $(CRT0) $(BOOTLOADER) Makefile config/FreeRTOSConfig.h
+	$(CC) $(CFLAGS) $(ARM_OBJ) $(BOOTLOADER) -nostartfiles $(CRT0) $(LINKER_FLAGS)
 	$(OBJDUMP) -d $(TARGET).elf > $(TARGET).asm
 
 $(ARM_OBJ) : %.o : %.c $(LDSCRIPT) Makefile config/FreeRTOSConfig.h

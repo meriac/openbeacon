@@ -56,29 +56,11 @@ typedef void (*THandler) (void);
 //* \fn    AT91F_AIC_ConfigureIt
 //* \brief Interrupt Handler Initialization
 //*----------------------------------------------------------------------------
-static inline unsigned int
+extern unsigned int
 AT91F_AIC_ConfigureIt (unsigned int irq_id,	// \arg interrupt number to initialize
 		       unsigned int priority,	// \arg priority to give to the interrupt
 		       unsigned int src_type,	// \arg activation and sense of activation
-		       THandler newHandler)	// \arg address of the interrupt handler
-{
-  unsigned int oldHandler;
-  unsigned int mask;
-
-  oldHandler = AT91C_BASE_AIC->AIC_SVR[irq_id];
-
-  mask = 0x1 << irq_id;
-  //* Disable the interrupt on the interrupt controller
-  AT91C_BASE_AIC->AIC_IDCR = mask;
-  //* Save the interrupt handler routine pointer and the interrupt priority
-  AT91C_BASE_AIC->AIC_SVR[irq_id] = (unsigned int) newHandler;
-  //* Store the Source Mode Register
-  AT91C_BASE_AIC->AIC_SMR[irq_id] = src_type | priority;
-  //* Clear the interrupt on the interrupt controller
-  AT91C_BASE_AIC->AIC_ICCR = mask;
-
-  return oldHandler;
-}
+		       THandler newHandler);	// \arg address of the interrupt handler
 
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_AIC_EnableIt
@@ -130,21 +112,9 @@ AT91F_AIC_AcknowledgeIt (void)	// \arg pointer to the AIC registers
 //* \fn    AT91F_AIC_SetExceptionVector
 //* \brief Configure vector handler
 //*----------------------------------------------------------------------------
-static inline unsigned int
+extern unsigned int
 AT91F_AIC_SetExceptionVector (unsigned int *pVector,	// \arg pointer to the AIC registers
-			      THandler Handler)	// \arg Interrupt Handler
-{
-  unsigned int oldVector = *pVector;
-
-  if ((unsigned int) Handler == (unsigned int) AT91C_AIC_BRANCH_OPCODE)
-    *pVector = (unsigned int) AT91C_AIC_BRANCH_OPCODE;
-  else
-    *pVector =
-      (((((unsigned int) Handler) - ((unsigned int) pVector) -
-	 0x8) >> 2) & 0x00FFFFFF) | 0xEA000000;
-
-  return oldVector;
-}
+			      THandler Handler);	// \arg Interrupt Handler
 
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_AIC_Trig
@@ -2127,26 +2097,10 @@ AT91F_US_SetIrdaFilter (AT91PS_USART pUSART, unsigned char value)
 //* \fn    AT91F_SSC_SetBaudrate
 //* \brief Set the baudrate according to the CPU clock
 //*----------------------------------------------------------------------------
-static inline void
+extern void
 AT91F_SSC_SetBaudrate (AT91PS_SSC pSSC,	// \arg pointer to a SSC controller
 		       unsigned int mainClock,	// \arg peripheral clock
-		       unsigned int speed)	// \arg SSC baudrate
-{
-  unsigned int baud_value;
-  //* Define the baud rate divisor register
-  if (speed == 0)
-    baud_value = 0;
-  else
-    {
-      baud_value = (unsigned int) (mainClock * 10) / (2 * speed);
-      if ((baud_value % 10) >= 5)
-	baud_value = (baud_value / 10) + 1;
-      else
-	baud_value /= 10;
-    }
-
-  pSSC->SSC_CMR = baud_value;
-}
+		       unsigned int speed);	// \arg SSC baudrate
 
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_SSC_Configure

@@ -28,15 +28,6 @@
 #include <beacontypes.h>
 #include "env.h"
 
-#define EFCS_CMD_WRITE_PAGE		0x1
-#define EFCS_CMD_SET_LOCK_BIT		0x2
-#define EFCS_CMD_WRITE_PAGE_LOCK	0x3
-#define EFCS_CMD_CLEAR_LOCK		0x4
-#define EFCS_CMD_ERASE_ALL		0x8
-#define EFCS_CMD_SET_NVM_BIT		0xb
-#define EFCS_CMD_CLEAR_NVM_BIT		0xd
-#define EFCS_CMD_SET_SECURITY_BIT	0xf
-
 #define PAGES_PER_LOCKREGION	(AT91C_IFLASH_LOCK_REGION_SIZE>>AT91C_IFLASH_PAGE_SHIFT)
 #define IS_FIRST_PAGE_OF_LOCKREGION(x)	((x % PAGES_PER_LOCKREGION) == 0)
 #define LOCKREGION_FROM_PAGE(x)	(x / PAGES_PER_LOCKREGION)
@@ -44,106 +35,139 @@
 
 TEnvironmentBlock env;
 
-static inline unsigned short RAMFUNC page_from_ramaddr(const void *addr)
+static inline unsigned short RAMFUNC
+page_from_ramaddr (const void *addr)
 {
-	unsigned long ramaddr = (unsigned long) addr;
-	ramaddr -= (unsigned long) AT91C_IFLASH;
-	return ((ramaddr >> AT91C_IFLASH_PAGE_SHIFT));
+  unsigned long ramaddr = (unsigned long) addr;
+  ramaddr -= (unsigned long) AT91C_IFLASH;
+  return ((ramaddr >> AT91C_IFLASH_PAGE_SHIFT));
 }
 
-static inline int RAMFUNC is_page_locked(unsigned short page)
+static inline int RAMFUNC
+is_page_locked (unsigned short page)
 {
-	unsigned short lockregion = LOCKREGION_FROM_PAGE(page);
+  unsigned short lockregion = LOCKREGION_FROM_PAGE (page);
 
-	return (AT91C_BASE_MC->MC_FSR & (lockregion << 16));
+  return (AT91C_BASE_MC->MC_FSR & (lockregion << 16));
 }
 
-static inline void RAMFUNC flash_cmd_wait(void)
+static inline void RAMFUNC
+flash_cmd_wait (void)
 {
-	while(( *AT91C_MC_FSR & AT91C_MC_FRDY ) != AT91C_MC_FRDY );
+  while ((*AT91C_MC_FSR & AT91C_MC_FRDY) != AT91C_MC_FRDY);
 }
 
-static inline void RAMFUNC unlock_page(unsigned short page)
+static inline void RAMFUNC
+unlock_page (unsigned short page)
 {
-	page &= 0x3ff;
-	AT91F_MC_EFC_PerformCmd(AT91C_BASE_MC, AT91C_MC_FCMD_UNLOCK |
-				AT91C_MC_CORRECT_KEY | (page << 8));
-	flash_cmd_wait();
+  page &= 0x3ff;
+  AT91F_MC_EFC_PerformCmd (AT91C_BASE_MC, AT91C_MC_FCMD_UNLOCK |
+			   AT91C_MC_CORRECT_KEY | (page << 8));
+  flash_cmd_wait ();
 }
 
-static inline void RAMFUNC flash_page(const void *addr)
+void RAMFUNC
+env_flash_to (const void *addr)
 {
-	unsigned short page = page_from_ramaddr(addr) & 0x3ff;
+  unsigned int i, *src, *dst;
 
-	if (is_page_locked(page))
-	    unlock_page(page);
+  unsigned short page;
 
-	AT91F_MC_EFC_PerformCmd(AT91C_BASE_MC, AT91C_MC_FCMD_START_PROG |
-				AT91C_MC_CORRECT_KEY | (page << 8));
-	flash_cmd_wait();
+  src = env.data;
+  dst = (unsigned int *) addr;
+  for (i = 0; i < (sizeof (env.data) / sizeof (env.data[0])); i++)
+    *dst++ = *src++;
+
+  page = page_from_ramaddr (addr) & 0x3ff;
+
+  if (is_page_locked (page))
+    unlock_page (page);
+
+  AT91F_MC_EFC_PerformCmd (AT91C_BASE_MC, AT91C_MC_FCMD_START_PROG |
+			   AT91C_MC_CORRECT_KEY | (page << 8));
+
+  flash_cmd_wait ();
 }
 
-unsigned short RAMFUNC env_crc16 (const unsigned char *buffer, int size)
+unsigned short RAMFUNC
+env_crc16 (const unsigned char *buffer, int size)
 {
-    unsigned short crc = 0xFFFF;
+  unsigned short crc = 0xFFFF;
 
-    if(buffer && size)
-        while (size--)
-        {
-            crc = (crc >> 8) | (crc << 8);
-            crc ^= *buffer++;
-            crc ^= ((unsigned char) crc) >> 4;
-            crc ^= crc << 12;
-            crc ^= (crc & 0xFF) << 5;
-        }
+  if (buffer && size)
+    while (size--)
+      {
+	crc = (crc >> 8) | (crc << 8);
+	crc ^= *buffer++;
+	crc ^= ((unsigned char) crc) >> 4;
+	crc ^= crc << 12;
+	crc ^= (crc & 0xFF) << 5;
+      }
 
-    return crc;
+  return crc;
 }
 
-void RAMFUNC env_store(void)
+#ifdef  __AT91SAM7X__
+void RAMFUNC
+env_reboot_to_update (void)
 {
-	unsigned int i,*src,*dst;
-	
-	/* During flashing only RAMFUNC code may be executed. 
-	 * For now, this means that no other code whatsoever may
-	 * be run until this function returns. */
-	vTaskSuspendAll();
-	portENTER_CRITICAL();
-	
-	env.e.magic=TENVIRONMENT_MAGIC;	
-	env.e.crc16=0;
-	env.e.size=sizeof(env);
-	env.e.crc16=env_crc16((unsigned char*)&env,sizeof(env));
-	
-	src=env.data;
-	dst=ENV_FLASH;
-        for (i = 0; i < (sizeof(env.data)/sizeof(env.data[0])); i++)
-	    *dst++ = *src++;
+  /* During flashing only RAMFUNC code may be executed. 
+   * For now, this means that no other code whatsoever may
+   * be run until this function returns. */
+  vTaskSuspendAll ();
+  portENTER_CRITICAL ();
 
-	flash_page(ENV_FLASH);
-	
-	portEXIT_CRITICAL();
-	xTaskResumeAll();
+  flash_cmd_wait ();
+
+  AT91F_MC_EFC_PerformCmd (AT91C_BASE_MC, AT91C_MC_CORRECT_KEY |
+			   AT91C_MC_FCMD_CLR_GP_NVM |
+			   (AT91C_MC_PAGEN & (2 << 8)));
+
+  // endless loop to trigger watchdog reset
+  while(1){};
+}
+#endif/*__AT91SAM7X__*/
+
+void RAMFUNC
+env_store (void)
+{
+  /* During flashing only RAMFUNC code may be executed. 
+   * For now, this means that no other code whatsoever may
+   * be run until this function returns. */
+  vTaskSuspendAll ();
+  portENTER_CRITICAL ();
+
+  env.e.magic = TENVIRONMENT_MAGIC;
+  env.e.crc16 = 0;
+  env.e.size = sizeof (env);
+  env.e.crc16 = env_crc16 ((unsigned char *) &env, sizeof (env));
+
+  env_flash_to (ENV_FLASH);
+
+  portEXIT_CRITICAL ();
+  xTaskResumeAll ();
 }
 
-int env_load(void)
+int
+env_load (void)
 {
-	unsigned int crc;
-    
-	memcpy(&env,ENV_FLASH,sizeof(env));
-	
-	if(env.e.magic!=TENVIRONMENT_MAGIC || env.e.size!=sizeof(env) )
-	    return 0;
-    
-	crc=env.e.crc16;
-	env.e.crc16=0;
-    
-	return env_crc16((unsigned char*)&env,sizeof(env))==crc;
+  unsigned int crc;
+
+  memcpy (&env, ENV_FLASH, sizeof (env));
+
+  if (env.e.magic != TENVIRONMENT_MAGIC || env.e.size != sizeof (env))
+    return 0;
+
+  crc = env.e.crc16;
+  env.e.crc16 = 0;
+
+  return env_crc16 ((unsigned char *) &env, sizeof (env)) == crc;
 }
 
-void env_init(void)
+void
+env_init (void)
 {
-	unsigned int fmcn = AT91F_MC_EFC_ComputeFMCN(MCK);
-	
-	AT91F_MC_EFC_CfgModeReg(AT91C_BASE_MC, fmcn << 16 | AT91C_MC_FWS_3FWS);
+  unsigned int fmcn = AT91F_MC_EFC_ComputeFMCN (MCK);
+
+  AT91F_MC_EFC_CfgModeReg (AT91C_BASE_MC, fmcn << 16 | AT91C_MC_FWS_3FWS);
 }
