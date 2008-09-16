@@ -11,6 +11,7 @@ APP_SRC= \
   application/led.c \
   application/proto.c \
   application/xxtea.c \
+  application/authentication.c \
   application/cmd/cmd.c \
   application/cmd/cmd_key.c \
   application/cmd/cmd_main.c \
