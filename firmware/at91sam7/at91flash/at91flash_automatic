@@ -64,8 +64,8 @@ do_detect() {
 }
 
 find_uart() {
-    DEV=`grep -l ${USB_MODALIAS} /sys/bus/usb-serial/devices/ttyUSB*/../modalias | head -n 1 | cut -d '/' --output-delimiter "
-" -f - | egrep -i '^ttyUSB'`
+    DEV=`grep -l ${USB_MODALIAS} /sys/bus/usb-serial/devices/ttyUSB*/../modalias | head -n 1 | tr / "
+" | egrep -i '^ttyUSB'`
     UART="/dev/${DEV}"
     return $?
 }
