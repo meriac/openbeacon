@@ -1,7 +1,7 @@
 #include <FreeRTOS.h>
 #include <task.h>
-#include <sys/types.h>
 #include <string.h>
+#include <beacontypes.h>
 
 #include "authentication.h"
 #include "openbouncer.h"
