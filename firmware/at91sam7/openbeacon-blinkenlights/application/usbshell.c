@@ -29,6 +29,7 @@
 #include <task.h>
 #include <semphr.h>
 #include <beacontypes.h>
+#include "openbeacon.h"
 #include "debug_print.h"
 #include "env.h"
 #include "USB-CDC.h"
@@ -36,6 +37,8 @@
 #include "update.h"
 #include "led.h"
 #include "usbshell.h"
+#include "proto.h"
+#include "main.h"
 
 #define PROMPT "\nWDIM> "
 
@@ -62,6 +65,11 @@ cmd_status (const portCHAR * cmd)
   shell_print ("   current dim value = ");
   DumpUIntToUSB (vGetDimmerStep ());
   shell_print ("\n");
+  
+  if (vGetDimmerOff())
+    shell_print ("   DIMMER IS CURRENTLY FORCED OFF!\n");
+  else
+    shell_print ("   dimmer not forced off.\n");
 
   shell_print ("   dimmer jitter = ");
   DumpUIntToUSB ( vGetDimmerJitterUS() );
@@ -70,6 +78,24 @@ cmd_status (const portCHAR * cmd)
   shell_print ("   EMI pulses = ");
   DumpUIntToUSB ( vGetEmiPulses() );
   shell_print ("\n");
+  
+  shell_print ("   packet count = ");
+  DumpUIntToUSB ( packet_count );
+  shell_print ("\n");
+  
+  shell_print ("   last sequence number = ");
+  DumpUIntToUSB ( last_sequence );
+  shell_print ("\n");
+  
+  shell_print ("   pings: last seq ");
+  DumpUIntToUSB ( last_ping_seq );
+  shell_print (", lost ");
+  DumpUIntToUSB ( pings_lost );
+  shell_print ("\n");
+
+  shell_print ("   dimmer delay = ");
+  DumpUIntToUSB ( env.e.dimmer_delay );
+  shell_print (" ms\n");
 
   shell_print ("   GAMMA table:\t");
   for (i = 0; i < GAMMA_SIZE; i++)
@@ -81,7 +107,13 @@ cmd_status (const portCHAR * cmd)
 	shell_print ("\n\t\t");
     }
   shell_print ("\n");
+}
 
+static void
+cmd_reset (const portCHAR * cmd)
+{
+  vResetEnv();
+  env_store();
 }
 
 static void
@@ -90,10 +122,16 @@ cmd_help (const portCHAR * cmd)
   shell_print ("Blinkenlights command shell help.\n");
   shell_print ("---------------------------------\n");
   shell_print ("\n");
-  shell_print ("help				This screen\n");
-  shell_print ("[wdim-]mac <xxyy> [<crc>]	Set the MAC address of this unit.\n");
-  shell_print ("status				Print status information about this unit.\n");
+  shell_print ("d[ebug] <level>			Define the debug level\n");
   shell_print ("dim <value>			Set the dimmer to a value (between 0 and 15)\n");
+  shell_print ("help				This screen\n");
+  shell_print ("id <mcu_id> <lamp_id>		Set mcu and lamp id\n");
+  shell_print ("reset				Reset the non-volatile flash to defaults\n");
+  shell_print ("mac <xxyy> [<crc>]		Set the MAC address of this unit.\n");
+  shell_print ("nrf_dump			dumps 2.4GHz frontend (nRF24L01) register set\n");  
+  shell_print ("nrf_init			Initialize 2.4GHz frontend from scratch\n");  
+  shell_print ("nrf_reset			reset 2.4GHz frontend FIFOs\n");  
+  shell_print ("status				Print status information about this unit.\n");
   shell_print ("update				Enter update mode - DO NOT USE FOR FUN\n");
 }
 
@@ -208,10 +246,101 @@ cmd_dim (const portCHAR * cmd)
   shell_print ("\n");
 }
 
+static void
+cmd_id (const portCHAR * cmd)
+{
+  int mcu_id = 0, lamp_id = 0;
+
+  while (*cmd && *cmd != ' ')
+    cmd++;
+
+  cmd++;
+
+  while (*cmd >= '0' && *cmd <= '9')
+    {
+      mcu_id *= 10;
+      mcu_id += *cmd - '0';
+      cmd++;
+    }
+
+  if (*cmd != ' ')
+    {
+      shell_print ("parameter missing\n");
+      return;
+    }
+
+  cmd++;
+
+  while (*cmd >= '0' && *cmd <= '9')
+    {
+      lamp_id *= 10;
+      lamp_id += *cmd - '0';
+      cmd++;
+    }
+
+  shell_print ("setting wmcu id ");
+  DumpUIntToUSB (mcu_id);
+  shell_print (", lamp id ");
+  DumpUIntToUSB (lamp_id);
+  shell_print ("\n");
+
+  if (mcu_id != env.e.wmcu_id ||
+      lamp_id != env.e.lamp_id)
+    {
+      env.e.wmcu_id = mcu_id;
+      env.e.lamp_id = lamp_id;
+      shell_print ("storing.\n");
+      env_store();
+    }
+  else
+    {
+      shell_print ("not storing, values are the same.\n");
+    }
+}
+
+static void
+cmd_debug (const portCHAR * cmd)
+{
+  int val = 0;
+
+  while (*cmd && *cmd != ' ')
+    cmd++;
+
+  cmd++;
+
+  if (*cmd < '0' || *cmd > '9')
+    return;
+  
+  val = *cmd - '0';
+
+  shell_print ("setting debug level to ");
+  DumpUIntToUSB(val);
+  shell_print ("\n");
+  debug = val;
+}
+
 void
 cmd_update (const portCHAR * cmd)
 {
   DeviceRevertToUpdateMode ();
+}
+
+void
+cmd_nrf_dump(const portCHAR * cmd)
+{
+  PtDumpNrfRegisters();
+}
+
+void
+cmd_nrf_init(const portCHAR * cmd)
+{
+  PtInitNrfFrontend(PTINITNRFFRONTEND_INIT);
+}
+
+void
+cmd_nrf_reset(const portCHAR * cmd)
+{
+  PtInitNrfFrontend(PTINITNRFFRONTEND_RESETFIFO);
 }
 
 static struct cmd_t
@@ -220,13 +349,18 @@ static struct cmd_t
   void (*callback) (const portCHAR * cmd);
 } commands[] =
 {
-  { "help", 	&cmd_help 	},
-  { "status", 	&cmd_status	},
-  { "mac", 	&cmd_mac 	},
-  { "MAC", 	&cmd_mac 	},
-  { "wdim-mac",	&cmd_mac	},
-  { "dim",	&cmd_dim	},
-  { "update",	&cmd_update	},
+  { "debug",		&cmd_debug	},
+  { "dim",		&cmd_dim	},
+  { "help", 		&cmd_help	},
+  { "id",		&cmd_id		},
+  { "nrf_dump",		&cmd_nrf_dump	},
+  { "nrf_init",		&cmd_nrf_init	},
+  { "nrf_reset",	&cmd_nrf_reset	},
+  { "reset",		&cmd_reset	},
+  { "status", 		&cmd_status	},
+  { "update",		&cmd_update	},
+  { "mac", 		&cmd_mac 	},
+  { "MAC", 		&cmd_mac 	},
     /* end marker */
   { NULL, NULL }
 };

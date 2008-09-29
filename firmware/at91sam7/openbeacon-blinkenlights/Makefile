@@ -15,7 +15,9 @@ APP_SRC=			\
   application/update.c		\
   application/usbshell.c	\
   application/debug_print.c	\
-  application/xxtea.c
+  application/xxtea.c		\
+  $(CORE)/openbeacon/crc32.c	\
+  $(CORE)/openbeacon/rnd.c
   
 BOOTLOADER=application/update.s
 

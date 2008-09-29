@@ -28,6 +28,7 @@
 #include <math.h>
 #include <board.h>
 #include <beacontypes.h>
+#include <rnd.h>
 #include <USB-CDC.h>
 #include "led.h"
 #include "xxtea.h"
@@ -44,8 +45,7 @@ static unsigned short line_hz_table[LINE_HERTZ_LOWPASS_SIZE];
 static int line_hz_pos, line_hz_sum, line_hz, line_hz_enabled;
 static int dimmer_step;
 static int dimmer_emi_pulses;
-static unsigned int random_seed_v1 = 0x52f7d319;
-static unsigned int random_seed_v2 = 0x6e28014a;
+static int dimmer_off = 0;
 
 int
 dimmer_line_hz_enabled (void)
@@ -66,18 +66,6 @@ vGetDimmerJitterUS (void)
   return (env.e.dimmer_jitter * 1000000) / PWM_CMR_CLOCK_FREQUENCY;
 }
 
-static inline unsigned int
-PtRandom (void)
-{
-  // MWC generator, period length 1014595583
-  return ((random_seed_v1 =
-	   36969 * (random_seed_v1 & 0xffff) +
-	   (random_seed_v1 >> 16)) << 16) ^ (random_seed_v2 =
-					     30963 *
-					     (random_seed_v2 & 0xffff) +
-					     (random_seed_v2 >> 16));
-}
-
 void __attribute__ ((section (".ramfunc"))) vnRF_PulseIRQ_Handler (void)
 {
   static unsigned int timer_prev = 0;
@@ -94,11 +82,11 @@ void __attribute__ ((section (".ramfunc"))) vnRF_PulseIRQ_Handler (void)
       if (pulse_length >
 	  ((MINIMAL_PULSE_LENGH_US * PWM_CMR_CLOCK_FREQUENCY) / 1000000))
 	{
-	  if (line_hz_enabled)
+	  if (line_hz_enabled && !dimmer_off)
 	    {
 	      pulse_length = (line_hz * dimmer_percent) / DIMMER_TICKS;
 	      pulse_length +=
-		(PtRandom () % (env.e.dimmer_jitter * 2)) -
+		(RndNumber () % (env.e.dimmer_jitter * 2)) -
 		env.e.dimmer_jitter;
 
 	      AT91C_BASE_TC2->TC_RA = pulse_length > 0 ? pulse_length : 1;
@@ -164,6 +152,18 @@ vGetEmiPulses (void)
 }
 
 void
+vSetDimmerOff (int off)
+{
+  dimmer_off = off;
+}
+
+int
+vGetDimmerOff (void)
+{
+  return dimmer_off;
+}
+
+void
 vSetDimmerGamma (int entry, int val)
 {
   if ((entry >= GAMMA_SIZE) || (entry < 0))
@@ -180,10 +180,6 @@ vSetDimmerGamma (int entry, int val)
 void
 vInitDimmer (void)
 {
-  /* set the random seed */
-  random_seed_v1 += env.e.mac;
-  random_seed_v2 -= env.e.mac;
-
   bzero (&line_hz_table, sizeof (line_hz_table));
   line_hz_pos = line_hz_sum = line_hz = line_hz_enabled = 0;
   dimmer_step = dimmer_emi_pulses = 0;

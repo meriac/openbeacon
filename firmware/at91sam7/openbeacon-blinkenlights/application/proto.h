@@ -26,53 +26,18 @@
 #include "openbeacon.h"
 #include "usbshell.h"
 
-#define GAMMA_DEFAULT	200
-#define FIFO_DEPTH	256
-#define RF_PAYLOAD_SIZE	26
-enum {
-  RF_CMD_SET_VALUES,
-  RF_CMD_SET_LAMP_ID,
-  RF_CMD_SET_GAMMA,
-  RF_CMD_WRITE_CONFIG,
-  RF_CMD_SET_JITTER,
-  RF_CMD_SEND_STATISTICS,
-  RF_CMD_ENTER_UPDATE_MODE = 0x3f
-};
+#define PTINITNRFFRONTEND_RESETFIFO 0x01
+#define PTINITNRFFRONTEND_INIT 0x02
 
-typedef struct
-{
-  unsigned char cmd;
-  unsigned short mac;
-  unsigned char wmcu_id;
-
-  union {
-    unsigned char payload[RF_PAYLOAD_SIZE];
-    
-    struct {
-      unsigned char id;
-      unsigned char wmcu_id;
-    } set_lamp_id;
-
-    struct {
-      unsigned char block;
-      unsigned short val[8];
-    } set_gamma;
-
-    struct {
-      unsigned short jitter;
-    } set_jitter;
-
-    struct {
-      unsigned short emi_pulses;
-      unsigned long packet_count;
-    } statistics;
-  }; /* union */
-
-  unsigned short crc;
-} __attribute__ ((packed)) BRFPacket;
-
-extern void vInitProtocolLayer (void);
+extern void vInitProtocolLayer (unsigned char wmcu_id);
 extern int PtSetFifoLifetimeSeconds (int Seconds);
 extern int PtGetFifoLifetimeSeconds (void);
+extern void PtInitNrfFrontend (int ResetType);
+extern void PtDumpNrfRegisters (void);
+extern unsigned int packet_count;
+extern unsigned int last_sequence;
+extern unsigned int last_ping_seq;
+extern unsigned int pings_lost;
+extern unsigned int debug;
 
 #endif/*__PROTO_H__*/

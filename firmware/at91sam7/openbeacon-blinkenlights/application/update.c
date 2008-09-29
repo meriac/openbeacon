@@ -25,6 +25,7 @@
 #include <task.h>
 #include <beacontypes.h>
 #include <string.h>
+#include "openbeacon.h"
 #include "debug_print.h"
 #include "env.h"
 #include "led.h"
