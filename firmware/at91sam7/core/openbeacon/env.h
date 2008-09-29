@@ -27,7 +27,7 @@ typedef union
 {
   TEnvironment e;
   unsigned int data[AT91C_IFLASH_PAGE_SIZE / sizeof (unsigned int)];
-} TEnvironmentBlock;
+} __attribute__((__packed__)) TEnvironmentBlock;
 
 extern TEnvironmentBlock env;
 extern void env_store (void) RAMFUNC;

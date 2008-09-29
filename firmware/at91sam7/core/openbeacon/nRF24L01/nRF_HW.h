@@ -98,6 +98,9 @@
 
 #define FIFO_RX_EMPTY		0x01
 #define FIFO_RX_FULL		0x02
+#define FIFO_TX_EMPTY		0x10
+#define FIFO_TX_FULL		0x20
+#define FIFO_TX_REUSE		0x40
 
 #define NRF_MIN_MAC_SIZE 3
 #define NRF_MAX_MAC_SIZE 5
