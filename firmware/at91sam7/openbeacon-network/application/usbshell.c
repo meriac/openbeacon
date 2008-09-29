@@ -32,6 +32,8 @@
 
 #include "debug_printf.h"
 #include "network.h"
+#include "proto.h"
+#include "bprotocol.h"
 #include "SAM7_EMAC.h"
 #include "env.h"
 #include "USB-CDC.h"
@@ -48,10 +50,13 @@
 static void
 cmd_status (const portCHAR * cmd)
 {
-  unsigned int i;
   struct netif *nic = &EMAC_if;
+  unsigned int uptime = (xTaskGetTickCount () / portTICK_RATE_MS) / 1000;
 
   shell_printf ("WMCU status:\n");
+  shell_printf ("	Firmware version: %s\n", VERSION);
+  shell_printf ("	Uptime: %03d:%02d:%02d\n",
+  		uptime / 3600, (uptime / 60) % 60, uptime % 60);
   shell_printf ("	WMCU ID: %d\n", env.e.mcu_id);
   shell_printf ("	MAC address:	%02x:%02x:%02x:%02x:%02x:%02x\n",
 		nic->hwaddr[0], nic->hwaddr[1], nic->hwaddr[2],
@@ -66,14 +71,27 @@ cmd_status (const portCHAR * cmd)
   shell_printf ("	Gateway addr:	%d.%d.%d.%d\n", ip4_addr1 (&nic->gw),
 		ip4_addr2 (&nic->gw), ip4_addr3 (&nic->gw),
 		ip4_addr4 (&nic->gw));
+  shell_printf ("	Receive statistics: %d packets total, %d frames, %d setup\n",
+     b_rec_total, b_rec_frames, b_rec_setup);
+  shell_printf ("	RF statistics: sent %d broadcasts, %d unicasts, received %d\n",
+     rf_sent_broadcast, rf_sent_unicast, rf_rec);
+  shell_printf ("	jam density: %d (wait time in ms)\n", PtGetRfJamDensity());
+  shell_printf ("	assigned lamps: %d\n", env.e.n_lamps);
+  shell_printf ("	rf power level: %d\n", PtGetRfPowerLevel());
+  debug_printf ("\n");
+}
 
-  shell_printf ("	assigned lamps (%d):\n", env.e.n_lamps);
-  shell_printf
-    ("		#lamp MAC	#screen		#x	#y	#last value\n");
+static void
+cmd_lampmap (const portCHAR * cmd)
+{
+  unsigned int i;
+
+  shell_printf ("assigned lamps (%d):\n", env.e.n_lamps);
+  shell_printf ("	#lamp MAC	#screen		#x	#y	#last value\n");
 
   for (i = 0; i < env.e.n_lamps; i++)
     {
-      debug_printf ("\t\t0x%04x\t\t%d\t\t%d\t%d\t%d\n",
+      debug_printf ("\t0x%04x\t\t%d\t\t%d\t%d\t%d\n",
 		    env.e.lamp_map[i].mac,
 		    env.e.lamp_map[i].screen,
 		    env.e.lamp_map[i].x,
@@ -96,27 +114,24 @@ cmd_help (const portCHAR * cmd)
   shell_printf ("\n");
   shell_printf ("[wmcu-]mac <xxyy> [<crc>]\n");
   shell_printf ("	Set the MAC address of this unit.\n");
-  shell_printf
-    ("	Address xxyy is given in two hexadecimal 8bit numbers with\n");
-  shell_printf
-    ("	no separator, crc is optional and is ignored when not given.\n");
-  shell_printf
-    ("	When given, it needs to be MAC_L ^ MAC_H, otherwise the\n");
-  shell_printf
-    ("	command is rejected. The two values which are set here are\n");
-  shell_printf
-    ("	the last two digits only with a unchangable prefix, hence\n");
+  shell_printf ("	Address xxyy is given in two hexadecimal 8bit numbers with\n");
+  shell_printf ("	no separator, crc is optional and is ignored when not given.\n");
+  shell_printf ("	When given, it needs to be MAC_L ^ MAC_H, otherwise the\n");
+  shell_printf ("	command is rejected. The two values which are set here are\n");
+  shell_printf ("	the last two digits only with a unchangable prefix, hence\n");
   shell_printf ("	the full MAC would be %02x:%02x:%02x:%02x:xx:yy.\n",
 		nic->hwaddr[0], nic->hwaddr[1], nic->hwaddr[2],
 		nic->hwaddr[3]);
+  shell_printf ("[wmcu-]id <id>\n");
+  shell_printf ("	Set the WMCU ID and store it to the flash memory\n");
+  shell_printf ("	This also updates all dimmers configured in the lamp map\n");
   shell_printf ("\n");
   shell_printf ("status\n");
-  shell_printf
-    ("	Print status information about this unit. Try it, it's fun.\n");
-  shell_printf ("\n");
+  shell_printf ("	Print status information about this unit. Try it, it's fun.\n");
+  shell_printf ("lampmap\n");
+  shell_printf ("	Dump the lampmap\n");
   shell_printf ("env\n");
-  shell_printf
-    ("	Show variables currently stored in the non-volatile flash memory\n");
+  shell_printf ("	Show variables currently stored in the non-volatile flash memory\n");
   shell_printf ("update\n");
   shell_printf ("        Enter update mode - DO NOT USE FOR FUN\n\n");
 }
@@ -197,30 +212,56 @@ cmd_mac (const portCHAR * cmd)
     }
 
   shell_printf ("setting new MAC: %02x%02x.\n", mac_h, mac_l);
-  shell_printf
-    ("Please power-cycle the device to make this change take place.\n");
-
-  /* set it ... */
-  if (env.e.mac_h != 0xff && env.e.mac_l != 0xff)
-    {
-      /* a MAC was set before. Hence, we need to stop the network thread
-       * before we start it again later. */
-      /* TODO */
-    }
+  shell_printf ("Please power-cycle the device to make this change take place.\n");
 
   env.e.mac_h = mac_h;
   env.e.mac_l = mac_l;
+  vTaskDelay (100 / portTICK_RATE_MS);
   env_store ();
-
-  vNetworkInit ();
 }
 
 static void
-cmd_env (const portCHAR * cmd)
+cmd_id (const portCHAR * cmd)
 {
-  shell_printf ("Current values in non-volatile flash storage:\n");
-  shell_printf ("   mcu_id = %d\n", env.e.mcu_id);
-  shell_printf ("   mac = %02x%02x\n", env.e.mac_h, env.e.mac_l);
+  unsigned int i, id = 0;
+
+  while (*cmd && *cmd != ' ')
+    cmd++;
+
+  cmd++;
+
+  for (;;)
+    {
+      portCHAR b;
+
+      if (!*cmd)
+	break;
+
+      b = *cmd++;
+      if (b > '9' || b < '0')
+	{
+	  shell_printf ("invalid ID!\n");
+	  return;
+	}
+
+      id *= 10;
+      id += (b - '0');
+    }
+
+  shell_printf ("setting new WMCU ID: %d\n", id);
+  env.e.mcu_id = id;
+
+  for (i = 0; i < env.e.n_lamps; i++)
+    {
+      LampMap *m = env.e.lamp_map + i;
+      shell_printf ("updating dimmer 0x%04x -> ID %d\n", m->mac, i);
+
+      b_set_lamp_id (i, m->mac);
+      vTaskDelay (100 / portTICK_RATE_MS);
+    }
+
+  vTaskDelay (100 / portTICK_RATE_MS);
+  env_store ();
 }
 
 static void
@@ -242,15 +283,19 @@ static struct cmd_t
 {
   const portCHAR *command;
   void (*callback) (const portCHAR * cmd);
-} commands[] = {
-  {"env", &cmd_env},
-  {"help", &cmd_help},
-  {"mac", &cmd_mac},
-  {"status", &cmd_status},
-  {"update", &cmd_update},
-  {"wmcu-mac", &cmd_mac},
+} commands[] =
+{
+  {"help",	&cmd_help},
+  {"id",	&cmd_id},
+  {"lampmap",	&cmd_lampmap},
+  {"mac",	&cmd_mac},
+  {"status",	&cmd_status},
+  {"update",	&cmd_update},
+  {"wmcu-id",	&cmd_id},
+  {"wmcu-mac",	&cmd_mac},
     /* end marker */
-  {NULL, NULL}
+  {
+  NULL, NULL}
 };
 
 static void

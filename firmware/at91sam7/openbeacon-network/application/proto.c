@@ -26,18 +26,61 @@
 #include <string.h>
 #include <board.h>
 #include <beacontypes.h>
+#include <crc32.h>
 #include "led.h"
 #include "xxtea.h"
 #include "proto.h"
+#include "bprotocol.h"
 #include "nRF24L01/nRF_HW.h"
 #include "nRF24L01/nRF_CMD.h"
 #include "nRF24L01/nRF_API.h"
 #include "debug_printf.h"
 #include "env.h"
+#include "rnd.h"
 
-const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] =
+#define DEFAULT_JAM_DENSITY 10
+#define TX_COMMAND_RETRIES 3
+
+static BRFPacket rfpkg;
+unsigned int rf_sent_broadcast, rf_sent_unicast, rf_rec;
+static unsigned char nrf_powerlevel_current, nrf_powerlevel_last;
+static unsigned int jam_density_ms;
+static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] =
   { 'D', 'E', 'C', 'A', 'D' };
-static BRFPacket rxpkg;
+static unsigned char jam_mac[NRF_MAX_MAC_SIZE] =
+  { 'J', 'A', 'M', 'M', 0 };
+static unsigned char wmcu_mac[NRF_MAX_MAC_SIZE] =
+  { 'W', 'M', 'C', 'U', 0 };
+
+static void
+PtUpdateWmcuId (unsigned char broadcast)
+{
+  /* update jamming data channel id */
+  if (broadcast)
+    nRFAPI_SetTxMAC (broadcast_mac, sizeof (broadcast_mac));
+  else
+    {
+      jam_mac[sizeof (jam_mac) - 1] = env.e.mcu_id;
+      nRFAPI_SetTxMAC (jam_mac, sizeof (jam_mac));
+    }
+
+  /* update WMCU id for response channel */
+  wmcu_mac[sizeof (wmcu_mac) - 1] = env.e.mcu_id;
+  nRFAPI_SetRxMAC (wmcu_mac, sizeof (wmcu_mac), 1);
+}
+
+void
+PtSetRfPowerLevel (unsigned char Level)
+{
+  nrf_powerlevel_current =
+    (Level >= NRF_POWERLEVEL_MAX) ? NRF_POWERLEVEL_MAX : Level;
+}
+
+unsigned char
+PtGetRfPowerLevel (void)
+{
+  return nrf_powerlevel_last;
+}
 
 static inline s_int8_t
 PtInitNRF (void)
@@ -46,47 +89,39 @@ PtInitNRF (void)
 		    sizeof (broadcast_mac), ENABLED_NRF_FEATURES))
     return 0;
 
-  nRFAPI_SetPipeSizeRX (0, sizeof (rxpkg));
-  nRFAPI_SetTxPower (3);
+  jam_density_ms = DEFAULT_JAM_DENSITY;
+
+  nrf_powerlevel_last = nrf_powerlevel_current = -1;
+  PtSetRfPowerLevel (NRF_POWERLEVEL_MAX);
+
+  nRFAPI_SetSizeMac (sizeof (wmcu_mac));
+  nRFAPI_SetPipeSizeRX (0, sizeof (rfpkg));
+  nRFAPI_SetPipeSizeRX (1, sizeof (rfpkg));
+  nRFAPI_PipesEnable (ERX_P0 | ERX_P1);
+  PtUpdateWmcuId (env.e.mcu_id == 0);
+
   nRFAPI_SetRxMode (0);
   nRFCMD_CE (0);
 
   return 1;
 }
 
-void
+static void
 shuffle_tx_byteorder (unsigned long *v, int len)
 {
   while (len--)
     {
-      *v = swaplong (*v);
+      *v = PtSwapLong (*v);
       v++;
     }
 }
 
-
-static inline short
-crc16 (const unsigned char *buffer, int size)
+static void
+PtInternalTransmit (BRFPacket * pkg)
 {
-  unsigned short crc = 0xFFFF;
-
-  if (buffer && size)
-    while (size--)
-      {
-	crc = (crc >> 8) | (crc << 8);
-	crc ^= *buffer++;
-	crc ^= ((unsigned char) crc) >> 4;
-	crc ^= crc << 12;
-	crc ^= (crc & 0xFF) << 5;
-      }
-
-  return crc;
-}
-
-void
-vnRFTransmitPacket (BRFPacket * pkg)
-{
-  unsigned short crc;
+  /* update the sequence */
+  if (sequence_seed == 0)
+    return;
 
   /* turn on redLED for TX indication */
   vLedSetRed (1);
@@ -94,12 +129,23 @@ vnRFTransmitPacket (BRFPacket * pkg)
   /* disable receive mode */
   nRFCMD_CE (0);
 
+  /* wait in case a packet is currently received */
+  vTaskDelay (3 / portTICK_RATE_MS);
+
   /* set TX mode */
   nRFAPI_SetRxMode (0);
 
+  if (pkg->mac == 0xffff)
+    rf_sent_broadcast++;
+  else
+    rf_sent_unicast++;
+
+  pkg->sequence = sequence_seed + (xTaskGetTickCount () / portTICK_RATE_MS);
+
   /* update crc */
-  crc = crc16 ((unsigned char *) pkg, sizeof (*pkg) - sizeof (pkg->crc));
-  pkg->crc = swapshort (crc);
+  pkg->crc =
+    PtSwapLong (crc32
+		((unsigned char *) pkg, sizeof (*pkg) - sizeof (pkg->crc)));
 
   /* encrypt the data */
   shuffle_tx_byteorder ((unsigned long *) pkg, sizeof (*pkg) / sizeof (long));
@@ -114,75 +160,148 @@ vnRFTransmitPacket (BRFPacket * pkg)
   nRFCMD_CE (1);
 
   /* wait till packet is transmitted */
-  vTaskDelay (10 / portTICK_RATE_MS);
+  vTaskDelay (3 / portTICK_RATE_MS);
 
   /* switch to RX mode again */
   nRFAPI_SetRxMode (1);
 
   /* turn off red TX indication LED */
   vLedSetRed (0);
-
 }
 
 void
-vnRFtaskRx (void *parameter)
+PtTransmit (BRFPacket * pkg, unsigned char broadcast)
 {
-  u_int16_t crc;
+  int i;
+  static BRFPacket backup;
 
-  if (!PtInitNRF ())
-    return;
+  if (TX_COMMAND_RETRIES > 1)
+    backup = *pkg;
 
-  /* FIXME!!! THIS IS RACY AND NEEDS A LOCK!!! */
+  if (broadcast)
+    PtUpdateWmcuId (pdTRUE);
 
-  for (;;)
+  for (i = 0; i < TX_COMMAND_RETRIES; i++)
     {
-      if (nRFCMD_WaitRx (100))
-	{
-	  vLedSetRed (1);
+      if (i)
+	*pkg = backup;
+      vTaskDelay (((RndNumber () % 5) / portTICK_RATE_MS));
+      PtInternalTransmit (pkg);
+    }
 
-	  do
-	    {
-	      /* read packet from nRF chip */
-	      nRFCMD_RegReadBuf (RD_RX_PLOAD, (unsigned char *) &rxpkg,
-				 sizeof (rxpkg));
-	      vLedSetRed (0);
-
-	      /* adjust byte order and decode */
-	      shuffle_tx_byteorder ((unsigned long *) &rxpkg,
-				    sizeof (rxpkg) / sizeof (long));
-	      xxtea_decode ((long *) &rxpkg, sizeof (rxpkg) / sizeof (long));
-	      shuffle_tx_byteorder ((unsigned long *) &rxpkg,
-				    sizeof (rxpkg) / sizeof (long));
-
-	      /* verify the crc checksum */
-	      crc =
-		crc16 ((unsigned char *) &rxpkg,
-		       sizeof (rxpkg) - sizeof (rxpkg.crc));
-
-	      /* sort out packets from other domains */
-	      if (rxpkg.wmcu_id != env.e.mcu_id)
-		continue;
-
-	      /* require packet to be sent from an dimmer */
-	      if (~rxpkg.cmd & 0x40)
-		continue;
-
-	      debug_printf ("dumping received packet:\n");
-	      hex_dump ((unsigned char *) &rxpkg, 0, sizeof (rxpkg));
-	    }
-	  while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
-
-	}
-      nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
-
-      /* schedule */
-      vTaskDelay (100 / portTICK_RATE_MS);
+  if (broadcast)
+    {
+      vTaskDelay ((3 + (RndNumber () % 5) / portTICK_RATE_MS));
+      PtUpdateWmcuId (pdFALSE);
     }
 }
 
 void
-vInitProtocolLayer (void)
+PtSetRfJamDensity (unsigned char milliseconds)
 {
-  xTaskCreate (vnRFtaskRx, (signed portCHAR *) "nRF_Rx", TASK_NRF_STACK,
+  jam_density_ms = milliseconds;
+}
+
+unsigned char
+PtGetRfJamDensity (void)
+{
+  return jam_density_ms;
+}
+
+static void
+vnRFtaskRxTx (void *parameter)
+{
+  u_int32_t crc, t;
+  u_int8_t status;
+  portTickType last_ticks = 0, jam_ticks = 0;
+
+  if (!PtInitNRF ())
+    return;
+
+  for (;;)
+    {
+      /* check if TX strength changed */
+      if (nrf_powerlevel_current != nrf_powerlevel_last)
+	{
+	  nRFAPI_SetTxPower (nrf_powerlevel_current);
+	  nrf_powerlevel_last = nrf_powerlevel_current;
+	}
+
+      status = nRFAPI_GetFifoStatus ();
+      /* living in a paranoid world ;-) */
+      if (status & FIFO_TX_FULL)
+	nRFAPI_FlushTX ();
+
+      /* check for received packets */
+      if ((status & FIFO_RX_FULL) || nRFCMD_WaitRx (0))
+	{
+	  vLedSetGreen (0);
+
+	  do
+	    {
+	      /* read packet from nRF chip */
+	      nRFCMD_RegReadBuf (RD_RX_PLOAD, (unsigned char *) &rfpkg,
+				 sizeof (rfpkg));
+
+	      /* adjust byte order and decode */
+	      shuffle_tx_byteorder ((unsigned long *) &rfpkg,
+				    sizeof (rfpkg) / sizeof (long));
+	      xxtea_decode ((long *) &rfpkg, sizeof (rfpkg) / sizeof (long));
+	      shuffle_tx_byteorder ((unsigned long *) &rfpkg,
+				    sizeof (rfpkg) / sizeof (long));
+
+	      /* verify the crc checksum */
+	      crc =
+		crc32 ((unsigned char *) &rfpkg,
+		       sizeof (rfpkg) - sizeof (rfpkg.crc));
+	      if ((crc == PtSwapLong (rfpkg.crc)) &&
+		  (rfpkg.wmcu_id == env.e.mcu_id) &&
+		  (rfpkg.cmd & RF_PKG_SENT_BY_DIMMER))
+		{
+		  //debug_printf("dumping received packet:\n");
+		  //hex_dump((unsigned char *) &rfpkg, 0, sizeof(rfpkg));
+		  b_parse_rfrx_pkg (&rfpkg);
+		  rf_rec++;
+		}
+	    }
+	  while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
+
+	  vLedSetGreen (1);
+	}
+
+      /* transmit current lamp value */
+      if (env.e.mcu_id && ((xTaskGetTickCount () - last_ticks) > jam_ticks))
+	{
+	  memset (&rfpkg, 0, sizeof (rfpkg));
+	  rfpkg.cmd = RF_CMD_SET_VALUES;
+	  rfpkg.wmcu_id = env.e.mcu_id;
+	  rfpkg.mac = 0xffff;	/* send to all MACs */
+
+	  for (t = 0; t < RF_PAYLOAD_SIZE; t++)
+	    rfpkg.payload[t] =
+	      (last_lamp_val[t * 2] & 0xf) |
+	      (last_lamp_val[(t * 2) + 1] << 4);
+
+	  // random delay to avoid collisions
+	  PtInternalTransmit (&rfpkg);
+
+	  // prepare next jam transmission
+	  last_ticks = xTaskGetTickCount ();
+	  jam_ticks =
+	    (RndNumber () % (jam_density_ms * 2)) / portTICK_RATE_MS;
+	}
+
+      vTaskDelay (5 / portTICK_RATE_MS);
+
+      /* did I already mention the paranoid world thing? */
+      nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
+    }
+}
+
+void
+PtInitProtocol (void)
+{
+  rf_rec = rf_sent_unicast = rf_sent_broadcast = 0;
+  xTaskCreate (vnRFtaskRxTx, (signed portCHAR *) "nRF_RxTx", TASK_NRF_STACK,
 	       NULL, TASK_NRF_PRIORITY, NULL);
 }

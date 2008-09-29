@@ -33,12 +33,16 @@
 #include <USB-CDC.h>
 #include <task.h>
 #include <dbgu.h>
+#include <beacontypes.h>
+#include <proto.h>
+#include <rnd.h>
 #include <network.h>
 
 #include "led.h"
 #include "proto.h"
 #include "usbshell.h"
 #include "env.h"
+#include "debug_printf.h"
 
 /**********************************************************************/
 static inline void
@@ -52,8 +56,9 @@ prvSetupHardware (void)
   /*  Enable the peripheral clock. */
   AT91C_BASE_PMC->PMC_PCER =
     (1 << AT91C_ID_PIOA) |
-    (1 << AT91C_ID_PIOB) | (1 << AT91C_ID_EMAC) | (1 << AT91C_ID_SPI1);
-
+    (1 << AT91C_ID_PIOB) |
+    (1 << AT91C_ID_EMAC) |
+    (1 << AT91C_ID_SPI1);
 }
 
 /**********************************************************************/
@@ -72,18 +77,24 @@ main (void)
 {
   prvSetupHardware ();
   vLedInit ();
+
+  /* If no previous environment exists - create a new, but don't store it */
   env_init ();
-  env_load ();
+  if(!env_load ()) {
+    debug_printf ("unable to load environment, resetting to defaults\n");
+    bzero (&env, sizeof (env));
+  }
 
   if (env.e.n_lamps > MAX_LAMPS)
     env.e.n_lamps = 0;
 
+  vRndInit ((((u_int32_t) env.e.mac_h) << 8) | env.e.mac_l);
   vNetworkInit ();
 
   xTaskCreate (vUSBCDCTask, (signed portCHAR *) "USB", TASK_USB_STACK,
 	       NULL, TASK_USB_PRIORITY, NULL);
 
-  vInitProtocolLayer ();
+  PtInitProtocol ();
   vUSBShellInit ();
   vTaskStartScheduler ();
 

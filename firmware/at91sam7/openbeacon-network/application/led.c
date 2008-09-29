@@ -52,6 +52,7 @@ vLedSetGreen (bool_t on)
 void
 vLedHaltBlinking (int reason)
 {
+
   volatile u_int32_t i = 0;
   s_int32_t t;
   while (1)
