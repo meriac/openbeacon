@@ -59,7 +59,7 @@ static unsigned char wmcu_mac[NRF_MAX_MAC_SIZE] =
 
 #define BLINK_INTERVAL_MS (50 / portTICK_RATE_MS)
 
-static void
+void
 PtUpdateWmcuId (unsigned char id)
 {
   /* update WMCU id for response channel */
@@ -161,7 +161,7 @@ shuffle_tx_byteorder (unsigned long *v, int len)
 inline static void
 PtResetDevice (void)
 {
-  vTaskDelay (100);
+  vTaskDelay (100 / portTICK_RATE_MS);
   vTaskSuspendAll ();
   portENTER_CRITICAL ();
   /* endless loop to trigger watchdog reset */
@@ -359,6 +359,12 @@ bParsePacket (unsigned char pipe)
       pkg.statistics.pings_lost = pings_lost;
       pkg.statistics.fw_version = VERSION_INT;
       pkg.statistics.tick_count = (xTaskGetTickCount() / portTICK_RATE_MS) / 1000;
+     /*
+      pkg.statistics.status =
+      	(env.e.wmcu_id & 0xff << 24) |
+	(env.e.lamp_id & 0xff << 16) |
+	(vGetDimmerOff() & 1);
+      */
       break;
     case RF_CMD_SET_DIMMER_DELAY:
       env.e.dimmer_delay = pkg.set_delay.delay;
@@ -513,3 +519,4 @@ vInitProtocolLayer (unsigned char wmcu_id)
   xTaskCreate (vnRFtaskRxTx, (signed portCHAR *) "nRF_RxTx",
 	       TASK_NRF_STACK, NULL, TASK_NRF_PRIORITY, NULL);
 }
+

@@ -289,6 +289,8 @@ cmd_id (const portCHAR * cmd)
     {
       env.e.wmcu_id = mcu_id;
       env.e.lamp_id = lamp_id;
+      PtUpdateWmcuId ( env.e.wmcu_id );
+      vTaskDelay (100 / portTICK_RATE_MS);
       shell_print ("storing.\n");
       env_store();
     }

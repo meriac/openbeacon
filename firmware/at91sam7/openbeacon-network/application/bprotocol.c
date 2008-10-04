@@ -45,11 +45,6 @@
 /* Blinkenlights includes. */
 #include "bprotocol.h"
 
-#define MAX_WIDTH 100
-#define MAX_HEIGHT 100
-#define MAX_CHANNELS 3
-#define MAX_BPP 4
-
 static struct udp_pcb *b_pcb, *b_ret_pcb;
 static struct ip_addr b_last_ipaddr;
 static struct pbuf *b_ret_pbuf;
@@ -80,6 +75,8 @@ b_parse_mcu_multiframe (mcu_multiframe_header_t * header, unsigned int maxlen)
   }
 
 //      debug_printf(" parsing mcu multiframe maxlen = %d\n", maxlen);
+
+  maxlen -= sizeof(*header);
 
   while (maxlen)
     {
@@ -137,21 +134,7 @@ static void send_udp (char *buffer)
 static int
 b_parse_mcu_setup (mcu_setup_header_t * header, int maxlen)
 {
-  int len = sizeof (*header);
-
-  if (len > maxlen)
-    return 0;
-
-  if (header->width >= MAX_WIDTH ||
-      header->height >= MAX_HEIGHT || header->channels > MAX_CHANNELS)
-    return 0;
-
-  len += header->width * header->height * header->channels;
-
-  if (len > maxlen)
-    return 0;
-
-  return len;
+  return 0;
 }
 
 void
@@ -457,7 +440,6 @@ b_recv (void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr *addr,
       pbuf_free (p);
       return;
     }
-
 
   switch (magic)
    {

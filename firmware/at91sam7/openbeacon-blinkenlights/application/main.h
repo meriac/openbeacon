@@ -1,8 +1,12 @@
 /***************************************************************
  *
- * OpenBeacon.org - OpenBeacon link layer protocol
+ * OpenBeacon.org - main header file
  *
  * Copyright 2007 Milosch Meriac <meriac@openbeacon.de>
+ *
+ * basically starts the USB task, initializes all IO ports
+ * and introduces idle application hook to handle the HF traffic
+ * from the nRF24L01 chip
  *
  ***************************************************************
 
@@ -18,27 +22,12 @@
     You should have received a copy of the GNU General Public License along
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
 */
 
-#ifndef __PROTO_H__
-#define __PROTO_H__
+#ifndef __MAIN_H__
+#define __MAIN_H__
 
-#include "openbeacon.h"
-#include "usbshell.h"
+extern void vResetEnv(void);
 
-#define PTINITNRFFRONTEND_RESETFIFO 0x01
-#define PTINITNRFFRONTEND_INIT 0x02
-
-extern void vInitProtocolLayer (unsigned char wmcu_id);
-extern int PtSetFifoLifetimeSeconds (int Seconds);
-extern int PtGetFifoLifetimeSeconds (void);
-extern void PtInitNrfFrontend (int ResetType);
-extern void PtDumpNrfRegisters (void);
-extern void PtUpdateWmcuId (unsigned char id);
-extern unsigned int packet_count;
-extern unsigned int last_sequence;
-extern unsigned int last_ping_seq;
-extern unsigned int pings_lost;
-extern unsigned int debug;
-
-#endif/*__PROTO_H__*/
+#endif/*__MAIN_H__*/
