@@ -1,13 +1,17 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <string.h>
-#include <stdint.h>
+#include <beacontypes.h>
 
 #include "authentication.h"
 #include "openbouncer.h"
 #include "board.h"
+#include "led.h"
+#include "nRF24L01/nRF_HW.h"
+#include "nRF24L01/nRF_CMD.h"
+#include "nRF24L01/nRF_API.h"
 
-uint8_t test;
+static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 1, 2, 3, 2, 1 };
 
 struct
 {
@@ -37,18 +41,58 @@ struct tag_key
 #define MAX_KEYS 200
 struct tag_key keys[MAX_KEYS];
 
+static void process_message(TBouncerEnvelope *message) {
+	/* Tag -> Door: HELLO
+	 * Door -> Tag: CHALLENGE_SETUP
+	 * Door -> Tag: CHALLENGE
+	 * Tag -> Door: Response
+	 */
+	switch(message->hdr.command) {
+	case BOUNCERPKT_CMD_HELLO: break;
+	case BOUNCERPKT_CMD_RESPONSE: break;
+	default: break;
+	}
+}
+
 static void
 authentication_task (void *parameter)
 {
-  (void) parameter;
-  memset (&authentication_state, 0, sizeof (authentication_state));
-  authentication_state.state = AUTHENTICATION_IDLE;
-
+	TBouncerEnvelope Bouncer;
+	(void) parameter;
+	memset (&authentication_state, 0, sizeof (authentication_state));
+	authentication_state.state = AUTHENTICATION_IDLE;
+	
+	
+	while(1) {
+		if (nRFCMD_WaitRx (10)) {
+			
+			do {
+				vLedSetRed (1);
+				// read packet from nRF chip
+				nRFCMD_RegReadBuf (RD_RX_PLOAD, (unsigned char *) &Bouncer, sizeof (Bouncer));
+				
+				process_message(&Bouncer);
+				
+				vLedSetRed (0);
+			} while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
+			
+			nRFAPI_GetFifoStatus();
+		}
+		nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
+	}
 }
 
 void
 init_authentication (void)
 {
-  xTaskCreate (authentication_task, (signed portCHAR *) "AUTHENTICATION",
+	if (!nRFAPI_Init(DEFAULT_CHANNEL, broadcast_mac, sizeof (broadcast_mac), ENABLED_NRF_FEATURES))
+		return;
+
+	nRFAPI_SetPipeSizeRX (0, 16);
+	nRFAPI_SetTxPower (3);
+	nRFAPI_SetRxMode (1);
+	nRFCMD_CE (1);
+	
+	xTaskCreate (authentication_task, (signed portCHAR *) "AUTHENTICATION",
 	       TASK_NRF_STACK, NULL, TASK_NRF_PRIORITY, NULL);
 }
