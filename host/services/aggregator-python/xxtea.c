@@ -47,26 +47,38 @@ set_key(PyObject *self, PyObject *args)
 static PyObject *
 decode(PyObject *self, PyObject *args)
 {
-	u_int32_t *v, n;
+	PyObject *encoded_buf_obj, *decoded_buf_obj;
+	u_int32_t *data, *v;
+	int n;
     u_int32_t z, y, e, p, sum;
 
-    if (!PyArg_ParseTuple(args, "s#", (char **) &v, &n))
+    if (!PyArg_ParseTuple(args, "O", &encoded_buf_obj))
         return NULL;
+
+	if (PyObject_AsReadBuffer(encoded_buf_obj, (const void **) &data, (Py_ssize_t *) &n) < 0)
+		return NULL;
 
 	if (n % 4) {
 		PyErr_SetString(PyExc_ValueError, "length must be a multiple of 4 bytes");
 		return NULL;
 	}
 
-	n /= 4;
-
 	if (n < 2) {
 		PyErr_SetString(PyExc_ValueError, "length must be at least 8 bytes");
 		return NULL;
 	}
 
-    for (p=0; p<n; p++)
-		v[p] = ntohl(v[p]);
+	decoded_buf_obj = PyBuffer_New((Py_ssize_t) n);
+	if (decoded_buf_obj == NULL)
+		return NULL;
+
+    if ( PyObject_AsWriteBuffer(decoded_buf_obj, (void **) &v, (Py_ssize_t *) &n) )
+		return NULL;
+
+	n /= 4;
+
+	for (p=0; p<n; p++)
+		v[p] = ntohl(data[p]);
 
 	y = v[0];
     sum = (6 + 52/n) * DELTA;
@@ -81,36 +93,47 @@ decode(PyObject *self, PyObject *args)
 		sum -= DELTA;
     }
 
-    for (p=0; p<n; p++)
-		v[p] = ntohl(v[p]);
+	for (p=0; p<n; p++)
+		v[p] = htonl(v[p]);
 
-	Py_INCREF(Py_None);
-    return Py_None;
+    return decoded_buf_obj;
 }
 
 static PyObject *
 encode(PyObject *self, PyObject *args)
 {
-	u_int32_t *v, n;
+	PyObject *cleartext_buf_obj, *encoded_buf_obj;
+	u_int32_t *data, *v;
+	int n;
     u_int32_t z, y, e, p, q, sum;
 
-    if (!PyArg_ParseTuple(args, "s#", (char **) &v, &n))
+    if (!PyArg_ParseTuple(args, "O", &cleartext_buf_obj))
         return NULL;
+
+	if (PyObject_AsReadBuffer(cleartext_buf_obj, (const void **) &data, (Py_ssize_t *) &n) < 0)
+		return NULL;
 
 	if (n % 4) {
 		PyErr_SetString(PyExc_ValueError, "length must be a multiple of 4 bytes");
 		return NULL;
 	}
 
-	n /= 4;
-
 	if (n < 2) {
 		PyErr_SetString(PyExc_ValueError, "length must be at least 8 bytes");
 		return NULL;
 	}
 
-    for (p=0; p<n; p++)
-		v[p] = ntohl(v[p]);
+	encoded_buf_obj = PyBuffer_New((Py_ssize_t) n);
+	if (encoded_buf_obj == NULL)
+		return NULL;
+
+    if ( PyObject_AsWriteBuffer(encoded_buf_obj, (void **) &v, (Py_ssize_t *) &n) )
+		return NULL;
+
+	n /= 4;
+
+	for (p=0; p<n; p++)
+		v[p] = ntohl(data[p]);
 
 	y = v[0];
 	z = v[n-1];
@@ -127,11 +150,10 @@ encode(PyObject *self, PyObject *args)
 		z = v[n-1] += MX;
 	}
 
-    for (p=0; p<n; p++)
-		v[p] = ntohl(v[p]);
+	for (p=0; p<n; p++)
+		v[p] = htonl(v[p]);
 
-	Py_INCREF(Py_None);
-    return Py_None;
+    return encoded_buf_obj;
 }
 
 static PyObject *
@@ -162,13 +184,12 @@ crc16(PyObject *self, PyObject *args)
 
 
 static PyMethodDef XXTEAMethods[] = {
-    {"set_key",  set_key, METH_VARARGS, "set_key"},
-    {"decode",  decode, METH_VARARGS, "decode"},
-    {"encode",  encode, METH_VARARGS, "encode"},
-    {"crc16",  crc16, METH_VARARGS, "crc16"},
+    {"set_key", set_key, METH_VARARGS, "set_key"},
+    {"decode", decode, METH_VARARGS, "decode"},
+    {"encode", encode, METH_VARARGS, "encode"},
+    {"crc16", crc16, METH_VARARGS, "crc16"},
     {NULL, NULL, 0, NULL} 
 };
-
 
 PyMODINIT_FUNC
 initxxtea(void)
