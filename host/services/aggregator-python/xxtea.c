@@ -55,7 +55,7 @@ decode(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "O", &encoded_buf_obj))
         return NULL;
 
-	if (PyObject_AsReadBuffer(encoded_buf_obj, (const void **) &data, (Py_ssize_t *) &n) < 0)
+	if ( PyObject_AsReadBuffer(encoded_buf_obj, (const void **) &data, (Py_ssize_t *) &n) )
 		return NULL;
 
 	if (n % 4) {
@@ -63,7 +63,7 @@ decode(PyObject *self, PyObject *args)
 		return NULL;
 	}
 
-	if (n < 2) {
+	if (n < 8) {
 		PyErr_SetString(PyExc_ValueError, "length must be at least 8 bytes");
 		return NULL;
 	}
@@ -110,7 +110,7 @@ encode(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "O", &cleartext_buf_obj))
         return NULL;
 
-	if (PyObject_AsReadBuffer(cleartext_buf_obj, (const void **) &data, (Py_ssize_t *) &n) < 0)
+	if ( PyObject_AsReadBuffer(cleartext_buf_obj, (const void **) &data, (Py_ssize_t *) &n) )
 		return NULL;
 
 	if (n % 4) {
@@ -118,7 +118,7 @@ encode(PyObject *self, PyObject *args)
 		return NULL;
 	}
 
-	if (n < 2) {
+	if (n < 8) {
 		PyErr_SetString(PyExc_ValueError, "length must be at least 8 bytes");
 		return NULL;
 	}
