@@ -40,7 +40,7 @@ OPENBEACON_DECODE_PUREPYTHON = 0
 PROTO_BEACONTRACKER = 23
 
 # XXTEA key
-TEA_CRYPTO_KEY = ( 0xB4595344L, 0xD3E119B6L, 0xA814D0ECL, 0xEFF5A24EL )
+TEA_CRYPTO_KEY = ( 0xDEADBEEF, 0xDEADBEEF, 0xDEADBEEF, 0xDEADBEEF )
 
 
 # ---------------------------------------------------------------------------
