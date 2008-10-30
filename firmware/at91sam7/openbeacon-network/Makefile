@@ -35,7 +35,6 @@ NETWORK_SRC= \
 
 APP_SRC= \
   application/debug_printf.c \
-  application/led.c \
   application/main.c \
   application/network.c \
   application/proto.c \

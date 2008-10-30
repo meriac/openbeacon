@@ -9,7 +9,6 @@ APP_LDFLAGS=-lm
 
 APP_SRC=			\
   application/main.c		\
-  application/led.c		\
   application/proto.c		\
   application/dimmer.c		\
   application/update.c		\

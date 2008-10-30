@@ -3,6 +3,7 @@
  * OpenBeacon.org - LED support
  *
  * Copyright 2007 Milosch Meriac <meriac@openbeacon.de>
+ *           2008 Henryk Plötz <henryk@ploetzli.ch>
  *
  ***************************************************************
 
@@ -21,64 +22,63 @@
 
 */
 #include <FreeRTOS.h>
+#include <beacontypes.h>
 #include <board.h>
-#include <string.h>
 #include <task.h>
-#include "led.h"
+#include <led.h>
 /**********************************************************************/
 
-void
-vLedSetRed (bool_t on)
+static inline void
+led_set(AT91PS_PIO pio, const u_int32_t led, const bool_t on)
 {
-  if (on)
-    AT91F_PIO_ClearOutput (AT91C_BASE_PIOB, LED_RED);
-  else
-    AT91F_PIO_SetOutput (AT91C_BASE_PIOB, LED_RED);
+	if (on)
+		AT91F_PIO_ClearOutput(pio, led);
+	else
+		AT91F_PIO_SetOutput(pio, led);
 }
 
-/**********************************************************************/
-
-extern void
-vLedSetGreen (bool_t on)
+#if defined(LED_RED)
+void led_set_red(bool_t on)
 {
-  if (on)
-    AT91F_PIO_ClearOutput (AT91C_BASE_PIOB, LED_GREEN);
-  else
-    AT91F_PIO_SetOutput (AT91C_BASE_PIOB, LED_GREEN);
+	led_set(LED_PIO, LED_RED, on);
 }
+#endif
 
 /**********************************************************************/
 
-void
-vLedHaltBlinking (int reason)
+#if defined(LED_GREEN)
+void led_set_green(bool_t on)
 {
+	led_set(LED_PIO, LED_GREEN, on);
+}
+#endif
 
-  volatile u_int32_t i = 0;
-  s_int32_t t;
-  while (1)
-    {
-      for (t = 0; t < reason; t++)
-	{
-	  AT91F_PIO_ClearOutput (AT91C_BASE_PIOB, LED_MASK);
-	  for (i = 0; i < MCK / 200; i++)
-	    AT91F_WDTRestart (AT91C_BASE_WDTC);
+/**********************************************************************/
 
-	  AT91F_PIO_SetOutput (AT91C_BASE_PIOB, LED_MASK);
-	  for (i = 0; i < MCK / 100; i++)
-	    AT91F_WDTRestart (AT91C_BASE_WDTC);
+void led_halt_blinking(int reason)
+{
+	volatile u_int32_t i = 0;
+	s_int32_t t;
+	while (1) {
+		for (t = 0; t < reason; t++) {
+			led_set(LED_PIO, LED_MASK, 1);
+			for (i = 0; i < MCK / 200; i++)
+				AT91F_WDTRestart(AT91C_BASE_WDTC);
 
+			led_set(LED_PIO, LED_MASK, 0);
+			for (i = 0; i < MCK / 100; i++)
+				AT91F_WDTRestart(AT91C_BASE_WDTC);
+		}
+		for (i = 0; i < MCK / 25; i++)
+			AT91F_WDTRestart(AT91C_BASE_WDTC);
 	}
-      for (i = 0; i < MCK / 25; i++)
-	AT91F_WDTRestart (AT91C_BASE_WDTC);
-    }
 }
 
 /**********************************************************************/
 
-void
-vLedInit (void)
+void led_init(void)
 {
-  // turn off LED's 
-  AT91F_PIO_CfgOutput (AT91C_BASE_PIOB, LED_MASK);
-  AT91F_PIO_SetOutput (AT91C_BASE_PIOB, LED_MASK);
+	// turn off LEDs
+	AT91F_PIO_CfgOutput(LED_PIO, LED_MASK);
+	AT91F_PIO_SetOutput(LED_PIO, LED_MASK);
 }

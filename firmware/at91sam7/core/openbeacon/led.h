@@ -3,6 +3,7 @@
  * OpenBeacon.org - LED support
  *
  * Copyright 2007 Milosch Meriac <meriac@openbeacon.de>
+ *           2008 Henryk Plötz <henryk@ploetzli.ch>
  *
  ***************************************************************
 
@@ -23,9 +24,21 @@
 #ifndef __LED_H__
 #define __LED_H__
 
-extern void vLedSetRed(bool_t on);
-extern void vLedSetGreen(bool_t on);
-extern void vLedHaltBlinking(int reason);
-extern void vLedInit(void);
+#if defined(LED_RED)
+extern void led_set_red(bool_t on);
+#endif
+
+#if defined(LED_GREEN)
+extern void led_set_green(bool_t on);
+#endif
+
+extern void led_halt_blinking(int reason);
+extern void led_init(void);
+
+/* Legacy names */
+#define vLedSetRed       led_set_red
+#define vLedSetGreen     led_set_green
+#define vLedHaltBlinking led_halt_blinking
+#define vLedInit         led_init
 
 #endif/*__LED_H__*/

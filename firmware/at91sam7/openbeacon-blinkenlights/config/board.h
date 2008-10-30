@@ -52,6 +52,7 @@
 /* LED declaration               */
 /*-------------------------------*/
 
+#define LED_PIO		AT91C_BASE_PIOA
 #define LED_GREEN	(1L<<22)
 #define LED_MASK	(LED_GREEN)
 

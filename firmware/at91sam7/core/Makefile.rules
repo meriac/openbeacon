@@ -79,6 +79,7 @@ LINKER_FLAGS=$(APP_LDFLAGS) -Xlinker -o$(TARGET).elf -Xlinker -M -Xlinker -Map=$
 ARM_SRC= \
   $(APP_SRC) \
   $(CORE)openbeacon/dbgu.c \
+  $(CORE)openbeacon/led.c \
   $(CORE)openbeacon/env.c \
   $(CORE)openbeacon/sort.c \
   $(CORE)openbeacon/nRF24L01/nRF_API.c \
