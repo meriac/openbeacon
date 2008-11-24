@@ -1,0 +1,23 @@
+Greets all. Thanks for downloading the OpenAMD web interface, v0.1.
+
+A few notes:
+
+1- There really isn't an installer file or anything. At the moment,
+   you need to have a system running PHP5 on it, connecting to an 
+   Oracle database. Consult the installer file for more info.
+
+2- We will be making a lot of changes (bug fixes, new features, etc)
+   to this system as time passes. We encourage outside contributions,
+   but would really prefer you check out the latest build before 
+   sending patches.
+
+3- If you are interested in using this software (or the Openbeacon
+   hardware) for your own conference, let us know. While it is open
+   source, we are more than happy to set up an installation for you.
+
+Past that, this is your data, so we're giving it back to you. Enjoy, 
+have fun, and please contribute with any cool ideas you can have!
+Stay tuned to http://amd.hope.net for any updates.
+
+Thanks,
+The OpenAMD Team

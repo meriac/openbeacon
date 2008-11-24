@@ -1,0 +1,16 @@
+<?php include 'header.php'; ?>
+
+<iframe id='jaxuploader' name='jaxuploader' style="display: none;">
+</iframe>
+
+<div style="border-color: darkgreen; border-style: dotted; width: 500px; margin: auto; padding: 20px; text-align: center;">
+	<b>Update your Avatar:</b><br />
+	<img id='avatar' src="/avatars/<?= $_SESSION['id'] ?>.png"><br />
+	<br />
+	<form method=post target='jaxuploader' action="useravatar.php" enctype="multipart/form-data">
+		<input type=file name=picture><br />
+		<br /><input type=submit>
+	</form>
+</div>
+
+<?php include 'footer.php'; ?>

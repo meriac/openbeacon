@@ -1,0 +1,24 @@
+<html>
+<head>
+<title>Viz Display</title>
+    <script><!--
+    var fudge = 0;
+    function beginrefresh() {
+        document.getElementById("locationmap").src = "http://amd.hope.net/mezzviz.png?" + (fudge++);
+	document.getElementById("areachart").src = "http://amd.hope.net/areachart.png?" + (fudge++);
+        setTimeout("beginrefresh()", 2000);
+    }
+    //--></script>
+</head>
+<body onload="setTimeout('beginrefresh()', 2000);" style="background: #000;">
+<table>
+<tr>
+<td valign="center">
+<img id="areachart" src="http://amd.hope.net/areachart.png" width="450" height="300">
+</td>
+<td valign="center">
+<img id="locationmap" src="http://amd.hope.net/mezzviz.png" width="293" height="303"/>
+</td>
+</table>
+</body>
+</html>
