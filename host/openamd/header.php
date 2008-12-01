@@ -30,13 +30,13 @@ session_start(); ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<link type="text/css" href="/css/main.css" rel="stylesheet" />
-<link type="text/css" href="/css/jqModal.css" rel="stylesheet" />
+<link type="text/css" href="css/main.css" rel="stylesheet" />
+<link type="text/css" href="css/jqModal.css" rel="stylesheet" />
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <title>The Last HOPE</title>
 </head>
 <body>
-<div id="wrapper"><div id="header"><img src="/images/hopestone.png" align=left /><h1><a href="index.php"><img src="/images/amd-project1.png" width="609" height="100" border=0></a></h1>
+<div id="wrapper"><div id="header"><img src="hopestone.png" align=left /><h1><a href="index.php"><img src="amd-project1.png" width="609" height="100" border=0></a></h1>
 <br>
 <div align="center">
 <div class="nav" id="home"><a href="index.php">main</a></div>
