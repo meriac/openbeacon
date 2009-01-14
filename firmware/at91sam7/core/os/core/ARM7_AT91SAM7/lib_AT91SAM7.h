@@ -1359,7 +1359,7 @@ extern unsigned int AT91F_RTTReadValue (AT91PS_RTTC pRTTC);
    ***************************************************************************** */
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_PITInit
-//* \brief System timer init : period in ‘second, system clock freq in MHz
+//* \brief System timer init : period in ï¿½second, system clock freq in MHz
 //*----------------------------------------------------------------------------
 static inline void
 AT91F_PITInit (AT91PS_PITC pPITC,
@@ -3006,6 +3006,7 @@ AT91F_PMC_CfgPMC (void)
 			       ((unsigned int) 1 << AT91C_ID_SYS));
 }
 
+#if !defined(__AT91SAM7SE512__)
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_PMC_CfgPIO
 //* \brief Configure PIO controllers to drive PMC signals
@@ -3018,6 +3019,7 @@ AT91F_PMC_CfgPIO (void)
 		       0,	// Peripheral A
 		       ((unsigned int) AT91C_PA6_PCK0) | ((unsigned int) AT91C_PA18_PCK2) | ((unsigned int) AT91C_PA31_PCK2) | ((unsigned int) AT91C_PA21_PCK1) | ((unsigned int) AT91C_PA17_PCK1));	// Peripheral B
 }
+#endif
 
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_VREG_CfgPMC
@@ -3111,6 +3113,7 @@ AT91F_US0_CfgPMC (void)
 			       ((unsigned int) 1 << AT91C_ID_US0));
 }
 
+#if !defined(__AT91SAM7SE512__)
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_US0_CfgPIO
 //* \brief Configure PIO controllers to drive US0 signals
@@ -3123,6 +3126,7 @@ AT91F_US0_CfgPIO (void)
 		       ((unsigned int) AT91C_PA5_RXD0) | ((unsigned int) AT91C_PA8_CTS0) | ((unsigned int) AT91C_PA7_RTS0) | ((unsigned int) AT91C_PA6_TXD0),	// Peripheral A
 		       ((unsigned int) AT91C_PA2_SCK0));	// Peripheral B
 }
+#endif
 
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_SPI_CfgPMC
@@ -3135,6 +3139,7 @@ AT91F_SPI_CfgPMC (void)
 			       ((unsigned int) 1 << AT91C_ID_SPI));
 }
 
+#if !defined(__AT91SAM7SE512__)
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_SPI_CfgPIO
 //* \brief Configure PIO controllers to drive SPI signals
@@ -3147,6 +3152,7 @@ AT91F_SPI_CfgPIO (void)
 		       ((unsigned int) AT91C_PA13_MOSI) | ((unsigned int) AT91C_PA31_NPCS1) | ((unsigned int) AT91C_PA14_SPCK) | ((unsigned int) AT91C_PA11_NPCS0) | ((unsigned int) AT91C_PA12_MISO),	// Peripheral A
 		       ((unsigned int) AT91C_PA9_NPCS1) | ((unsigned int) AT91C_PA22_NPCS3) | ((unsigned int) AT91C_PA3_NPCS3) | ((unsigned int) AT91C_PA5_NPCS3) | ((unsigned int) AT91C_PA10_NPCS2) | ((unsigned int) AT91C_PA30_NPCS2));	// Peripheral B
 }
+#endif
 
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_PITC_CfgPMC
@@ -3172,6 +3178,7 @@ AT91F_AIC_CfgPMC (void)
 			       ((unsigned int) 1 << AT91C_ID_IRQ1));
 }
 
+#if !defined(__AT91SAM7SE512__)
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_AIC_CfgPIO
 //* \brief Configure PIO controllers to drive AIC signals
@@ -3184,6 +3191,7 @@ AT91F_AIC_CfgPIO (void)
 		       ((unsigned int) AT91C_PA30_IRQ1),	// Peripheral A
 		       ((unsigned int) AT91C_PA20_IRQ0) | ((unsigned int) AT91C_PA19_FIQ));	// Peripheral B
 }
+#endif
 
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_TWI_CfgPMC
@@ -3209,6 +3217,7 @@ AT91F_TWI_CfgPIO (void)
 		       0);	// Peripheral B
 }
 
+#if !defined(__AT91SAM7SE512__)
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_PWMC_CH3_CfgPIO
 //* \brief Configure PIO controllers to drive PWMC_CH3 signals
@@ -3235,6 +3244,7 @@ AT91F_PWMC_CH2_CfgPIO (void)
 		       ((unsigned int) AT91C_PA13_PWM2) | ((unsigned int) AT91C_PA25_PWM2));	// Peripheral B
 }
 
+
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_PWMC_CH1_CfgPIO
 //* \brief Configure PIO controllers to drive PWMC_CH1 signals
@@ -3260,6 +3270,7 @@ AT91F_PWMC_CH0_CfgPIO (void)
 		       ((unsigned int) AT91C_PA0_PWM0),	// Peripheral A
 		       ((unsigned int) AT91C_PA23_PWM0) | ((unsigned int) AT91C_PA11_PWM0));	// Peripheral B
 }
+#endif
 
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_ADC_CfgPMC
@@ -3272,6 +3283,7 @@ AT91F_ADC_CfgPMC (void)
 			       ((unsigned int) 1 << AT91C_ID_ADC));
 }
 
+#if !defined(__AT91SAM7SE512__)
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_ADC_CfgPIO
 //* \brief Configure PIO controllers to drive ADC signals
@@ -3284,6 +3296,7 @@ AT91F_ADC_CfgPIO (void)
 		       0,	// Peripheral A
 		       ((unsigned int) AT91C_PA8_ADTRG));	// Peripheral B
 }
+#endif
 
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_RTTC_CfgPMC
@@ -3318,6 +3331,7 @@ AT91F_TC0_CfgPMC (void)
 			       ((unsigned int) 1 << AT91C_ID_TC0));
 }
 
+#if !defined(__AT91SAM7SE512__)
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_TC0_CfgPIO
 //* \brief Configure PIO controllers to drive TC0 signals
@@ -3330,6 +3344,7 @@ AT91F_TC0_CfgPIO (void)
 		       0,	// Peripheral A
 		       ((unsigned int) AT91C_PA0_TIOA0) | ((unsigned int) AT91C_PA4_TCLK0) | ((unsigned int) AT91C_PA1_TIOB0));	// Peripheral B
 }
+#endif
 
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_TC1_CfgPMC
@@ -3342,6 +3357,7 @@ AT91F_TC1_CfgPMC (void)
 			       ((unsigned int) 1 << AT91C_ID_TC1));
 }
 
+#if !defined(__AT91SAM7SE512__)
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_TC1_CfgPIO
 //* \brief Configure PIO controllers to drive TC1 signals
@@ -3354,6 +3370,7 @@ AT91F_TC1_CfgPIO (void)
 		       0,	// Peripheral A
 		       ((unsigned int) AT91C_PA15_TIOA1) | ((unsigned int) AT91C_PA28_TCLK1) | ((unsigned int) AT91C_PA16_TIOB1));	// Peripheral B
 }
+#endif
 
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_TC2_CfgPMC
@@ -3366,6 +3383,7 @@ AT91F_TC2_CfgPMC (void)
 			       ((unsigned int) 1 << AT91C_ID_TC2));
 }
 
+#if !defined(__AT91SAM7SE512__)
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_TC2_CfgPIO
 //* \brief Configure PIO controllers to drive TC2 signals
@@ -3378,6 +3396,7 @@ AT91F_TC2_CfgPIO (void)
 		       0,	// Peripheral A
 		       ((unsigned int) AT91C_PA27_TIOB2) | ((unsigned int) AT91C_PA26_TIOA2) | ((unsigned int) AT91C_PA29_TCLK2));	// Peripheral B
 }
+#endif
 
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_MC_CfgPMC

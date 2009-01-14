@@ -87,7 +87,7 @@ static void prvHandleStandardEndPointRequest (xUSB_REQUEST * pxRequest);
 static void prvHandleClassInterfaceRequest (xUSB_REQUEST * pxRequest);
 
 /* Prepare control data transfer.  prvSendNextSegment starts transfer. */
-static void prvSendControlData (unsigned portCHAR * pucData,
+static void prvSendControlData (const unsigned portCHAR * pucData,
 				unsigned portSHORT usRequestedLength,
 				unsigned portLONG ulLengthLeftToSend,
 				portLONG lSendingDescriptor);
@@ -273,6 +273,14 @@ vUSBRecvByte (portCHAR *cByte, portLONG size, portTickType xTicksToWait)
         res++;
 
     return res;
+}
+
+/*------------------------------------------------------------*/
+
+int
+iUSBGetChosenConfiguration (void)
+{
+  return ucUSBConfig;
 }
 
 /*------------------------------------------------------------*/
@@ -554,10 +562,14 @@ prvGetStandardDeviceDescriptor (xUSB_REQUEST * pxRequest)
 			  pdTRUE);
       break;
 
-    case usbDESCRIPTOR_TYPE_CONFIGURATION:
-      prvSendControlData ((unsigned portCHAR *) &(pxConfigDescriptor),
-			  pxRequest->usLength, sizeof (pxConfigDescriptor),
+    case usbDESCRIPTOR_TYPE_CONFIGURATION: {
+        /* The index to the configuration descriptor is the lower byte. */
+        unsigned int config = pxRequest->usValue & 0xff;
+        if(config > sizeof(pxConfigDescriptorList)/sizeof(pxConfigDescriptorList[0])) config = sizeof(pxConfigDescriptorList)/sizeof(pxConfigDescriptorList[0]); 
+      prvSendControlData ((unsigned portCHAR*) pxConfigDescriptorList[config],
+			  pxRequest->usLength, pxConfigDescriptorSizes[config],
 			  pdTRUE);
+      }
       break;
 
     case usbDESCRIPTOR_TYPE_STRING:
@@ -756,9 +768,17 @@ prvHandleStandardEndPointRequest (xUSB_REQUEST * pxRequest)
 
 /*-----------------------------------------------------------*/
 
+static void vEnableUSBClock(void)
+{
+	  /* Enables the 48MHz USB clock UDPCK and System Peripheral USB Clock. */
+	  AT91C_BASE_PMC->PMC_SCER = AT91C_PMC_UDP;
+	  AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_UDP);
+}
+
 static void
 vDetachUSBInterface (void)
 {
+#if defined(USB_PULLUP_EXTERNAL)
   /* Setup the PIO for the USB pull up resistor. */
   AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA16;
   AT91C_BASE_PIOA->PIO_OER = AT91C_PIO_PA16;
@@ -766,6 +786,12 @@ vDetachUSBInterface (void)
 
   /* Disable pull up */
   AT91C_BASE_PIOA->PIO_SODR = AT91C_PIO_PA16;
+#elif defined(USB_PULLUP_INTERNAL)
+  vEnableUSBClock();
+  AT91C_BASE_UDP->UDP_TXVC &= ~AT91C_UDP_PUON;
+#else
+#error USB Pullup not defined
+#endif
 }
 
 /*-----------------------------------------------------------*/
@@ -807,10 +833,9 @@ vInitUSBInterface (void)
   /* Set the PLL USB Divider */
   AT91C_BASE_CKGR->CKGR_PLLR |= AT91C_CKGR_USBDIV_1;
 
-  /* Enables the 48MHz USB clock UDPCK and System Peripheral USB Clock. */
-  AT91C_BASE_PMC->PMC_SCER = AT91C_PMC_UDP;
-  AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_UDP);
+  vEnableUSBClock();
 
+#if defined(USB_PULLUP_EXTERNAL)
   /* Setup the PIO for the USB pull up resistor. */
   AT91C_BASE_PIOA->PIO_PER = AT91C_PIO_PA16;
   AT91C_BASE_PIOA->PIO_OER = AT91C_PIO_PA16;
@@ -819,6 +844,7 @@ vInitUSBInterface (void)
   /* Start without the pullup - this will get set at the end of this 
      function. */
   AT91C_BASE_PIOA->PIO_SODR = AT91C_PIO_PA16;
+#endif
 
 
   /* When using the USB debugger the peripheral registers do not always get
@@ -846,13 +872,20 @@ vInitUSBInterface (void)
 
   /* Wait a short while before making our presence known. */
   vTaskDelay (usbINIT_DELAY);
+
+#if defined(USB_PULLUP_EXTERNAL)
   AT91C_BASE_PIOA->PIO_CODR = AT91C_PIO_PA16;
+#elif defined(USB_PULLUP_INTERNAL)
+  AT91C_BASE_UDP->UDP_TXVC |= AT91C_UDP_PUON;
+#else
+#error USB Pullup not defined
+#endif
 }
 
 /*-----------------------------------------------------------*/
 
 static void
-prvSendControlData (unsigned portCHAR * pucData,
+prvSendControlData (const unsigned portCHAR * pucData,
 		    unsigned portSHORT usRequestedLength,
 		    unsigned portLONG ulLengthToSend,
 		    portLONG lSendingDescriptor)

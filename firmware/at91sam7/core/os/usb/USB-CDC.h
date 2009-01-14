@@ -83,5 +83,6 @@ void vUSBCDCTask (void *pvParameters);
 sent unless the port is connected. */
 void vUSBSendByte (portCHAR cByte);
 portLONG vUSBRecvByte (portCHAR *cByte,portLONG size, portTickType xTicksToWait);
+int iUSBGetChosenConfiguration (void);
 
 #endif

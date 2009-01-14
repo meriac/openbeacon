@@ -1,9 +1,8 @@
 /***************************************************************
  *
- * OpenBeacon.org - LED support
+ * OpenBeacon.org - OpenBeacon link layer protocol
  *
  * Copyright 2007 Milosch Meriac <meriac@openbeacon.de>
- *           2008 Henryk Plötz <henryk@ploetzli.ch>
  *
  ***************************************************************
 
@@ -21,26 +20,24 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#ifndef __LED_H__
-#define __LED_H__
+#ifndef __PROTO_H__
+#define __PROTO_H__
 
-#include <beacontypes.h>
+#include "openbeacon.h"
 
-#if defined(LED_RED)
-extern void led_set_red(bool_t on);
-#endif
+#define FIFO_DEPTH 256
 
-#if defined(LED_GREEN)
-extern void led_set_green(bool_t on);
-#endif
+typedef struct
+{
+  u_int16_t tag_oid;
+  u_int8_t tag_strength;
+  u_int8_t packet_count;
+} __attribute__ ((packed)) TBeaconSort;
 
-extern void led_halt_blinking(int reason);
-extern void led_init(void);
+extern TBeaconEnvelope g_Beacon;
 
-/* Legacy names */
-#define vLedSetRed       led_set_red
-#define vLedSetGreen     led_set_green
-#define vLedHaltBlinking led_halt_blinking
-#define vLedInit         led_init
+extern void vInitProtocolLayer (void);
+extern int PtSetFifoLifetimeSeconds (int Seconds);
+extern int PtGetFifoLifetimeSeconds (void);
 
-#endif/*__LED_H__*/
+#endif/*__PROTO_H__*/

@@ -1,11 +1,12 @@
 /***************************************************************
  *
- * OpenBeacon.org - LED support
+ * OpenBeacon.org - XXTEA encryption / decryption
+ *                  exported functions
  *
- * Copyright 2007 Milosch Meriac <meriac@openbeacon.de>
- *           2008 Henryk Plötz <henryk@ploetzli.ch>
+ * Copyright 2006 Milosch Meriac <meriac@openbeacon.de>
  *
  ***************************************************************
+
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,28 +20,18 @@
     You should have received a copy of the GNU General Public License along
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
 */
 
-#ifndef __LED_H__
-#define __LED_H__
+#ifndef __XXTEA_H__
+#define __XXTEA_H__
 
-#include <beacontypes.h>
+#ifdef  CONFIG_TEA_ENABLEENCODE
+extern void xxtea_encode (void);
+#endif /*CONFIG_ENABLEENCODE */
 
-#if defined(LED_RED)
-extern void led_set_red(bool_t on);
-#endif
+#ifdef  CONFIG_TEA_ENABLEDECODE
+ extern void xxtea_decode (void);
+#endif /*CONFIG_ENABLEDECODE */
 
-#if defined(LED_GREEN)
-extern void led_set_green(bool_t on);
-#endif
-
-extern void led_halt_blinking(int reason);
-extern void led_init(void);
-
-/* Legacy names */
-#define vLedSetRed       led_set_red
-#define vLedSetGreen     led_set_green
-#define vLedHaltBlinking led_halt_blinking
-#define vLedInit         led_init
-
-#endif/*__LED_H__*/
+#endif/*__XXTEA_H__*/
