@@ -58,11 +58,11 @@ static unsigned char eink_mgmt_data[10240] __attribute__ ((section (".sdram")));
 
 static void unpack_image(struct image_buffer *target, const struct splash_image * const source)
 {
-	const struct splash_part ** image_parts = source->splash_parts;
+	const struct splash_part * const * image_parts = source->splash_parts;
 	void *current_target = &target->data;
 	
 	led_set_red(1);
-	const struct splash_part **current_part = image_parts;
+	const struct splash_part * const * current_part = image_parts;
 	while(*current_part != 0) {
 		lzo_uint out_len = sizeof(scratch_space);
 		if(lzo1x_decompress_safe((unsigned char*)((*current_part)->data), (*current_part)->compress_len, scratch_space, &out_len, NULL) == LZO_E_OK) {
