@@ -12,7 +12,7 @@ struct splash_part {
 struct splash_image {
 	unsigned int width;
 	unsigned int height;
-	const struct splash_part **splash_parts;
+	const struct splash_part * const *splash_parts;
 };
 
 

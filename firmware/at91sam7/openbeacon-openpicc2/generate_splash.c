@@ -181,7 +181,7 @@ int main(int argc, char *argv[])
     }
 	
     /* Then print all the references to the cache */
-    printf("\n\nstatic const struct splash_part *%s_parts[] = {\n", destination_basename);
+    printf("\n\nstatic const struct splash_part * const %s_parts[] = {\n", destination_basename);
     for(i=0; i<part_indices_len; i++) {
     	printf("\t&part%i,\n", part_indices[i]);
     }
