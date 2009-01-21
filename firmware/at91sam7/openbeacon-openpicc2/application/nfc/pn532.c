@@ -23,6 +23,8 @@ static xSemaphoreHandle pn532_rx_semaphore;
 static int pn532_rx_enabled = 0;
 
 //#define PN532_EMULATE_FAKE_INTERRUPTS
+//#define DEBUG_MESSAGE_FLOW
+//#define DEBUG_QUEUE_POSTING
 
 #define PN532_NR_MESSAGE_BUFFER 3
 #define PN532_NR_WAIT_QUEUES 4
@@ -371,40 +373,43 @@ static void pn532_rx_task(void *parameter)
 
 		struct pn532_wait_queue *queue = NULL;
 		unsigned int max_priority=0;
-		taskENTER_CRITICAL();
-		for(i=0; i<PN532_NR_WAIT_QUEUES; i++) {
-			const struct pn532_wait_queue * const current = &(pn532_wait_queues[i]);
-			int matches = 0;
 
-			if(current->wait_mask == 0) continue;
-			if(current->wait_mask & PN532_WAIT_ACK) {
-				matches = matches || ((last_received->type == MESSAGE_TYPE_ACK) || (last_received->type == MESSAGE_TYPE_NACK));
-			}
-			if(current->wait_mask & PN532_WAIT_ERROR) {
-				matches = matches || (last_received->type == MESSAGE_TYPE_ERROR);
-			}
-			if(current->wait_mask & PN532_WAIT_CONTENT) {
-				matches = matches || ((last_received->type == MESSAGE_TYPE_NORMAL) || (last_received->type == MESSAGE_TYPE_EXTENDED));
-			}
-			if(current->wait_mask & PN532_WAIT_MATCH) {
-				if(current->match_length <= last_received->payload_len) {
-					int j, m=1;
-					for(j=0; j<current->match_length; j++)
-						if(current->match_data[j] != last_received->message.data[j])
-							m = 0;
-					matches = matches || m;
+		if(last_received->state == MESSAGE_STATE_IN_POSTAMBLE) {
+			taskENTER_CRITICAL();
+			for(i=0; i<PN532_NR_WAIT_QUEUES; i++) {
+				const struct pn532_wait_queue * const current = &(pn532_wait_queues[i]);
+				int matches = 0;
+
+				if(current->wait_mask == 0) continue;
+				if(current->wait_mask & PN532_WAIT_ACK) {
+					matches = matches || ((last_received->type == MESSAGE_TYPE_ACK) || (last_received->type == MESSAGE_TYPE_NACK));
+				}
+				if(current->wait_mask & PN532_WAIT_ERROR) {
+					matches = matches || (last_received->type == MESSAGE_TYPE_ERROR);
+				}
+				if(current->wait_mask & PN532_WAIT_CONTENT) {
+					matches = matches || ((last_received->type == MESSAGE_TYPE_NORMAL) || (last_received->type == MESSAGE_TYPE_EXTENDED));
+				}
+				if(current->wait_mask & PN532_WAIT_MATCH) {
+					if(current->match_length <= last_received->payload_len) {
+						int j, m=1;
+						for(j=0; j<current->match_length; j++)
+							if(current->match_data[j] != last_received->message.data[j])
+								m = 0;
+						matches = matches || m;
+					}
+				}
+				if(current->wait_mask & PN532_WAIT_CATCHALL) {
+					matches = matches || 1;
+				}
+
+				if(matches && (current->wait_priority >= max_priority)) {
+					queue = (struct pn532_wait_queue*)current;
+					max_priority = current->wait_priority;
 				}
 			}
-			if(current->wait_mask & PN532_WAIT_CATCHALL) {
-				matches = matches || 1;
-			}
-
-			if(matches && (current->wait_priority >= max_priority)) {
-				queue = (struct pn532_wait_queue*)current;
-				max_priority = current->wait_priority;
-			}
+			taskEXIT_CRITICAL();
 		}
-		taskEXIT_CRITICAL();
 
 		if(queue == NULL) {
 			pn532_put_message_buffer(&last_received);
