@@ -2,8 +2,11 @@
 #include <AT91SAM7.h>
 #include <board.h>
 #include <beacontypes.h>
+
 #include <task.h>
 #include <semphr.h>
+#include <queue.h>
+#include <USB-CDC.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -22,8 +25,10 @@ static int pn532_rx_enabled = 0;
 //#define PN532_EMULATE_FAKE_INTERRUPTS
 
 #define PN532_NR_MESSAGE_BUFFER 3
+#define PN532_NR_WAIT_QUEUES 4
 static struct pn532_message_buffer pn532_message_buffers[PN532_NR_MESSAGE_BUFFER];
-static struct pn532_message_buffer *last_received; /* FIXME Remove and replace with queue */
+static struct pn532_message_buffer *last_received;
+static xQueueHandle pn532_message_queue;
 
 /* Utilities to handle message buffer structs (from the static field pn532_message_buffers) */
 static int _pn532_get_message_buffer(struct pn532_message_buffer **msg, int in_irq); /* Strictly internal for use in IRQ handlers */
@@ -32,7 +37,7 @@ static int _pn532_put_message_buffer(struct pn532_message_buffer **msg, int skip
 /* Internal */
 static void reverse_bytes(u_int8_t *data, const unsigned int len);
 static void pn532_enable_rx(u_int8_t enable, u_int8_t from_irq);
-static void pn532_reset(void); 
+static void pn532_reset(void);
 
 #ifndef __GNUC__
 /* Evaluates to 18 instructions */
@@ -66,14 +71,14 @@ static void pn532_reset(void);
  * SPI receive job for the full maximum message length each time we'll do the following:
  *  + Start the receive process by scheduling a receive job for the first 8 bytes
  *  + In the SPI completion callback, look at and decode those first 8 bytes to determine the frame
- *    type and frame size (6 bytes should be enough to determine wether it's ACK/NACK (6 bytes), a 
+ *    type and frame size (6 bytes should be enough to determine wether it's ACK/NACK (6 bytes), a
  *    normal frame header (5 bytes including the length) or an extended frame header (8 bytes including
  *    the length). In the case of an ACK or NACK packet we will receive some additional bytes of postamble,
  *    in the case of a normal frame we will receive some content bytes that need to be decoded and stored.
  *  + If necessary (extended frame, normal frame with more than two payload bytes), schedule an SPI
  *    receive job for the remainder of the frame to be executed *right*now*. The chip select line will
  *    not be released in between these two jobs (SPI_FLAG_DELAYED_CS_INACTIVE).
- * +  In the case of completion of an additional receive job give the partially decoded frame to the 
+ * +  In the case of completion of an additional receive job give the partially decoded frame to the
  *    rx task for further decoding (no need to do this in interrupt context).
  */
 #define INITIAL_RECEIVE_LEN 8
@@ -84,9 +89,9 @@ static void pn532_callback(void *buf, unsigned int len, portBASE_TYPE *xTaskWoke
 	int i, full_frame = 0;
 	struct pn532_message_buffer *msg = NULL;
 	for(i=0; i<PN532_NR_MESSAGE_BUFFER; i++) {
-		if ((buf == &(pn532_message_buffers[i].message.spi_header))  || 
-			(buf == ((void*)(&(pn532_message_buffers[i].message.data))) 
-					+ pn532_message_buffers[i].received_len 
+		if ((buf == &(pn532_message_buffers[i].message.spi_header))  ||
+			(buf == ((void*)(&(pn532_message_buffers[i].message.data)))
+					+ pn532_message_buffers[i].received_len
 					- pn532_message_buffers[i].additional_receive_len) ) {
 			msg = &(pn532_message_buffers[i]);
 			break;
@@ -94,9 +99,9 @@ static void pn532_callback(void *buf, unsigned int len, portBASE_TYPE *xTaskWoke
 	}
 	if(msg == NULL) return;
 	if(msg->direction == DIRECTION_OUTGOING) return;
-	
+
 	pn532_parse_frame(msg);
-	
+
 	switch(msg->type) {
 	case MESSAGE_TYPE_NORMAL: /* Fall-through */
 	case MESSAGE_TYPE_EXTENDED:
@@ -104,7 +109,7 @@ static void pn532_callback(void *buf, unsigned int len, portBASE_TYPE *xTaskWoke
 		if(msg->additional_receive_len > 0) {
 			unsigned int oldlen = msg->received_len;
 			msg->received_len += msg->additional_receive_len;
-			if(spi_transceive_from_irq(&pn532_spi, ((void*)(&(msg->message.data)))+oldlen, 
+			if(spi_transceive_from_irq(&pn532_spi, ((void*)(&(msg->message.data)))+oldlen,
 					msg->additional_receive_len, 1, xTaskWoken) < 0) {
 				msg->state = MESSAGE_STATE_EXCEPTION; /* Scheduling the second SPI job failed, give something to the rx task so that it can recover */
 				full_frame = 1;
@@ -120,7 +125,7 @@ static void pn532_callback(void *buf, unsigned int len, portBASE_TYPE *xTaskWoke
 		full_frame = 1;
 		break;
 	}
-	
+
 	if(full_frame) {
 		last_received = msg;
 		xSemaphoreGiveFromISR(pn532_rx_semaphore, xTaskWoken);
@@ -136,13 +141,13 @@ static void pn532_prepare_receive(struct pn532_message_buffer *msg)
 	if(msg->bufsize < toclean) toclean = msg->bufsize;
 	memset(msg->message.data, 0x0, toclean);
 	msg->direction = DIRECTION_INCOMING;
-	
+
 	msg->decoded_len = 0;
 	msg->payload_len = 0;
 	msg->received_len = 0;
-	msg->additional_receive_len = 0; 
-	msg->decoded_raw_len = 0; 
-	
+	msg->additional_receive_len = 0;
+	msg->decoded_raw_len = 0;
+
 	msg->type = MESSAGE_TYPE_UNKNOWN;
 }
 
@@ -203,9 +208,28 @@ int pn532_put_message_buffer(struct pn532_message_buffer **msg)
 	return _pn532_put_message_buffer(msg, 0);
 }
 
-	
+
 static const char PN532_CMD_GetGeneralStatus[] = {0xD4, 0x04};
 static const char PN532_CMD_GetFirmwareVersion[] = {0xD4, 0x02};
+
+inline void
+DumpUIntToUSB (unsigned int data)
+{
+  int i = 0;
+  unsigned char buffer[10], *p = &buffer[sizeof (buffer)];
+
+  do
+    {
+      *--p = '0' + (unsigned char) (data % 10);
+      data /= 10;
+      i++;
+    }
+  while (data);
+
+  while (i--)
+    vUSBSendByte (*p++);
+}
+
 
 static void pn532_rx_task(void *parameter)
 {
@@ -215,20 +239,22 @@ static void pn532_rx_task(void *parameter)
 	while(1) {
 		pn532_enable_rx(1, 0);
 		xSemaphoreTake(pn532_rx_semaphore, portMAX_DELAY);
-		
+
 		if(last_received == NULL) {
 			printf("Whee, got a null pointer\n");
+			pn532_put_message_buffer(&last_received);
 			continue;
 		}
-		
+
 		if(last_received->state == MESSAGE_STATE_EXCEPTION) {
 			printf("Receive exception occured\n");
+			pn532_put_message_buffer(&last_received);
 			continue;
 		}
-		
+
 		unsigned int i;
 		int r = pn532_parse_frame(last_received);
-		printf("Message received\n");
+		DumpUIntToUSB((unsigned int)last_received); printf(" Message received\n");
 
 #if 0
 		if(r >= 0) {
@@ -250,7 +276,20 @@ static void pn532_rx_task(void *parameter)
 #else
 		(void)r; (void)i;
 #endif
-		pn532_put_message_buffer(&last_received);
+		switch(last_received->type) {
+		case MESSAGE_TYPE_NORMAL: /* Fall-through */
+		case MESSAGE_TYPE_EXTENDED:
+		case MESSAGE_TYPE_ERROR:
+			if(!xQueueSend(pn532_message_queue, &last_received, 0)) {
+				/* queue full */
+				pn532_put_message_buffer(&last_received);
+				printf("Message dropped\n");
+			}
+			break;
+		default:
+			printf("Ignoring message\n");
+			pn532_put_message_buffer(&last_received);
+		}
 	}
 }
 
@@ -275,7 +314,7 @@ static void pn532_fakeirq_task(void *parameter)
 }
 #endif
 
-/* Hard reset the PN532 through the reset controller. 
+/* Hard reset the PN532 through the reset controller.
  * Note: wait up to 7 ms after return from this function before using the PN532 */
 static void pn532_reset(void)
 {
@@ -300,11 +339,16 @@ int pn532_send_frame(struct pn532_message_buffer *msg)
 	return 0;
 }
 
+int pn532_recv_frame(struct pn532_message_buffer **msg)
+{
+	return xQueueReceive(pn532_message_queue, msg, portMAX_DELAY);
+}
+
 /* Fill a frame with payload and construct the surrounding frame structure. Works from end to start
  * in order not to overwrite payload that is stored in the same spot as the frame structure.
  * E.g. you can use a struct pn532_message_buffer, store your payload in message.data and then call
  * this function with a pointer to the message buffer, to message.data and the length and it will
- * construct a proper frame in message.data. 
+ * construct a proper frame in message.data.
  */
 int pn532_prepare_frame(struct pn532_message_buffer *msg, const char *payload, unsigned int plen)
 {
@@ -313,7 +357,7 @@ int pn532_prepare_frame(struct pn532_message_buffer *msg, const char *payload, u
 	int offset = 1 + 2 + 2 + (extended_frame ? 3 : 0);
 	u_int8_t checksum = 0;
 	unsigned int pos = 0;
-	
+
 	for(pos = 0; pos < plen; pos++) {
 		checksum += payload[plen-1-pos];
 		msg->message.data[offset+plen-1-pos] = payload[plen-1-pos];
@@ -333,12 +377,12 @@ int pn532_prepare_frame(struct pn532_message_buffer *msg, const char *payload, u
 		msg->message.data[6] = (plen >> 0) & 0xff;
 		msg->message.data[7] = (-( ((plen >> 8) & 0xff) + ((plen >> 0) & 0xff) )) & 0xff;
 	}
-	
+
 	msg->received_len = offset + plen + 1 + 1;
 	msg->direction = DIRECTION_OUTGOING;
-	
+
 	reverse_bytes(msg->message.data, msg->received_len);
-	
+
 	return 0;
 }
 
@@ -361,7 +405,7 @@ int pn532_unparse_frame(struct pn532_message_buffer *msg)
 		memcpy(msg->message.data, NACK_FRAME, sizeof(NACK_FRAME));
 		msg->received_len = sizeof(NACK_FRAME);
 	} else return -EBADMSG;
-	
+
 	msg->direction = DIRECTION_OUTGOING;
 	reverse_bytes(msg->message.data, msg->received_len);
 	return 0;
@@ -375,14 +419,14 @@ void reverse_bytes(u_int8_t *data, const unsigned int len)
 		data++;
 		pos++;
 	}
-	
+
 	if(len >= 4)
 		while( pos < len-3 ) {
 			((u_int32_t*)data)[0] = REVERSE_BYTE_W( ((u_int32_t*)data)[0] );
 			data+=4;
 			pos+=4;
 		}
-	
+
 	while(pos < len) {
 		data[0] = REVERSE_BYTE(data[0]);
 		data++;
@@ -397,12 +441,12 @@ int pn532_parse_frame(struct pn532_message_buffer *msg)
 	u_int8_t *outp = &(msg->message.data[msg->decoded_len]);
 	const u_int8_t *endp = &(msg->message.data[msg->received_len]);
 	u_int8_t *oendp = &(msg->message.data[msg->payload_len]);
-	
+
 	reverse_bytes(inp, msg->received_len - msg->decoded_raw_len);
-	
+
 #define NEED_BYTES(a) {if(inp+a >= endp) {msg->type = MESSAGE_TYPE_UNKNOWN; msg->state = MESSAGE_STATE_ABORTED; goto out; } }
 #define GET_OFFSET(a) ( ((unsigned long)a)-((unsigned long)(&msg->message.data)) )
-	
+
 	int lastwaszero = 0;
 	msg->additional_receive_len = 0;
 	while(inp < endp) {
@@ -467,7 +511,7 @@ int pn532_parse_frame(struct pn532_message_buffer *msg)
 				if(msg->message.checksum != 0) {
 					msg->state = MESSAGE_STATE_ABORTED;
 				} else {
-					msg->state = MESSAGE_STATE_IN_POSTAMBLE; 
+					msg->state = MESSAGE_STATE_IN_POSTAMBLE;
 				}
 			}
 			break;
@@ -484,9 +528,9 @@ int pn532_parse_frame(struct pn532_message_buffer *msg)
 out:
 	msg->decoded_len = GET_OFFSET(outp);
 	msg->decoded_raw_len = GET_OFFSET(inp);
-	
+
 	msg->additional_receive_len = 0;
-	switch(msg->state) { /* All lengths are cumulative */ 
+	switch(msg->state) { /* All lengths are cumulative */
 	case MESSAGE_STATE_IN_PREAMBLE:
 		msg->additional_receive_len += 2;
 	case MESSAGE_STATE_IN_LEN:
@@ -498,7 +542,7 @@ out:
 	default:
 		break;
 	}
-	
+
 	if(msg->state != MESSAGE_STATE_ABORTED) {
 		return 0;
 	} else {
@@ -534,7 +578,7 @@ static void pn532_enable_rx(u_int8_t enable, u_int8_t from_irq) {
 	if(!from_irq) taskENTER_CRITICAL();
 	pn532_rx_enabled = enable;
 #ifndef PN532_EMULATE_FAKE_INTERRUPTS
-	if(enable) pio_irq_enable(PN532_INT_PIO, PN532_INT_PIN); 
+	if(enable) pio_irq_enable(PN532_INT_PIO, PN532_INT_PIN);
 	else pio_irq_disable(PN532_INT_PIO, PN532_INT_PIN);
 #endif
 	if(!from_irq) taskEXIT_CRITICAL();
@@ -548,10 +592,10 @@ static void pn532_enable_rx(u_int8_t enable, u_int8_t from_irq) {
  *   1         1     PN532
  *   0         1     RFfieldON mode
  *   1         0     PN512 emulation
- * 
+ *
  * On the OpenPICC2/txtr.mini P35 is NC (but can be connected to ground through R43),
  * P70_IRQ is connected to PA0, thereby pulled high by the automatic internal pullup.
- * 
+ *
  * In order for the PN532 to enter the true PN532 mode both pins must have the same
  * level, this is (through sheer luck) the case by default: P35 is pulled high by
  * an internal pullup in the PN532 (this is only documented in AN10609: PN532 application
@@ -574,23 +618,24 @@ int pn532_init(void)
 
 	vSemaphoreCreateBinary(pn532_rx_semaphore);
 	xSemaphoreTake(pn532_rx_semaphore, 0);
+	pn532_message_queue = xQueueCreate(PN532_NR_MESSAGE_BUFFER, sizeof(struct pn532_message_buffer*));
 	spi_set_callback(&pn532_spi, pn532_callback, 1);
-	
+
 	pio_irq_init_once();
 #ifndef PN532_EMULATE_FAKE_INTERRUPTS
 	pio_irq_register(PN532_INT_PIO, PN532_INT_PIN, pn532_irq);
 #else
 	(void)pn532_irq;
 #endif
-	
+
 	pn532_enable_rx(0, 0);
-	
+
 	xTaskCreate (pn532_rx_task, (signed portCHAR *) "PN532 RX TASK", TASK_PN532_STACK,
 			NULL, TASK_PN532_PRIORITY, NULL);
 #ifdef PN532_EMULATE_FAKE_INTERRUPTS
 	xTaskCreate (pn532_fakeirq_task, (signed portCHAR *) "PN532 FAKEIRQ TASK", 128,
 			NULL, TASK_PN532_PRIORITY, NULL);
 #endif
-	
+
 	return 0;
 }

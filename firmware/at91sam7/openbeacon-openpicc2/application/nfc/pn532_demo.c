@@ -9,22 +9,26 @@
 
 #include "pn532.h"
 
+extern inline void
+DumpUIntToUSB (unsigned int data);
+
+
 void pn532_demo_task(void *parameter)
 {
 	(void)parameter;
 	vTaskDelay(3000/portTICK_RATE_MS);
 	printf("Here\n");
 	vTaskDelay(1000/portTICK_RATE_MS);
-	
+
 	struct pn532_message_buffer *msg;
 	if( pn532_get_message_buffer(&msg) != 0) {
 		printf("Couldn't get message buffer\n");
 		while(1) vTaskDelay(1000);
 	}
-	
+
 	{
 #if 0
-		const char cmd[] = {0xd4, 0x8c, 
+		const char cmd[] = {0xd4, 0x8c,
 				0x04,
 				0x80, 0x00,
 				0x12, 0x34, 0x56,
@@ -43,7 +47,7 @@ void pn532_demo_task(void *parameter)
 		const char cmd[] = { 0xd4, 0x4a, 0x02, 0x00}; // InListPassiveTarget
 #elif 0
 		const char cmd[] = { 0xd4, 0x60, 0xff, 0x01, 0x10}; // InAutoPoll
-#elif 1
+#elif 0
 		const char cmd[] = {0xd4, 0x14, 0x02, 0x00 }; // SAMconfiguration: virtual card
 #elif 0
 		const char cmd[] = {0xd4, 0x04}; // GetGeneralStatus
@@ -54,11 +58,18 @@ void pn532_demo_task(void *parameter)
 	}
 	pn532_send_frame(msg);
 	pn532_put_message_buffer(&msg);
-	
+
+	if(pn532_recv_frame(&msg)) {
+		DumpUIntToUSB((unsigned int)msg);
+		printf(" Message received here, too %i %i\n", msg->type, msg->payload_len);
+		{int i; for(i=0; i<msg->payload_len; i++) printf("%02X ", msg->message.data[i]); printf("\n");}
+		pn532_put_message_buffer(&msg);
+	}
+
 	vTaskDelay(1000/portTICK_RATE_MS);
 	pn532_write_register(0x6330, 0x80); vTaskDelay(150);
 	pn532_write_register(0x6306, (2<<6) | (0<<4) | (0xf)); vTaskDelay(150);
-	
+
 	while(1) {
 #if 0
 		vTaskDelay(1000/portTICK_RATE_MS);
@@ -78,6 +89,11 @@ void pn532_demo_task(void *parameter)
 		vTaskDelay(150);
 		pn532_write_register(0x6328, 5);
 #endif
-		vTaskDelay(1500);
+		if(pn532_recv_frame(&msg)) {
+			DumpUIntToUSB((unsigned int)msg);
+			printf(" Another message received here, too %i %i\n", msg->type, msg->payload_len);
+			{int i; for(i=0; i<msg->payload_len; i++) printf("%02X ", msg->message.data[i]); printf("\n");}
+			pn532_put_message_buffer(&msg);
+		}
 	}
 }

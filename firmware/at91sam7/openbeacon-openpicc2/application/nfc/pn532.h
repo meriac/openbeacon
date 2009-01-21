@@ -27,7 +27,7 @@ struct pn532_message_buffer {
 	enum { DIRECTION_INCOMING, DIRECTION_OUTGOING} direction;
 	u_int16_t bufsize; /* The raw size of the allocated data buffer, without SPI header */
 	u_int16_t received_len; /* How many bytes have been received (without the one byte that is the SPI header) */
-	u_int16_t additional_receive_len; /* How many bytes of the raw frame should be received additionally in order to form a complete frame */ 
+	u_int16_t additional_receive_len; /* How many bytes of the raw frame should be received additionally in order to form a complete frame */
 	u_int16_t payload_len; /* How many bytes the payload is supposed to have */
 	u_int16_t decoded_len; /* How may bytes of the payload have been decoded */
 	u_int16_t decoded_raw_len; /* How may bytes of the raw frame have been decoded */
@@ -35,7 +35,7 @@ struct pn532_message_buffer {
 	enum {
 		MESSAGE_STATE_FREE=0,
 		MESSAGE_STATE_RESERVED,
-		MESSAGE_STATE_IN_PREAMBLE, 
+		MESSAGE_STATE_IN_PREAMBLE,
 		MESSAGE_STATE_IN_LEN,
 		MESSAGE_STATE_IN_BODY,
 		MESSAGE_STATE_IN_CHECKSUM,
@@ -51,6 +51,17 @@ struct pn532_message_buffer {
 	} message;
 };
 
+/* Wait for ACK or NACK */
+#define PN532_WAIT_ACK 1
+/* Wait for an error indication */
+#define PN532_WAIT_ERROR 2
+/* Wait for a content frame (normal or extended) */
+#define PN532_WAIT_CONTENT 4
+/* Wait for a specific match */
+#define PN532_WAIT_MATCH 8
+/* Catch the rest */
+#define PN532_WAIT_CATCHALL 16
+
 /* Utilities to handle message buffer structs (from the static field pn532_message_buffers) */
 extern int pn532_get_message_buffer(struct pn532_message_buffer **msg);
 extern int pn532_put_message_buffer(struct pn532_message_buffer **msg);
@@ -60,6 +71,7 @@ extern int pn532_parse_frame(struct pn532_message_buffer *msg); /* (partially) p
 extern int pn532_unparse_frame(struct pn532_message_buffer *msg); /* Construct from host to PN532 (input data expected in msg->message.data) */
 extern int pn532_prepare_frame(struct pn532_message_buffer *msg, const char *payload, unsigned int plen); /* Similar to pn532_unparse_frame, but doesn't need payload to be already stored in the buffer (e.g. from ROM) */
 
-extern int pn532_send_frame(struct pn532_message_buffer *msg); /* Blockingly send a fully constructed message */ 
+extern int pn532_send_frame(struct pn532_message_buffer *msg); /* Blockingly send a fully constructed message */
+extern int pn532_recv_frame(struct pn532_message_buffer **msg); /* Blockingly receive a message, caller is responsible for freeing the message buffer structure */
 
 #endif /*PN532_H_*/
