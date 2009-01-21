@@ -42,7 +42,8 @@ static signed char task_list[10*40]; /* 40 bytes per task, approx. 10 tasks */
 #define SCROLL_SLIDER_DEAD_SPAN 1
 #define SCROLL_HISTORY 3
 
-#define SWIPE_MIN_DISTANCE (0.75*slider_x.part_diff)
+#define SWIPE_MIN_DISTANCE_X (0.75*slider_x.part_diff)
+#define SWIPE_MIN_DISTANCE_Y (0.25*slider_y.part_diff)
 
 #define DIRECTORY_ENTRIES 10
 
@@ -456,7 +457,7 @@ static struct {
 	int currently_touching;
 	int slider_history[SCROLL_HISTORY]; int slider_history_index;
 	int scroll_sent;
-	int y_touchdown_position, x_touchdown_position;
+	int y_touchdown_position, x_touchdown_position, x_touch_position;
 } slider_info = {
 		.current_scroll_position = -1,
 		.y_touchdown_position = -1,
@@ -481,6 +482,7 @@ static void slider_update_cb(struct slider_state *state)
 			if(slider_info.x_touchdown_position == -1) {
 				slider_info.x_touchdown_position = state->xval;
 			}
+			slider_info.x_touch_position = state->xval;
 		}
 		
 		if(state->buttons.ytouching) { /* Touching slider, scroll Y */
@@ -499,9 +501,9 @@ static void slider_update_cb(struct slider_state *state)
 				}
 			}
 			
-			if(position != slider_info.current_scroll_position) {
+			if( position != slider_info.current_scroll_position && position != -1 ) {
 				/* only act when the low-pass filter says so */
-				if(position != -1 && slider_info.y_touchdown_position == -1)
+				if( slider_info.y_touchdown_position == -1)
 					slider_info.y_touchdown_position = position;
 				
 				/* Don't report scrolls that seem to start in 
@@ -515,11 +517,15 @@ static void slider_update_cb(struct slider_state *state)
 					dead_area = 0;
 				if(dead_area) {
 					slider_info.y_touchdown_position = -1;
-				}
-				if(slider_info.y_touchdown_position != position && !dead_area) {
-					event_send(EVENT_SCROLL_RELATIVE_Y, position-slider_info.y_touchdown_position);
-					slider_info.y_touchdown_position = position;
-					slider_info.scroll_sent = 1;
+				} else {
+					if( ( slider_info.current_scroll_position != position && xTaskGetTickCount() - slider_info.last_touchdown_time > CLICK_MAX_DURATION )
+                                         || ( slider_info.current_scroll_position != -1 && abs( slider_info.current_scroll_position - position ) > 1 ) ) {
+						if( slider_info.current_scroll_position != -1 ) {
+							event_send(EVENT_SCROLL_RELATIVE_Y, position-slider_info.current_scroll_position);
+							slider_info.scroll_sent = 1;
+						}
+						slider_info.current_scroll_position = position;
+					}
 				}
 			}
 		} else if(state->buttons.button1) slider_info.button1++;
@@ -529,7 +535,7 @@ static void slider_update_cb(struct slider_state *state)
 	}
 	
 	if(slider_info.currently_touching && !touching) {
-		int have_swipe = (slider_info.xtouching > 0 && abs(slider_info.x_touchdown_position-state->xval) >= SWIPE_MIN_DISTANCE);
+		int have_swipe = (slider_info.xtouching > 0 && abs(slider_info.x_touchdown_position-slider_info.x_touch_position) >= SWIPE_MIN_DISTANCE_X);
 		if((xTaskGetTickCount() - slider_info.last_touchdown_time < CLICK_MAX_DURATION) || 
 				(slider_info.magic > 0) || have_swipe) {
 			/* This is a click */
@@ -541,7 +547,7 @@ static void slider_update_cb(struct slider_state *state)
 					MAX(slider_info.button1, slider_info.button2)), slider_info.xtouching);
 			
 			if(slider_info.magic > 0) type = CLICK_MAGIC;
-			else if(have_swipe) type = (slider_info.x_touchdown_position-state->xval) > 0 ? SWIPE_SLIDER_X_1 : SWIPE_SLIDER_X_2;
+			else if(have_swipe) type = slider_info.x_touchdown_position > slider_info.x_touch_position ? SWIPE_SLIDER_X_1 : SWIPE_SLIDER_X_2;
 			else if(slider_info.button1 == max_clicks) type = CLICK_BUTTON_1;
 			else if(slider_info.button2 == max_clicks) type = CLICK_BUTTON_2;
 			else if(slider_info.ytouching == max_clicks && !slider_info.scroll_sent) type = CLICK_SLIDER_Y;

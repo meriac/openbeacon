@@ -367,8 +367,9 @@ static int eink_job_handle_part(eink_job_t job, unsigned int index)
 		if(job->parts[index].xoffset == 0 && job->parts[index].yoffset == 0) {
 			eink_set_display_address(job->parts[index].image_buffer->start_address);
 		} else {
+			int   relative_off = job->parts[index].xoffset*BS60_INIT_HSIZE + job->parts[index].yoffset;
 			/* FIXME Implement */
-			eink_set_display_address(job->parts[index].image_buffer->start_address);
+			eink_set_display_address(job->parts[index].image_buffer->start_address-relative_off);
 		}
 		switch(job->parts[index].update_mode) {
 		case UPDATE_MODE_PART:
