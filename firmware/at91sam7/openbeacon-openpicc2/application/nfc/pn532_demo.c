@@ -51,7 +51,7 @@ void pn532_demo_task(void *parameter)
 				0x00}; // TgInitAsTarget
 #elif 0
 		const char cmd[] = { 0xd4, 0x4a, 0x02, 0x00}; // InListPassiveTarget
-#elif 1
+#elif 0
 		const char cmd[] = { 0xd4, 0x60, 0xff, 0x01, 0x10}; // InAutoPoll
 #elif 0
 		const char cmd[] = {0xd4, 0x14, 0x02, 0x00 }; // SAMconfiguration: virtual card
@@ -62,19 +62,19 @@ void pn532_demo_task(void *parameter)
 #endif
 		pn532_prepare_frame(msg, cmd, sizeof(cmd));
 	}
-	pn532_send_frame(msg);
+	if(pn532_send_frame(msg)==0) printf("Command sent and ack'ed\n");
 	pn532_put_message_buffer(&msg);
 
 	if(pn532_recv_frame_queue(&msg, queue) == 0) {
 		DumpUIntToUSB((unsigned int)msg);
-		printf(" Message received here, too %i %i\n", msg->type, msg->payload_len);
+		printf(" Message received here, too %i %i %i\n", msg->type, msg->payload_len, msg->state);
 		{int i; for(i=0; i<msg->payload_len; i++) printf("%02X ", msg->message.data[i]); printf("\n");}
 		pn532_put_message_buffer(&msg);
 	}
 
 	vTaskDelay(1000/portTICK_RATE_MS);
-	pn532_write_register(0x6330, 0x80); vTaskDelay(150);
-	pn532_write_register(0x6306, (2<<6) | (0<<4) | (0xf)); vTaskDelay(150);
+	if(pn532_write_register(0x6330, 0x80) == 0) printf("Write ack'ed\n");
+	if(pn532_write_register(0x6306, (2<<6) | (0<<4) | (0xf)) == 0) printf("Write ack'ed\n");
 
 	while(1) {
 #if 0

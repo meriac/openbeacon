@@ -407,7 +407,6 @@ static void pn532_rx_task(void *parameter)
 		taskEXIT_CRITICAL();
 
 		if(queue == NULL) {
-			printf("Message dropped\n");
 			pn532_put_message_buffer(&last_received);
 		} else {
 			if(!xQueueSend(queue->message_queue, &last_received, 0)) {
@@ -429,7 +428,6 @@ static void pn532_fakeirq_task(void *parameter)
 	(void)parameter;
 	while(1) {
 		vTaskDelay(10);
-		if(!pn532_running) continue;
 		if(!pn532_rx_enabled) continue;
 		u_int8_t status = pn532_read_spi_status_register();
 		if(status & 1) {
