@@ -26,9 +26,21 @@ static int pn532_rx_enabled = 0;
 
 #define PN532_NR_MESSAGE_BUFFER 3
 #define PN532_NR_WAIT_QUEUES 4
-static struct pn532_message_buffer pn532_message_buffers[PN532_NR_MESSAGE_BUFFER];
+
+#define PN532_WAIT_PRIORITY_MAX 255
+#define PN532_WAIT_PRIORITY_RENUMBER_THRESHOLD 200
+
+struct pn532_wait_queue {
+	unsigned int wait_mask; /* == 0 if this queue is unused */
+	xQueueHandle message_queue;
+	unsigned char wait_priority;
+	unsigned char match_length;
+	unsigned char match_data[2];
+} __attribute__((packed));
+
 static struct pn532_message_buffer *last_received;
-static xQueueHandle pn532_message_queue;
+static struct pn532_message_buffer pn532_message_buffers[PN532_NR_MESSAGE_BUFFER];
+static struct pn532_wait_queue pn532_wait_queues[PN532_NR_WAIT_QUEUES];
 
 /* Utilities to handle message buffer structs (from the static field pn532_message_buffers) */
 static int _pn532_get_message_buffer(struct pn532_message_buffer **msg, int in_irq); /* Strictly internal for use in IRQ handlers */
@@ -208,6 +220,84 @@ int pn532_put_message_buffer(struct pn532_message_buffer **msg)
 	return _pn532_put_message_buffer(msg, 0);
 }
 
+static int _pn532_get_wait_queue(struct pn532_wait_queue **queue, unsigned int wait_mask, unsigned char match_length, const unsigned char * const match_data, int in_irq)
+{
+	int i;
+	int min_priority=-1, max_priority=-1;
+	if(queue == NULL) return -EINVAL;
+	if(match_length > sizeof((*queue)->match_data)) return -EINVAL;
+	*queue = NULL;
+	if(!in_irq) taskENTER_CRITICAL();
+
+#ifdef DEBUG_QUEUE_MANAGEMENT
+	printf("<"); for(i=0; i<PN532_NR_WAIT_QUEUES; i++) {
+		if(pn532_wait_queues[i].wait_mask == 0) printf("!");
+		else printf("%i", pn532_wait_queues[i].wait_priority);
+	} printf(">");
+#endif
+
+	for(i=0; i<PN532_NR_WAIT_QUEUES; i++) {
+		if(pn532_wait_queues[i].wait_mask == 0) {
+			if(*queue == NULL) {
+				*queue = &(pn532_wait_queues[i]);
+#ifdef DEBUG_QUEUE_MANAGEMENT
+				printf("[%i]", i);
+#endif
+			}
+		} else {
+			if(min_priority == -1) min_priority = pn532_wait_queues[i].wait_priority;
+			else if(pn532_wait_queues[i].wait_priority < min_priority) min_priority = pn532_wait_queues[i].wait_priority;
+			if(max_priority == -1) max_priority = pn532_wait_queues[i].wait_priority;
+			else if(pn532_wait_queues[i].wait_priority > max_priority) max_priority = pn532_wait_queues[i].wait_priority;
+		}
+	}
+
+	if(*queue != NULL) {
+		if(min_priority > PN532_WAIT_PRIORITY_RENUMBER_THRESHOLD) {
+			for(i=0; i<PN532_NR_WAIT_QUEUES; i++)
+				pn532_wait_queues[i].wait_priority -= min_priority;
+			max_priority -= min_priority;
+			min_priority -= min_priority;
+		}
+
+		(*queue)->wait_mask = wait_mask;
+		(*queue)->wait_priority = max_priority+1;
+		(*queue)->match_length = match_length;
+		for(i=0; i<match_length; i++) {
+			(*queue)->match_data[i] = match_data[i];
+		}
+#ifdef DEBUG_QUEUE_MANAGEMENT
+		printf("(%i,%i)", (*queue)->wait_priority, ((*queue)-pn532_wait_queues)/sizeof(pn532_wait_queues[0]));
+#endif
+	}
+
+	if(!in_irq) taskEXIT_CRITICAL();
+	if(*queue == NULL) return -EBUSY;
+#ifdef DEBUG_QUEUE_MANAGEMENT
+	printf("{");
+#endif
+	return 0;
+}
+
+static int _pn532_put_wait_queue(struct pn532_wait_queue **queue)
+{
+	if(queue == NULL) return -EINVAL;
+	if(*queue == NULL) return -EINVAL;
+	(*queue)->wait_mask = 0;
+#ifdef DEBUG_QUEUE_MANAGEMENT
+	printf("}");
+#endif
+	return 0;
+}
+
+int pn532_get_wait_queue(struct pn532_wait_queue **queue, unsigned int wait_mask, unsigned char match_length, const unsigned char * const match_data)
+{
+	return _pn532_get_wait_queue(queue, wait_mask, match_length, match_data, 0);
+}
+int pn532_put_wait_queue(struct pn532_wait_queue **queue)
+{
+	return _pn532_put_wait_queue(queue);
+}
 
 static const char PN532_CMD_GetGeneralStatus[] = {0xD4, 0x04};
 static const char PN532_CMD_GetFirmwareVersion[] = {0xD4, 0x02};
@@ -254,7 +344,9 @@ static void pn532_rx_task(void *parameter)
 
 		unsigned int i;
 		int r = pn532_parse_frame(last_received);
-		DumpUIntToUSB((unsigned int)last_received); printf(" Message received\n");
+#ifdef DEBUG_MESSAGE_FLOW
+		printf("M\n");
+#endif
 
 #if 0
 		if(r >= 0) {
@@ -276,19 +368,57 @@ static void pn532_rx_task(void *parameter)
 #else
 		(void)r; (void)i;
 #endif
-		switch(last_received->type) {
-		case MESSAGE_TYPE_NORMAL: /* Fall-through */
-		case MESSAGE_TYPE_EXTENDED:
-		case MESSAGE_TYPE_ERROR:
-			if(!xQueueSend(pn532_message_queue, &last_received, 0)) {
-				/* queue full */
-				pn532_put_message_buffer(&last_received);
-				printf("Message dropped\n");
+
+		struct pn532_wait_queue *queue = NULL;
+		unsigned int max_priority=0;
+		taskENTER_CRITICAL();
+		for(i=0; i<PN532_NR_WAIT_QUEUES; i++) {
+			const struct pn532_wait_queue * const current = &(pn532_wait_queues[i]);
+			int matches = 0;
+
+			if(current->wait_mask == 0) continue;
+			if(current->wait_mask & PN532_WAIT_ACK) {
+				matches = matches || ((last_received->type == MESSAGE_TYPE_ACK) || (last_received->type == MESSAGE_TYPE_NACK));
 			}
-			break;
-		default:
-			printf("Ignoring message\n");
+			if(current->wait_mask & PN532_WAIT_ERROR) {
+				matches = matches || (last_received->type == MESSAGE_TYPE_ERROR);
+			}
+			if(current->wait_mask & PN532_WAIT_CONTENT) {
+				matches = matches || ((last_received->type == MESSAGE_TYPE_NORMAL) || (last_received->type == MESSAGE_TYPE_EXTENDED));
+			}
+			if(current->wait_mask & PN532_WAIT_MATCH) {
+				if(current->match_length <= last_received->payload_len) {
+					int j, m=1;
+					for(j=0; j<current->match_length; j++)
+						if(current->match_data[j] != last_received->message.data[j])
+							m = 0;
+					matches = matches || m;
+				}
+			}
+			if(current->wait_mask & PN532_WAIT_CATCHALL) {
+				matches = matches || 1;
+			}
+
+			if(matches && (current->wait_priority >= max_priority)) {
+				queue = (struct pn532_wait_queue*)current;
+				max_priority = current->wait_priority;
+			}
+		}
+		taskEXIT_CRITICAL();
+
+		if(queue == NULL) {
+			printf("Message dropped\n");
 			pn532_put_message_buffer(&last_received);
+		} else {
+			if(!xQueueSend(queue->message_queue, &last_received, 0)) {
+				printf("Queue full\n");
+				pn532_put_message_buffer(&last_received);
+			} else {
+#ifdef DEBUG_QUEUE_POSTING
+				DumpUIntToUSB(queue->wait_priority);
+				printf("P\n");
+#endif
+			}
 		}
 	}
 }
@@ -333,15 +463,58 @@ int pn532_read_spi_status_register(void)
 int pn532_send_frame(struct pn532_message_buffer *msg)
 {
 	msg->message.spi_header = REVERSE_BYTE(PN532_SPI_COMMAND_WRITE_FIFO);
-	int r = spi_transceive_automatic_retry(&pn532_spi, &(msg->message.spi_header), msg->received_len+1);
+	struct pn532_wait_queue *queue;
+	struct pn532_message_buffer *ack;
+	int r = _pn532_get_wait_queue(&queue, PN532_WAIT_ACK, 0, NULL, 0);
 	if(r<0) return r;
+	r = spi_transceive_automatic_retry(&pn532_spi, &(msg->message.spi_header), msg->received_len+1);
+	if(r<0) {_pn532_put_wait_queue(&queue); return r;}
 	spi_wait_for_completion(&pn532_spi);
+	if(pn532_recv_frame_queue(&ack, queue) == 0) {
+		_pn532_put_wait_queue(&queue);
+#ifdef DEBUG_MESSAGE_FLOW
+		printf("A\n");
+#endif
+		if(ack->type == MESSAGE_TYPE_ACK) {
+			pn532_put_message_buffer(&ack);
+			return 0;
+		} else {
+			pn532_put_message_buffer(&ack);
+			return -EIO;
+		}
+	} else {
+		_pn532_put_wait_queue(&queue);
+		return -ECANCELED;
+	}
+}
+
+int pn532_recv_frame(struct pn532_message_buffer **msg, unsigned int wait_mask)
+{
+	return pn532_recv_frame_match(msg, wait_mask, 0, NULL);
+}
+
+int pn532_recv_frame_match(struct pn532_message_buffer **msg, unsigned int wait_mask, unsigned char match_length, const unsigned char * const match_data)
+{
+	struct pn532_wait_queue *queue;
+	int r = _pn532_get_wait_queue(&queue, wait_mask, match_length, match_data, 0);
+	if(r < 0) return r;
+#ifdef DEBUG_QUEUE_POSTING
+	DumpUIntToUSB(queue->wait_priority);
+	printf("W\n");
+#endif
+	xQueueReceive(queue->message_queue, msg, portMAX_DELAY);
+	_pn532_put_wait_queue(&queue);
 	return 0;
 }
 
-int pn532_recv_frame(struct pn532_message_buffer **msg)
+int pn532_recv_frame_queue(struct pn532_message_buffer **msg, struct pn532_wait_queue *queue)
 {
-	return xQueueReceive(pn532_message_queue, msg, portMAX_DELAY);
+#ifdef DEBUG_QUEUE_POSTING
+	DumpUIntToUSB(queue->wait_priority);
+	printf("W\n");
+#endif
+	xQueueReceive(queue->message_queue, msg, portMAX_DELAY);
+	return 0;
 }
 
 /* Fill a frame with payload and construct the surrounding frame structure. Works from end to start
@@ -565,13 +738,32 @@ int pn532_read_register(u_int16_t addr)
 int pn532_write_register(u_int16_t addr, u_int8_t val)
 {
 	const char cmd[] = {0xD4, 0x08, (addr>>8)&0xff, addr & 0xff, val};
+	const unsigned char match[] = {0xD5, 0x09};
+
 	struct pn532_message_buffer *msg;
-	int r = pn532_get_message_buffer(&msg);
+	struct pn532_wait_queue *queue;
+
+	int r = _pn532_get_wait_queue(&queue, PN532_WAIT_MATCH, sizeof(match), match, 0);
 	if(r != 0) return r;
+
+	r = pn532_get_message_buffer(&msg);
+	if(r != 0) { pn532_put_wait_queue(&queue); return r;}
+
 	pn532_prepare_frame(msg, cmd, sizeof(cmd));
 	pn532_send_frame(msg);
 	pn532_put_message_buffer(&msg);
-	return 0;
+
+	if(pn532_recv_frame_queue(&msg, queue) == 0) {
+#ifdef DEBUG_MESSAGE_FLOW
+		printf("O\n");
+#endif
+		pn532_put_message_buffer(&msg);
+		_pn532_put_wait_queue(&queue);
+		return 0;
+	} else {
+		_pn532_put_wait_queue(&queue);
+		return -EIO;
+	}
 }
 
 static void pn532_enable_rx(u_int8_t enable, u_int8_t from_irq) {
@@ -616,9 +808,13 @@ int pn532_init(void)
 	}
 	spi_set_flag(&pn532_spi, SPI_FLAG_DELAYED_CS_INACTIVE, 1);
 
+	int i;
+	for(i=0; i<PN532_NR_WAIT_QUEUES; i++) {
+		pn532_wait_queues[i].message_queue = xQueueCreate(PN532_NR_MESSAGE_BUFFER, sizeof(struct pn532_message_buffer*));
+	}
+
 	vSemaphoreCreateBinary(pn532_rx_semaphore);
 	xSemaphoreTake(pn532_rx_semaphore, 0);
-	pn532_message_queue = xQueueCreate(PN532_NR_MESSAGE_BUFFER, sizeof(struct pn532_message_buffer*));
 	spi_set_callback(&pn532_spi, pn532_callback, 1);
 
 	pio_irq_init_once();

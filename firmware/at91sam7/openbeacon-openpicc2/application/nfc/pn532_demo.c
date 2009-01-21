@@ -20,6 +20,12 @@ void pn532_demo_task(void *parameter)
 	printf("Here\n");
 	vTaskDelay(1000/portTICK_RATE_MS);
 
+	struct pn532_wait_queue *queue;
+	if(pn532_get_wait_queue(&queue, PN532_WAIT_CONTENT, 0, NULL) != 0) {
+		printf("Couldn't get wait queue\n");
+		while(1) vTaskDelay(1000);
+	}
+
 	struct pn532_message_buffer *msg;
 	if( pn532_get_message_buffer(&msg) != 0) {
 		printf("Couldn't get message buffer\n");
@@ -45,7 +51,7 @@ void pn532_demo_task(void *parameter)
 				0x00}; // TgInitAsTarget
 #elif 0
 		const char cmd[] = { 0xd4, 0x4a, 0x02, 0x00}; // InListPassiveTarget
-#elif 0
+#elif 1
 		const char cmd[] = { 0xd4, 0x60, 0xff, 0x01, 0x10}; // InAutoPoll
 #elif 0
 		const char cmd[] = {0xd4, 0x14, 0x02, 0x00 }; // SAMconfiguration: virtual card
@@ -59,7 +65,7 @@ void pn532_demo_task(void *parameter)
 	pn532_send_frame(msg);
 	pn532_put_message_buffer(&msg);
 
-	if(pn532_recv_frame(&msg)) {
+	if(pn532_recv_frame_queue(&msg, queue) == 0) {
 		DumpUIntToUSB((unsigned int)msg);
 		printf(" Message received here, too %i %i\n", msg->type, msg->payload_len);
 		{int i; for(i=0; i<msg->payload_len; i++) printf("%02X ", msg->message.data[i]); printf("\n");}
@@ -89,7 +95,7 @@ void pn532_demo_task(void *parameter)
 		vTaskDelay(150);
 		pn532_write_register(0x6328, 5);
 #endif
-		if(pn532_recv_frame(&msg)) {
+		if(pn532_recv_frame_queue(&msg, queue) == 0) {
 			DumpUIntToUSB((unsigned int)msg);
 			printf(" Another message received here, too %i %i\n", msg->type, msg->payload_len);
 			{int i; for(i=0; i<msg->payload_len; i++) printf("%02X ", msg->message.data[i]); printf("\n");}

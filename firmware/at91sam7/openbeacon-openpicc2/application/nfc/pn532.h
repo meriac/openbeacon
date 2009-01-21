@@ -72,6 +72,13 @@ extern int pn532_unparse_frame(struct pn532_message_buffer *msg); /* Construct f
 extern int pn532_prepare_frame(struct pn532_message_buffer *msg, const char *payload, unsigned int plen); /* Similar to pn532_unparse_frame, but doesn't need payload to be already stored in the buffer (e.g. from ROM) */
 
 extern int pn532_send_frame(struct pn532_message_buffer *msg); /* Blockingly send a fully constructed message */
-extern int pn532_recv_frame(struct pn532_message_buffer **msg); /* Blockingly receive a message, caller is responsible for freeing the message buffer structure */
+extern int pn532_recv_frame(struct pn532_message_buffer **msg, unsigned int wait_mask); /* Blockingly receive a message, caller is responsible for freeing the message buffer structure */
+extern int pn532_recv_frame_match(struct pn532_message_buffer **msg, unsigned int wait_mask, unsigned char match_length, const unsigned char * const match_data); /* ditto, but with content match */
+
+struct pn532_wait_queue;
+extern int pn532_get_wait_queue(struct pn532_wait_queue **queue, unsigned int wait_mask, unsigned char match_length, const unsigned char * const match_data);
+extern int pn532_put_wait_queue(struct pn532_wait_queue **queue);
+extern int pn532_recv_frame_queue(struct pn532_message_buffer **msg, struct pn532_wait_queue *queue);
+
 
 #endif /*PN532_H_*/
