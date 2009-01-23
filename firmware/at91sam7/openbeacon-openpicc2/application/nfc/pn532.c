@@ -22,7 +22,7 @@ static spi_device pn532_spi;
 static xSemaphoreHandle pn532_rx_semaphore;
 static int pn532_rx_enabled = 0;
 
-//#define PN532_EMULATE_FAKE_INTERRUPTS
+#define PN532_EMULATE_FAKE_INTERRUPTS
 //#define DEBUG_MESSAGE_FLOW
 //#define DEBUG_QUEUE_POSTING
 
@@ -463,17 +463,20 @@ int pn532_read_spi_status_register(void)
 	return REVERSE_BYTE(buf[1]);
 }
 
+#define PN532_SEND_WAIT_TIME (500/portTICK_RATE_MS)
+
 int pn532_send_frame(struct pn532_message_buffer *msg)
 {
-	msg->message.spi_header = REVERSE_BYTE(PN532_SPI_COMMAND_WRITE_FIFO);
 	struct pn532_wait_queue *queue;
 	struct pn532_message_buffer *ack;
+	msg->message.spi_header = REVERSE_BYTE(PN532_SPI_COMMAND_WRITE_FIFO);
 	int r = _pn532_get_wait_queue(&queue, PN532_WAIT_ACK, 0, NULL, 0);
 	if(r<0) return r;
 	r = spi_transceive_automatic_retry(&pn532_spi, &(msg->message.spi_header), msg->received_len+1);
 	if(r<0) {_pn532_put_wait_queue(&queue); return r;}
 	spi_wait_for_completion(&pn532_spi);
-	if(pn532_recv_frame_queue(&ack, queue, portMAX_DELAY) == 0) {
+
+	if(pn532_recv_frame_queue(&ack, queue, PN532_SEND_WAIT_TIME) == 0) {
 		_pn532_put_wait_queue(&queue);
 #ifdef DEBUG_MESSAGE_FLOW
 		printf("A\n");
@@ -481,13 +484,16 @@ int pn532_send_frame(struct pn532_message_buffer *msg)
 		if(ack->type == MESSAGE_TYPE_ACK) {
 			pn532_put_message_buffer(&ack);
 			return 0;
+		} else if(ack->type == MESSAGE_TYPE_NACK) {
+			pn532_put_message_buffer(&ack);
+			return -ECONNRESET;
 		} else {
 			pn532_put_message_buffer(&ack);
 			return -EIO;
 		}
 	} else {
 		_pn532_put_wait_queue(&queue);
-		return -ECANCELED;
+		return -ETIMEDOUT;
 	}
 }
 

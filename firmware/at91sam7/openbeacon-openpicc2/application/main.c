@@ -48,6 +48,7 @@
 #include "sdcard.h"
 #include "nfc/pn532.h"
 #include "nfc/pn532_demo.h"
+#include "nfc/picc_emu.h"
 #include "ebook/ebook.h"
 
 /**********************************************************************/
@@ -84,11 +85,11 @@ void watchdog_restart_task (void *parameter)
 void demo_task(void *parameter)
 {
 	(void)parameter;
-	
+
 	led_set_red(1);
 	vTaskDelay(500/portTICK_RATE_MS);
 	led_set_red(0);
-	
+
 	while(1) {vTaskDelay(1000/portTICK_RATE_MS);}
 }
 
@@ -110,12 +111,12 @@ void sdram_test_task(void *parameter)
 	for(i=0; i<4194304; i++) {
 		pSdram[i] = 0xbeef0000 ^ i;
 	}
-	
+
 	while(1) {
 		int ok = 1;
-		
+
 		for(i=0; i<4194304; i++) {
-			u_int32_t test = pSdram[i]; 
+			u_int32_t test = pSdram[i];
 			if(test != (0xbeef0000 ^ i)) {
 				ok = 0;
 			}
@@ -132,7 +133,7 @@ void sdcard_test_task(void *parameter)
 	(void)parameter;
 	vTaskDelay(5000/portTICK_RATE_MS);
 	printf("Here we go\n");
-	
+
 	sdcard_open_card();
 	while(1) {
 		vTaskDelay(1000/portTICK_RATE_MS);
@@ -147,17 +148,17 @@ void flash_demo_task(void *parameter)
 	(void)parameter;
 	vTaskDelay(3000/portTICK_RATE_MS);
 	printf("Here\n");
-	
+
 	int r =	eink_flash_acquire();
 	if(r>=0) {
 		unsigned int ident = eink_flash_read_identification();
 		printf("Device identification: %06X\n", ident);
-		
+
 		printf("Starting read\n");
 		eink_flash_read(0, (char*)SDRAM_BASE, READ_SIZE);
 		eink_flash_release();
 		printf("Dunnit\n");
-		
+
 		int i, j;
 		for(i=0; i<READ_SIZE/16; i++) {
 			for(j=0; j<16; j++) {
@@ -185,7 +186,7 @@ void flash_demo_task(void *parameter)
 			printf("%04X\n", eink_read_register(0x148));
 		}
 	}
-	
+
 	while(1) {
 		vTaskDelay(1000/portTICK_RATE_MS);
 	}
@@ -197,7 +198,7 @@ int
 main (void)
 {
   prvSetupHardware ();
-  
+
   led_init();
 
   if(!power_init()) {
@@ -223,15 +224,16 @@ main (void)
   /*xTaskCreate (pn532_demo_task, (signed portCHAR *) "PN532 DEMO TASK", TASK_PN532_STACK,
 			NULL, TASK_PN532_PRIORITY, NULL);*/
 
-  
+
   sdram_init();
-  eink_interface_init();
-  ad7147_init();
-  accelerometer_init();
+  //eink_interface_init();
+  //ad7147_init();
+  //accelerometer_init();
   //sdcard_init();
-  //pn532_init();
-  ebook_init();
-  
+  pn532_init();
+  picc_emu_init();
+  //ebook_init();
+
   led_set_green(1);
 
   vTaskStartScheduler ();

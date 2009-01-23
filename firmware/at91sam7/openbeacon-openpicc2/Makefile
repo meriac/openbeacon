@@ -30,6 +30,7 @@ APP_SRC= \
   application/ui/ui.c \
   application/nfc/pn532.c \
   application/nfc/pn532_demo.c \
+  application/nfc/picc_emu.c \
   application/ebook/ebook.c \
   application/ebook/event.c
 
