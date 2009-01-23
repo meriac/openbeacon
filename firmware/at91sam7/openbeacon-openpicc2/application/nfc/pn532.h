@@ -78,7 +78,7 @@ extern int pn532_recv_frame_match(struct pn532_message_buffer **msg, unsigned in
 struct pn532_wait_queue;
 extern int pn532_get_wait_queue(struct pn532_wait_queue **queue, unsigned int wait_mask, unsigned char match_length, const unsigned char * const match_data);
 extern int pn532_put_wait_queue(struct pn532_wait_queue **queue);
-extern int pn532_recv_frame_queue(struct pn532_message_buffer **msg, struct pn532_wait_queue *queue);
+extern int pn532_recv_frame_queue(struct pn532_message_buffer **msg, struct pn532_wait_queue *queue, portTickType wait_time);
 
 
 #endif /*PN532_H_*/

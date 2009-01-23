@@ -473,7 +473,7 @@ int pn532_send_frame(struct pn532_message_buffer *msg)
 	r = spi_transceive_automatic_retry(&pn532_spi, &(msg->message.spi_header), msg->received_len+1);
 	if(r<0) {_pn532_put_wait_queue(&queue); return r;}
 	spi_wait_for_completion(&pn532_spi);
-	if(pn532_recv_frame_queue(&ack, queue) == 0) {
+	if(pn532_recv_frame_queue(&ack, queue, portMAX_DELAY) == 0) {
 		_pn532_put_wait_queue(&queue);
 #ifdef DEBUG_MESSAGE_FLOW
 		printf("A\n");
@@ -510,14 +510,14 @@ int pn532_recv_frame_match(struct pn532_message_buffer **msg, unsigned int wait_
 	return 0;
 }
 
-int pn532_recv_frame_queue(struct pn532_message_buffer **msg, struct pn532_wait_queue *queue)
+int pn532_recv_frame_queue(struct pn532_message_buffer **msg, struct pn532_wait_queue *queue, portTickType wait_time)
 {
 #ifdef DEBUG_QUEUE_POSTING
 	DumpUIntToUSB(queue->wait_priority);
 	printf("W\n");
 #endif
-	xQueueReceive(queue->message_queue, msg, portMAX_DELAY);
-	return 0;
+	if(xQueueReceive(queue->message_queue, msg, wait_time)) return 0;
+	else return -ETIMEDOUT;
 }
 
 /* Fill a frame with payload and construct the surrounding frame structure. Works from end to start
@@ -756,7 +756,7 @@ int pn532_write_register(u_int16_t addr, u_int8_t val)
 	pn532_send_frame(msg);
 	pn532_put_message_buffer(&msg);
 
-	if(pn532_recv_frame_queue(&msg, queue) == 0) {
+	if(pn532_recv_frame_queue(&msg, queue, portMAX_DELAY) == 0) {
 #ifdef DEBUG_MESSAGE_FLOW
 		printf("O\n");
 #endif

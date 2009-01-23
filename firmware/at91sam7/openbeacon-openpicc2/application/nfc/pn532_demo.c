@@ -81,7 +81,7 @@ void pn532_demo_task(void *parameter)
 	if(pn532_send_frame(msg)==0) printf("Command sent and ack'ed\n");
 	pn532_put_message_buffer(&msg);
 
-	if(pn532_recv_frame_queue(&msg, queue) == 0) {
+	if(pn532_recv_frame_queue(&msg, queue, portMAX_DELAY) == 0) {
 		DumpUIntToUSB((unsigned int)msg);
 		printf(" Message received here, too %i %i %i\n", msg->type, msg->payload_len, msg->state);
 		{int i; for(i=0; i<msg->payload_len; i++) printf("%02X ", msg->message.data[i]); printf("\n");}
@@ -103,7 +103,7 @@ void pn532_demo_task(void *parameter)
 	}
 
 	while(1) {
-		if(pn532_recv_frame_queue(&msg, queue) == 0) {
+		if(pn532_recv_frame_queue(&msg, queue, portMAX_DELAY) == 0) {
 			DumpUIntToUSB((unsigned int)msg);
 			printf(" Another message received here, too %i %i\n", msg->type, msg->payload_len);
 			{int i; for(i=0; i<msg->payload_len; i++) printf("%02X ", msg->message.data[i]); printf("\n");}
