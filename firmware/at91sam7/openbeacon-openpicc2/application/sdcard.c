@@ -285,7 +285,7 @@ int
 sdcard_disk_read (
 	   u_int8_t * buff,	/* Pointer to the data buffer to store read data */
 	   u_int32_t sector,	/* Start sector number (LBA) */
-	   u_int32_t count	/* Sector count (1..255) */
+	   u_int32_t count	/* Sector count */
   )
 {
   if (Stat & STA_NOINIT)
