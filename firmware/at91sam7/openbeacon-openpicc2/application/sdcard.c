@@ -54,7 +54,7 @@ typedef enum
 #define SDCARD_SPI_CONFIG(scbr) (AT91C_SPI_BITS_8 | AT91C_SPI_CPOL | \
 			(scbr << 8) | (1L << 16) | (0L << 24))
 
-static const int SCBR = ((int) (MCK / 5e6) + 1) & 0xFF;
+static const int SCBR = 2;
 static const int SCBR_INIT = ((int) (MCK / 4e5) + 1) & 0xFF;
 static spi_device sdcard_spi;
 static volatile int Stat = STA_NOINIT;	/* Disk status */
@@ -83,10 +83,7 @@ wait_ready (void)
   res = rcvr_spi ();
 
   while ((res != 0xff) && timeout--)
-    {
-      vTaskDelay (10 / portTICK_RATE_MS);
       res = rcvr_spi ();
-    }
 
   return res;
 }
@@ -138,9 +135,7 @@ sdcard_block_read (u_int8_t * buff,	/* Data buffer to store received data */
   do
     {				/* Wait for data packet in timeout of 100ms */
       token = rcvr_spi ();
-      if (token == 0xFF)
-	vTaskDelay (1 / portTICK_RATE_MS);
-      else
+      if (token != 0xFF)
 	break;
     }
   while (timeout--);
@@ -229,7 +224,7 @@ sdcard_open_card (void)
   memset(ocr,0xFF,sizeof(ocr));
   sdcard_transceive(ocr,sizeof(ocr));
   DESELECT ();
-  memset(ocr,0xFF,sizeof(ocr));
+  memset(ocr,0xFF,2);
   sdcard_transceive(ocr,sizeof(ocr));
 
   ty = 0;
@@ -267,6 +262,8 @@ sdcard_open_card (void)
 	}
     }
   CardType = ty;
+  if(ty == 12)
+    spi_change_config(&sdcard_spi,SDCARD_SPI_CONFIG (SCBR));
   sdcard_release ();
   
   printf("SD Card type %i detected\n",ty);
@@ -319,9 +316,6 @@ sdcard_disk_read (
         printf("SD CMD18 failed\n");
     }
   sdcard_release ();
-
-  if(count)
-    printf("error: %i sectors remaining from read\n",(int)count);
 
   return count ? RES_ERROR : RES_OK;
 }

@@ -53,7 +53,7 @@
 
 
 #define SECTOR_SIZE 512
-#define SECTOR_COUNT 4
+#define SECTOR_COUNT 1
 u_int8_t sector_buffer[SECTOR_SIZE * SECTOR_COUNT];
 
 
@@ -153,7 +153,8 @@ sdram_test_task (void *parameter)
 void
 sdcard_test_task (void *parameter)
 {
-  int res;
+  int res, sector;
+
   (void) parameter;
   vTaskDelay (5000 / portTICK_RATE_MS);
   printf ("Here we go\n");
@@ -166,11 +167,25 @@ sdcard_test_task (void *parameter)
     }
   else
     {
+      sector = 0;
+      while (sdcard_disk_read (sector_buffer, 0, SECTOR_COUNT));
+      {
+	vTaskDelay (100);
+	printf (".");
+      }
+      printf ("\n");
+
       while (1)
 	{
-	  memset(sector_buffer,0,sizeof(sector_buffer));
-	  res = sdcard_disk_read(sector_buffer, 0, 1);
-	  printf ("result=%03i DATA[0x%02X,0x%02X] reading SDCARD\n", res, sector_buffer[0x1FE], sector_buffer[0x1FF]);
+	  memset (sector_buffer, 0, sizeof (sector_buffer));
+	  if ((sector % 100) == 0)
+	    printf ("%i kb\n", sector / 2);
+
+	  res = sdcard_disk_read (sector_buffer, sector++, SECTOR_COUNT);
+
+	  if (res)
+	    printf ("\nresult=%03i DATA[0x%02X,0x%02X] reading SDCARD\n\n",
+		    res, sector_buffer[0x1FE], sector_buffer[0x1FF]);
 	}
     }
 }
@@ -196,15 +211,6 @@ flash_demo_task (void *parameter)
       eink_flash_release ();
       printf ("Dunnit\n");
 
-      int i, j;
-      for (i = 0; i < READ_SIZE / 16; i++)
-	{
-	  for (j = 0; j < 16; j++)
-	    {
-	      printf ("%02X ", SDRAM_BASE[i * 16 + j]);
-	    }
-	  printf ("\n");
-	}
     }
   else
     {
