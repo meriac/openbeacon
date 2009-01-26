@@ -25,7 +25,7 @@
 #define DBG 0
 #define DIE(args...) { if(DBG) printf(args); led_halt_blinking(7); }
 
-const char target_init_cmd[] = {0xd4, 0x8c,
+static const char target_init_cmd[] = {0xd4, 0x8c,
 		0x04, /* PICC only */
 		0x08, 0x00, /* ATQA */
 		0x12, 0x34, 0x56, /* UID */
@@ -42,15 +42,15 @@ const char target_init_cmd[] = {0xd4, 0x8c,
 		0x02, 0x12, 0x34 /* 2 historical bytes of ATS: 12 34 */
 }; // TgInitAsTarget
 
-const char get_data_cmd[] = {0xd4, 0x86};
+static const char get_data_cmd[] = {0xd4, 0x86};
 
-const char set_data_cmd[] = {0xd4, 0x8e};
+static const char set_data_cmd[] = {0xd4, 0x8e};
 
-const char get_status_cmd[] = {0xd4, 0x8a};
+static const char get_status_cmd[] = {0xd4, 0x8a};
 
-const unsigned char fixed_resp[] = {0x90, 0x00};
+static const unsigned char fixed_resp[] = {0x90, 0x00};
 
-struct pn532_wait_queue *queue;
+static struct pn532_wait_queue *queue;
 
 #define RETRIES 30
 
@@ -60,10 +60,6 @@ static int picc_init_target(void)
 	struct pn532_message_buffer *msg;
 
 	if(DBG) printf("INF: Trying init\n");
-
-	/* FIXME HACK HACK HACK */
-	AT91C_BASE_RSTC->RSTC_RCR = 0xA5000008;
-	vTaskDelay(10/portTICK_RATE_MS);
 
 init_target_again:
 	if( pn532_get_message_buffer(&msg) != 0) {
@@ -75,6 +71,13 @@ init_target_again:
 	if(pn532_send_frame(msg)!=0) {
 		if(tries++ < RETRIES) {
 			pn532_put_message_buffer(&msg);
+
+			if(DBG) printf("ERR: TgInitAsTarget didn't respond\n");
+
+			/* FIXME HACK HACK HACK */
+			AT91C_BASE_RSTC->RSTC_RCR = 0xA5000008;
+			vTaskDelay(10/portTICK_RATE_MS);
+
 			goto init_target_again;
 		}
 		DIE("ERR: Couldn't TgInitAsTarget\n");
@@ -288,7 +291,7 @@ static int reset_state(void)
 
 unsigned char buffer[270];
 
-void picc_emu_task(void *parameter)
+static void picc_emu_task(void *parameter)
 {
 	(void)parameter;
 	vTaskDelay(500/portTICK_RATE_MS);
