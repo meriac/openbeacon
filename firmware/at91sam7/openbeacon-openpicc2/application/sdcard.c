@@ -1,3 +1,9 @@
+/*-----------------------------------------------------------------------*/
+/* MMC/SDSC/SDHC (in SPI mode) control module  (C)ChaN, 2007             */
+/*                                                                       */
+/* adapted to OpenPICC2 by meriac@bitmanufaktur.de in 2008               */
+/*-----------------------------------------------------------------------*/
+
 #include <FreeRTOS.h>
 #include <AT91SAM7.h>
 #include <board.h>
@@ -54,8 +60,8 @@ typedef enum
 #define SDCARD_SPI_CONFIG(scbr) (AT91C_SPI_BITS_8 | AT91C_SPI_CPOL | \
 			(scbr << 8) | (1L << 16) | (0L << 24))
 
-static const int SCBR = 2;
 static const int SCBR_INIT = ((int) (MCK / 4e5) + 1) & 0xFF;
+static const int SCBR = ((int) (MCK / 4e6) + 1) & 0xFF;
 static spi_device sdcard_spi;
 static volatile int Stat = STA_NOINIT;	/* Disk status */
 static u_int8_t CardType;	/* b0:MMC, b1:SDv1, b2:SDv2, b3:Block addressing */
