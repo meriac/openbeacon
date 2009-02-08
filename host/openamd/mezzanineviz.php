@@ -41,7 +41,7 @@ include("header.php"); ?>
 <Br><br>
 </td><td valign="top">
 <!--<img src="/images/mezzanine.png"><br><br>-->
-<img id="locationmap" src="http://amd.hope.net/mezzviz.png"/><br/><br/>
+<img id="locationmap" src="mezzviz.png"/><br/><br/>
 <br>
 
 </td></tr></table>
@@ -49,7 +49,7 @@ include("header.php"); ?>
     <script><!--
     var fudge = 0;
     function beginrefresh() {
-        document.getElementById("locationmap").src = "http://amd.hope.net/mezzviz.png?" + (fudge++);
+        document.getElementById("locationmap").src = "mezzviz.png?" + (fudge++);
         setTimeout("beginrefresh()", 2000);
     }
     setTimeout("beginrefresh()", 2000);

@@ -1,38 +1,36 @@
+	<p><p><p><p>&nbsp;
+          </td>
+          <td background="images/bPanelRight.png">&nbsp;</td>
+        </tr>
+        <tr>
+          <td><img src="images/bPanelCrnBtmLft.png" width="50" height="50" /></td>
+          <td background="images/bPanelCrnBtmCnt.png">&nbsp;</td>
+          <td><img src="images/bPanelCrnBtmRight.png" width="50" height="50" /></td>
+        </tr>
+      </table>
+    </td>
+    <td width="115" valign="middle">
+    <!-- Floating nav -->
+      <div style =  "float:left; z-index:10; position:relative; left:-200px; top:15px;">
 <?php
 
-/***************************************************************
- *
- * amd.hope.net - index.php
- *
- * Copyright 2008 The OpenAMD Project <contribute@openamd.org>
- *
-/***************************************************************
-
-/*
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; version 2.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-*/
+require_once('showuser.php');
+//include('config.php');
 
 
-oci_close($oracleconn);
+if (isset($_SESSION['error'])) {
+  echo "<h2><font color=\"red\">" . $_SESSION['error'] . "</font></h2>";
+  //unset($_SESSION['error']);
+}
+
+include_once 'sidebar.php';
+
 ?>
-
-</div>
-<!-- End Content -->
-
-
-<div id="footer"><a href="http://www.thelasthope.org">The Last HOPE</a> :: <a href="http://www.2600.com">2600</a> :: <a href="index.php">home</a> :: <a href="schedule.php">schedule</a> :: <a href="faq.php">faq</a> :: &copy; HOPE 2008</div>
-</div>
+          </div>  
+        </td>
+      </tr>
+    </table>
+  </div>
 </body>
 </html>
+

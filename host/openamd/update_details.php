@@ -119,7 +119,7 @@ if (isset($_REQUEST['reminder_phone']) && preg_match("/^[on]{2}$/",$_REQUEST['re
 //    we all know god was getting a happy ending massage
 
 if (isset($_REQUEST['country']) && $_REQUEST['country'] != "0" ) {
-    if (preg_match("/^[0-9]{1,2}$/",$_REQUEST['country'])) {
+    if (preg_match("/^[0-9]{1,3}$/",$_REQUEST['country'])) {
         $_SESSION['country'] = $_REQUEST['country'];
     }
     else {

@@ -24,76 +24,102 @@
 
 */
 
+session_start();
 
-session_start(); ?>
+include 'config.php';
+
+?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<link type="text/css" href="css/main.css" rel="stylesheet" />
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Welcome to 25c3 OpenAMD</title>
+<link type="text/css" href="css/main2.css" rel="stylesheet" />
 <link type="text/css" href="css/jqModal.css" rel="stylesheet" />
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>The Last HOPE</title>
-</head>
+<style type="text/css">
+<!--
+body {
+	background-color: #a0a0a0;
+	background:url(images/bg.jpg) no-repeat left;
+	
+}
+-->
+</style></head>
+
 <body>
-<div id="wrapper"><div id="header"><img src="hopestone.png" align=left /><h1><a href="index.php"><img src="amd-project1.png" width="609" height="100" border=0></a></h1>
-<br>
-<div align="center">
-<div class="nav" id="home"><a href="index.php">main</a></div>
-<div class="nav" id="home"><a href="login.php">participate</a></div>
-<div class="nav" id="home"><a href="viz.php">visualize</a></div>
-<?php
-if (isset($_SESSION['rfid'])) { ?>
-<div class="nav" id="home"><a href="game.php">play</a></div>
-<?php } ?>
-<div class="nav" id="contest"><a href="schedule.php">schedule</a></div>
-<div class="nav" id="home"><a href="faq.php">faq</a></div>
-<?php
-if (isset($_SESSION['handle'])) {
-  ?><div class="nav" id="logout"><a href="logout.php">log out</a></div><?php
-}
-else {
-  ?><div class="nav" id="login"><a href="login.php">log in</a></div><?php
-}
-?>
-<?php
-  if ($_REQUEST['testmode'] == true) {
-?>
-<div class="nav" id="findafriend"><a href="findafriend.php">find a friend</a></div>
-<?php
-  }
-?>
-</div>
-</div>
+<noscript><p><font size=12 color="red">This Application needs Javascript enabled.</font></p></noscript>
+<table align="center" width="200" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td>
+	<img src="images/logo.png" />
 
-<!-- Begin Content -->
-<div id="content">
+	</td>
+  </tr>
+</table>
 
-<p>UPDATE: We have improved visualization performance and restored public Internet access to the web server.  You should be able to access the site from your mobile devices again.</p>
-<p/>
-<p>PUBLIC WEB SERVICE: The documentation for the tag position web service have been published at <a href="https://amd.hope.net/websvcdocs.php">https://amd.hope.net/websvcdocs.php</a>.  Feel free to use the web service, but please do not abuse it.  Limit your use to one request per second.</p>
-<p>&nbsp;</p>
+<div id="mainContentContainer" align="center">
+  <table width="919" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+      <td width="804" align="left" valign="top">
+      <table align="center" width="644" border="0" cellspacing="0" cellpadding="0">
+        <tr>
 
-<?php
+          <td width="50"><img src="images/bPanelCrnTopLeft.png" width="50" height="50" /></td>
+          <td width="592" background="images/bPanelCrnBtm.png">&nbsp;</td>
+          <td width="50"><img src="images/bPanelCrnTopRight.png" width="50" height="50" /></td>
+        </tr>
+        <tr>
+          <td height="424" background="images/bPanelLeftCenter.png">&nbsp;</td>
+          <td align="left" valign="top" bgcolor="#fff2c7">
+            <div id="mainNav" style="position:relative; left:25px; color:#000; font-family: arial, helvetica, sans-serif; font-weight:bolder;">
+              <table width="500" border="0" cellspacing="0" cellpadding="0">
+		<!-- Begin TOP MENU links and formatting -->
+                <tr>
+                  <td>
+                    <div class="nav"><a href="index.php">Home</a></div>
+	          </td>
+                  <td>
+                    <? if (isset($_SESSION['handle'])) { ?>
+                    <div class="nav"><a href="login.php">Profile</a></div>
+                    <? }
+                       else { ?> 
+                    <div class="nav"><a href="create.php">Participate</a></div>
+                    <? } ?>
+	          </td>
+                  <td>
+	    	    <div class="nav"><a href="viz.php">Visualize</a></div>
+                  </td>
+                  <td>
+		    <div class="nav"><a href="schedule.php">Schedule</a></div>
+                  </td>
+                  <td>
+		    <div class="nav"><a href="faq.php">FAQ</a></div>
+               	  </td>
+		  <!--
+                  <td>
+                    <div class="nav"><a href="http://25c3.openamd.org">Wiki</a></div>
+                  </td> -->
+                  <td>
+                    <? if (isset($_SESSION['handle'])) { ?>
+		    <div class="nav"><a href="logout.php">Log out</a.</div>
+                    <? }
+                       else { ?>
+                    <div class="nav"><a href="login.php">Log in</a></div>
+                    <? } ?>
+                  </td>
+                </tr>
+                <!-- End TOP MENU links and formatting -->
+              </table>  
+            </div>
+	    
+            <div id=content style="position:relative; left:50px; top:50px;">
+<? 
+// Display error message, if set 
 
-require_once('showuser.php');    
-include('config.php');
-
-if (isset($_SESSION['error'])) {
-  echo "<h2><font color=\"red\">" . $_SESSION['error'] . "</font></h2>";
-  unset($_SESSION['error']);
-}
-
-function set_error($message, $redirect) {
-  $_SESSION['error'] = $message;
-  if ($redirect == "null") {
-    // log message to a file
-  }
-  else {
-    header("Location: $redirect");
-    //print "<script>self.location='$redirect'</script>";
-    die();
-  }
-}
-
-?>
+if (isset($_SESSION['error'])) { ?>
+<font color="red" size="+1"><b><? 
+	echo $_SESSION['error']; 
+        $_SESSION['error'] = ""; 
+?></b></font>
+<? } ?>

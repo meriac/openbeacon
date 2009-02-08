@@ -29,7 +29,7 @@ include('header.php');
 ?>
 <h2>Personalized Schedule: <?php echo $_SESSION['handle']; ?></h2>
 <a href="schedule.php">Add More Talks</a>
-
+<p>
 <?php
 
 $query = <<<ENDQUERY
@@ -46,7 +46,7 @@ $result = oracle_query("get personalized schedule", $oracleconn, $query, array("
 
 
 $rows = sizeof($result);
-echo "<center><table style='background-color:#111111; border: thin dotted #999999;'><tr><td>";
+echo "<table style='background-color:#0000; width: 600px; border: thin dotted #999999;'><tr><td>";
 if ($rows > 0) {
          for ($i = 0; $i < $rows; $i++) {
                  $row=$result[$i];

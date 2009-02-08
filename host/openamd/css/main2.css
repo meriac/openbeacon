@@ -1,0 +1,20 @@
+.nav
+{ color: #7a1414; font-weight: bold; 
+width: 125px; height:20px; float: left; 
+text-align: center; 
+text-transform: uppercase; 
+}
+.sidebar-header
+{
+color:#791515; 
+font-family: arial, helvetica, sans-serif; 
+font-weight:bold;
+}
+.sidebar
+{
+color:#791515; 
+font-weight:normal;
+}
+
+a:link { color: #7a1414; text-decoration: none; border-bottom: 1pt solid #7a1414; }
+a:visited { color: #b91d1d; text-decoration: none; border-bottom: 1pt solid #b91d1d;  }

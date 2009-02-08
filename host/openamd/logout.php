@@ -44,6 +44,7 @@ if (isset($_SESSION['handle'])) {
     unset($_SESSION['location']);
     unset($_SESSION['country']);
     unset($_SESSION['admin']);
+    session_destroy();
     set_error("You have been logged out.<br>","index.php");
 }
 else {

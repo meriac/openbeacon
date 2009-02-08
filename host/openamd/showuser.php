@@ -27,8 +27,11 @@
 
 //session_start();
 
+error_reporting(E_ALL);
+
 function show_user($id, $interests) {
 
+// echo "debug: inside show_user";
 global $oracleconn;
 
 if (!preg_match("/^[0-9]{4}$/",$id)) {
@@ -70,6 +73,7 @@ if ($numrows == 1) {
                 echo $row["ID"]; ?>&body=1"><img src="images/email.png" title="Send Email Ping" alt="Send Email Ping" border=0></a><?php
         }
     }
+/*
     if ($row["PHONE"] && isset($_SESSION['id'])) {
         if ($phonebit) {
             ?><img src="images/phone_out.png" title="Already pinged." alt="Already pinged."><?php
@@ -79,6 +83,7 @@ if ($numrows == 1) {
                 echo $row["ID"]; ?>&body=1"><img src="images/phone.png" title="Send SMS Ping" alt="Send SMS Ping" border=0></a><?php
         }
     }
+*/
     ?></td></tr></table><?php
 }
 else {

@@ -1,69 +1,138 @@
-<?php
+<?
+// schedule.en.xml
 
-/***************************************************************
- *
- * amd.hope.net - index.php
- *
- * Copyright 2008 The OpenAMD Project <contribute@openamd.org>
- *
-/***************************************************************
+include 'config.php';
+
+$file = file("schedule.en.xml");
+
+$i = 0;
+$eventid = "";
+$title = "";
+$track = "";
+$subtitle = "";
+$tag = "";
+$start = "";
+$duration = "";
+$type = "";
+$abstract = "";
+$description = "";
+$day = "";
+$room = "";
+
+oracle_query("deleting talks from db...", $oracleconn, "delete from Talks");
+oracle_query("test",$oracleconn, "delete from Speakers");
+oracle_query("test",$oracleconn, "delete from Speakers_Talks");
+
+foreach($file as $line_num => $line) {
+
+    if (preg_match("/<day index=\"(.*)\" date=\"(.*)\"/",$line,$lolz)) {
+	echo $lolz[2] . "<br>";
+        $day = $lolz[2];
+    }
+
+    // get event ID
+    if (preg_match("/event id=\"(.*)\"/",$line,$lolz)) {
+            $eventid = $lolz[1];
+            $i++;
+    }
+    if (preg_match("/<title>(.*)<\/title>/",$line,$lolz)) {
+//	    echo "title=" . $lolz[1] . "<br>";
+            $title = preg_replace("/'/","''",$lolz[1]);
+            $i++;
+    }
+    if (preg_match("/<track>(.*)<\/track>/",$line,$lolz)) {
+//	    echo "track=" . $lolz[1] . "<br>";
+            $track = $lolz[1];
+            $i++;
+    }
+    if (preg_match("/<subtitle>(.*)<\/subtitle>/",$line,$lolz)) {
+//	    echo "subtitle=" . $lolz[1] . "<br>";
+            $subtitle = preg_replace("/'/","''",$lolz[1]);
+            $i++;
+    }
+    if (preg_match("/<tag>(.*)<\/tag>/",$line,$lolz)) {
+//	    echo "tag=" . $lolz[1] . "<br>";
+            $tag = $lolz[1];
+            $i++;
+    }
+    if (preg_match("/<start>(.*)<\/start>/",$line,$lolz)) {
+//	    echo "starttime=" . $lolz[1] . "<br>";
+            $start = $lolz[1];
+            $i++;
+    }
+    if (preg_match("/<duration>(.*)<\/duration>/",$line,$lolz)) {
+//          echo "duration=" . $lolz[1] . "<br>";
+            $duration = $lolz[1];
+            $i++;
+    }
+    if (preg_match("/<type>(.*)<\/type>/",$line,$lolz)) {
+//	    echo "type=" . $lolz[1] . "<br>";
+            $type = $lolz[1];
+            $i++;
+    }
+    if (preg_match("/<abstract>(.*)<\/abstract>/",$line,$lolz)) {
+//	    echo "abstract=" . $lolz[1] . "<br>";
+            $abstract = preg_replace("/'/","''",$lolz[1]);
+            $i++;
+    }
+    if (preg_match("/<description>(.*)<\/description>/",$line,$lolz)) {
+//            echo "description=" . $lolz[1] . "<br>";
+            $description = preg_replace("/'/","''",$lolz[1]);
+            $i++;
+    }
+    if (preg_match("/<room>(.*)<\/room>/",$line,$lolz)) {
+	    $room = $lolz[1];
+            $i++;
+    }
+
+    if (preg_match("/<language>(.*)<\/language>/",$line,$lolz)) {
+	    $language = $lolz[1];
+    }
+
+    if (preg_match("/<\/day>/",$line)) {
+	echo "<p>";
+    }
+
+    if (preg_match("/<person id=\"(.*)\">(.*)<\/person>/",$line,$lolz)) {
+            $personid = $lolz[1];
+            $personname = preg_replace("/'/","''",$lolz[2]);
+            echo "event id: $eventid person id: $personid person name: $personname<br>";
+            $query1 = "insert into Speakers (ID, Name) values ($personid, '$personname')";
+            $query2 = "insert into Speakers_Talks (Talk_ID, Speaker_ID) values ($eventid, $personid)";
+            echo $query1 . "<br>" . $query2 . "<br>";
+            $query0 = "select * from Speakers where ID=$personid";
+            $result0 = oracle_query("checking", $oracleconn, $query0);
+            if (sizeof($result0) == 0) {
+              $query1 = "insert into Speakers (ID, Name) values ($personid, '$personname')";
+              oracle_query("updating", $oracleconn, $query1);
+            }
+	    oracle_query("updating", $oracleconn, $query2);
+
+    }
 
 /*
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; version 2.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
+    if (preg_match("/<link href=\"(.*)\">/",$line,$lolz)) {
+            echo "link=" . $lolz[1] . "<br>";
+    }
 */
 
+    // Done colleting data? Time to submit to the database
 
-include('header.php');
-
-$file = file("talks");
-
-oracle_query("deleting talk interests", $oracleconn, "delete from talks_interests", NULL, 0);
-$i = 0;
-foreach($file as $line_num => $line) {
-    list($title, $interests) = split("[|]",$line);
-    $interests = split("[,]",$interests);
-    $title = addslashes($title);
-    $titleq = "select ID from Talks where Talk_Title='$title'";
-    $titler = oracle_query("fetching talk", $oracleconn, $titleq, NULL, 0);
-    //echo "Title row count: " . count($titler) . "<br>";
-    //var_dump($titler); echo "<br>";
-    $i++;
-    for($i = 0; $i < sizeof($interests); $i++) {
-        $interestq = "select Interest_ID from Interests_List where Interest_Name='" .
-            trim($interests[$i]) . "'";
-        echo $interestq . "<br>";
-        $interestr = oracle_query("fetching interest", $oracleconn, $interestq, NULL, 0);
-        //echo "Interest row count: " . count($interestr) . "<br>";
-        //var_dump($interestr); echo "<br>";
-        if (count($interestr) == 0) {
-          echo "Missing interest: " . trim($interests[$i]) . "<br>";
-        } 
-        else {
-          if(count($titler) != 1) {
-            $insertq = "insert into Talks_Interests (Talk_ID, Interest) values ('" .
-              $title . "', '" . $interestr[0]["INTEREST_ID"] . "')";
-          }
-          else {
-            $insertq = "insert into Talks_Interests (Talk_ID, Interest) values ('" .
-              $titler[0]["ID"] . "', '" . $interestr[0]["INTEREST_ID"] ."')";
-          }
-        echo $insertq . "<br>";
-        oracle_query("inserting talk interest row", $oracleconn, $insertq);
-        }
+    if (preg_match("/<\/event>/",$line)) { 
+	echo "<p>"; $i = 0;
+        $addtalk = "insert into Talks 
+                (id, Room, Talk_Title, Track, Subtitle, Tag, Talk_Time, Duration, Type, Description, Abstract, Language) values
+                ($eventid,'$room','$title','$track','$subtitle','$tag', 
+                 to_date('$day $start','yyyy-mm-dd hh24:mi:ss'),'$duration','$type', '$description', '$abstract', '$language')";
+//	echo $addtalk;
+        oracle_query("adding talks from xml", $oracleconn, $addtalk);
     }
+
 }
 
-oci_commit($oracleconn);
-echo "talks updated<br>";
+    //list($title, $interests) = split("[|]",$line);
+    //$interests = split("[,]",$interests);
+    //$title = addslashes($title);
+    //$titleq = "select ID from Talks where Talk_Title='$title'";
+    //$titler = oracle_query("fetching talk", $oracleconn, $titleq, NULL, 0);
+

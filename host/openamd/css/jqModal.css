@@ -5,7 +5,7 @@ div.jqmNotice {
     position: fixed;
     
     width: 550px;
-    background:#000000;
+    background:white;
     border: 1px solid #FFF;
     padding: 0;
 }
@@ -19,8 +19,8 @@ div.jqmnTitle {
   font-family: Arial, sans-serif;
   font-size: 12pt;
 
-  color: #fff;
-  background-color: #00a300;
+  color: black;
+  background-color: #ffe6a9;
   height: 1em;
 
   vertical-align: top;
@@ -40,13 +40,13 @@ div.jqmNotice img.jqmClose {
 }
 
 .jqmnContent {
-  color:#fff;
+  color:black;
   font-family: Arial, sans-serif;
   padding: 5px;
   padding-top: 12px;
 }
 
 .jqmnContent b {
-  color: #cc0000;
+  color: black;
 }
 

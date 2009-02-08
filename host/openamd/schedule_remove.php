@@ -28,7 +28,7 @@
 include('header.php');
 // Remove from schedule
 if (isset($_SESSION['handle'])) {
-    if (isset($_REQUEST['talk']) && preg_match("/^[0-9]{1,3}$/",$_REQUEST['talk'])) {
+    if (isset($_REQUEST['talk']) && preg_match("/^[0-9]{1,4}$/",$_REQUEST['talk'])) {
 
         $isthere = "select * from Talks_List where Hacker_ID='" . $_SESSION['id'] .
             "' and Talk_ID='" . $_REQUEST['talk'] . "'";

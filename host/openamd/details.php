@@ -60,10 +60,12 @@ $pass = $_POST['password'];
             <td>Email:</td>
             <td><input type="text" name="email" id="email" value="<?php echo mysql_result($result, 0, 'Email');?>"></td>
         </tr>
-        <tr>
+        <!-- removed because europeans are silly -->
+	<tr>
             <td>Enter your cell <br>if you want to receive <br>texts during the games <br>and for reminders:</td>
             <td><input type="text" name="phone" id="phone" value="<?php echo mysql_result($result, 0, 'Phone');?>"></td>
         </tr>
+	<!-- and americans are smart -->
         <tr>
             <td>&nbsp;</td>
         </tr>

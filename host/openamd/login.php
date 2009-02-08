@@ -54,13 +54,15 @@ if (isset($_SESSION['handle'])) {
         ?>
         <center>
         <?php if (!$edited) { ?>
-        <h3 style="color:#ff0000;"><u>Be careful and accurate, you can only enter your interests once.</u></h3><br><?php
+        <h3 style="color:#ff0000;"><u>Be careful and accurate:<br>you can only enter your interests once.</u></h3><br><?php
         } ?>
         <form action="update_details.php" method="post">
-        <table style="background-color:#111111; border: thin dotted #999999;"><tr>
+<?//        <table style="background-color:#111111; border: thin dotted #999999;"><tr> ?>
+        <table>
+        <!--<tr>
             <td>Change Avatar:</td>
             <td><a href="avatar-up.php"><img src="/avatars/<?= $_SESSION['id'] ?>.png"></a></td>
-        </tr>
+        </tr>-->
         <tr>
             <td><a href="change_password.php">Change Password</a></td>
             <td></td>
@@ -76,10 +78,12 @@ if (isset($_SESSION['handle'])) {
             <td>Email:</td>
             <td><?= $row["EMAIL"];?></td>
         </tr>
-        <tr>
+<!-- removing because germans are silly
+       <tr>
             <td>Cell number (all numbers):</td>
             <td><?php if ($edited) {
                 if ($row["PHONE"] != "0") { ?>
+We got owned by the (rhymes-with-unease) and didn't even get a lessons learned|malicious software,network security
                     <input type="text" name="phone" onblur="this.style.borderColor='';" onfocus="this.style.borderColor='#3080f0';" id="phone" class="formz" value="<?php
                     echo ereg_replace("[^0-9A-Z]","",mcrypt_cbc(MCRYPT_BLOWFISH,
                     $_SESSION['id'], base64_decode($row["PHONE"]), MCRYPT_DECRYPT, '12345678'));
@@ -126,6 +130,7 @@ if (isset($_SESSION['handle'])) {
             }
             ?>
         </tr>
+ and americans are smart -->
         <tr>
             <td>Reminders:</td>
             <td><input type="checkbox" name="reminder_email" id="reminder_email" class="formz"<?php
@@ -137,7 +142,7 @@ if (isset($_SESSION['handle'])) {
                         echo " checked";
                     }
                 }
-                ?>>Email&nbsp;<input type="checkbox" name="reminder_phone" id="reminder_phone" class="formz"<?php
+                ?>>Email<!--&nbsp;<input type="checkbox" name="reminder_phone" id="reminder_phone" class="formz"<?php
                 if($row["REMINDER"] == 2|| $row["REMINDER"] == 3) {
                     echo " checked";
                 }
@@ -145,7 +150,7 @@ if (isset($_SESSION['handle'])) {
                     if ($_SESSION['reminder'] == 2 || $_SESSION['reminder'] == 3) {
                         echo " checked";
                     }
-                }?>>SMS</td>
+                }?>>SMS--></td>
         </tr>
         <tr>
             <td>&nbsp;</td>
@@ -182,7 +187,7 @@ if (isset($_SESSION['handle'])) {
             }?></td>
         </tr>
         <tr>
-            <td>Home Town (zip code):</td>
+            <td>Home Town (postal code):</td>
             <td><?php if ($edited) { ?>
                 <input type="text" size="7" name="location" onblur="this.style.borderColor='';" onfocus="this.style.borderColor='#3080f0';" id="location" value="<?php echo $row["LOCATION"]; ?>"><?php
             }
@@ -197,7 +202,7 @@ if (isset($_SESSION['handle'])) {
             <td>Country:</td>
             <td><select name="country">
                 <?php
-                $countries = "select id, country from Countries";
+                $countries = "select id, country from Countries order by country asc";
                 $countrieslist = oracle_query("get countries", $oracleconn, $countries);
                 foreach($countrieslist as $country) { ?>
                     <option value="<?php echo $country["ID"]; ?>"<?php
@@ -241,6 +246,7 @@ if (isset($_SESSION['handle'])) {
     // Gets interests for user
     $user_query = "select Interest from Interests where ID='" . $_SESSION['id'] . "' order by Interest asc";
     $user_rows = oracle_query("fetching user interests", $oracleconn, $user_query);
+    $num_user_rows = sizeof($user_rows);
     if ($rows) {
         $user_interest_count = 0;
         for ($i = 0; $i < $rows; $i++) {
@@ -251,7 +257,7 @@ if (isset($_SESSION['handle'])) {
                 ?><td><input type="checkbox" name="<?php
                 echo $allrows[$i]["INTEREST_ID"];
                 ?>" id="<?php echo $allrows[$i]["INTEREST_ID"];?>" <?php
-                if ($user_interest_count < $user_rows) {
+                if ($user_interest_count < $num_user_rows) {
                     if ($user_rows[$user_interest_count]["INTEREST"] ==
                         $allrows[$i]["INTEREST_ID"]) {
                          echo 'checked';
@@ -285,9 +291,8 @@ if (isset($_SESSION['handle'])) {
 else {
 ?>
 
-<h2>Welcome to the OpenAMD web interface!</h2><br>
-<h3><a href="login.php?create=1"><blink>Click here to create a new account</blink></a></h3><br>
-<b>Log in:</b><p>
+<div class="body-header">Log into 25c3 OpenAMD</div><br>
+<h3>Have an account?<br><a href="create.php">If not, click here to create one.</a></h3><br>
 <table>
     <form id="login" action="auth.php" method="post">
     <tr><td>Username:</td><td><input class="formz" type="text" name="user" length="40" onblur="this.style.borderColor='';" onfocus="this.style.borderColor='#3080f0';"></td></tr>
@@ -295,7 +300,7 @@ else {
     <tr><td colspan=2 align=left><input type="submit" value="Login"  onmouseover="this.style.backgroundColor='#3080f0';" onmouseout="this.style.backgroundColor='';" class="formz" text="submit"></td></tr>
     </form>
 </table>
-<font color="red">If you have forgotten your password, please wait until saturday morning and go to the info desk. Thank you for your patience.</font>
+<a href="forgot_password.php"><font color="red">Forgot your password?</font></a>
 <?php 
 
 }

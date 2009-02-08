@@ -28,10 +28,11 @@
 // CHANGE THESE SETTINGS TO MATCH YOUR SYSTEM
 
 // Oracle DB info
-$username = '';
-$password = '';
-$host = ''; 
-$webapp = ''; // no trailing slash at the end
+$username = 'hopeamd';
+$password = 'HopeAMD';
+//$host = 'localhost:1521'; 
+$host = 'openamd';
+$webapp = 'http://beta.openbeacon.de:8181/sputnik-webapp/dynamic'; // no trailing slash at the end
 
 // DO NOT EDIT BELOW THIS LINE
 
@@ -67,6 +68,7 @@ function oracle_query($what, $oracleconn, $query, $params = NULL, $commit = 1) {
     $e = oci_error($statement);
     die(htmlentities($what . ": failed to execute query: " . $query . ": " . $e['message']));
   }
+//  var $allrows;;
   oci_fetch_all($statement, $allrows, 0, -1, OCI_ASSOC+OCI_FETCHSTATEMENT_BY_ROW);
   oci_free_statement($statement);
   return $allrows;
@@ -84,9 +86,23 @@ function get_user_location($userid) {
 }
 
 function get_room_users($room) {
-  return split("\n",file_get_contents($webapp . "dumplocations?area=$room"));
+  global $webapp;
+  return split("\n",file_get_contents($webapp . "/dumplocations?area=$room"));
 }
 
 date_default_timezone_set('UTC');
+
+
+function set_error($message, $redirect) {
+  $_SESSION['error'] = $message;
+  if ($redirect == "null") {
+    // log message to a file
+  }
+  else {
+    //header("Location: $redirect");
+    print "<script>self.location='$redirect';</script>";
+    die();
+  }
+}
 
 ?>

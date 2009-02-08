@@ -44,6 +44,7 @@ $query = <<<ENDQUERY
           AND ti.talk_id = t.id
           AND i.interest_id = ti.interest
           AND p1.id = :hackerid
+          AND t.talk_time >= sysdate
       GROUP BY p1.id, p1.handle, t.id, t.Talk_Title, (t.talk_time-to_date('01-jan-1970'))*86400, t.speaker_name
       ORDER BY count(*) DESC, dbms_random.random
 ENDQUERY;
@@ -55,14 +56,14 @@ $result = oracle_query("get personalized schedule", $oracleconn, $query, array("
  
  
  $rows = sizeof($result);
- echo "<center><table style='background-color:#111111; border: thin dotted #999999;'><tr><td>";
+ echo "<center><table style='background-color:#0000; border: thin dotted #999999;'><tr><td>";
  if ($rows > 0) {
           for ($i = 0; $i < $rows; $i++) {
                   $row=$result[$i];
                   ?><div style="border-bottom: thin dotted #999999; padding: 5px; width: 600px;"><?php
                   echo $row["TALK_TITLE"] . "<br>(";
                   echo "<font class='speaker'>" . $row["SPEAKER_NAME"] . " <i>";
-                  echo date("l Hs",$row["TALK_TIME"]) . "</i></font>) ";
+                  echo date("l Hs",$row["TALK_TIME"]) . "</i></font>)  based on " . $row["COMMON_INTERESTS"];
           ?></div><?php
           }
   }
@@ -70,25 +71,9 @@ $result = oracle_query("get personalized schedule", $oracleconn, $query, array("
   ?>You should <a href="schedule.php">sign up</a> for some talks!
   <?php
   }
- ?></td></tr></table></center><?php
+ ?>
+
+</td></tr></table></center><?php
  include('footer.php');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-include('footer.php');
 
 ?>

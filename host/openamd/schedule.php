@@ -33,15 +33,15 @@ include("header.php");
 .hidden { visibility: hidden; }
 .unhidden { visibility: visible; }
 
-th { background-color:#111111; border: thin dotted #999999; }
+th { background-color:#ffe6a9; border: thin dotted #999999; }
 
 -->
 
 </style>
-<script type="text/javascript" src="/javascripts/jquery.js"></script>
-<script type="text/javascript" src="/javascripts/jqModal.js"></script>
-<script type="text/javascript" src="/javascripts/jqDnR.js"></script>
-<script type="text/javascript" src="/javascripts/jquery-easing.js"></script>
+<script type="text/javascript" src="javascripts/jquery.js"></script>
+<script type="text/javascript" src="javascripts/jqModal.js"></script>
+<script type="text/javascript" src="javascripts/jqDnR.js"></script>
+<script type="text/javascript" src="javascripts/jquery-easing.js"></script>
 <script type="text/javascript">
 $().ready(function() {
   $("#schedule_details")
@@ -73,9 +73,13 @@ function showDetails(datasource) {
 </div>
 <div id="col2">
 <?php if (isset($_SESSION['handle'])) { ?>
-<h2>Schedule: <?php echo $_SESSION['handle']; ?></h2>
-Get reminders for talks you want to see by checking the boxes and clicking "Update Schedule".<br>
-<a href="schedule_personal.php">View Personal Schedule</a>
+<div style="width:600px;"><h2>Add to Schedule: <?php echo $_SESSION['handle']; ?></h2>
+<a href="schedule_personal.php">View Personal Schedule</a><br>
+<div style="font-size: 11px;">
+Create a personal schedule by checking the boxes and clicking "Update Schedule".<br>
+You can remove talks from your schedule on your personal schedule page.<br>
+To get talk update reminders, check the "Email" box in your profile.<br></div>
+<p>
 <form action="schedule_submit.php" method="post"><?php
 }
 else {?>
@@ -83,10 +87,9 @@ else {?>
 <?php
 }
 ?>
-<center>
 <div id="day0">
 <?php if (isset($_SESSION['handle'])) { ?>
-<input type="submit" class="formz" onmouseover="this.style.backgroundColor='#3080f0';" onmouseout="this.style.backgroundColor='';" value="Update Schedule">
+<center><input type="submit" class="formz" onmouseover="this.style.backgroundColor='#3080f0';" onmouseout="this.style.backgroundColor='';" value="Add to Schedule"></center>
 <?php
 }
 // Fetch SQL containing schedule data
@@ -100,7 +103,7 @@ else
 }
 $query = <<<ENDQUERY
 with phptalks as (       
-    select  id, speaker_name, talk_title, abstract
+    select  id, speaker_name, talk_title, abstract, room
            ,round((talk_time-to_date('01-jan-1970'))*86400) talk_time
            ,track
            ,checked
@@ -113,9 +116,9 @@ select  times.talk_time,
         t2.id id2, t2.speaker_name speaker2, t2.talk_title title2, t2.abstract abstract2, nvl(t2.checked,'') checked2, 
         t3.id id3, t3.speaker_name speaker3, t3.talk_title title3, t3.abstract abstract3, nvl(t3.checked,'') checked3
 from    (select distinct talk_time from phptalks) times
-        left join phptalks t1 on (times.talk_time = t1.talk_time and t1.track = 'Hopper')
-        left join phptalks t2 on (times.talk_time = t2.talk_time and t2.track = 'Turing')
-        left join phptalks t3 on (times.talk_time = t3.talk_time and t3.track = 'Engressia')
+        left join phptalks t1 on (times.talk_time = t1.talk_time and t1.room = 'Saal 1')
+        left join phptalks t2 on (times.talk_time = t2.talk_time and t2.room = 'Saal 2')
+        left join phptalks t3 on (times.talk_time = t3.talk_time and t3.room = 'Saal 3')
 order by times.talk_time asc
 ENDQUERY;
 
@@ -133,9 +136,9 @@ foreach ($allrows as $row) {
             echo "</table>";
         }
         $day = date("l", $row["TALK_TIME"]);
-        ?><table style="width:600px; background-color:#111111; border: thin dotted #999999;">
+        ?><table style="text-align:center; position:relative; width:600px; left:25px; color:#000; font-family: arial, helvetica, sans-serif;">
         <tr><th colspan="5"><br /><?php echo $day; ?> Schedule</th></tr>
-        <tr><th width="60">Time</th><th>Hopper (A)</th><th>Turing (B)</th><th>Engressia (C)</th></tr><?php
+        <tr><th width="60">Time</th><th>Saal 1</th><th>Saal 2</th><th>Saal 3</th></tr><?php
     }
     ?><tr><?php
     // is the talk selected?
@@ -198,10 +201,9 @@ if ($day != "none") {
 }
 
 if (isset($_SESSION['handle'])) {
-    ?><input type="submit" class="formz" onmouseover="this.style.backgroundColor='#3080f0';" onmouseout="this.style.backgroundColor='';"  value="Update Schedule"></form><?php
+    ?><center><input type="submit" class="formz" onmouseover="this.style.backgroundColor='#3080f0';" onmouseout="this.style.backgroundColor='';"  value="Add to Schedule"></center></form><?php
 }
 ?>
-</center>
 </div>
 <?php
 

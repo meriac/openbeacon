@@ -31,7 +31,7 @@ include 'header.php' ?>
 <h2> Accessing Tag Position Data</h2>
 
 <p>The current tag position data can be accessed via a simple web service.  There are two ways to access this service.  The first service sends a dump of the current locations.  The second continues to send new snapshots of positions as long as you stay connected.  Both use the same output format and support the same query parameters.
-</p><p>The address of the service is http://amd.hope.net:8181/sputnik-webapp/dynamic/dumplocations.
+</p><p>The address of the service is http://beta.openbeacon.de:8181/sputnik-webapp/dynamic/dumplocations.
 </p><p>The following query parameters are supported:
 </p>
 <table border="0">
@@ -80,7 +80,7 @@ include 'header.php' ?>
 </p><p>Here's a sample use of the system via telnet.  Note that the server supports simple HTTP 0.9 syntax and does not require any HTTP headers to be sent or parsed.  (Though if you make an HTTP 1.1 request, of course, it will respond with HTTP 1.1 headers.)
 </p>
 <pre>
-bash-3.2$ telnet amd.hope.net 8181
+bash-3.2$ telnet beta.openbeacon.de 8181
 Escape character is '^]'.
 GET /sputnik-webapp/dynamic/dumplocations?area=Engressia&amp;limit=5
 Engressia|2387|46.7369918823242|83.1452331542969|0
@@ -92,7 +92,7 @@ Engressia|2301|124.9999771118164|50.0000267028809|0
 <p>Another example:
 </p>
 <pre>
-bash-3.2$ curl 'http://amd.hope.net:8181/sputnik-webapp/dynamic/dumplocations?tagid=2399&amp;scale=100&amp;asint'
+bash-3.2$ curl 'http://beta.openbeacon.de:8181/sputnik-webapp/dynamic/dumplocations?tagid=2399&amp;scale=100&amp;asint'
 Hopper|2399|7500|5000|0|0
 
 </pre>

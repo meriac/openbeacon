@@ -27,9 +27,9 @@
 
 // Create new user
 
-include('header.php');
 
-$_SESSION['error'] = "";
+include('header.php');
+//$_SESSION['error'] = "";
 
 if (isset($_REQUEST['reg']) && $_REQUEST['reg'] == '1') {
     /* ok, time to perform some checks
@@ -51,18 +51,19 @@ if (isset($_REQUEST['reg']) && $_REQUEST['reg'] == '1') {
         set_error("Please fill in the RFID field.<br>","create.php");
     }
     if (isset($_REQUEST['pin']) && $_REQUEST['pin'] != "") {
-        if (preg_match("/^[0-9]{10}$/",$_REQUEST['pin'])) {
+        if (preg_match("/^[0-9]{1,4}$/",$_REQUEST['pin'])) {
             $pin = $_REQUEST['pin'];
         }
         else {
-            set_error("Please make sure the PIN is 10 numbers.<br>","create.php");
+            set_error("Please verify your PIN is correct.<br>","create.php");
         }
     }
     else {
         set_error("Please enter your PIN.<br>","create.php");
     }
-    
-    $rfidresult = oracle_query("check if user is registered...", $rfidquery);
+ 
+    $rfidquery = "select ID, PIN, Registered from Creation where ID='$rfid'";
+    $rfidresult = oracle_query("check if user is registered...", $oracleconn, $rfidquery);
     if (sizeof($rfidresult) > 1) {
         set_error("System error. Please contact the OpenAMD administrator.<br>","create.php");
     }
@@ -71,11 +72,11 @@ if (isset($_REQUEST['reg']) && $_REQUEST['reg'] == '1') {
     }
     if (sizeof($rfidresult) == 1) {
         $row=$rfidresult[0];
-        if ($row[1] != $pin) {
+        if ($row['PIN'] != $pin) {
             set_error("PIN does not match the system. Please try again.<br>","create.php");
         }
-        if ($row[2]) {
-            set_error("This RFID has already been registered. Please try again.<br>","create.php");
+        if ($row['REGISTERED']) {
+            set_error("This RFID has already been registered.<br>","create.php");
         }
         // Looks like they passed the gauntlet. Let's register them now!
         $_SESSION['id'] = $rfid;
@@ -85,13 +86,17 @@ if (isset($_REQUEST['reg']) && $_REQUEST['reg'] == '1') {
 else {
 
 ?>
-
-Please enter the credentials you were given at registration to create your OpenAMD account:<p>
+<div class="body-header">Create a 25c3 Account</div><p>
+<div class="body-text">
+Fill out the form to create your OpenAMD account:<p>
 <form action="create.php?reg=1" method="post">
-RFID number: <input type="text" name="rfid" size=4 class="formz"><p>
-PIN: <input type="text" name="pin" class="formz"><p>
-<input type="submit" class="formz">
+<center><table>
+<tr><td>RFID number:</td><td><input type="text" name="rfid" size=4 class="formz"></td></tr>
+<tr><td>PIN:</td><td><input type="text" name="pin" size=4 class="formz"></td></tr>
+</table>
+<input type="submit" class="formz" value="Create"></center>
 </form>
+</div>
 <?php
 }
 include('footer.php');

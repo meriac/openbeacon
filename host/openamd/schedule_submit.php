@@ -54,6 +54,7 @@ for ($i = 0; $i < $rows; $i++) {
         oracle_query("inserting talk subscription", $oracleconn, $mytalks);
     }
 }
+
 set_error("You have been subscribed. Enjoy!<br>","index.php");
 
 include('footer.php');

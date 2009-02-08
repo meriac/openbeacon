@@ -27,22 +27,21 @@
 
 include("header.php"); ?>
 
-<h2>Visualize: <?php echo $_SESSION['handle']; ?></h2>
-<br><center>
-<table cellspacing=3 border=0><tr><td width="10%" valign="top">
-<a href="mezzanineviz.php">2nd Floor<br>(Mezzanine)<br>
-<img src="/images/mezzanine_thumb.png" border=0></a>
-<br><br>
-<a href="18thfloorviz.php">18th Floor<br>
-<img src="/images/18thfloor_thumb.png" border=0></a>
-<br><br>
-</td><td align="center" valign="top">
-<center><h3>Welcome to the OpenAMD Web Visualization system:</h3><br>
-&nbsp;<img id="areachart" src="http://amd.hope.net/areachart.png">
-</center>
-</td>
-</table>
-</center>
+<div class="body-header">25c3 OpenAMD Web Visualization:</div>
+<div class="body-text">
+<font color="red"><a href="usersrooms.php">View who is in every room!</a></font><br>
+<p>Proximity tracking by SocioPatterns:</p>
+<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,0,0">
+<param name="movie" value="https://ssl.openamd.org/openamd/sociopatterns/_swfs_/bt3_25c3_web_alpha.swf" />
+<param name="quality" value="high" />
+<param name="allowScriptAccess" value="always" />
+<param name="play" value="true" />
+<param name="allowFullscreen" value="true"/>
+<param name="bgcolor" value="#000000" />
+<embed height="434" pluginspage="http://www.macromedia.com/go/getflashplayer" allowScriptAccess="always" src="https://ssl.openamd.org/openamd/sociopatterns/_swfs_/bt3_25c3_web_alpha.swf" type="application/x-shockwave-flash" width="580" quality="high" play="true" allowFullscreen="true" bgcolor="#000000"></embed>
+</object>
+
+</div>
 
     <script><!--
     var fudge = 0;
@@ -55,6 +54,4 @@ include("header.php"); ?>
 
 <?php
 
-include('room_details.php');
-
- include("footer.php"); ?>
+include("footer.php"); ?>
