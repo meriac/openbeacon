@@ -2,7 +2,7 @@
 
 var MAPPER = {
   scansUrl    : 
-  'https://amd.hope.net/sputnik-webapp/dynamic/dumplocations?json',
+  'https://beta.openamd.org:8181/sputnik-webapp/dynamic/dumplocations?json',
   interval    : 1000,                   // how many milliseconds between visual updates
   intervalPtr : undefined,
   tagDivs     : [],
