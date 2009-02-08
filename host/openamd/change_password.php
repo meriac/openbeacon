@@ -57,7 +57,7 @@ else {
   <form action="change_password.php" method="post">
   <input type="hidden" name="change" value="1">
   <h3>Change your password</h3>
-  Current password: <input type="pssword" name="current" class="formz"><br>
+  Current password: <input type="password" name="current" class="formz"><br>
   New password: <input type="password" name="new1" class="formz"><br>
   New pass (again): <input type="password" name="new2" class="formz"><br>
   <input type="submit" value="Change Password">
