@@ -73,6 +73,15 @@ elseif (count($passrows) < 1) {
     set_error("Incorrect password.<br>","index.php");
 }
 else {
+
+    // If it's the first sign in, activate the account
+    $isactivatedr = "select registered from Creation where id=" . $passrows[0]["ID"];
+    $isactivatedq = oracle_query("pull registered yesno", $oracleconn, $isactivatedr);
+    if (!$isactivatedq[0]["REGISTERED"]) {
+         $activater = "update Creation set registered = 1, timestamp=sysdate where id=" . $passrows[0]["ID"];
+         $activateq = oracle_query("activate account", $oracleconn, $activater);
+    }
+
     $_SESSION['handle'] = $passrows[0]["HANDLE"];
     $_SESSION['id'] = $passrows[0]["ID"];
     $_SESSION['admin'] = $passrows[0]["ADMIN"];
