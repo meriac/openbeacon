@@ -118,15 +118,23 @@ switch($body) {
 
 function welcome() {
   global $oracleconn, $from, $subject, $to;
+  $newpassword = 
   $query = "select Email from Person where ID='$to'";
   $result = oracle_query("select email to", $oracleconn, $query);
-  $body = "testtest"; // enter welcome message here
+  
+  // Create password
+  $pass = substr(md5(rand(1,1000000000)), 0, 10);
+  $commitpass = hash('sha256',$pass);
+  $passquery = "update Person set Password = '$commitpass' where ID='$to'";
+  $resultnewpassword = oracle_query('created new password', $oracleconn, $passquery);
+
+  $body = "Welcome to the OpenAMD system. Your account password is $pass. You must log in to active your account. Please change your password after logging in."; // enter welcome message here
   if (sizeof($result) != 1) {
     set_error("Error sending welcome messages.<br>","index.php");
   }
   else {
     if (mail($result[0]["EMAIL"], $subject, $body, $from)) {
-      set_error("Welcome to OpenAMD!<br>","index.php");
+      set_error("Welcome to OpenAMD!<br>Check your email to find your password.","index.php");
     }
     else {
       set_error("Cannot send welcome message.<br>","index.php");
@@ -263,7 +271,7 @@ function forgot() {
 
     // We had to remove the "Forgot Password" feature due to abuse at
     // the conference. Feel free to re-enable it.
-    set_error("This function has been removed. Please contact the info desk to get your password changed.","index.php");
+//    set_error("This function has been removed. Please contact the info desk to get your password changed.","index.php");
     if (substr($medium, 0, 1) != '0') {
         set_error("The email method you have selected is not appropriate. loldongz.<br>", "index.php");
     }
