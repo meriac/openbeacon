@@ -118,7 +118,7 @@ switch($body) {
 
 function welcome() {
   global $oracleconn, $from, $subject, $to;
-  $newpassword = 
+  $newpassword = ""; 
   $query = "select Email from Person where ID='$to'";
   $result = oracle_query("select email to", $oracleconn, $query);
   
