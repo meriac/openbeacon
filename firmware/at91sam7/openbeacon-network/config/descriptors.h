@@ -67,11 +67,11 @@ const portCHAR pxProductStringDescriptor[] = {
   40,
   usbDESCRIPTOR_TYPE_STRING,
   
-  't', 0x00, 'x', 0x00, 't', 0x00, 'r', 0x00,
-  ' ', 0x00, 'm', 0x00, 'i', 0x00, 'n', 0x00,
-  'i', 0x00, '/', 0x00, 'O', 0x00, 'p', 0x00,
-  'e', 0x00, 'n', 0x00, 'P', 0x00, 'I', 0x00,
-  'C', 0x00, 'C', 0x00, '2', 0x00, 0x00, 0x00, /* FIXME: Doesn't work without these four additional zeroes */
+  'O', 0x00, 'p', 0x00, 'e', 0x00, 'n', 0x00,
+  'B', 0x00, 'e', 0x00, 'a', 0x00, 'c', 0x00,
+  'o', 0x00, 'n', 0x00, ' ', 0x00, 'N', 0x00,
+  'e', 0x00, 't', 0x00, 'w', 0x00, 'o', 0x00,
+  'r', 0x00, 'k', 0x00, ' ', 0x00, '1', 0x00,
   0x00, 0x00
 };
 
@@ -286,7 +286,7 @@ const char pxDeviceDescriptor[] = {
   0x00,				/* bDeviceProtocol:             */
   0x08,				/* bMaxPacketSize0              */
   0xC0, 0x16,			/* idVendorL                    */
-  0xAC, 0x08,			/* idProductL                   */
+  0xB0, 0x08,			/* idProductL                   */
   0x10, 0x01,			/* bcdDeviceL                   */
   usbMANUFACTURER_STRING,	/* iManufacturer                */
   usbPRODUCT_STRING,		/* iProduct                     */
