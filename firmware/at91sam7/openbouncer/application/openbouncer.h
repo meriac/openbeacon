@@ -49,10 +49,10 @@
  */
 typedef struct
 {
-  uint8_t version;
-  uint8_t command;
-  uint8_t value;
-  uint8_t flags;
+  u_int8_t version;
+  u_int8_t command;
+  u_int8_t value;
+  u_int8_t flags;
 } TBouncerCmdHeader;
 
 
@@ -73,8 +73,8 @@ typedef struct
 typedef struct
 {
   TBouncerCmdHeader hdr;
-  uint32_t salt_a;
-  uint32_t reserved[2];
+  u_int32_t salt_a;
+  u_int32_t reserved[2];
 } TBouncerCmdHello;
 
 /* 
@@ -95,8 +95,8 @@ typedef struct
 typedef struct
 {
   TBouncerCmdHeader hdr;
-  uint32_t src_mac;
-  uint32_t challenge[2];
+  u_int32_t src_mac;
+  u_int32_t challenge[2];
 } TBouncerCmdChallengeSetup;
 
 /* 
@@ -119,8 +119,8 @@ typedef struct
 typedef struct
 {
   TBouncerCmdHeader hdr;
-  uint32_t src_mac;
-  uint8_t picks[BOUNCERPKT_PICKS_COUNT];
+  u_int32_t src_mac;
+  u_int8_t picks[BOUNCERPKT_PICKS_COUNT];
 } TBouncerCmdChallenge;
 
 /* 
@@ -144,8 +144,8 @@ typedef struct
 typedef struct
 {
   TBouncerCmdHeader hdr;
-  uint32_t salt_b;
-  uint8_t picks[BOUNCERPKT_PICKS_COUNT];
+  u_int32_t salt_b;
+  u_int8_t picks[BOUNCERPKT_PICKS_COUNT];
 } TBouncerCmdResponse;
 
 typedef union
