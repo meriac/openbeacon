@@ -28,7 +28,7 @@
 #include <board.h>
 #include "sort.h"
 
-void RAMFUNC sort (unsigned int *array, unsigned int count)
+void sort (unsigned int *array, unsigned int count)
 {
     unsigned int *p, *q, *top = array + count - 1,tmp;
     int more;

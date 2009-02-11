@@ -30,10 +30,10 @@ typedef union
 } __attribute__((__packed__)) TEnvironmentBlock;
 
 extern TEnvironmentBlock env;
-extern void env_store (void) RAMFUNC;
+extern void env_store (void);
 extern int env_load (void);
 extern void env_init (void);
-extern unsigned short env_crc16 (const unsigned char *buffer, int size) RAMFUNC;
+extern unsigned short env_crc16 (const unsigned char *buffer, int size);
 extern void env_flash_to (const void *addr) RAMFUNC;
 
 #ifdef  __AT91SAM7X__

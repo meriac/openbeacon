@@ -89,7 +89,7 @@ env_flash_to (const void *addr)
   flash_cmd_wait ();
 }
 
-unsigned short RAMFUNC
+unsigned short
 env_crc16 (const unsigned char *buffer, int size)
 {
   unsigned short crc = 0xFFFF;
@@ -128,7 +128,7 @@ env_reboot_to_update (void)
 }
 #endif/*__AT91SAM7X__*/
 
-void RAMFUNC
+void
 env_store (void)
 {
   /* During flashing only RAMFUNC code may be executed. 
