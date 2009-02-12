@@ -269,7 +269,7 @@ DFS_OpenCard (void)
 	}
     }
   CardType = ty;
-  if(ty == 12)
+//  if(ty == 12)
     spi_change_config(&sdcard_spi,SDCARD_SPI_CONFIG (SCBR));
   sdcard_release ();
 

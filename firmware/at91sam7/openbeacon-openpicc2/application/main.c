@@ -219,8 +219,7 @@ sdcard_test_task (void *parameter)
 	    vTaskDelay (100 / portTICK_RATE_MS);
 	}
 
-      printf
-	("Partition 0 start sector 0x%08X active 0x%02X type 0x%02X size 0x%08X\n",
+      printf ("Partition 0 start sector 0x%08X active 0x%02X type 0x%02X size 0x%08X\n",
 	 (unsigned int) pstart, (unsigned int) pactive, (unsigned int) ptype,
 	 (unsigned int) psize);
 
@@ -231,14 +230,11 @@ sdcard_test_task (void *parameter)
 	    vTaskDelay (100 / portTICK_RATE_MS);
 	}
       printf ("Volume label '%-11.11s'\n", vi.label);
-      printf
-	("%d sector/s per cluster, %d reserved sector/s, volume total %d sectors.\n",
+      printf ("%d sector/s per cluster, %d reserved sector/s, volume total %d sectors.\n",
 	 (int) vi.secperclus, (int) vi.reservedsecs, (int) vi.numsecs);
-      printf
-	("%d sectors per FAT, first FAT at sector #%d, root dir at #%d.\n",
+      printf ("%d sectors per FAT, first FAT at sector #%d, root dir at #%d.\n",
 	 (int) vi.secperfat, (int) vi.fat1, (int) vi.rootdir);
-      printf
-	("(For FAT32, the root dir is a CLUSTER number, FAT12/16 it is a SECTOR number)\n");
+      printf ("(For FAT32, the root dir is a CLUSTER number, FAT12/16 it is a SECTOR number)\n");
       printf ("%d root dir entries, data area commences at sector #%d.\n",
 	      (int) vi.rootentries, (int) vi.dataarea);
       printf ("%d clusters (%d bytes) in data area, filesystem IDd as ",
