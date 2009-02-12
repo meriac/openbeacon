@@ -15,6 +15,7 @@
 
 #include "sdcard.h"
 #include "spi.h"
+#include "dosfs.h"
 
 /* Definitions for MMC/SDC command */
 #define CMD0	(0x40+0)	/* GO_IDLE_STATE */
@@ -219,7 +220,7 @@ sdcard_send_cmd (u_int8_t cmd,	/* Command byte */
 /*-----------------------------------------------------------------------*/
 
 int
-sdcard_open_card (void)
+DFS_OpenCard (void)
 {
   u_int8_t cmd, ty, ocr[10];
   u_int32_t timeout = 10000;
@@ -271,7 +272,7 @@ sdcard_open_card (void)
   if(ty == 12)
     spi_change_config(&sdcard_spi,SDCARD_SPI_CONFIG (SCBR));
   sdcard_release ();
-  
+
   printf("SD Card type %i detected\n",ty);
 
   if (ty)			/* Initialization succeded */
@@ -284,50 +285,46 @@ sdcard_open_card (void)
 /* Read Sector(s)                                                        */
 /*-----------------------------------------------------------------------*/
 
-int
+static inline int
 sdcard_disk_read (
 	   u_int8_t * buff,	/* Pointer to the data buffer to store read data */
-	   u_int32_t sector,	/* Start sector number (LBA) */
-	   u_int32_t count	/* Sector count */
+	   u_int32_t sector	/* Start sector number (LBA) */
   )
 {
+  int res=RES_ERROR;
+
   if (Stat & STA_NOINIT)
     return RES_NOTRDY;
 
   if (!(CardType & 8))
-    sector *= 512;		/* Convert to byte address if needed */
+    sector *= SECTOR_SIZE;	/* Convert to byte address if needed */
 
   sdcard_claim ();
 
-  if (count == 1)
-    {				/* Single block read */
-      if ((sdcard_send_cmd (CMD17, sector) == 0)	/* READ_SINGLE_BLOCK */
-	  && sdcard_block_read (buff, 512))
-	count = 0;
-    }
-  else
-    {				/* Multiple block read */
-      if (sdcard_send_cmd (CMD18, sector) == 0)
-	{			/* READ_MULTIPLE_BLOCK */
-	  do
-	    {
-	      if (!sdcard_block_read (buff, 512))
-		break;
-	      buff += 512;
-	    }
-	  while (--count);
-	  sdcard_send_cmd (CMD12, 0);	/* STOP_TRANSMISSION */
-	}
-      else
-        printf("SD CMD18 failed\n");
-    }
+  if ((sdcard_send_cmd (CMD17, sector) == 0)	/* READ_SINGLE_BLOCK */
+      && sdcard_block_read (buff, SECTOR_SIZE))
+      res=RES_OK;
+
   sdcard_release ();
 
-  return count ? RES_ERROR : RES_OK;
+  return res;
+}
+
+uint32_t DFS_ReadSector (uint8_t unit, uint8_t * buffer, uint32_t sector, uint32_t count)
+{
+    (void) unit;
+
+    while(count--)
+    {
+	if(sdcard_disk_read(buffer,sector++)!=RES_OK)
+	    return 1;
+	buffer+=SECTOR_SIZE;
+    }
+    return 0;
 }
 
 int
-sdcard_init (void)
+DFS_Init (void)
 {
   AT91F_PIO_CfgOutput (SDCARD_CS_PIO, SDCARD_CS_PIN);
   AT91F_PIO_SetOutput (SDCARD_CS_PIO, SDCARD_CS_PIN);

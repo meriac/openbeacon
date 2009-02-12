@@ -45,17 +45,13 @@
 #include "eink/eink_flash.h"
 #include "touch/ad7147.h"
 #include "accelerometer.h"
-#include "sdcard.h"
+#include "dosfs.h"
 #include "nfc/pn532.h"
 #include "nfc/pn532_demo.h"
 #include "nfc/picc_emu.h"
 #include "ebook/ebook.h"
 
-
-#define SECTOR_SIZE 512
-#define SECTOR_COUNT 1
-u_int8_t sector_buffer[SECTOR_SIZE * SECTOR_COUNT];
-
+static uint8_t sector[SECTOR_SIZE],sector1[SECTOR_SIZE],buffer[SECTOR_SIZE];
 
 /**********************************************************************/
 static inline void
@@ -151,15 +147,61 @@ sdram_test_task (void *parameter)
 }
 
 void
+hex_dump (const unsigned char *buf, unsigned int addr, unsigned int len)
+{
+  unsigned int start, i, j;
+  char c;
+
+  start = addr & ~0xf;
+
+  for (j = 0; j < len; j += 16)
+    {
+      printf ("%08x:", start + j);
+
+      for (i = 0; i < 16; i++)
+	{
+	  if (start + i + j >= addr && start + i + j < addr + len)
+	    printf (" %02x", buf[start + i + j]);
+	  else
+	    printf ("   ");
+	}
+      printf ("  |");
+      for (i = 0; i < 16; i++)
+	{
+	  if (start + i + j >= addr && start + i + j < addr + len)
+	    {
+	      c = buf[start + i + j];
+	      if (c >= ' ' && c < 127)
+		printf ("%c", c);
+	      else
+		printf (".");
+	    }
+	  else
+	    printf (" ");
+	}
+      printf ("|\n");
+    }
+}
+
+void
 sdcard_test_task (void *parameter)
 {
-  int res, sector;
+  u_int32_t pstart, psize, i,t;
+  u_int8_t pactive, ptype;
+  VOLINFO vi;
+  DIRINFO di;
+  DIRENT de;
+  FILEINFO fi;
+//  u_int32_t cache;
+  int res;
 
   (void) parameter;
+
+
   vTaskDelay (5000 / portTICK_RATE_MS);
   printf ("Here we go\n");
 
-  if ((res = sdcard_open_card ()) != 0)
+  if ((res = DFS_OpenCard ()) != 0)
     {
       printf ("Can't open SDCARD [%i]\n", res);
       while (1)
@@ -167,26 +209,82 @@ sdcard_test_task (void *parameter)
     }
   else
     {
-      sector = 0;
-      while (sdcard_disk_read (sector_buffer, 0, SECTOR_COUNT));
-      {
-	vTaskDelay (100);
-	printf (".");
-      }
-      printf ("\n");
-
-      while (1)
+      // Obtain pointer to first partition on first (only) unit
+      pstart = DFS_GetPtnStart (0, sector, 0, &pactive, &ptype, &psize);
+      if (pstart == 0xffffffff)
 	{
-	  memset (sector_buffer, 0, sizeof (sector_buffer));
-	  if ((sector % 100) == 0)
-	    printf ("%i kb\n", sector / 2);
-
-	  res = sdcard_disk_read (sector_buffer, sector++, SECTOR_COUNT);
-
-	  if (res)
-	    printf ("\nresult=%03i DATA[0x%02X,0x%02X] reading SDCARD\n\n",
-		    res, sector_buffer[0x1FE], sector_buffer[0x1FF]);
+	  printf ("Cannot find first partition\n");
+	  hex_dump(sector,0,sizeof(sector));
+	  while (1)
+	    vTaskDelay (100 / portTICK_RATE_MS);
 	}
+
+      printf
+	("Partition 0 start sector 0x%08X active 0x%02X type 0x%02X size 0x%08X\n",
+	 (unsigned int) pstart, (unsigned int) pactive, (unsigned int) ptype,
+	 (unsigned int) psize);
+
+      if (DFS_GetVolInfo (0, sector, pstart, &vi))
+	{
+	  printf ("Error getting volume information\n");
+	  while (1)
+	    vTaskDelay (100 / portTICK_RATE_MS);
+	}
+      printf ("Volume label '%-11.11s'\n", vi.label);
+      printf
+	("%d sector/s per cluster, %d reserved sector/s, volume total %d sectors.\n",
+	 (int) vi.secperclus, (int) vi.reservedsecs, (int) vi.numsecs);
+      printf
+	("%d sectors per FAT, first FAT at sector #%d, root dir at #%d.\n",
+	 (int) vi.secperfat, (int) vi.fat1, (int) vi.rootdir);
+      printf
+	("(For FAT32, the root dir is a CLUSTER number, FAT12/16 it is a SECTOR number)\n");
+      printf ("%d root dir entries, data area commences at sector #%d.\n",
+	      (int) vi.rootentries, (int) vi.dataarea);
+      printf ("%d clusters (%d bytes) in data area, filesystem IDd as ",
+	      (int) vi.numclusters,
+	      (int) vi.numclusters * vi.secperclus * SECTOR_SIZE);
+
+      if (vi.filesystem == FAT12)
+	printf ("FAT12.\n");
+      else if (vi.filesystem == FAT16)
+	printf ("FAT16.\n");
+      else if (vi.filesystem == FAT32)
+	printf ("FAT32.\n");
+      else
+	printf ("[unknown]\n");
+
+      di.scratch = sector1;
+      if (DFS_OpenDir (&vi, (uint8_t *) "", &di))
+	{
+	  printf ("Error opening root directory\n");
+	  while (1)
+	    vTaskDelay (100 / portTICK_RATE_MS);
+	}
+
+      while (!DFS_GetNext (&vi, &di, &de))
+	{
+	  if (de.name[0])
+	  {
+	    printf ("file: '%-11.11s'\n", de.name);
+	    printf ("read test:\n");
+	    if (DFS_OpenFile (&vi, de.name, DFS_READ, sector, &fi))
+		printf ("error opening file\n");
+	    else
+	    {
+		t = fi.filelen;
+		if(t>SECTOR_SIZE)
+		    t=SECTOR_SIZE;
+		DFS_ReadFile (&fi, sector, buffer, &i, t);
+		hex_dump(buffer,0,i);
+	    }
+	  }
+	}
+	
+
+      printf("DONE\n");
+      while (1)
+	vTaskDelay (100 / portTICK_RATE_MS);
     }
 }
 
@@ -288,7 +386,7 @@ main (void)
   //eink_interface_init();
   //ad7147_init();
   //accelerometer_init();
-  sdcard_init ();
+  DFS_Init ();
   //pn532_init();
   //picc_emu_init();
   //ebook_init();

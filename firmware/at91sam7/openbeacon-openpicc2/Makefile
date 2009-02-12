@@ -11,6 +11,7 @@ IMAGES=splash directory arrows
 
 APP_SRC= \
   application/main.c \
+  application/dosfs.c \
   application/proto.c \
   application/xxtea.c \
   application/sdram.c \
