@@ -157,7 +157,7 @@ unsigned char nRFCMD_GetRegSize(unsigned char reg)
     return res;
 }
 
-portBASE_TYPE __attribute__((section (".ramfunc"))) nRFCMD_ProcessNextMacro(void)
+static portBASE_TYPE nRFCMD_ProcessNextMacro(void)
 {
     u_int8_t size;
 
@@ -176,7 +176,7 @@ portBASE_TYPE __attribute__((section (".ramfunc"))) nRFCMD_ProcessNextMacro(void
     return pdFALSE;
 }
 
-void __attribute__((section (".ramfunc"))) nRFCMD_ISR_DMA_Handler(void)
+void nRFCMD_ISR_DMA_Handler(void)
 {
     portBASE_TYPE xTaskWokenDMA = pdFALSE;    
     
@@ -189,7 +189,7 @@ void __attribute__((section (".ramfunc"))) nRFCMD_ISR_DMA_Handler(void)
 	portYIELD_FROM_ISR();	
 }
 
-void __attribute__((naked, section (".ramfunc"))) nRFCMD_ISR_DMA(void)
+void __attribute__((naked)) nRFCMD_ISR_DMA(void)
 {
     portSAVE_CONTEXT();
     nRFCMD_ISR_DMA_Handler();        
@@ -204,7 +204,7 @@ void nRFCMD_ExecMacro(const unsigned char *macro, unsigned char *rx_data)
     xSemaphoreTake(xnRF_SemaphoreDMA,portMAX_DELAY);
 }
 
-void __attribute__((section (".ramfunc"))) nRFCMD_ISR_ACK_Handler(void)
+void nRFCMD_ISR_ACK_Handler(void)
 {
     portBASE_TYPE xTaskWokenACK = pdFALSE;
 
@@ -217,7 +217,7 @@ void __attribute__((section (".ramfunc"))) nRFCMD_ISR_ACK_Handler(void)
 	portYIELD_FROM_ISR();
 }
 
-void __attribute__((naked, section (".ramfunc"))) nRFCMD_ISR_ACK(void)
+void __attribute__((naked)) nRFCMD_ISR_ACK(void)
 {
     portSAVE_CONTEXT();
     nRFCMD_ISR_ACK_Handler();        
