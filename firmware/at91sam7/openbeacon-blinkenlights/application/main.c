@@ -93,8 +93,7 @@ vApplicationIdleHook (void)
 }
 
 /**********************************************************************/
-int
-main (void)
+void __attribute__((noreturn)) mainloop (void)
 {
   prvSetupHardware ();
 
@@ -108,6 +107,6 @@ main (void)
   vLedSetGreen (1);
   vTaskStartScheduler ();
 
-  return 0;
+  while(1); 
 }
 

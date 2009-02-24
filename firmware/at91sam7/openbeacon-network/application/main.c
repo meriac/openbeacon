@@ -72,8 +72,7 @@ vApplicationIdleHook (void)
 }
 
 /**********************************************************************/
-int
-main (void)
+void __attribute__((noreturn)) mainloop (void)
 {
   prvSetupHardware ();
   vLedInit ();
@@ -98,5 +97,5 @@ main (void)
   vUSBShellInit ();
   vTaskStartScheduler ();
 
-  return 0;
+  while(1);
 }

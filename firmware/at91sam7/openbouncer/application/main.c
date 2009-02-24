@@ -75,25 +75,24 @@ vApplicationIdleHook (void)
 }
 
 /**********************************************************************/
-int
-main (void)
+void __attribute__((noreturn)) mainloop (void)
 {
   prvSetupHardware ();
 
   vLedInit ();
 
   xTaskCreate (vUSBCDCTask, (signed portCHAR *) "USB", TASK_USB_STACK,
-	       NULL, TASK_USB_PRIORITY, NULL);
+    NULL, TASK_USB_PRIORITY, NULL);
 
   vCmdInit ();
 
   vLockInit ();
-  
+ 
   init_authentication();
 
   vLedSetGreen (0);
 
   vTaskStartScheduler ();
 
-  return 0;
+  while(1);
 }
