@@ -39,11 +39,7 @@
     .equ  I_BIT, 0x80               /* when I bit is set, IRQ is disabled */
     .equ  F_BIT, 0x40               /* when F bit is set, FIQ is disabled */
 
-
-start:
-_start:
-_mainCRTStartup:
-
+_reset:
 	/* Setup a stack for each mode - note that this only sets up a usable stack
 	for system/user, SWI and IRQ modes.   Also each mode is setup with
 	interrupts initially disabled. */
@@ -133,29 +129,28 @@ endless_loop:
 	.word	__stack_end__
 
 
-	/* Setup vector table.  Note that undf, pabt, dabt, fiq just execute
-	a null loop. */
+	/* Setup vector table.  Note that undf, pabt, dabt, fiq just execute a null loop. */
 
 .section .startup,"ax"
          .code 32
          .align 0
-
-	b     _start						/* reset - _start			*/
+start:
+	b     _reset						/* reset - _start		*/
 	ldr   pc, _undf						/* undefined - _undf		*/
-	ldr   pc, _swi						/* SWI - _swi				*/
+	ldr   pc, _swi						/* SWI - _swi			*/
 	ldr   pc, _pabt						/* program abort - _pabt	*/
 	ldr   pc, _dabt						/* data abort - _dabt		*/
-	nop									/* reserved					*/
-	ldr   pc, [pc,#-0xF20]				/* IRQ - read the AIC		*/
-	ldr   pc, _fiq						/* FIQ - _fiq				*/
+	nop							/* reserved			*/
+	ldr   pc, [pc,#-0xF20]				/* IRQ - read the AIC			*/
+	ldr   pc, _fiq						/* FIQ - _fiq			*/
 
 _undf:  .word __undf                    /* undefined				*/
-_swi:   .word swi_handler				/* SWI						*/
+_swi:   .word swi_handler				/* SWI			*/
 _pabt:  .word __pabt                    /* program abort			*/
 _dabt:  .word __dabt                    /* data abort				*/
-_fiq:   .word __fiq                     /* FIQ						*/
+_fiq:   .word __fiq                     /* FIQ					*/
 
 __undf: b     .                         /* undefined				*/
 __pabt: b     .                         /* program abort			*/
 __dabt: b     .                         /* data abort				*/
-__fiq:  b     .                         /* FIQ						*/
+__fiq:  b     .                         /* FIQ					*/
