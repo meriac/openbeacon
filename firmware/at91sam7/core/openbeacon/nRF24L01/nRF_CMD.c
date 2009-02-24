@@ -34,6 +34,8 @@
 #include <board.h>
 #include <beacontypes.h>
 
+#ifdef  CE_PIN
+
 #define NRF_SPI_PINS (CSN_PIN|MOSI_PIN|SCK_PIN|MISO_PIN)
 
 #ifdef  __AT91SAM7X256__
@@ -273,3 +275,5 @@ unsigned char nRFCMD_Init(void)
     
     return 0;
 }
+
+#endif /* CE_PIN */
