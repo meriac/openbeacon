@@ -43,7 +43,7 @@ TBeaconEnvelope g_Beacon;
                         g_Beacon.datab[b]=tmp;
 
 /**********************************************************************/
-void RAMFUNC
+void
 shuffle_tx_byteorder (void)
 {
   unsigned char tmp;
@@ -141,8 +141,6 @@ vnRFtaskRx (void *parameter)
 
   if (!PtInitNRF ())
     return;
-
-  DumpStringToUSB ("INFO: 'RX: oid,seq,strength,flags'");
 
   for (;;)
     {
