@@ -1,6 +1,6 @@
 	/* Sample initialization file */
 
-	.extern main
+	.extern mainloop
 	.extern exit
 	.extern AT91F_LowLevelInit
 
@@ -106,7 +106,7 @@ _reset:
 	mov		r0, #0          /* no arguments  */
 	mov		r1, #0          /* no argv either */
 
-    ldr lr, =main	
+	ldr lr, =mainloop
 	bx	lr
 
 endless_loop:
