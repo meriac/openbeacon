@@ -33,12 +33,14 @@
 
 #include "console.h"
 
+#define XON 0x11
+#define XOFF 0x13
 #define MAX_CMDLINE_LENGTH 80
-#define MAX_IHEX_ROW_WIDTH 0x30
 #define MAX_ANSISEQUENCE_LENGTH 10
 
 static u_int8_t vConsoleCmd[MAX_CMDLINE_LENGTH + 1],
   vConsoleANSI[MAX_ANSISEQUENCE_LENGTH + 1];
+static u_int8_t ihex[0x30];
 
 int
 puts (const char *message)
@@ -81,10 +83,11 @@ msg (const char *msg)
 }
 
 static inline void
-vConsoleProcessIHEXbin (u_int8_t * ihex, int size)
+vConsoleProcessIHEXbin (int size)
 {
   int i;
   u_int8_t crc;
+  u_int32_t adr = 0, eip = -1, t;
 
   if (size < 5)
     msg ("too short iHEX line");
@@ -102,7 +105,51 @@ vConsoleProcessIHEXbin (u_int8_t * ihex, int size)
 	    msg ("invalid iHEX checksum");
 	  else
 	    {
-		msg("validated!");
+	      switch (ihex[3])
+		{
+		case 0x00:	// Data Record
+		  t = adr | (((u_int16_t) ihex[1]) << 8) | ihex[2];
+		  if((t>=(u_int32_t)AT91C_IFLASH) && (t<(u_int32_t)AT91C_ISRAM))
+		    msg("writing to flash not supported yet");
+		  else
+		    memcpy((void*)t,(void*)&ihex[4],ihex[0]);
+		
+		  // bandwidth limitation
+		  vUSBSendByte(XOFF);
+		  vTaskDelay (2);
+		  vUSBSendByte(XON);
+		  break;
+
+		case 0x01:	// End of File Record
+		  if(eip!=(u_int32_t)-1)
+		  {
+		    msg("jumping into code not supported yet");
+		    eip=-1;
+		    adr=0;
+		  }
+		  break;
+
+		case 0x04:	// Extended Linear Address Record
+		  if (ihex[0] != 2 || ihex[1] || ihex[2])
+		    msg ("invalid parameters for Extended Linear Address Record");
+		  else
+		    adr = (((u_int32_t) ihex[4]) << 24)
+			| (((u_int32_t) ihex[5]) << 16);
+		  break;
+
+		case 0x05:	// Start Linear Address Record
+		  if (ihex[0] != 4 || ihex[1] || ihex[2])
+		    msg ("invalid parameters for Start Linear Address Record");
+		  else
+		    eip = (((u_int32_t) ihex[4]) << 24)
+			| (((u_int32_t) ihex[5]) << 16)
+			| (((u_int16_t) ihex[6]) << 8)
+			| ihex[7];
+		  break;
+
+		default:
+		  msg ("unkown iHEX command type ");
+		}
 	    }
 	}
     }
@@ -111,8 +158,8 @@ vConsoleProcessIHEXbin (u_int8_t * ihex, int size)
 static inline void
 vConsoleProcessIHEX (void)
 {
-  int pos;
-  u_int8_t data, c, *p, *d, ihex[MAX_IHEX_ROW_WIDTH];
+  u_int32_t pos;
+  u_int8_t data, c, *p, *d;
 
   pos = data = 0;
   p = &vConsoleCmd[1];
@@ -134,14 +181,14 @@ vConsoleProcessIHEX (void)
 	data = c;
 
       pos++;
-      if (pos >= (MAX_IHEX_ROW_WIDTH * 2))
+      if (pos >= (sizeof (ihex) * 2))
 	break;
     }
 
   if (c)
     msg ("invalid character in iHEX line");
   else
-    vConsoleProcessIHEXbin (ihex, pos / 2);
+    vConsoleProcessIHEXbin (pos / 2);
 
 }
 
@@ -220,6 +267,8 @@ vConsoleTask (void *parameter)
 	      else if (data < ' ')
 		switch (data)
 		  {
+		  case '\n':
+		    break;
 		  case '\r':
 		    if (pos)
 		      {
@@ -227,7 +276,7 @@ vConsoleTask (void *parameter)
 			vConsoleProcessLine ();
 			pos = 0;
 		      }
-		    puts ("\n\r#~> ");
+		    puts ("\n\r# ");
 		    break;
 		  default:
 		    puts (" =");
