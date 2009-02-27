@@ -34,9 +34,10 @@
 #include "console.h"
 
 #define MAX_CMDLINE_LENGTH 80
+#define MAX_IHEX_ROW_WIDTH 0x30
 #define MAX_ANSISEQUENCE_LENGTH 10
 
-static char vConsoleCmd[MAX_CMDLINE_LENGTH + 1],
+static u_int8_t vConsoleCmd[MAX_CMDLINE_LENGTH + 1],
   vConsoleANSI[MAX_ANSISEQUENCE_LENGTH + 1];
 
 int
@@ -73,10 +74,75 @@ puti (unsigned int data)
 }
 
 static void
-msg (const char* msg)
+msg (const char *msg)
 {
-    puts("\n\rbootloader: ");
-    puts(msg);
+  puts ("\n\rbootloader: ");
+  puts (msg);
+}
+
+static inline void
+vConsoleProcessIHEXbin (u_int8_t * ihex, int size)
+{
+  int i;
+  u_int8_t crc;
+
+  if (size < 5)
+    msg ("too short iHEX line");
+  else
+    {
+      if (ihex[0] != (size - 5))
+	msg ("invalid iHEX line length");
+      else
+	{
+	  crc = 0;
+	  for (i = 0; i < size; i++)
+	    crc += ihex[i];
+
+	  if (crc)
+	    msg ("invalid iHEX checksum");
+	  else
+	    {
+		msg("validated!");
+	    }
+	}
+    }
+}
+
+static inline void
+vConsoleProcessIHEX (void)
+{
+  int pos;
+  u_int8_t data, c, *p, *d, ihex[MAX_IHEX_ROW_WIDTH];
+
+  pos = data = 0;
+  p = &vConsoleCmd[1];
+  d = ihex;
+  while ((c = *p++) != 0)
+    {
+      if (c >= '0' && c <= '9')
+	c -= '0';
+      else if (c >= 'A' && c <= 'F')
+	c -= 'A' - 0xA;
+      else if (c >= 'a' && c <= 'f')
+	c -= 'a' - 0xA;
+      else
+	break;
+
+      if (pos & 1)
+	*d++ = (data << 4) | c;
+      else
+	data = c;
+
+      pos++;
+      if (pos >= (MAX_IHEX_ROW_WIDTH * 2))
+	break;
+    }
+
+  if (c)
+    msg ("invalid character in iHEX line");
+  else
+    vConsoleProcessIHEXbin (ihex, pos / 2);
+
 }
 
 static inline void
@@ -85,28 +151,28 @@ vConsoleProcessLine (void)
   int i;
   char c;
 
-  const char *p,ani[]="|/-\\";
+  const char *p, ani[] = "|/-\\";
 
   switch (vConsoleCmd[0])
     {
     case 'A':
-      for(i=0; i<20; i++)
-      {
-        p=ani;
-        while((c=*p++)!=0)
-        {
-	  vUSBSendByte(c);
-	  vTaskDelay(portTICK_RATE_MS * 100);
-	  puts("\033[D");
-        }
-      }
-      puts(" \033[D");
+      for (i = 0; i < 20; i++)
+	{
+	  p = ani;
+	  while ((c = *p++) != 0)
+	    {
+	      vUSBSendByte (c);
+	      vTaskDelay (portTICK_RATE_MS * 100);
+	      puts ("\033[D");
+	    }
+	}
+      puts (" \033[D");
       break;
     case ':':
-      puts ("iHEX");
+      vConsoleProcessIHEX ();
       break;
     default:
-      msg("command not found");
+      msg ("command not found");
     }
 }
 
@@ -127,10 +193,10 @@ vConsoleTask (void *parameter)
 	    {
 	      ansipos = 0;
 	      if (pos)
-	      {
-		pos--;
-		puts("\033[D \033[D");
-	      }
+		{
+		  pos--;
+		  puts ("\033[D \033[D");
+		}
 	    }
 	  else if (ansipos)
 	    {
@@ -155,12 +221,12 @@ vConsoleTask (void *parameter)
 		switch (data)
 		  {
 		  case '\r':
-		    if(pos)
-		    {
+		    if (pos)
+		      {
 			vConsoleCmd[pos] = 0;
 			vConsoleProcessLine ();
 			pos = 0;
-		    }
+		      }
 		    puts ("\n\r#~> ");
 		    break;
 		  default:
