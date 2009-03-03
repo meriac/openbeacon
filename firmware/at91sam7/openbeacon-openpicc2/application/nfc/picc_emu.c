@@ -22,7 +22,7 @@
 #include "pn532.h"
 #include "picc_emu.h"
 
-#define DBG 0
+#define DBG 1
 #define DIE(args...) { if(DBG) printf(args); led_halt_blinking(7); }
 
 static const char target_init_cmd[] = {0xd4, 0x8c,
@@ -87,7 +87,13 @@ init_target_again:
 	if(DBG) printf("INF: Boot ok\n");
 
 	if(pn532_recv_frame_queue(&msg, queue, portMAX_DELAY) == 0) {
-		if(DBG) {int i; for(i=0; i<msg->payload_len; i++) printf("%02X ", msg->message.data[i]); printf("\n");}
+		if(DBG) {
+			printf("INF: SPI-Link (3): ");
+			int i;
+			for(i=0; i<msg->payload_len; i++)
+				printf("%02X ", msg->message.data[i]);
+			printf("\n");
+		}
 		if(DBG) printf("INF: Connection open\n");
 		pn532_put_message_buffer(&msg);
 	}
@@ -112,7 +118,13 @@ static int picc_get_data(unsigned char *data, unsigned int *length, portTickType
 	pn532_put_message_buffer(&msg);
 
 	if(pn532_recv_frame_queue(&msg, queue, wait_ticks) == 0) {
-		if(DBG) {int i; for(i=0; i<msg->payload_len; i++) printf("%02X ", msg->message.data[i]); printf("\n");}
+		if(DBG) {
+			printf("INF: SPI-Link: ");
+			int i;
+			for(i=0; i<msg->payload_len; i++)
+				printf("%02X ", msg->message.data[i]);
+			printf("\n");
+		}
 
 		if(msg->message.data[1] != 0x87) {
 			DIE("ERR: Strange response to GetData\n");
@@ -163,7 +175,13 @@ static int picc_put_data(const unsigned char * const data, unsigned int len, por
 			if(DBG) printf("INF: Response send ok\n");
 			result = msg->message.data[2];
 		} else {
-			if(DBG) {int i; for(i=0; i<msg->payload_len; i++) printf("%02X ", msg->message.data[i]); printf("\n");}
+			if(DBG) {
+				printf("INF: SPI-Link (4): ");
+				int i;
+				for(i=0; i<msg->payload_len; i++)
+					printf("%02X ", msg->message.data[i]);
+				printf("\n");
+			}
 			if(DBG) printf("ERR: Strange response to SetData\n");
 			result = -EIO;
 		}
@@ -189,7 +207,13 @@ static int __attribute__((unused)) picc_get_status(portTickType wait_ticks)
 	pn532_put_message_buffer(&msg);
 
 	if(pn532_recv_frame_queue(&msg, queue, wait_ticks) == 0) {
-		if(DBG) {int i; for(i=0; i<msg->payload_len; i++) printf("%02X ", msg->message.data[i]); printf("\n");}
+		if(DBG) {
+			printf("INF: SPI-Link (2): ");
+			int i;
+			for(i=0; i<msg->payload_len; i++)
+				printf("%02X ", msg->message.data[i]);
+			printf("\n");
+		}
 
 		if(msg->message.data[1] != 0x8B) {
 			DIE("ERR: Strange response to GetTargetStatus\n");
