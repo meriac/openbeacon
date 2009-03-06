@@ -32,6 +32,7 @@
 #include <led.h>
 
 #include "console.h"
+#include "update.h"
 
 #define XON 0x11
 #define XOFF 0x13
@@ -185,9 +186,9 @@ vConsoleProcessIHEX (void)
 	break;
     }
 
-  if (c)
+/*  if (c)
     msg ("invalid character in iHEX line");
-  else
+  else*/
     vConsoleProcessIHEXbin (pos / 2);
 
 }
@@ -202,6 +203,9 @@ vConsoleProcessLine (void)
 
   switch (vConsoleCmd[0])
     {
+    case 'R':
+	DeviceRevertToUpdateMode();
+	break;
     case 'A':
       for (i = 0; i < 20; i++)
 	{
@@ -270,13 +274,13 @@ vConsoleTask (void *parameter)
 		  case '\n':
 		    break;
 		  case '\r':
+		    puts ("\n\r# ");
 		    if (pos)
 		      {
 			vConsoleCmd[pos] = 0;
 			vConsoleProcessLine ();
 			pos = 0;
 		      }
-		    puts ("\n\r# ");
 		    break;
 		  default:
 		    puts (" =");
