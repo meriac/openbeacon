@@ -107,7 +107,7 @@ env_crc16 (const unsigned char *buffer, int size)
   return crc;
 }
 
-#ifdef  __AT91SAM7X__
+#if defined(__AT91SAM7X__) || defined(__AT91SAM7SE__)
 void RAMFUNC
 env_reboot_to_update (void)
 {
@@ -126,7 +126,7 @@ env_reboot_to_update (void)
   // endless loop to trigger watchdog reset
   while(1){};
 }
-#endif/*__AT91SAM7X__*/
+#endif/*__AT91SAM7X__ || __AT91SAM7SE__*/
 
 void
 env_store (void)

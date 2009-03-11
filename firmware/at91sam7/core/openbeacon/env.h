@@ -36,8 +36,8 @@ extern void env_init (void);
 extern unsigned short env_crc16 (const unsigned char *buffer, int size);
 extern void env_flash_to (const void *addr) RAMFUNC;
 
-#ifdef  __AT91SAM7X__
+#if defined(__AT91SAM7X__) || defined(__AT91SAM7SE__)
 extern void env_reboot_to_update (void) RAMFUNC;
-#endif/*__AT91SAM7X__*/
+#endif/*__AT91SAM7X__ || __AT91SAM7SE__*/
 
 #endif/*__ENV_H__*/
