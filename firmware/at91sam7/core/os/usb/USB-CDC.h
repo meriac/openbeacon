@@ -84,5 +84,6 @@ sent unless the port is connected. */
 void vUSBSendByte (portCHAR cByte);
 portLONG vUSBRecvByte (portCHAR *cByte,portLONG size, portTickType xTicksToWait);
 int iUSBGetChosenConfiguration (void);
+void vDetachUSBInterface (void);
 
 #endif

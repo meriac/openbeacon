@@ -66,7 +66,7 @@
 static void prvResetEndPoints (void);
 
 /* Clear pull up resistor to detach device from host */
-static void vDetachUSBInterface (void);
+void vDetachUSBInterface (void);
 
 /* Set up interface and initialize variables */
 static void vInitUSBInterface (void);
@@ -775,7 +775,7 @@ static void vEnableUSBClock(void)
 	  AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_UDP);
 }
 
-static void
+void
 vDetachUSBInterface (void)
 {
 #if defined(USB_PULLUP_EXTERNAL)
