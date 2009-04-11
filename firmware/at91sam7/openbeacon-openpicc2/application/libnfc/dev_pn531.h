@@ -24,12 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "defines.h"
 #include "types.h"
 
-// Functions used by developer to handle connection to this device
-dev_info* dev_pn531_connect(const ui32 uiIndex);
-void dev_pn531_disconnect(dev_info* pdi);
-
-// Callback function used by libnfc to transmit commands to the PN53X chip
-bool dev_pn531_transceive(const dev_spec ds, const byte* pbtTx, const ui32 uiTxLen, byte* pbtRx, ui32* puiRxLen);
+extern const struct libnfc_driver_info PN531_DRIVER_INFO;
 
 #endif // _LIBNFC_DEV_PN531_H_
 

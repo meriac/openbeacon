@@ -29,28 +29,34 @@ typedef enum {
 } bool;
 
 typedef enum {
-  DT_ACR122                   = 0x01,
-  DT_PN531_USB                = 0x02,
-} device_type;
-
-typedef enum {
   CT_PN531                    = 0x00,
   CT_PN532                    = 0x10,
   CT_PN533                    = 0x20,
 } chip_type;
 
-typedef bool (dev_trans)(const dev_spec ds, const byte* pbtTx, const ui32 uiTxLen, byte* pbtRx, ui32* puiRxLen); 
+struct libnfc_driver_info;
+typedef const struct libnfc_driver_info * libnfc_driver_info_t;
+
 typedef struct {
+  libnfc_driver_info_t driver;
   char acName[255]; // Device name string
-  device_type dt;   // Device type description
   chip_type ct;
   dev_spec ds;      // Pointer to the device connection specification
-  dev_trans* trans; // Transceive function used by active reader to wrap the PN53X commands
   bool bActive;     // This represents if the PN53X device was initialized succesful
   bool bCrc;        // Is the crc automaticly added, checked and removed from the frames
   bool bPar;        // Does the PN53x chip handles parity bits, all parities are handled as data
   ui8 ui8TxBits;    // The last tx bits setting, we need to reset this if it does not apply anymore
-}dev_info;
+} dev_info;
+
+#ifdef LIBNFC_INTERNALS
+struct libnfc_driver_info {
+	dev_info* (*connect)(const libnfc_driver_info_t driver_info, const ui32 uiIndex);
+	bool (*transceive)(const dev_spec ds, const byte* pbtTx, const ui32 uiTxLen, byte* pbtRx, ui32* puiRxLen);
+	void (*disconnect)(dev_info* pdi);
+	const char * const driver_name;
+};
+#endif
+
 
 typedef enum {
   DCO_HANDLE_CRC              = 0x00,

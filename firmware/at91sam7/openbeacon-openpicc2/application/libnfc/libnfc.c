@@ -88,13 +88,20 @@ byte pncmd_exchange_raw_data          [266] = { 0xD4,0x42 };
 static byte abtRx[MAX_FRAME_LEN];
 static ui32 uiRxLen;
 
+#ifndef ENABLED_DRIVERS
+#error No reader drivers enabled, cannot compile libnfc
+static const libnfc_driver_info_t const enabled_drivers[] = {};
+#else
+static const libnfc_driver_info_t const enabled_drivers[] = { ENABLED_DRIVERS };
+#endif
+
 bool pn53x_transceive(const dev_info* pdi, const byte* pbtTx, const ui32 uiTxLen)
 {
   // Reset the receiving buffer
   uiRxLen = MAX_FRAME_LEN;
 
   // Call the tranceive callback function of the current device
-  if (!pdi->trans(pdi->ds,pbtTx,uiTxLen,abtRx,&uiRxLen)) return false;
+  if (!pdi->driver->transceive(pdi->ds,pbtTx,uiTxLen,abtRx,&uiRxLen)) return false;
 
   // Make sure there was no failure reported by the PN53X chip (0x00 == OK)
   if (abtRx[0] != 0) return false;
@@ -109,7 +116,7 @@ byte pn53x_get_reg(const dev_info* pdi, ui16 ui16Reg)
   ui32 uiValueLen = 1;
   pncmd_get_register[2] = ui16Reg >> 8;
   pncmd_get_register[3] = ui16Reg & 0xff;
-  pdi->trans(pdi->ds,pncmd_get_register,4,&ui8Value,&uiValueLen);
+  pdi->driver->transceive(pdi->ds,pncmd_get_register,4,&ui8Value,&uiValueLen);
   return ui8Value;
 }
 
@@ -118,13 +125,13 @@ bool pn53x_set_reg(const dev_info* pdi, ui16 ui16Reg, ui8 ui8SybmolMask, ui8 ui8
   pncmd_set_register[2] = ui16Reg >> 8;
   pncmd_set_register[3] = ui16Reg & 0xff;
   pncmd_set_register[4] = ui8Value | (pn53x_get_reg(pdi,ui16Reg) & (~ui8SybmolMask));
-  return pdi->trans(pdi->ds,pncmd_set_register,5,null,null);
+  return pdi->driver->transceive(pdi->ds,pncmd_set_register,5,null,null);
 }
 
 bool pn53x_set_parameters(const dev_info* pdi, ui8 ui8Value)
 {
   pncmd_set_parameters[2] = ui8Value;
-  return pdi->trans(pdi->ds,pncmd_set_parameters,3,null,null);
+  return pdi->driver->transceive(pdi->ds,pncmd_set_parameters,3,null,null);
 }
 
 bool pn53x_set_tx_bits(const dev_info* pdi, ui8 ui8Bits)
@@ -246,16 +253,18 @@ bool pn53x_unwrap_frame(const byte* pbtFrame, const ui32 uiFrameBits, byte* pbtR
 dev_info* nfc_connect()
 {
   dev_info* pdi;
-  
-  // Search for an available ACR122 device
-  pdi = dev_acr122_connect(0);
-  if (pdi != INVALID_DEVICE_INFO) return pdi;
+  unsigned int i;
 
-  // Search for an available PN531 device
-  pdi = dev_pn531_connect(0);
-  if (pdi != INVALID_DEVICE_INFO) return pdi;
+  // Search for an available reader device
+  for(i=0; i<sizeof(enabled_drivers)/sizeof(enabled_drivers[0]); i++) {
+	  pdi = enabled_drivers[i]->connect(enabled_drivers[i], 0);
+	  if (pdi != INVALID_DEVICE_INFO) {
+		  pdi->driver = enabled_drivers[i];
+		  return pdi;
+	  }
+  }
 
-  // To bad, no reader for this index was found
+  // Too bad, no reader for this index was found
   return INVALID_DEVICE_INFO;
 }
 
@@ -264,12 +273,7 @@ void nfc_disconnect(dev_info* pdi)
   // Make sure we reset the CRC and parity to chip handling.
   nfc_configure(pdi,DCO_HANDLE_CRC,true);
   nfc_configure(pdi,DCO_HANDLE_PARITY,true);
-  
-  switch(pdi->dt)
-  {
-    case DT_ACR122: dev_acr122_disconnect(pdi); break;
-    case DT_PN531_USB: dev_pn531_disconnect(pdi); break;
-  }
+  pdi->driver->disconnect(pdi);
 }
 
 bool nfc_configure(dev_info* pdi, const dev_config_option dco, const bool bEnable)
@@ -308,7 +312,7 @@ bool nfc_configure(dev_info* pdi, const dev_config_option dco, const bool bEnabl
 
     case DCO_ACTIVATE_FIELD:
       pncmd_rf_configure_field[3] = (bEnable) ? 1 : 0;
-      if (!pdi->trans(pdi->ds,pncmd_rf_configure_field,4,null,null)) return false;
+      if (!pdi->driver->transceive(pdi->ds,pncmd_rf_configure_field,4,null,null)) return false;
     break;
 
     case DCO_INFINITE_LIST_PASSIVE:
@@ -316,7 +320,7 @@ bool nfc_configure(dev_info* pdi, const dev_config_option dco, const bool bEnabl
       pncmd_rf_configure_retry_select[3] = (bEnable) ? 0xff : 0x00; // MxRtyATR, default: active = 0xff, passive = 0x02
       pncmd_rf_configure_retry_select[4] = (bEnable) ? 0xff : 0x00; // MxRtyPSL, default: 0x01
       pncmd_rf_configure_retry_select[5] = (bEnable) ? 0xff : 0x00; // MxRtyPassiveActivation, default: 0xff
-      if(!pdi->trans(pdi->ds,pncmd_rf_configure_retry_select,6,null,null)) return false;
+      if(!pdi->driver->transceive(pdi->ds,pncmd_rf_configure_retry_select,6,null,null)) return false;
     break;
 
     case DCO_ACCEPT_INVALID_FRAMES:
@@ -371,7 +375,7 @@ bool nfc_reader_list_passive(const dev_info* pdi, const init_modulation im, cons
 
   // Try to find a tag, call the tranceive callback function of the current device
   uiRxLen = MAX_FRAME_LEN;
-  if (!pdi->trans(pdi->ds,pncmd_reader_list_passive,4+uiInitDataLen,abtRx,&uiRxLen)) return false;
+  if (!pdi->driver->transceive(pdi->ds,pncmd_reader_list_passive,4+uiInitDataLen,abtRx,&uiRxLen)) return false;
 
   // Make sure one tag has been found, the PN53X returns 0x00 if none was available
   if (abtRx[0] != 1) return false;
@@ -473,7 +477,7 @@ bool nfc_reader_transceive_bits(const dev_info* pdi, const byte* pbtTx, const ui
   // Retrieve the leading bits
   ui8Bits = uiFrameBits%8;
   
-  // Get the amount of frame bytes + optional (1 byte if there are leading bits) 
+  // Get the amount of frame bytes + optional (1 byte if there are leading bits)
   uiFrameBytes = (uiFrameBits/8)+((ui8Bits==0)?0:1);
 
   // When the parity is handled before us, we just copy the data
@@ -486,7 +490,7 @@ bool nfc_reader_transceive_bits(const dev_info* pdi, const byte* pbtTx, const ui
   // We have to give the amount of bytes + (the two command bytes 0xD4, 0x42)
   if (!pn53x_transceive(pdi,pncmd_exchange_raw_data,uiFrameBytes+2)) return false;
  
-  // Get the last bit-count that is stored in the received byte 
+  // Get the last bit-count that is stored in the received byte
   ui8Bits = pn53x_get_reg(pdi,REG_CIU_CONTROL) & SYMBOL_RX_LAST_BITS;
 
   // Recover the real frame length in bits
@@ -623,7 +627,7 @@ bool nfc_target_init(const dev_info* pdi, byte* pbtRx, ui32* puiRxBits)
   // Request the initialization as a target, we can not use pn53x_transceive() because
   // abtRx[0] contains the emulation mode (baudrate, 14443-4?, DEP and framing type)
   uiRxLen = MAX_FRAME_LEN;
-  if (!pdi->trans(pdi->ds,pncmd_target_init,39,abtRx,&uiRxLen)) return false;
+  if (!pdi->driver->transceive(pdi->ds,pncmd_target_init,39,abtRx,&uiRxLen)) return false;
 
   // Get the last bit-count that is stored in the received byte 
   ui8Bits = pn53x_get_reg(pdi,REG_CIU_CONTROL) & SYMBOL_RX_LAST_BITS;

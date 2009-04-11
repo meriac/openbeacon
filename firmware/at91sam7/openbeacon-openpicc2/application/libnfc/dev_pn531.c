@@ -75,7 +75,7 @@ void get_end_points(struct usb_device *dev, dev_spec_pn531* pdsp)
   }
 }                                                                                  
 
-dev_info* dev_pn531_connect(const ui32 uiIndex)
+dev_info* dev_pn531_connect(const libnfc_driver_info_t driver_info, const ui32 uiIndex)
 {                                                
   int idvendor = 0x04CC;
   int idproduct = 0x0531;
@@ -143,10 +143,8 @@ dev_info* dev_pn531_connect(const ui32 uiIndex)
         *pdsp = dsp;
         pdi = malloc(sizeof(dev_info));
         sprintf(pdi->acName,"PN531USB");
-        pdi->dt = DT_PN531_USB;
         pdi->ct = CT_PN531;
         pdi->ds = (dev_spec)pdsp;
-        pdi->trans = dev_pn531_transceive;
         pdi->bActive = true;
         pdi->bCrc = true;
         pdi->bPar = true;
@@ -248,3 +246,10 @@ bool dev_pn531_transceive(const dev_spec ds, const byte* pbtTx, const ui32 uiTxL
 
     return true;
 }
+
+const struct libnfc_driver_info PN531_DRIVER_INFO = {
+		.connect = dev_pn531_connect,
+		.transceive = dev_pn531_transceive,
+		.disconnect = dev_pn531_disconnect,
+		.driver_name = "Direct PN531 USB driver",
+};

@@ -57,7 +57,7 @@ static ulong ulRxBufLen;
 static byte abtGetFw[5] = { 0xFF,0x00,0x48,0x00,0x00 };
 static byte abtLed[9] = { 0xFF,0x00,0x40,0x05,0x04,0x00,0x00,0x00,0x00 };
 
-dev_info* dev_acr122_connect(const ui32 uiIndex)
+dev_info* dev_acr122_connect(const libnfc_driver_info_t driver_info, const ui32 uiIndex)
 {
   char* pacReaders[MAX_READERS];
   char acList[256+64*MAX_READERS];
@@ -149,10 +149,8 @@ dev_info* dev_acr122_connect(const ui32 uiIndex)
       // Done, we found the reader we are looking for
       pdi = malloc(sizeof(dev_info));
       strcpy(pdi->acName,pcFirmware);
-      pdi->dt = DT_ACR122;
       pdi->ct = CT_PN532;
       pdi->ds = (dev_spec)pdsa;
-      pdi->trans = dev_acr122_transceive;
       pdi->bActive = true;
       pdi->bCrc = true;
       pdi->bPar = true;
@@ -268,4 +266,11 @@ bool dev_acr122_led_red(const dev_spec ds, bool bOn)
     return (SCardTransmit(pdsa->hCard,&(pdsa->ioCard),abtLed,sizeof(abtLed),null,(byte*)abtBuf,(void*)&ulBufLen) == SCARD_S_SUCCESS);
   }
 }
+
+const struct libnfc_driver_info ACR122_DRIVER_INFO = {
+		.connect = dev_acr122_connect,
+		.transceive = dev_acr122_transceive,
+		.disconnect = dev_acr122_disconnect,
+		.driver_name = "ACR122 driver",
+};
 
