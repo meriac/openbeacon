@@ -1,0 +1,16 @@
+Release Notes for ACR122U CCID Driver
+=====================================
+
+-----------------------------------------
+Version: 1.1.6.0 (RW)	Date: 11-Feb-2008
+-----------------------------------------
+
+- ACR122U CCID driver package for 2000, XP, 2003 and Vista (x86 & x64).
+- Based on the AC38U CCID driver v1.1.6.0.
+- ACS SPC Signed for Vista x86 & x64.
+
+-----------------------------------------
+Update: 1.1.6.0 (RW)	Date: 13-Feb-2008
+-----------------------------------------
+
+- Change in inf-file for windows 2000 install
