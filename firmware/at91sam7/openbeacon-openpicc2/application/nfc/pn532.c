@@ -532,7 +532,7 @@ int pn532_recv_frame_queue(struct pn532_message_buffer **msg, struct pn532_wait_
  * this function with a pointer to the message buffer, to message.data and the length and it will
  * construct a proper frame in message.data.
  */
-int pn532_prepare_frame(struct pn532_message_buffer *msg, const char *payload, unsigned int plen)
+int pn532_prepare_frame(struct pn532_message_buffer *msg, const unsigned char *payload, unsigned int plen)
 {
 	if(plen > PN532_MAX_PAYLOAD_LEN) return -EMSGSIZE;
 	int extended_frame = !!(plen > 255);
@@ -579,7 +579,7 @@ int pn532_unparse_frame(struct pn532_message_buffer *msg)
 {
 	if(msg == NULL) return -EINVAL;
 	if(msg->type == MESSAGE_TYPE_EXTENDED || msg->type == MESSAGE_TYPE_NORMAL || msg->type == MESSAGE_TYPE_ERROR) {
-		return pn532_prepare_frame(msg, (char*)&(msg->message.data), msg->payload_len);
+		return pn532_prepare_frame(msg, msg->message.data, msg->payload_len);
 	} else if(msg->type == MESSAGE_TYPE_ACK) {
 		memcpy(msg->message.data, ACK_FRAME, sizeof(ACK_FRAME));
 		msg->received_len = sizeof(ACK_FRAME);
@@ -734,7 +734,7 @@ out:
 
 int pn532_read_register(u_int16_t addr)
 {
-	const char cmd[] = {0xD4, 0x06, (addr>>8)&0xff, addr & 0xff};
+	const unsigned char cmd[] = {0xD4, 0x06, (addr>>8)&0xff, addr & 0xff};
 	struct pn532_message_buffer *msg;
 	int r = pn532_get_message_buffer(&msg);
 	if(r != 0) return r;
@@ -746,7 +746,7 @@ int pn532_read_register(u_int16_t addr)
 
 int pn532_write_register(u_int16_t addr, u_int8_t val)
 {
-	const char cmd[] = {0xD4, 0x08, (addr>>8)&0xff, addr & 0xff, val};
+	const unsigned char cmd[] = {0xD4, 0x08, (addr>>8)&0xff, addr & 0xff, val};
 	const unsigned char match[] = {0xD5, 0x09};
 
 	struct pn532_message_buffer *msg;

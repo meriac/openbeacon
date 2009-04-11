@@ -25,7 +25,7 @@
 #define DBG 1
 #define DIE(args...) { if(DBG) printf(args); led_halt_blinking(7); }
 
-static const char target_init_cmd[] = {0xd4, 0x8c,
+static const unsigned char target_init_cmd[] = {0xd4, 0x8c,
 		0x04, /* PICC only */
 		0x08, 0x00, /* ATQA */
 		0x12, 0x34, 0x56, /* UID */
@@ -42,11 +42,11 @@ static const char target_init_cmd[] = {0xd4, 0x8c,
 		0x02, 0x12, 0x34 /* 2 historical bytes of ATS: 12 34 */
 }; // TgInitAsTarget
 
-static const char get_data_cmd[] = {0xd4, 0x86};
+static const unsigned char get_data_cmd[] = {0xd4, 0x86};
 
-static const char set_data_cmd[] = {0xd4, 0x8e};
+static const unsigned char set_data_cmd[] = {0xd4, 0x8e};
 
-static const char get_status_cmd[] = {0xd4, 0x8a};
+static const unsigned char get_status_cmd[] = {0xd4, 0x8a};
 
 static const unsigned char fixed_resp[] = {0x90, 0x00};
 
@@ -160,7 +160,7 @@ static int picc_put_data(const unsigned char * const data, unsigned int len, por
 	memcpy(msg->message.data + msg->payload_len, data, len);
 	msg->payload_len += len;
 
-	pn532_prepare_frame(msg, (char*)(msg->message.data), msg->payload_len);
+	pn532_prepare_frame(msg, msg->message.data, msg->payload_len);
 
 	if(pn532_send_frame(msg)!=0) {
 		DIE("ERR: Couldn't SetData\n");

@@ -33,8 +33,8 @@ void pn532_demo_task(void *parameter)
 	}
 
 	{
-#if 1
-		const char cmd[] = {0xd4, 0x8c,
+#if 0
+		const unsigned char cmd[] = {0xd4, 0x8c,
 				0x04,
 				0x08, 0x00,
 				0x12, 0x34, 0x56,
@@ -50,7 +50,7 @@ void pn532_demo_task(void *parameter)
 				0x00,
 				0x02, 0x12, 0x34}; // TgInitAsTarget
 #elif 0
-		const char cmd[] = {0xd4, 0x8c,
+		const unsigned char cmd[] = {0xd4, 0x8c,
 				0x00,
 				0x80, 0x00,
 				0x12, 0x34, 0x56,
@@ -65,16 +65,16 @@ void pn532_demo_task(void *parameter)
 				0x33, 0x22, 0x11,
 				0x00,
 				0x00}; // TgInitAsTarget
+#elif 1
+		const unsigned char cmd[] = { 0xd4, 0x4a, 0x02, 0x00}; // InListPassiveTarget
 #elif 0
-		const char cmd[] = { 0xd4, 0x4a, 0x02, 0x00}; // InListPassiveTarget
+		const unsigned char cmd[] = { 0xd4, 0x60, 0xff, 0x01, 0x10}; // InAutoPoll
 #elif 0
-		const char cmd[] = { 0xd4, 0x60, 0xff, 0x01, 0x10}; // InAutoPoll
+		const unsigned char cmd[] = {0xd4, 0x14, 0x02, 0x00 }; // SAMconfiguration: virtual card
 #elif 0
-		const char cmd[] = {0xd4, 0x14, 0x02, 0x00 }; // SAMconfiguration: virtual card
-#elif 0
-		const char cmd[] = {0xd4, 0x04}; // GetGeneralStatus
+		const unsigned char cmd[] = {0xd4, 0x04}; // GetGeneralStatus
 #else
-		const char cmd[] = {0xD4, 0x02}; // GetFirmwareVersion
+		const unsigned char cmd[] = {0xD4, 0x02}; // GetFirmwareVersion
 #endif
 		pn532_prepare_frame(msg, cmd, sizeof(cmd));
 	}
@@ -91,7 +91,7 @@ void pn532_demo_task(void *parameter)
 	vTaskDelay(1000/portTICK_RATE_MS);
 
 	{
-		const char cmd[] = {0xd4, 0x86};
+		const unsigned char cmd[] = {0xd4, 0x86};
 		if( pn532_get_message_buffer(&msg) == 0) {
 			pn532_prepare_frame(msg, cmd, sizeof(cmd));
 			if(pn532_send_frame(msg)==0) printf("Command sent and ack'ed\n");

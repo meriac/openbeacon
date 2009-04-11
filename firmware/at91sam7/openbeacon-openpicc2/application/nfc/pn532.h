@@ -69,7 +69,7 @@ extern int pn532_put_message_buffer(struct pn532_message_buffer **msg);
 /* Utilities to handle message buffer contents */
 extern int pn532_parse_frame(struct pn532_message_buffer *msg); /* (partially) parse from PN532 to host */
 extern int pn532_unparse_frame(struct pn532_message_buffer *msg); /* Construct from host to PN532 (input data expected in msg->message.data) */
-extern int pn532_prepare_frame(struct pn532_message_buffer *msg, const char *payload, unsigned int plen); /* Similar to pn532_unparse_frame, but doesn't need payload to be already stored in the buffer (e.g. from ROM) */
+extern int pn532_prepare_frame(struct pn532_message_buffer *msg, const unsigned char *payload, unsigned int plen); /* Similar to pn532_unparse_frame, but doesn't need payload to be already stored in the buffer (e.g. from ROM) */
 
 extern int pn532_send_frame(struct pn532_message_buffer *msg); /* Blockingly send a fully constructed message */
 extern int pn532_recv_frame(struct pn532_message_buffer **msg, unsigned int wait_mask); /* Blockingly receive a message, caller is responsible for freeing the message buffer structure */
