@@ -22,6 +22,7 @@ Thanks to d18c7db and Okko for example code
 
 #include "defines.h"
 
+#define _GNU_SOURCE 1
 #include <usb.h>
 #include <stdio.h>
 #include <string.h>
