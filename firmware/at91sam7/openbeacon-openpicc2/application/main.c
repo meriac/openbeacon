@@ -49,6 +49,7 @@
 #include "nfc/pn532.h"
 #include "nfc/pn532_demo.h"
 #include "nfc/picc_emu.h"
+#include "nfc/libnfc_demo.h"
 #include "ebook/ebook.h"
 
 static uint8_t sector[SECTOR_SIZE],sector1[SECTOR_SIZE],buffer[SECTOR_SIZE];
@@ -276,7 +277,7 @@ sdcard_test_task (void *parameter)
 	    }
 	  }
 	}
-	
+
 
       printf("DONE\n");
       while (1)
@@ -369,20 +370,21 @@ void __attribute__((noreturn)) mainloop (void)
   //xTaskCreate (sdram_test_task, (signed portCHAR *) "SDRAM_DEMO", 512, NULL, NEAR_IDLE_PRIORITY, NULL);
   /*xTaskCreate (demo_task, (signed portCHAR *) "LED_DEMO", 512,
      NULL, NEAR_IDLE_PRIORITY, NULL); */
-  xTaskCreate (sdcard_test_task, (signed portCHAR *) "SDCARD_DEMO", 1024,
-	       NULL, NEAR_IDLE_PRIORITY, NULL);
+  /*xTaskCreate (sdcard_test_task, (signed portCHAR *) "SDCARD_DEMO", 1024,
+	       NULL, NEAR_IDLE_PRIORITY, NULL);*/
   /*xTaskCreate (flash_demo_task, (signed portCHAR *) "FLASH DEMO", 512,
      NULL, NEAR_IDLE_PRIORITY, NULL); */
   /*xTaskCreate (pn532_demo_task, (signed portCHAR *) "PN532 DEMO TASK", TASK_PN532_STACK,
-     NULL, TASK_PN532_PRIORITY, NULL); */
+     NULL, TASK_PN532_PRIORITY, NULL);*/
 
 
   sdram_init ();
   //eink_interface_init();
   //ad7147_init();
   //accelerometer_init();
-  DFS_Init ();
-  //pn532_init();
+  //DFS_Init ();
+  pn532_init();
+  libnfc_demo_init();
   //picc_emu_init();
   //ebook_init();
 
