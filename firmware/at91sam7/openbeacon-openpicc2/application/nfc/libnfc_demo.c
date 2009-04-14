@@ -57,12 +57,13 @@ static void libnfc_demo_task(void *parameter)
   /* FIXME: The following crashes (the old printf problem) */
   //printf("\nConnected to NFC reader: %s\n\n",pdi->acName);
 
-  int a=0, b=0, current_time = xTaskGetTickCount(), last_time = xTaskGetTickCount();
-  (void)a; (void)b; (void)current_time; (void)last_time;
+  __attribute__((unused)) int a=0, b=0, current_time = xTaskGetTickCount(), last_time = xTaskGetTickCount();
   while(1) {
+	  int ok = 0;
 	  // Poll for a ISO14443A (MIFARE) tag
 	  if (nfc_reader_list_passive(pdi,IM_ISO14443A_106,null,null,&ti))
 	  {
+		  ok = 1;
 #if 0
 		  printf("The following (NFC) ISO14443A tag was found:\n\n");
 		  printf("ATQA (SENS_RES):   "); fflush(stdout); hexdump(ti.tia.abtAtqa,2); printf("\n");
@@ -76,9 +77,9 @@ static void libnfc_demo_task(void *parameter)
 		  }
 	  }
 #else
-		  b++;
 	  }
-	  DumpUIntToUSB(a); printf(" Ok         \r"); fflush(stdout);
+	  b++;
+	  vUSBSendByte('\r'); DumpUIntToUSB(a); printf(ok?" Ok     ":"        "); fflush(stdout);
 	  if( (current_time = xTaskGetTickCount()) > (last_time+1000) ) {
 		  a = b; b = 0;
 		  last_time = current_time;
