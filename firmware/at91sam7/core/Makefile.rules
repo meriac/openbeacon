@@ -99,6 +99,7 @@ ARM_SRC= \
 # Define all object files.
 #
 ARM_OBJ = $(ARM_SRC:.c=.o)
+APP_ADDITIONAL?=
 
 $(TARGET).bin : $(TARGET).elf
 	$(OBJCOPY) $(TARGET).elf -O binary $(TARGET).bin
@@ -106,8 +107,8 @@ $(TARGET).bin : $(TARGET).elf
 $(TARGET).hex : $(TARGET).elf
 	$(OBJCOPY) $(TARGET).elf -O ihex $(TARGET).hex
 
-$(TARGET).elf : $(ARM_OBJ) $(CRT0) $(BOOTLOADER) Makefile config/FreeRTOSConfig.h
-	$(CC) $(CFLAGS) $(ARM_OBJ) $(BOOTLOADER) -nostartfiles $(CRT0) $(LINKER_FLAGS)
+$(TARGET).elf : $(ARM_OBJ) $(CRT0) $(BOOTLOADER) $(APP_ADDITIONAL) Makefile config/FreeRTOSConfig.h
+	$(CC) $(CFLAGS) $(ARM_OBJ) $(BOOTLOADER) $(APP_ADDITIONAL) -nostartfiles $(CRT0) $(LINKER_FLAGS)
 	$(OBJDUMP) -d $(TARGET).elf > $(TARGET).asm
 
 $(ARM_OBJ) : %.o : %.c $(LDSCRIPT) Makefile config/FreeRTOSConfig.h
