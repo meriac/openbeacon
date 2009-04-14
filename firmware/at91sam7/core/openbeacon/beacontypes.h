@@ -28,8 +28,8 @@
 #define IRQFUNC __attribute__ ((interrupt("IRQ")))
 #define FIQFUNC __attribute__ ((interrupt("FIQ")))
 
-#define true    -1
-#define false   0
+//#define true    -1
+//#define false   0
 
 typedef unsigned char bool_t;
 typedef unsigned char u_int8_t;
