@@ -7,12 +7,24 @@
 
 static void sdram_setup_pio(void)
 {
-	AT91F_PIO_CfgPeriph(AT91C_BASE_PIOA, 0,
-			(1L<<2)|(1L<<5)|(1L<<8)|(1L<<9)|(1L<<10)|(0x1ffL<<23) );
-	AT91F_PIO_CfgPeriph(AT91C_BASE_PIOB, 0,
-			(1L<<3)|(1L<<4)|(1L<<6)|(1L<<7)|(1L<<8)|(1L<<11)|(1L<<13)|(0xffffL<<16));
-	AT91F_PIO_CfgPeriph(AT91C_BASE_PIOC, 
-			0xFFFFL, 0);
+	switch(BOARD->identifier) {
+	case BOARD_V0_1:
+		AT91F_PIO_CfgPeriph(AT91C_BASE_PIOA, 0,
+				(1L<<2)|(1L<<5)|(1L<<8)|(1L<<9)|(1L<<10)|(0x1ffL<<23) );
+		AT91F_PIO_CfgPeriph(AT91C_BASE_PIOB, 0,
+				(1L<<3)|(1L<<4)|(1L<<6)|(1L<<7)|(1L<<8)|(1L<<11)|(1L<<13)|(0xffffL<<16));
+		AT91F_PIO_CfgPeriph(AT91C_BASE_PIOC,
+				0xFFFFL, 0);
+		break;
+	case BOARD_V0_2:
+		AT91F_PIO_CfgPeriph(AT91C_BASE_PIOA, 0,
+				(7L)|(1L<<5)|(1L<<9)|(1L<<10)|(1L<<18)|(0x1ffL<<23) );
+		AT91F_PIO_CfgPeriph(AT91C_BASE_PIOB, 0,
+				(1L<<3)|(1L<<4)|(1L<<6)|(1L<<7)|(1L<<8)|(1L<<11)|(1L<<13)|(0xffffL<<16));
+		AT91F_PIO_CfgPeriph(AT91C_BASE_PIOC,
+				0xFFFFL, 0);
+		break;
+	}
 }
 
 //*----------------------------------------------------------------------------
@@ -50,15 +62,15 @@ void sdram_init(void)
 	// NOP Command
 	psdrc->SDRC_MR = AT91C_SDRC_DBW_32_BITS | AT91C_SDRC_MODE_NOP_CMD;	// Set NOP
 	pSdram[0] = 0x00000000;	// Perform NOP
-	
+
 	//*** Step 4 *** (micron step 6)
 	//All Banks Precharge Command
 	psdrc->SDRC_MR = AT91C_SDRC_DBW_32_BITS | 0x00000002;	// Set PRCHG AL
 	pSdram[0] = 0x00000000;	// Perform PRCHG
-	
+
 	// micron step 7
 	for(i=0;i<1;i++) ;
-	
+
 	//*** Step 5 *** (micron step 8)
 	//8 Refresh Command
 	psdrc->SDRC_MR = AT91C_SDRC_DBW_32_BITS | AT91C_SDRC_MODE_RFSH_CMD;	// Set 1st CBR
@@ -92,7 +104,7 @@ void sdram_init(void)
 	*(SDRAM_BASE + SDRAM_MODE) = 0x0;	// Perform LMR burst=1, lat=2
 	//pSdram[SDRAM_MODE] = 0x1;
 	for(i=0;i<2;i++) ;
-	
+
 	//*** Step 7 ***
 	//Normal Mode Command
 	psdrc->SDRC_MR = AT91C_SDRC_DBW_32_BITS | AT91C_SDRC_MODE_NORMAL_CMD;	// Set Normal mode

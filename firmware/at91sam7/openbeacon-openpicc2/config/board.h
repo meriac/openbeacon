@@ -27,6 +27,21 @@
 
 #include <lib_AT91SAM7.h>
 
+enum board_layout_id {
+	BOARD_V0_1,
+	BOARD_V0_2,
+};
+
+struct board_layout {
+	enum board_layout_id identifier;
+	const char *friendly_name;
+	struct {
+		AT91PS_PIO pio; unsigned int pin;
+	} AD7147_INT, PN532_INT;
+};
+extern const struct board_layout BOARD_LAYOUTS[];
+extern const struct board_layout * BOARD;
+
 /*-------------------------------*/
 /* Screen Parameters */
 /*-------------------------------*/
@@ -74,9 +89,9 @@
 /*-------------------------------*/
 #define AD7147_CS_PIO	AT91C_BASE_PIOB
 #define AD7147_CS_PIN	(1L<<10)
-#define AD7147_INT_PIO	AT91C_BASE_PIOA
-#define AD7147_INT_PIN	(1L<<1)
 #define AD7147_CS		2
+#define AD7147_INT_PIO	(BOARD->AD7147_INT.pio)
+#define AD7147_INT_PIN	(BOARD->AD7147_INT.pin)
 
 /*-------------------------------*/
 /* SD card declaration           */
@@ -93,8 +108,8 @@
 #define PN532_CS_PIN	(1L<<5)
 #define PN532_CS		3
 
-#define PN532_INT_PIO  AT91C_BASE_PIOA
-#define PN532_INT_PIN  (1L<<0)
+#define PN532_INT_PIO  (BOARD->PN532_INT.pio)
+#define PN532_INT_PIN  (BOARD->PN532_INT.pin)
 
 /*-------------------------------*/
 /* power declaration             */

@@ -119,7 +119,20 @@ sdram_test_task (void *parameter)
   volatile int i;
 
   vTaskDelay (1000 / portTICK_RATE_MS);
+  printf("Starting SDRAM test for %s\n", BOARD->friendly_name);
+
+  for(i=0; i<4; i++) {
+	  SDRAM_BASE[i] = i;
+  }
+
   volatile unsigned int *pSdram = (unsigned int *) SDRAM_BASE;
+
+  if(pSdram[0] == 0x03020100) {
+	  printf("Byte-wise SDRAM access OK\n");
+  } else {
+	  printf("Byte-wise SDRAM access not OK\n");
+  }
+
   for (i = 0; i < 4194304; i++)
     {
       pSdram[i] = 0xbeef0000 ^ i;
@@ -134,6 +147,7 @@ sdram_test_task (void *parameter)
 	  u_int32_t test = pSdram[i];
 	  if (test != (0xbeef0000 ^ i))
 	    {
+	      if(ok) printf("Error at %i: %08X\n", i, (unsigned int)test);
 	      ok = 0;
 	    }
 	}
@@ -346,12 +360,49 @@ flash_demo_task (void *parameter)
 }
 
 
+const struct board_layout BOARD_LAYOUTS[] = {
+		[BOARD_V0_1] = { BOARD_V0_1,
+				"Test release v0.1",
+				{AT91C_BASE_PIOA, 1L<<1}, // AD7147 INT
+				{AT91C_BASE_PIOA, 1L<<0}, // PN532 INT
+		},
+		[BOARD_V0_2] = { BOARD_V0_2,
+				"Release v0.2",
+				{AT91C_BASE_PIOA, 1L<<19},
+				{AT91C_BASE_PIOA, 1L<<17},
+		},
+};
+const struct board_layout * BOARD;
+static void detect_board(void)
+{
+	/* Detect board v0.1 vs. v0.2 by looking at the POWER_MODE_0 and _1 pulldowns */
+	AT91F_PIO_CfgInput(POWER_MODE_PIO, POWER_MODE_0_PIN | POWER_MODE_1_PIN);
+	POWER_MODE_PIO->PIO_PPUER = POWER_MODE_0_PIN | POWER_MODE_1_PIN;
+
+	volatile int i; for(i=0; i<100; i++) ;
+
+	if( (!!AT91F_PIO_IsInputSet(POWER_MODE_PIO, POWER_MODE_0_PIN)) != (!!AT91F_PIO_IsInputSet(POWER_MODE_PIO, POWER_MODE_1_PIN)) ){
+		/* Safety check: in the current hardware these two must always be set to the same level */
+		led_halt_blinking(0);
+	}
+
+	if( AT91F_PIO_IsInputSet(POWER_MODE_PIO, POWER_MODE_0_PIN) ) {
+		BOARD = &(BOARD_LAYOUTS[BOARD_V0_1]);
+	} else {
+		BOARD = &(BOARD_LAYOUTS[BOARD_V0_2]);
+	}
+
+	POWER_MODE_PIO->PIO_PPUDR = POWER_MODE_0_PIN | POWER_MODE_1_PIN;
+}
+
 /**********************************************************************/
 void __attribute__((noreturn)) mainloop (void)
 {
   prvSetupHardware ();
 
   led_init ();
+
+  detect_board();
 
   if (!power_init ())
     {
