@@ -306,7 +306,7 @@ int eink_comm_test(u_int16_t reg1, u_int16_t reg2)
 	return 1;
 }
 
-int eink_controller_init(void)
+int eink_controller_check_supported(void)
 {
 	u_int16_t product = eink_read_register(2);
 	if(product != 0x0047) return -EINK_ERROR_NOT_DETECTED;
@@ -314,24 +314,31 @@ int eink_controller_init(void)
 	u_int16_t revision = eink_read_register(0);
 	if(revision != 0x0100) return -EINK_ERROR_NOT_SUPPORTED;
 	
-	
-	eink_perform_command(EINK_CMD_INIT_SYS_RUN, 0, 0, 0, 0);
-	eink_wait_for_completion();
-	
 	/* Perform comm test, use host memory count and checksum registers as scratch space */
 	if(!eink_comm_test(0x148, 0x156))
 		return -EINK_ERROR_COMMUNICATIONS_FAILURE;
 	/* Now reset host memory interface */
 	eink_write_register(0x140, 1L<<15);
+	
+	return 0;
+}
 
-	/* the following three commands are from the example code */ 
+int eink_controller_init(void)
+{
+	int result = eink_controller_check_supported();
+	if(result != 0) return result;
+	
+	eink_perform_command(EINK_CMD_INIT_SYS_RUN, 0, 0, 0, 0);
+	eink_wait_for_completion();
+	
+	/* the following three commands are from the example code */
 	eink_write_register(0x106, 0x203);
 	
 	const u_int16_t dspe_cfg[] = { BS60_INIT_HSIZE, BS60_INIT_VSIZE,
 			BS60_INIT_SDRV_CFG, BS60_INIT_GDRV_CFG, BS60_INIT_LUTIDXFMT
 	};
 	eink_perform_command(EINK_CMD_INIT_DSPE_CFG, dspe_cfg, 5, 0, 0);
-
+	
 	const u_int16_t dspe_tmg[] = { BS60_INIT_FSLEN, ( BS60_INIT_FELEN << 8 ) | BS60_INIT_FBLEN,
 			BS60_INIT_LSLEN, ( BS60_INIT_LELEN << 8 ) | BS60_INIT_LBLEN,
 			BS60_INIT_PIXCLKDIV

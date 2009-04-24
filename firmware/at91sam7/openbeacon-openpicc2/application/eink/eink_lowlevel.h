@@ -24,4 +24,6 @@ extern int eink_perform_command(const u_int16_t command,
 		u_int16_t * const response, const size_t response_len);
 extern void eink_wait_display_idle(void);
 
+extern int eink_controller_check_supported(void);
+
 #endif /*EINK_LOWLEVEL_H_*/

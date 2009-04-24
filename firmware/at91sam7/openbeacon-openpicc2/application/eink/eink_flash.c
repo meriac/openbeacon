@@ -33,11 +33,8 @@ int eink_flash_acquire(void)
 {
 	eink_controller_reset();
 	
-	u_int16_t product = eink_read_register(2);
-	if(product != 0x0047) return -EINK_ERROR_NOT_DETECTED;
-	
-	u_int16_t revision = eink_read_register(0);
-	if(revision != 0x0100) return -EINK_ERROR_NOT_SUPPORTED;
+	int r = eink_controller_check_supported();
+	if(r != 0) return r;
 	
 	eink_write_register(0x10, 0x0004);
 	eink_write_register(0x12, 0x5949);
@@ -54,7 +51,7 @@ int eink_flash_acquire(void)
 	eink_write_register(0x236, 0x09);
 	eink_write_register(0x230, 1);
 	while(eink_read_register(0x230) & 0x80) ;
-
+	
 	eink_write_register(0x204, EINK_FLASH_CONTROL_VALUE & ~(0x80));
 	eink_write_register(0x208, 0);
 	
@@ -145,7 +142,7 @@ static int eink_flash_wait_status_register(u_int8_t mask, u_int8_t value)
 {
 	u_int8_t status;
 	eink_write_register(0x208, 0x1); /* Enable Chip Select */
-
+	
 	eink_flash_wait(SPI_FLASH_BUSY, 0);
 	eink_flash_wait(SPI_FLASH_WRITE_EMPTY, SPI_FLASH_WRITE_EMPTY);
 	eink_write_register(0x202, 0x105); /* Read flash status register command */
@@ -177,11 +174,11 @@ int eink_flash_write_enable(void)
 int eink_flash_bulk_erase(void)
 {
 	eink_write_register(0x208, 0x1); /* Enable Chip Select */
-
+	
 	eink_flash_wait(SPI_FLASH_BUSY, 0);
 	eink_flash_wait(SPI_FLASH_WRITE_EMPTY, SPI_FLASH_WRITE_EMPTY);
 	eink_write_register(0x202, 0x1C7); /* Bulk erase command */
-
+	
 	eink_flash_wait(SPI_FLASH_BUSY, 0);
 	
 	eink_write_register(0x208, 0x0); /* Disable Chip Select */
@@ -195,13 +192,13 @@ int eink_flash_read_identification(void)
 {
 	u_int8_t id[3];
 	eink_write_register(0x208, 0x1); /* Enable Chip Select */
-
+	
 	eink_flash_wait(SPI_FLASH_BUSY, 0);
 	eink_flash_wait(SPI_FLASH_WRITE_EMPTY, SPI_FLASH_WRITE_EMPTY);
 	eink_write_register(0x202, 0x19F); /* Read identification command */
-
+	
 	eink_flash_read_bytes(id, 3);
-
+	
 	eink_write_register(0x208, 0x0); /* Disable Chip Select */
 	return (id[0]<<16) | (id[1]<<8) | id[2];
 }
@@ -216,7 +213,7 @@ int eink_flash_program_page(u_int32_t flash_address, const unsigned char *data, 
 	eink_write_register(0x202, 0x102); /* Program Page command */
 	
 	eink_flash_send_address(flash_address);
-
+	
 	for(i=0; i<len; i++) {
 		eink_flash_wait(SPI_FLASH_BUSY, 0);
 		eink_flash_wait(SPI_FLASH_WRITE_EMPTY, SPI_FLASH_WRITE_EMPTY);
@@ -224,7 +221,7 @@ int eink_flash_program_page(u_int32_t flash_address, const unsigned char *data, 
 	}
 	
 	eink_write_register(0x208, 0x0); /* Disable Chip Select */
-
+	
 	eink_flash_wait_status_register(1, 0); /* Wait for Write-In-Progress to go low */
 	return 0;
 }

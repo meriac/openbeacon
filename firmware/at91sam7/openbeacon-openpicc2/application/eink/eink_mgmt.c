@@ -408,12 +408,12 @@ static int eink_job_conflicts(const eink_job_t job1, unsigned int index1,
 	if(rectangle_contains(x1_1, y1_1, x2_1, y2_1,  x2_2, y1_2)) return 1;
 	if(rectangle_contains(x1_1, y1_1, x2_1, y2_1,  x1_2, y2_2)) return 1;
 	if(rectangle_contains(x1_1, y1_1, x2_1, y2_1,  x2_2, y2_2)) return 1;
-
+	
 	if(rectangle_contains(x1_2, y1_2, x2_2, y2_2,  x1_1, y1_1)) return 1;
 	if(rectangle_contains(x1_2, y1_2, x2_2, y2_2,  x2_1, y1_1)) return 1;
 	if(rectangle_contains(x1_2, y1_2, x2_2, y2_2,  x1_1, y2_1)) return 1;
 	if(rectangle_contains(x1_2, y1_2, x2_2, y2_2,  x2_1, y2_1)) return 1;
-
+	
 	return 0;
 }
 
