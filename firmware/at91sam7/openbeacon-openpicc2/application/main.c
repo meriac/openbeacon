@@ -404,6 +404,8 @@ void __attribute__((noreturn)) mainloop (void)
 
   detect_board();
 
+  sdram_init ();
+
   if (!power_init ())
     {
       led_halt_blinking (1);
@@ -429,15 +431,14 @@ void __attribute__((noreturn)) mainloop (void)
      NULL, TASK_PN532_PRIORITY, NULL);*/
 
 
-  sdram_init ();
-  //eink_interface_init();
-  //ad7147_init();
-  //accelerometer_init();
+  eink_interface_init();
+  ad7147_init();
+  accelerometer_init();
   //DFS_Init ();
-  pn532_init();
-  libnfc_demo_init();
+  //pn532_init();
+  //libnfc_demo_init();
   //picc_emu_init();
-  //ebook_init();
+  ebook_init();
 
   led_set_green (1);
 
