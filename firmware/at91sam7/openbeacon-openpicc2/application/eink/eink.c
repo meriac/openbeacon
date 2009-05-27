@@ -314,12 +314,6 @@ int eink_controller_check_supported(void)
 	u_int16_t revision = eink_read_register(0);
 	if(revision != 0x0100) return -EINK_ERROR_NOT_SUPPORTED;
 	
-	/* Perform comm test, use host memory count and checksum registers as scratch space */
-	if(!eink_comm_test(0x148, 0x156))
-		return -EINK_ERROR_COMMUNICATIONS_FAILURE;
-	/* Now reset host memory interface */
-	eink_write_register(0x140, 1L<<15);
-	
 	return 0;
 }
 
@@ -331,6 +325,13 @@ int eink_controller_init(void)
 	eink_perform_command(EINK_CMD_INIT_SYS_RUN, 0, 0, 0, 0);
 	eink_wait_for_completion();
 	
+
+	/* Perform comm test, use host memory count and checksum registers as scratch space */
+	if(!eink_comm_test(0x148, 0x156))
+		return -EINK_ERROR_COMMUNICATIONS_FAILURE;
+	/* Now reset host memory interface */
+	eink_write_register(0x140, 1L<<15);
+
 	/* the following three commands are from the example code */
 	eink_write_register(0x106, 0x203);
 	

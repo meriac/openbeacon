@@ -36,9 +36,17 @@ int eink_flash_acquire(void)
 	int r = eink_controller_check_supported();
 	if(r != 0) return r;
 	
-	eink_write_register(0x10, 0x0004);
-	eink_write_register(0x12, 0x5949);
-	eink_write_register(0x14, 0x0040);
+#define PLL0 0x0004
+#define PLL1 0x5949
+#define PLL2 0x0040
+	eink_write_register(0x10, PLL0);
+	eink_write_register(0x12, PLL1);
+	eink_write_register(0x14, PLL2);
+	
+	/* Simple communications check */
+	if(eink_read_register(0x10) != PLL0) return -EINK_ERROR_COMMUNICATIONS_FAILURE;
+	if(eink_read_register(0x12) != PLL1) return -EINK_ERROR_COMMUNICATIONS_FAILURE;
+	if(eink_read_register(0x14) != PLL2) return -EINK_ERROR_COMMUNICATIONS_FAILURE;
 	
 	eink_write_register(0x16, 0x000);
 	while((eink_read_register(0xa) & 1) != 1);
@@ -268,8 +276,9 @@ static void reflash_led_blinker(void *parameters)
  *  + The flash identification indicates our custom built controller and not the stock Epson one
  *  + The first 4 bytes of the existing flash content do not match eink_flash_content
  * 
- * If this function returns a non-null value then the controller was reset and the application
- * should wait 5ms before proceeding;
+ * If this function returns a positive value then the controller was reset and the application
+ * should wait 5ms before proceeding; if the function returns 0, no change was done; if the
+ * function returns a negative value it is an error code
  */
 int eink_flash_conditional_reflash(void)
 {
@@ -304,6 +313,8 @@ int eink_flash_conditional_reflash(void)
 			vTaskDelete(led_task_handle);
 			led_set_red(0); led_set_green(1);
 		}
+	} else {
+		return r;
 	}
 out_done:
 	eink_flash_release();
