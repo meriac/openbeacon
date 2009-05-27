@@ -325,7 +325,6 @@ int eink_controller_init(void)
 	eink_perform_command(EINK_CMD_INIT_SYS_RUN, 0, 0, 0, 0);
 	eink_wait_for_completion();
 	
-
 	/* Perform comm test, use host memory count and checksum registers as scratch space */
 	if(!eink_comm_test(0x148, 0x156))
 		return -EINK_ERROR_COMMUNICATIONS_FAILURE;
