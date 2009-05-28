@@ -28,7 +28,7 @@ extern const struct splash_image splash_image;
 extern const struct splash_image arrows_image;
 extern const struct splash_image directory_image;
 
-static unsigned char scratch_space[MAX_PART_SIZE] __attribute__((aligned (2)));
+extern unsigned char scratch_space[MAX_PART_SIZE] __attribute__((aligned (2)));
 static signed char task_list[10*40]; /* 40 bytes per task, approx. 10 tasks */
 
 #define DISPLAY_SHORT (EINK_CURRENT_DISPLAY_CONFIGURATION->vsize)

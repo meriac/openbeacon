@@ -7,7 +7,7 @@ OPTIM=-O2
 APP_CFLAGS=-Iapplication -DLZO_CFG_NO_UNALIGNED -DLZO_ALIGNED_OK_4 -DHAVE_FLASH_CONTENT -std=gnu99 -fgnu89-inline
 APP_LDFLAGS=-Lapplication/libnfc/linux -lm -lnfc
 
-IMAGES=splash directory arrows
+IMAGES=splash directory arrows bg
 
 APP_SRC= \
   application/main.c \
@@ -35,7 +35,8 @@ APP_SRC= \
   application/nfc/libnfc_demo.c \
   application/nfc/pn532_libnfc_reader.c \
   application/ebook/ebook.c \
-  application/ebook/event.c
+  application/ebook/event.c \
+  application/paint/paint.c
 
 IMAGES_C=$(foreach i,$(IMAGES),application/$(i)_pgm.c)
 APP_SRC+=$(IMAGES_C)
