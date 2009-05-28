@@ -14,6 +14,7 @@
 #include <USB-CDC.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "libnfc_demo.h"
 #include "libnfc/libnfc.h"
@@ -25,6 +26,31 @@ extern void hexdump(const unsigned char *data, size_t length);
 static void libnfc_demo_task(void *parameter)
 {
   (void) parameter;
+  vTaskDelay(5000 / portTICK_RATE_MS);
+
+  {
+#define TEST_SIZE (5*1024)
+	  char * test = malloc(TEST_SIZE);
+	  if(test) {
+		  int i=0;
+		  DumpUIntToUSB((unsigned int)test);
+		  vUSBSendByte('='); vUSBSendByte(' ');
+		  vTaskDelay(1000 / portTICK_RATE_MS);
+		  for(i=0; i<TEST_SIZE; i++) {
+			  test[i] = i;
+		  }
+		  for(i=0; i<TEST_SIZE; i+=257) {
+			  DumpUIntToUSB(test[i]);
+			  vUSBSendByte(' ');
+			  vTaskDelay(1 / portTICK_RATE_MS);
+		  }
+		  vUSBSendByte('\r'); vUSBSendByte('\n');
+		  free(test);
+	  } else {
+		  printf("Malloc failed\n");
+	  }
+  }
+
   vTaskDelay(5000 / portTICK_RATE_MS);
 
   tag_info ti;
@@ -64,7 +90,7 @@ static void libnfc_demo_task(void *parameter)
 	  if (nfc_reader_list_passive(pdi,IM_ISO14443A_106,null,null,&ti))
 	  {
 		  ok = 1;
-#if 0
+#if 1
 		  printf("The following (NFC) ISO14443A tag was found:\n\n");
 		  printf("ATQA (SENS_RES):   "); fflush(stdout); hexdump(ti.tia.abtAtqa,2); printf("\n");
 		  printf("UID (NFCID1):      "); fflush(stdout); hexdump(ti.tia.abtUid,ti.tia.uiUidLen); printf("\n");
