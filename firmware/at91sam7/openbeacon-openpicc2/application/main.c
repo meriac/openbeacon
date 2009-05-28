@@ -115,50 +115,61 @@ HexChar (unsigned char nibble)
 void
 sdram_test_task (void *parameter)
 {
-  (void) parameter;
-  volatile int i;
-
-  vTaskDelay (1000 / portTICK_RATE_MS);
-  printf("Starting SDRAM test for %s\n", BOARD->friendly_name);
-
-  for(i=0; i<4; i++) {
-	  SDRAM_BASE[i] = i;
-  }
-
-  volatile unsigned int *pSdram = (unsigned int *) SDRAM_BASE;
-
-  if(pSdram[0] == 0x03020100) {
-	  printf("Byte-wise SDRAM access OK\n");
-  } else {
-	  printf("Byte-wise SDRAM access not OK\n");
-  }
-
-  for (i = 0; i < 4194304; i++)
-    {
-      pSdram[i] = 0xbeef0000 ^ i;
-    }
-
-  while (1)
-    {
-      int ok = 1;
-
-      for (i = 0; i < 4194304; i++)
-	{
-	  u_int32_t test = pSdram[i];
-	  if (test != (0xbeef0000 ^ i))
-	    {
-	      if(ok) printf("Error at %i: %08X\n", i, (unsigned int)test);
-	      ok = 0;
-	    }
+	(void) parameter;
+	volatile int i;
+	
+	vTaskDelay (1000 / portTICK_RATE_MS);
+	printf("Starting SDRAM test for %s\n", BOARD->friendly_name);
+	
+	for(i=0; i<4; i++) {
+		SDRAM_BASE[i] = i;
 	}
-      led_set_red (0);
-      led_set_green (0);
-      vTaskDelay (100 / portTICK_RATE_MS);
-      led_set_red (!ok);
-      led_set_green (ok);
-      if (ok)
-	printf ("SDRAM ok\n");
-    }
+	
+	volatile unsigned int *pSdram = (unsigned int *) SDRAM_BASE;
+	
+	if(pSdram[0] == 0x03020100) {
+		printf("Byte-wise SDRAM access OK\n");
+	} else {
+		printf("Byte-wise SDRAM access not OK\n");
+	}
+	
+	long start = xTaskGetTickCount(), stop;
+	for (i = 0; i < 4194304; i++) {
+		pSdram[i] = 0xbeef0000 ^ i;
+	}
+	stop = xTaskGetTickCount();
+	printf("Loaded test pattern in %li ticks\n", (long)(stop-start));
+	
+	start = xTaskGetTickCount();
+	for (i = 0; i < 4194304; i++) {
+		(void)pSdram[i];
+	}
+	stop = xTaskGetTickCount();
+	printf("Read test pattern in %li ticks\n", (long)(stop-start));
+	
+	while (1)
+	{
+		int ok = 1;
+		
+		start = xTaskGetTickCount();
+		for (i = 0; i < 4194304; i++)
+		{
+			u_int32_t test = pSdram[i];
+			if (test != (0xbeef0000 ^ i))
+			{
+				if(ok) printf("Error at %i: %08X\n", i, (unsigned int)test);
+				ok = 0;
+			}
+		}
+		stop = xTaskGetTickCount();
+		led_set_red (0);
+		led_set_green (0);
+		vTaskDelay (100 / portTICK_RATE_MS);
+		led_set_red (!ok);
+		led_set_green (ok);
+		if (ok)
+			printf ("SDRAM ok (%li ticks)\n", (long)(stop-start));
+	}
 }
 
 void
@@ -433,7 +444,7 @@ void __attribute__((noreturn)) mainloop (void)
 
   eink_interface_init();
   ad7147_init();
-  accelerometer_init();
+  //accelerometer_init();
   //DFS_Init ();
   //pn532_init();
   //libnfc_demo_init();
