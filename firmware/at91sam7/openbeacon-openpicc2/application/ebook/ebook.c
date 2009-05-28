@@ -31,10 +31,13 @@ extern const struct splash_image directory_image;
 static unsigned char scratch_space[MAX_PART_SIZE] __attribute__((aligned (2)));
 static signed char task_list[10*40]; /* 40 bytes per task, approx. 10 tasks */
 
-#define DISPLAY_SHORT 600
-#define DISPLAY_LONG 800
+#define DISPLAY_SHORT (EINK_CURRENT_DISPLAY_CONFIGURATION->vsize)
+#define DISPLAY_LONG (EINK_CURRENT_DISPLAY_CONFIGURATION->hsize)
 
-#define IMAGE_SIZE (DISPLAY_SHORT*DISPLAY_LONG)
+/* Warning: The actual display size must not exceed this definition. E.g.
+ * assert( IMAGE_SIZE >= EINK_CURRENT_DISPLAY_CONFIGURATION->hsize * EINK_CURRENT_DISPLAY_CONFIGURATION->vsize );
+ */
+#define IMAGE_SIZE (1216*832)
 
 #define CLICK_MAX_DURATION (250/portTICK_RATE_MS)
 #define SCROLL_SLIDER_LENGTH 10
@@ -165,28 +168,27 @@ const int rotation_map[] = {
 };
 #endif
 
-eink_image_buffer_t _blank_buffer[2],
-splash_buffer[4],
-directory_buffer[2],
-arrows_buffer[2];
-eink_image_buffer_t blank_buffer;
+eink_image_buffer_t blank_buffer[4],
+	splash_buffer[4],
+	directory_buffer[4],
+	arrows_buffer[4];
 
 struct {
 	eink_image_buffer_t *buffer;
 	unsigned int count;
 	char *description;
 } _buffers[] = {
-		{_blank_buffer, 2, "blank"},
+		{blank_buffer, 4, "blank"},
 		{splash_buffer, 4, "splash"},
-		{directory_buffer, 2, "directory"},
-		{arrows_buffer, 2, "arrows"},
+		{directory_buffer, 4, "directory"},
+		{arrows_buffer, 4, "arrows"},
 };
 
 static void clear_screen(void)
 {
 	eink_job_t job;
 	eink_job_begin(&job, 0);
-	eink_job_add(job, blank_buffer, WAVEFORM_MODE_GC, UPDATE_MODE_FULL);
+	eink_job_add(job, blank_buffer[0], WAVEFORM_MODE_GC, UPDATE_MODE_FULL);
 	eink_job_commit(job);
 }
 
@@ -218,7 +220,7 @@ static void update_scroll_position(enum ORIENTATION orientation, int *old_positi
 
 		eink_job_t job;
 		eink_job_begin(&job, (direction<<8) | (*old_position) );
-		eink_job_add_area(job, _blank_buffer[orientation/2], WAVEFORM_MODE_DU, UPDATE_MODE_PART,
+		eink_job_add_area(job, blank_buffer[orientation], WAVEFORM_MODE_DU, UPDATE_MODE_PART,
 				offset_x, offset_y, width, height);
 		eink_job_commit(job);
 	}
@@ -233,7 +235,7 @@ static void update_scroll_position(enum ORIENTATION orientation, int *old_positi
 
 	eink_job_t job;
 	eink_job_begin(&job, (direction<<8) | (new_position));
-	eink_job_add_area(job, arrows_buffer[orientation/2], WAVEFORM_MODE_DU, UPDATE_MODE_PART,
+	eink_job_add_area(job, arrows_buffer[orientation], WAVEFORM_MODE_DU, UPDATE_MODE_PART,
 			offset_x, offset_y, width, height);
 	eink_job_commit(job);
 
@@ -272,12 +274,14 @@ static void ebook_task(void *params)
 
 	eink_mgmt_init(eink_mgmt_data, sizeof(eink_mgmt_data));
 
+#if 0 /* FIXME Seems to be broken, sometimes (hangs at boot) */
 	error = eink_flash_conditional_reflash();
 	if(error > 0) { /* Not an error, but the controller was reinitialized and we must wait */
 		vTaskDelay(5/portTICK_RATE_MS);
 	} else if(error < 0) {
 		ebook_die_error(-error);
 	}
+#endif
 
 	if (lzo_init() != LZO_E_OK) {
 		printf("internal error - lzo_init() failed !!!\n");
@@ -287,12 +291,14 @@ static void ebook_task(void *params)
 				lzo_version_string(), lzo_version_date());
 	}
 
+	printf("A\n");
 	eink_controller_reset();
-	vTaskDelay(50/portTICK_RATE_MS);
+	printf("B\n");
 
 	error=eink_controller_init();
 	if(error < 0) ebook_die_error(-error);
-
+	printf("C\n");
+	
 	{
 		unsigned int i, j;
 		for(i=0; i < (sizeof(_buffers)/sizeof(_buffers[0])); i++) {
@@ -305,49 +311,59 @@ static void ebook_task(void *params)
 		}
 	}
 
+	/*
+	 * splash_image, directory_image, arrows_image are in the flash
+	 * image_buffer[] is in the microcontroller SDRAM
+	 * splash_buffer, directory_buffer, arrows_buffer, blank_buffer are in the display controller SDRAM
+	 */
+	
+	/* Empty image in image buffer 0 */
+	memset(image_buffer[0].data, 0xff, sizeof(image_buffer[4].data));
+	
 	/* Splash image in image buffer 1 */
 	unpack_image(&image_buffer[1], &splash_image);
+	
 	/* Directory image in buffer 2 */
 	unpack_image(&image_buffer[2], &directory_image);
+	
 	/* Prepared arrows in buffer 3 */
 	unpack_image(&image_buffer[3], &arrows_image);
-
-	memset(&image_buffer[0], 0xff, sizeof(image_buffer[0]));
-
+	
 	{
-		int orient = 0, orient_=0;
+		int orient;
 		for(orient = 0; orient < 4; orient ++) {
 			unsigned int width, height;
 			get_display_sizes(orient, &width, &height);
 
+			/* Clear the splash_buffer by loading from the white image into it, then paint the logo
+			 * by loading from the splash_image
+			 */
 			eink_image_buffer_load(splash_buffer[orient], PACK_MODE_1BYTE, rotation_map[orient],
 					image_buffer[0].data, width*height);
 			eink_image_buffer_load_area(splash_buffer[orient], PACK_MODE_1BYTE, rotation_map[orient],
 					(width-image_buffer[1].width)/2, (height-image_buffer[1].height)/2,
 					image_buffer[1].width, image_buffer[1].height,
 					image_buffer[1].data, image_buffer[1].height*image_buffer[1].width);
-
-			if(can_display(orient, &image_buffer[2])) {
-				error = eink_image_buffer_load(_blank_buffer[orient_], PACK_MODE_1BYTE, rotation_map[orient],
-						image_buffer[0].data, width*height);
-				eink_image_buffer_load(directory_buffer[orient_], PACK_MODE_1BYTE, rotation_map[orient],
-						image_buffer[2].data, image_buffer[2].height*image_buffer[2].width);
-				eink_image_buffer_load(arrows_buffer[orient_], PACK_MODE_1BYTE, rotation_map[orient],
-						image_buffer[3].data, image_buffer[3].height*image_buffer[3].width);
-				orient_++;
-			}
+			
+			error = eink_image_buffer_load(blank_buffer[orient], PACK_MODE_1BYTE, rotation_map[orient],
+					image_buffer[0].data, width*height);
+			
+			eink_image_buffer_load(directory_buffer[orient], PACK_MODE_1BYTE, rotation_map[orient],
+					image_buffer[2].data, image_buffer[2].height*image_buffer[2].width);
+			
+			eink_image_buffer_load(arrows_buffer[orient], PACK_MODE_1BYTE, rotation_map[orient],
+					image_buffer[3].data, image_buffer[3].height*image_buffer[3].width);
 		}
 	}
-	blank_buffer = _blank_buffer[0];
 
-	if( error >= 0) {
+	if(error >= 0) {
 		printf("White image load ok\n");
 		eink_job_t job;
 		eink_job_begin(&job, 0);
-		eink_job_add(job, blank_buffer, WAVEFORM_MODE_INIT, UPDATE_MODE_INIT);
+		eink_job_add(job, blank_buffer[0], WAVEFORM_MODE_INIT, UPDATE_MODE_FULL);
 		eink_job_commit(job);
 	} else {
-		printf("White image load error %i\n", error);
+		printf("White image load error %i: %s\n", error, strerror(-error));
 	}
 
 	int i=0;

@@ -12,7 +12,7 @@
 #include "eink/eink.h"
 #include "eink/eink_lowlevel.h"
 
-#define EINK_MAX_IMAGE_BUFFER 10
+#define EINK_MAX_IMAGE_BUFFER 20
 #define EINK_MAX_JOB 32
 #define EINK_MAX_JOB_PART 4
 
@@ -98,7 +98,7 @@ int eink_image_buffer_acquire(eink_image_buffer_t *buf)
 		if(image_buffers[i].state == IMAGE_BUFFER_FREE) {
 			image_buffers[i].state = IMAGE_BUFFER_USED;
 			*buf = &image_buffers[i];
-			image_buffers[i].start_address = 0x800000 + i * BS60_INIT_HSIZE * BS60_INIT_VSIZE; /* FIXME */
+			image_buffers[i].start_address = EINK_IMAGE_BUFFER_START + i * EINK_IMAGE_SIZE;
 			break;
 		}
 	}
@@ -367,7 +367,7 @@ static int eink_job_handle_part(eink_job_t job, unsigned int index)
 		if(job->parts[index].xoffset == 0 && job->parts[index].yoffset == 0) {
 			eink_set_display_address(job->parts[index].image_buffer->start_address);
 		} else {
-			int   relative_off = job->parts[index].xoffset*BS60_INIT_HSIZE + job->parts[index].yoffset;
+			int relative_off = job->parts[index].xoffset * EINK_CURRENT_DISPLAY_CONFIGURATION->hsize + job->parts[index].yoffset;
 			/* FIXME Implement */
 			eink_set_display_address(job->parts[index].image_buffer->start_address-relative_off);
 		}

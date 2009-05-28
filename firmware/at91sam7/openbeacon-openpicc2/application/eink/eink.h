@@ -82,19 +82,27 @@ enum eink_error {
 
 #define EINK_FLASH_CONTROL_VALUE  0x0099
 
-/* From the example code */
-#define BS60_INIT_HSIZE 800
-#define BS60_INIT_VSIZE 600
-#define BS60_INIT_FSLEN 4
-#define BS60_INIT_FBLEN 4
-#define BS60_INIT_FELEN 10
-#define BS60_INIT_LSLEN 10
-#define BS60_INIT_LBLEN 4
-#define BS60_INIT_LELEN 74
-#define BS60_INIT_PIXCLKDIV 6
-#define BS60_INIT_SDRV_CFG ( 100 | ( 1 << 8 ) | ( 1 << 9 ) )
-#define BS60_INIT_GDRV_CFG  0x2
-#define BS60_INIT_LUTIDXFMT ( 4 | ( 1 << 7 ) )
+enum eink_display_type {
+	EINK_DISPLAY_60,
+	EINK_DISPLAY_97,
+};
+struct eink_display_configuration {
+	int hsize, vsize,
+		fslen, fblen, felen,
+		lslen, lblen, lelen,
+		pixclkdiv,
+		sdrv_cfg,
+		gdrv_cfg,
+		lutidxfmt;
+};
+extern const struct eink_display_configuration EINK_DISPLAY_CONFIGURATIONS[];
+extern const struct eink_display_configuration *EINK_CURRENT_DISPLAY_CONFIGURATION;
+
+#define _EINK_ROUND_UP_32(i) ( ((i+31)/32)*32  )
+#define EINK_IMAGE_SIZE (_EINK_ROUND_UP_32(EINK_CURRENT_DISPLAY_CONFIGURATION->hsize) *  \
+	_EINK_ROUND_UP_32(EINK_CURRENT_DISPLAY_CONFIGURATION->vsize)) 
+#define EINK_UPDATE_BUFFER_START 0x0
+#define EINK_IMAGE_BUFFER_START ( EINK_IMAGE_SIZE * 2)
 
 extern void eink_controller_reset(void);
 extern int eink_controller_init(void);

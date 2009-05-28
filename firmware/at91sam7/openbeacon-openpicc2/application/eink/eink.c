@@ -12,8 +12,30 @@
 #include "eink/eink.h"
 #include "eink/eink_lowlevel.h"
 
-#define EINK_UPDATE_BUFFER_START 0x0
-#define EINK_IMAGE_BUFFER_START (600*800*2)
+/* From the example code */
+const struct eink_display_configuration EINK_DISPLAY_CONFIGURATIONS[] = {
+		[EINK_DISPLAY_60] = {
+				.hsize = 800, .vsize = 600,
+				.fslen = 4,  .fblen = 4,  .felen = 10,
+				.lslen = 10, .lblen = 4,  .lelen = 74,
+				.pixclkdiv = 6,
+				.sdrv_cfg = ( 100 | ( 1 << 8 ) | ( 1 << 9 )  ),
+				.gdrv_cfg = 0x2,
+				.lutidxfmt = ( 4 | ( 1 << 7 ) )
+		},
+		[EINK_DISPLAY_97] = {
+				.hsize = 1200, .vsize = 825,
+				.fslen = 0,  .fblen = 4,  .felen = 4,
+				.lslen = 4,  .lblen = 10, .lelen = 60,
+				.pixclkdiv = 3,
+				.sdrv_cfg = ( 100 | ( 1 << 8 ) | ( 1 << 9 ) ),
+				.gdrv_cfg = 0x2,
+				.lutidxfmt = ( 4 | ( 1 << 7 ) )
+		},
+};
+
+#define EINK_CURRENT_DISPLAY_TYPE EINK_DISPLAY_97
+const struct eink_display_configuration *EINK_CURRENT_DISPLAY_CONFIGURATION = &(EINK_DISPLAY_CONFIGURATIONS[EINK_CURRENT_DISPLAY_TYPE]);
 
 #define EINK_READY() AT91F_PIO_IsInputSet(FPC_NHRDY_PIO, FPC_NHRDY_PIN)
 /* Note that the address bits are not decoded */ 
@@ -334,14 +356,21 @@ int eink_controller_init(void)
 	/* the following three commands are from the example code */
 	eink_write_register(0x106, 0x203);
 	
-	const u_int16_t dspe_cfg[] = { BS60_INIT_HSIZE, BS60_INIT_VSIZE,
-			BS60_INIT_SDRV_CFG, BS60_INIT_GDRV_CFG, BS60_INIT_LUTIDXFMT
+	const u_int16_t dspe_cfg[] = {
+			EINK_CURRENT_DISPLAY_CONFIGURATION->hsize, 
+			EINK_CURRENT_DISPLAY_CONFIGURATION->vsize,
+			EINK_CURRENT_DISPLAY_CONFIGURATION->sdrv_cfg,
+			EINK_CURRENT_DISPLAY_CONFIGURATION->gdrv_cfg,
+			EINK_CURRENT_DISPLAY_CONFIGURATION->lutidxfmt,
 	};
 	eink_perform_command(EINK_CMD_INIT_DSPE_CFG, dspe_cfg, 5, 0, 0);
 	
-	const u_int16_t dspe_tmg[] = { BS60_INIT_FSLEN, ( BS60_INIT_FELEN << 8 ) | BS60_INIT_FBLEN,
-			BS60_INIT_LSLEN, ( BS60_INIT_LELEN << 8 ) | BS60_INIT_LBLEN,
-			BS60_INIT_PIXCLKDIV
+	const u_int16_t dspe_tmg[] = {
+			EINK_CURRENT_DISPLAY_CONFIGURATION->fslen,
+			( EINK_CURRENT_DISPLAY_CONFIGURATION->felen << 8 ) | EINK_CURRENT_DISPLAY_CONFIGURATION->fblen,
+			EINK_CURRENT_DISPLAY_CONFIGURATION->lslen,
+			( EINK_CURRENT_DISPLAY_CONFIGURATION->lelen << 8 ) | EINK_CURRENT_DISPLAY_CONFIGURATION->lblen,
+			EINK_CURRENT_DISPLAY_CONFIGURATION->pixclkdiv,
 	};
 	eink_perform_command(EINK_CMD_INIT_DSPE_TMG, dspe_tmg, 5, 0, 0);
 	

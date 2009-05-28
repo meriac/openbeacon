@@ -415,7 +415,7 @@ void __attribute__((noreturn)) mainloop (void)
   xTaskCreate (watchdog_restart_task, (signed portCHAR *) "WATCHDOG",
 	       TASK_WATCHDOG_STACK, NULL, TASK_WATCHDOG_PRIORITY, NULL);
 
-  xTaskCreate (vUSBCDCTask, (signed portCHAR *) "USB", TASK_USB_STACK,
+  xTaskCreate (vUSBCDCTask, (signed portCHAR *) "USB        ", TASK_USB_STACK,
 	       NULL, TASK_USB_PRIORITY, NULL);
 
   /* vInitProtocolLayer (); */
