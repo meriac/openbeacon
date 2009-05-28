@@ -417,10 +417,10 @@ void eink_interface_init(void)
 	/* D0-15, Write Enable, Read Enable and Chip Select go to the Static Memory Controller peripheral */
 	AT91F_PIO_CfgPeriph(FPC_SMC_PIO, 0xFFFFL, FPC_SMC_PINS);
 	
-	/* 16-bit device on 16-bit interface, no extra float time, wait state enabled, no extra wait states,
+	/* 16-bit device on 16-bit interface, no extra float time, wait state enabled, 3 extra wait states (4 total),
 	 * no extra setup or hold time. */
 	AT91C_BASE_SMC->SMC2_CSR[0] = AT91C_SMC2_BAT | AT91C_SMC2_DBW_16 | (0L<<8) |
-		AT91C_SMC2_WSEN | 5 | (0L<<24) | (0L<<28);
+		AT91C_SMC2_WSEN | 3 | (0L<<24) | (0L<<28);
 	
 	pio_irq_init_once();
 	vSemaphoreCreateBinary(eink_irq_semaphore);

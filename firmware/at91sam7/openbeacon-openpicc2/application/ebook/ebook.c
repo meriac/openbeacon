@@ -329,6 +329,7 @@ static void ebook_task(void *params)
 	/* Prepared arrows in buffer 3 */
 	unpack_image(&image_buffer[3], &arrows_image);
 	
+	portTickType start = xTaskGetTickCount(), stop;
 	{
 		int orient;
 		for(orient = 0; orient < 4; orient ++) {
@@ -355,6 +356,8 @@ static void ebook_task(void *params)
 					image_buffer[3].data, image_buffer[3].height*image_buffer[3].width);
 		}
 	}
+	stop = xTaskGetTickCount();
+	printf("Images loaded in %li ticks\n", (long)(stop-start));
 
 	if(error >= 0) {
 		printf("White image load ok\n");
