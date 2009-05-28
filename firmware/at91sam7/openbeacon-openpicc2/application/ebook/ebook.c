@@ -318,7 +318,7 @@ static void ebook_task(void *params)
 	 */
 	
 	/* Empty image in image buffer 0 */
-	memset(image_buffer[0].data, 0xff, sizeof(image_buffer[4].data));
+	memset(image_buffer[0].data, 0xff, sizeof(image_buffer[0].data));
 	
 	/* Splash image in image buffer 1 */
 	unpack_image(&image_buffer[1], &splash_image);
