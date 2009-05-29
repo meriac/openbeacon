@@ -131,42 +131,57 @@ static void eink_burst_write_begin(void)
 	eink_wait_for_completion();
 }
 
-static void eink_burst_write_with_checksum(const unsigned char * const data, unsigned int length)
+static void _eink_burst_write_with_checksum_8(const unsigned char * const data, unsigned int length)
 {
 	unsigned int i;
+	const uint64_t * sendbuf = (const uint64_t*)data;
+	for(i=0; i<length; i++) {
+		const uint64_t item = (*(sendbuf++));
+		streamed_checksum += (uint16_t)item;
+		eink_base[0] = (uint16_t)item;
+		streamed_checksum += (uint16_t)(item>>16);
+		eink_base[0] = (uint16_t)(item>>16);
+		streamed_checksum += (uint16_t)(item>>32);
+		eink_base[0] = (uint16_t)(item>>32);
+		streamed_checksum += (uint16_t)(item>>48);
+		eink_base[0] = (uint16_t)(item>>48);
+	}
+}
+
+static void _eink_burst_write_with_checksum_4(const unsigned char * const data, unsigned int length)
+{
+	unsigned int i;
+	const uint32_t * sendbuf = (const u_int32_t*)data;
+	for(i=0; i<length; i++) {
+		const uint32_t item = (*(sendbuf++));
+		streamed_checksum += (uint16_t)item;
+		eink_base[0] = (uint16_t)item;
+		streamed_checksum += (uint16_t)(item>>16);
+		eink_base[0] = (uint16_t)(item>>16);
+	}
+}
+
+static void _eink_burst_write_with_checksum_2(const unsigned char * const data, unsigned int length)
+{
+	unsigned int i;
+	const u_int16_t *sendbuf = (const u_int16_t*)data;
+	for(i=0; i<length; i++) {
+		streamed_checksum += *sendbuf;
+		eink_base[0] = *(sendbuf++);
+	}
+}
+
+static void eink_burst_write_with_checksum(const unsigned char * const data, unsigned int length)
+{
 	if(((length&0x7) == 0) && (((uint32_t)data&0x7) == 0)) {
 		/* Optimized code path: data is on 8-byte boundary, length divisible by 8 */
-		const uint64_t * sendbuf = (const uint64_t*)data;
-		length /= 8;
-		for(i=0; i<length; i++) {
-			const uint64_t item = (*(sendbuf++));
-			streamed_checksum += (uint16_t)item;
-			eink_base[0] = (uint16_t)item;
-			streamed_checksum += (uint16_t)(item>>16);
-			eink_base[0] = (uint16_t)(item>>16);
-			streamed_checksum += (uint16_t)(item>>32);
-			eink_base[0] = (uint16_t)(item>>32);
-			streamed_checksum += (uint16_t)(item>>48);
-			eink_base[0] = (uint16_t)(item>>48);
-		}
+		_eink_burst_write_with_checksum_8(data, length/8);
 	} else if(((length&0x3) == 0) && (((uint32_t)data&0x3) == 0)) {
 		/* Optimized code path: 4byte */
-		const uint32_t * sendbuf = (const u_int32_t*)data;
-		length /= 4;
-		for(i=0; i<length; i++) {
-			const uint32_t item = (*(sendbuf++));
-			streamed_checksum += (uint16_t)item;
-			eink_base[0] = (uint16_t)item;
-			streamed_checksum += (uint16_t)(item>>16);
-			eink_base[0] = (uint16_t)(item>>16);
-		}
+		_eink_burst_write_with_checksum_4(data, length/4);
 	} else {
-		const u_int16_t *sendbuf = (const u_int16_t*)data;
-		length /= 2;
-		for(i=0; i<length; i++) {
-			streamed_checksum += *sendbuf;
-			eink_base[0] = *(sendbuf++);
-		}
+		/* Implicitly assume that all image data will be 16-bit aligned */
+		_eink_burst_write_with_checksum_2(data, length/2);
 	}
 }
 
