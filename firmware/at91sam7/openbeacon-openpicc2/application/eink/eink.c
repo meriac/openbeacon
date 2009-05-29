@@ -7,6 +7,7 @@
 #include <task.h>
 
 #include <stdio.h>
+#include <stdint.h>
 
 #include "pio_irq.h"
 #include "eink/eink.h"
@@ -130,13 +131,27 @@ static void eink_burst_write_begin(void)
 	eink_wait_for_completion();
 }
 
-static void eink_burst_write_with_checksum(const unsigned char *data, unsigned int length)
+static void eink_burst_write_with_checksum(const unsigned char * const data, unsigned int length)
 {
-	const u_int16_t *sendbuf = (const u_int16_t*)data;
 	unsigned int i;
-	for(i=0; i<length/2; i++) {
-		streamed_checksum += *sendbuf;
-		eink_base[0] = *(sendbuf++);
+	if(((length&0x3) == 0) && (((uint32_t)data&0x3) == 0)) {
+		/* Optimized code path */
+		const uint32_t * sendbuf = (const u_int32_t*)data;
+		length /= 4;
+		for(i=0; i<length; i++) {
+			const uint32_t item = (*(sendbuf++));
+			streamed_checksum += (uint16_t)item;
+			eink_base[0] = (uint16_t)item;
+			streamed_checksum += (uint16_t)(item>>16);
+			eink_base[0] = (uint16_t)(item>>16);
+		}
+	} else {
+		const u_int16_t *sendbuf = (const u_int16_t*)data;
+		length /= 2;
+		for(i=0; i<length; i++) {
+			streamed_checksum += *sendbuf;
+			eink_base[0] = *(sendbuf++);
+		}
 	}
 }
 

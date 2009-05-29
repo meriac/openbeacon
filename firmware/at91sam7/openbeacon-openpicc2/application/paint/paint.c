@@ -150,30 +150,45 @@ static void paint_task(void *params)
 	
 	unpack_image(&bg_data, &bg_image);
 	
-	portTickType start = xTaskGetTickCount(), stop;
-	
 	error = 0;
+	
+	portTickType start = xTaskGetTickCount(), stop, cumulative=0;
 	error |= eink_image_buffer_load(blank_buffer, PACK_MODE_2BIT, ROTATION_MODE_90,
 			blank_data.data, ROUND_UP(DISPLAY_LONG,8)*ROUND_UP(DISPLAY_SHORT,8)) /8;
+	stop = xTaskGetTickCount();
+	printf("Blank image: %li\n", (long)(stop-start));
+	cumulative += stop-start;
 	
+	start = xTaskGetTickCount();
 	error |= eink_image_buffer_load(black_buffer, PACK_MODE_2BIT, ROTATION_MODE_90,
 			black_data.data, ROUND_UP(DISPLAY_LONG,8)*ROUND_UP(DISPLAY_SHORT,8)) /8;
+	stop = xTaskGetTickCount();
+	printf("Black image: %li\n", (long)(stop-start));
+	cumulative += stop-start;
 	
+	start = xTaskGetTickCount();
 	error |= eink_image_buffer_load(bg_buffer, PACK_MODE_2BIT, ROTATION_MODE_90,
 			blank_data.data, ROUND_UP(DISPLAY_LONG,8)*ROUND_UP(DISPLAY_SHORT,8)) /8;
+	stop = xTaskGetTickCount();
+	printf("Blank image: %li\n", (long)(stop-start));
+	cumulative += stop-start;
+	
+	start = xTaskGetTickCount();
 	error |= eink_image_buffer_load_area(bg_buffer, PACK_MODE_1BYTE, ROTATION_MODE_90,
 			(DISPLAY_SHORT-bg_data.width)/2, (DISPLAY_LONG-bg_data.height)/2,
 			bg_data.width, bg_data.height,
 			bg_data.data, bg_data.height*bg_data.width);
-	
 	stop = xTaskGetTickCount();
-	printf("Images loaded in %li ticks\n", (long)(stop-start));
+	printf("Background image: %li\n", (long)(stop-start));
+	cumulative += stop-start;
+	
+	printf("All images loaded in %li ticks\n", (long)(cumulative));
 
 	if(error >= 0) {
 		printf("All images loaded ok\n");
 		eink_job_t job;
 		eink_job_begin(&job, 0);
-		eink_job_add(job, blank_buffer, WAVEFORM_MODE_INIT, UPDATE_MODE_FULL);
+		eink_job_add(job, blank_buffer, WAVEFORM_MODE_INIT, UPDATE_MODE_INIT);
 		eink_job_commit(job);
 	} else {
 		printf("Image load error %i: %s\n", error, strerror(-error));
@@ -207,13 +222,11 @@ static void paint_task(void *params)
 		} else {
 			idle_time=0;
 		}
-#if 0
 		if(idle_time > 600) {
 			clear_screen();
 			while(eink_job_count_pending() > 0) vTaskDelay(10/portTICK_RATE_MS);
 			power_off();
 		}
-#endif
 		
 		if(battery_update_counter++ >= 2) {
 			const int MIN_V = 600, MAX_V = 900;
