@@ -1,7 +1,7 @@
 #ifndef SPLASH_H_
 #define SPLASH_H_
 
-#define MAX_PART_SIZE (1*1024)
+#define MAX_PART_SIZE (1024*1024)
 
 struct splash_part {
 	unsigned int compress_len;

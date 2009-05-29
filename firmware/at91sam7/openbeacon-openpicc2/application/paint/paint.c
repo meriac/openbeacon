@@ -153,14 +153,14 @@ static void paint_task(void *params)
 	portTickType start = xTaskGetTickCount(), stop;
 	
 	error = 0;
-	error |= eink_image_buffer_load(blank_buffer, PACK_MODE_1BYTE, ROTATION_MODE_90,
-			blank_data.data, ROUND_UP(DISPLAY_LONG,2)*ROUND_UP(DISPLAY_SHORT,2));
+	error |= eink_image_buffer_load(blank_buffer, PACK_MODE_2BIT, ROTATION_MODE_90,
+			blank_data.data, ROUND_UP(DISPLAY_LONG,8)*ROUND_UP(DISPLAY_SHORT,8)) /8;
 	
-	error |= eink_image_buffer_load(black_buffer, PACK_MODE_1BYTE, ROTATION_MODE_90,
-			black_data.data, ROUND_UP(DISPLAY_LONG,2)*ROUND_UP(DISPLAY_SHORT,2));
+	error |= eink_image_buffer_load(black_buffer, PACK_MODE_2BIT, ROTATION_MODE_90,
+			black_data.data, ROUND_UP(DISPLAY_LONG,8)*ROUND_UP(DISPLAY_SHORT,8)) /8;
 	
-	error |= eink_image_buffer_load(bg_buffer, PACK_MODE_1BYTE, ROTATION_MODE_90,
-			blank_data.data, ROUND_UP(DISPLAY_LONG,2)*ROUND_UP(DISPLAY_SHORT,2));
+	error |= eink_image_buffer_load(bg_buffer, PACK_MODE_2BIT, ROTATION_MODE_90,
+			blank_data.data, ROUND_UP(DISPLAY_LONG,8)*ROUND_UP(DISPLAY_SHORT,8)) /8;
 	error |= eink_image_buffer_load_area(bg_buffer, PACK_MODE_1BYTE, ROTATION_MODE_90,
 			(DISPLAY_SHORT-bg_data.width)/2, (DISPLAY_LONG-bg_data.height)/2,
 			bg_data.width, bg_data.height,
@@ -187,6 +187,7 @@ static void paint_task(void *params)
 
 	event_t received_event;
 	event_loop_running = 1;
+	int battery_update_counter = 5;
 	while(1) {
 		received_event.class = EVENT_NONE;
 		event_receive(&received_event, 1000/portTICK_RATE_MS);
@@ -206,10 +207,35 @@ static void paint_task(void *params)
 		} else {
 			idle_time=0;
 		}
+#if 0
 		if(idle_time > 600) {
 			clear_screen();
 			while(eink_job_count_pending() > 0) vTaskDelay(10/portTICK_RATE_MS);
 			power_off();
+		}
+#endif
+		
+		if(battery_update_counter++ >= 2) {
+			const int MIN_V = 600, MAX_V = 900;
+			int voltage = power_get_battery_voltage();
+			battery_update_counter = 0;
+			int barlen = (DISPLAY_LONG * (voltage-MIN_V)) / (MAX_V-MIN_V);
+			if(barlen >= DISPLAY_LONG) barlen = DISPLAY_LONG-1;
+			if(barlen < 0) barlen = 0;
+			
+			eink_job_t job;
+			eink_job_begin(&job, 0);
+			if(barlen > 0) {
+				eink_job_add_area(job, blank_buffer, WAVEFORM_MODE_GU, UPDATE_MODE_FULL, 
+						DISPLAY_SHORT-1, 0, 
+						1, barlen);
+			}
+			if(barlen < DISPLAY_LONG-1) {
+				eink_job_add_area(job, black_buffer, WAVEFORM_MODE_GU, UPDATE_MODE_FULL, 
+						DISPLAY_SHORT-1, DISPLAY_LONG-1 - barlen, /* x, y */ 
+						1, DISPLAY_LONG-1); /* width, height */
+			}
+			eink_job_commit(job);
 		}
 	}
 }
