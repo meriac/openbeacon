@@ -134,8 +134,23 @@ static void eink_burst_write_begin(void)
 static void eink_burst_write_with_checksum(const unsigned char * const data, unsigned int length)
 {
 	unsigned int i;
-	if(((length&0x3) == 0) && (((uint32_t)data&0x3) == 0)) {
-		/* Optimized code path */
+	if(((length&0x7) == 0) && (((uint32_t)data&0x7) == 0)) {
+		/* Optimized code path: data is on 8-byte boundary, length divisible by 8 */
+		const uint64_t * sendbuf = (const uint64_t*)data;
+		length /= 8;
+		for(i=0; i<length; i++) {
+			const uint64_t item = (*(sendbuf++));
+			streamed_checksum += (uint16_t)item;
+			eink_base[0] = (uint16_t)item;
+			streamed_checksum += (uint16_t)(item>>16);
+			eink_base[0] = (uint16_t)(item>>16);
+			streamed_checksum += (uint16_t)(item>>32);
+			eink_base[0] = (uint16_t)(item>>32);
+			streamed_checksum += (uint16_t)(item>>48);
+			eink_base[0] = (uint16_t)(item>>48);
+		}
+	} else if(((length&0x3) == 0) && (((uint32_t)data&0x3) == 0)) {
+		/* Optimized code path: 4byte */
 		const uint32_t * sendbuf = (const u_int32_t*)data;
 		length /= 4;
 		for(i=0; i<length; i++) {
