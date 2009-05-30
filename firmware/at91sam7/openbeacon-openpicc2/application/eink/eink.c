@@ -131,6 +131,7 @@ static void eink_burst_write_begin(void)
 	eink_wait_for_completion();
 }
 
+#if 0
 void _eink_burst_write_with_checksum_8(const unsigned char * const data, unsigned int length)
 {
 	unsigned int i;
@@ -152,6 +153,42 @@ void _eink_burst_write_with_checksum_8(const unsigned char * const data, unsigne
 	}
 	streamed_checksum = checksum;
 }
+#else
+static void _eink_burst_write_with_checksum_8(const unsigned char * const data, unsigned int length)
+{
+	unsigned int i;
+	const uint64_t * sendbuf = (const uint64_t*)data;
+	uint32_t checksum = streamed_checksum;
+	for(i=0; i<length; i++) {
+		uint32_t item1, item2;
+		
+		asm volatile(
+				"LDM %[sendbuf], {%[item1], %[item2]}\n\t"   /* {item1, item2} = *sendbuf */
+				"ADD %[sendbuf], %[sendbuf], #8\n\t"         /* sendbuf++ */
+				
+				"ADD %[checksum], %[checksum], %[item1]\n\t" /* checksum += item1 */
+				"STRH %[item1], [%[eink_base]]\n\t"          /* eink_base[0] = item1 */
+				
+				"MOV %[item1], %[item1], LSR #16\n\t"        /* item1 >>= 16; */
+				
+				"ADD %[checksum], %[checksum], %[item1]\n\t" /* checksum += item1 */
+				"STRH %[item1], [%[eink_base]]\n\t"          /* eink_base[0] = item1 */
+				
+				"ADD %[checksum], %[checksum], %[item2]\n\t" /* checksum += item2 */
+				"STRH %[item2], [%[eink_base]]\n\t"          /* eink_base[0] = item2 */
+				
+				"MOV %[item2], %[item2], LSR #16\n\t"        /* item2 >>= 16; */
+				
+				"ADD %[checksum], %[checksum], %[item2]\n\t" /* checksum += item2 */
+				"STRH %[item2], [%[eink_base]]\n\t"          /* eink_base[0] = item2 */
+				
+				: [checksum] "+r" (checksum), [item1] "=r" (item1), [item2] "=r" (item2), [sendbuf] "+r" (sendbuf) 
+				: [eink_base] "r" (eink_base)
+		);
+	}
+	streamed_checksum = checksum;
+}
+#endif
 
 static void _eink_burst_write_with_checksum_4(const unsigned char * const data, unsigned int length)
 {
