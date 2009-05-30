@@ -38,7 +38,7 @@ extern unsigned char scratch_space[MAX_PART_SIZE] __attribute__((aligned (2)));
 struct image_buffer {
 	unsigned int width;
 	unsigned int height;
-	u_int8_t data[IMAGE_SIZE];
+	u_int8_t __attribute__((aligned(16))) data[IMAGE_SIZE];
 };
 static struct image_buffer __attribute__ ((section (".sdram"))) blank_data, black_data, bg_data;
 static eink_image_buffer_t blank_buffer, black_buffer, bg_buffer;

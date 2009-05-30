@@ -131,6 +131,41 @@ static void eink_burst_write_begin(void)
 	eink_wait_for_completion();
 }
 
+#define ADD_SHIFT_STORE(checksum, eink_base, item) \
+	"ADD %[" checksum "], %[" checksum "], %[" item "]\n\t" /* checksum += item */ \
+	"STRH %[" item "], [%[" eink_base "]]\n\t"              /* eink_base[0] = item */ \
+	\
+	"MOV %[" item "], %[" item "], LSR #16\n\t"             /* item >>= 16; */ \
+	\
+	"ADD %[" checksum "], %[" checksum "], %[" item "]\n\t" /* checksum += item */ \
+	"STRH %[" item "], [%[" eink_base "]]\n\t"              /* eink_base[0] = item */
+
+static void _eink_burst_write_with_checksum_16(const unsigned char * const data, unsigned int length)
+{
+	unsigned int i;
+	uint32_t checksum = streamed_checksum;
+	const void *sendbuf = data;
+	for(i=0; i<length; i++) {
+		uint32_t item1, item2, item3, item4;
+		
+		asm volatile(
+				"LDM %[sendbuf], {%[item1], %[item2], %[item3], %[item4]}\n\t" /* {item1, item2, item3, item4} = *sendbuf */
+				"ADD %[sendbuf], %[sendbuf], #16\n\t"
+				
+				ADD_SHIFT_STORE("checksum", "eink_base", "item1")
+				ADD_SHIFT_STORE("checksum", "eink_base", "item2")
+				ADD_SHIFT_STORE("checksum", "eink_base", "item3")
+				ADD_SHIFT_STORE("checksum", "eink_base", "item4")
+				
+				: [checksum] "+r" (checksum), [item1] "=r" (item1), [item2] "=r" (item2), 
+					[item3] "=r" (item3), [item4] "=r" (item4), [sendbuf] "+r" (sendbuf) 
+				: [eink_base] "r" (eink_base)
+		);
+	}
+	streamed_checksum = checksum;
+}
+
+
 #if 0
 void _eink_burst_write_with_checksum_8(const unsigned char * const data, unsigned int length)
 {
@@ -166,21 +201,8 @@ static void _eink_burst_write_with_checksum_8(const unsigned char * const data, 
 				"LDM %[sendbuf], {%[item1], %[item2]}\n\t"   /* {item1, item2} = *sendbuf */
 				"ADD %[sendbuf], %[sendbuf], #8\n\t"         /* sendbuf++ */
 				
-				"ADD %[checksum], %[checksum], %[item1]\n\t" /* checksum += item1 */
-				"STRH %[item1], [%[eink_base]]\n\t"          /* eink_base[0] = item1 */
-				
-				"MOV %[item1], %[item1], LSR #16\n\t"        /* item1 >>= 16; */
-				
-				"ADD %[checksum], %[checksum], %[item1]\n\t" /* checksum += item1 */
-				"STRH %[item1], [%[eink_base]]\n\t"          /* eink_base[0] = item1 */
-				
-				"ADD %[checksum], %[checksum], %[item2]\n\t" /* checksum += item2 */
-				"STRH %[item2], [%[eink_base]]\n\t"          /* eink_base[0] = item2 */
-				
-				"MOV %[item2], %[item2], LSR #16\n\t"        /* item2 >>= 16; */
-				
-				"ADD %[checksum], %[checksum], %[item2]\n\t" /* checksum += item2 */
-				"STRH %[item2], [%[eink_base]]\n\t"          /* eink_base[0] = item2 */
+				ADD_SHIFT_STORE("checksum", "eink_base", "item1")
+				ADD_SHIFT_STORE("checksum", "eink_base", "item2")
 				
 				: [checksum] "+r" (checksum), [item1] "=r" (item1), [item2] "=r" (item2), [sendbuf] "+r" (sendbuf) 
 				: [eink_base] "r" (eink_base)
@@ -215,7 +237,10 @@ static void _eink_burst_write_with_checksum_2(const unsigned char * const data, 
 
 static void eink_burst_write_with_checksum(const unsigned char * const data, unsigned int length)
 {
-	if(((length&0x7) == 0) && (((uint32_t)data&0x7) == 0)) {
+	if(((length&0xf) == 0) && (((uint32_t)data&0xf) == 0)) {
+		/* Optimized code path: data is on 16-byte boundary, length divisible by 16 */
+		_eink_burst_write_with_checksum_16(data, length/16);
+	} else if(((length&0x7) == 0) && (((uint32_t)data&0x7) == 0)) {
 		/* Optimized code path: data is on 8-byte boundary, length divisible by 8 */
 		_eink_burst_write_with_checksum_8(data, length/8);
 	} else if(((length&0x3) == 0) && (((uint32_t)data&0x3) == 0)) {
