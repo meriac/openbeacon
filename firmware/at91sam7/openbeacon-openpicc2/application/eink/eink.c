@@ -131,21 +131,26 @@ static void eink_burst_write_begin(void)
 	eink_wait_for_completion();
 }
 
-static void _eink_burst_write_with_checksum_8(const unsigned char * const data, unsigned int length)
+void _eink_burst_write_with_checksum_8(const unsigned char * const data, unsigned int length)
 {
 	unsigned int i;
 	const uint64_t * sendbuf = (const uint64_t*)data;
+	uint32_t checksum = streamed_checksum;
 	for(i=0; i<length; i++) {
 		const uint64_t item = (*(sendbuf++));
-		streamed_checksum += (uint16_t)item;
-		eink_base[0] = (uint16_t)item;
-		streamed_checksum += (uint16_t)(item>>16);
-		eink_base[0] = (uint16_t)(item>>16);
-		streamed_checksum += (uint16_t)(item>>32);
-		eink_base[0] = (uint16_t)(item>>32);
-		streamed_checksum += (uint16_t)(item>>48);
-		eink_base[0] = (uint16_t)(item>>48);
+		const uint32_t item1 = item, item2 = (item>>32);
+		
+		checksum += (uint16_t)item1;
+		eink_base[0] = (uint16_t)item1;
+		checksum += (uint16_t)(item1>>16);
+		eink_base[0] = (uint16_t)(item1>>16);
+		
+		checksum += (uint16_t)(item2);
+		eink_base[0] = (uint16_t)(item2);
+		checksum += (uint16_t)(item2>>16);
+		eink_base[0] = (uint16_t)(item2>>16);
 	}
+	streamed_checksum = checksum;
 }
 
 static void _eink_burst_write_with_checksum_4(const unsigned char * const data, unsigned int length)
