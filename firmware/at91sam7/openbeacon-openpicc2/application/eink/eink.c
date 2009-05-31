@@ -131,14 +131,97 @@ static void eink_burst_write_begin(void)
 	eink_wait_for_completion();
 }
 
-#define ADD_SHIFT_STORE(checksum, eink_base, item) \
+#define ADD_16(checksum, item) \
 	"ADD %[" checksum "], %[" checksum "], %[" item "]\n\t" /* checksum += item */ \
-	"STRH %[" item "], [%[" eink_base "]]\n\t"              /* eink_base[0] = item */ \
-	\
-	"MOV %[" item "], %[" item "], LSR #16\n\t"             /* item >>= 16; */ \
-	\
-	"ADD %[" checksum "], %[" checksum "], %[" item "]\n\t" /* checksum += item */ \
-	"STRH %[" item "], [%[" eink_base "]]\n\t"              /* eink_base[0] = item */
+	"ADD %[" checksum "], %[" checksum "], %[" item "], LSR #16\n\t" /* checksum += item >> 16 */
+
+#if 0 /* This code would only work with an ARM6 core or above (the AT91SE has an ARM4 core) */
+static void _eink_burst_write_with_checksum_32(const unsigned char * const data, unsigned int length)
+{
+	unsigned int i;
+	uint32_t checksum = streamed_checksum;
+	const void *sendbuf = data;
+	for(i=0; i<length; i++) {
+		register uint32_t item1 asm("r0"),
+			item2 asm("r1"),
+			item3 asm("r2"),
+			item4 asm("r3"),
+			item5 asm("r4"),
+			item6 asm("r5"),
+			item7 asm("r6"),
+			item8 asm("r7");
+		
+		asm volatile(
+				"LDM %[sendbuf], {%[item1], %[item2], %[item3], %[item4], %[item5], %[item6], %[item7], %[item8]}\n\t" /* {item1, item2, item3, item4, item5, item6, item7, item8} = *sendbuf */
+				"ADD %[sendbuf], %[sendbuf], #16\n\t"
+				
+				"STM %[eink_base], {%[item1], %[item2], %[item3], %[item4], %[item5], %[item6], %[item7], %[item8]}\n\t"
+				
+				"ADD16 %[item1], %[item1], %[item2]\n\t"
+				"ADD16 %[item1], %[item1], %[item3]\n\t"
+				"ADD16 %[item1], %[item1], %[item4]\n\t"
+				"ADD16 %[item1], %[item1], %[item5]\n\t"
+				"ADD16 %[item1], %[item1], %[item6]\n\t"
+				"ADD16 %[item1], %[item1], %[item7]\n\t"
+				"ADD16 %[item1], %[item1], %[item8]\n\t"
+				
+				"ADD %[checksum], %[checksum], %[item1]\n\t"
+				"ADD %[checksum], %[checksum], %[item1], LSR #16\n\t"
+				
+				: [checksum] "+r" (checksum), 
+					[item1] "=r" (item1), [item2] "=r" (item2), 
+					[item3] "=r" (item3), [item4] "=r" (item4), 
+					[item5] "=r" (item5), [item6] "=r" (item6), 
+					[item7] "=r" (item7), [item8] "=r" (item8), 
+					[sendbuf] "+r" (sendbuf) 
+				: [eink_base] "r" (eink_base)
+		);
+	}
+	streamed_checksum = checksum;
+}
+#else
+static void _eink_burst_write_with_checksum_32(const unsigned char * const data, unsigned int length)
+{
+	unsigned int i;
+	uint32_t checksum = streamed_checksum;
+	const void *sendbuf = data;
+	for(i=0; i<length; i++) {
+		register uint32_t item1 asm("r0"),
+			item2 asm("r1"),
+			item3 asm("r2"),
+			item4 asm("r3"),
+			item5 asm("r4"),
+			item6 asm("r5"),
+			item7 asm("r6"),
+			item8 asm("r7");
+		
+		asm volatile(
+				"LDM %[sendbuf], {%[item1], %[item2], %[item3], %[item4], %[item5], %[item6], %[item7], %[item8]}\n\t" /* {item1, item2, item3, item4, item5, item6, item7, item8} = *sendbuf */
+				"ADD %[sendbuf], %[sendbuf], #32\n\t" /* ((uint128_t*)sendbuf)++ */
+				
+				"STM %[eink_base], {%[item1], %[item2], %[item3], %[item4], %[item5], %[item6], %[item7], %[item8]}\n\t"
+				
+				ADD_16("checksum", "item1")
+				ADD_16("checksum", "item2")
+				ADD_16("checksum", "item3")
+				ADD_16("checksum", "item4")
+				ADD_16("checksum", "item5")
+				ADD_16("checksum", "item6")
+				ADD_16("checksum", "item7")
+				ADD_16("checksum", "item8")
+				
+				: [checksum] "+r" (checksum), 
+					[item1] "=r" (item1), [item2] "=r" (item2), 
+					[item3] "=r" (item3), [item4] "=r" (item4), 
+					[item5] "=r" (item5), [item6] "=r" (item6), 
+					[item7] "=r" (item7), [item8] "=r" (item8), 
+					[sendbuf] "+r" (sendbuf) 
+				: [eink_base] "r" (eink_base)
+			);
+	}
+	streamed_checksum = checksum;
+}
+#endif
 
 static void _eink_burst_write_with_checksum_16(const unsigned char * const data, unsigned int length)
 {
@@ -152,10 +235,12 @@ static void _eink_burst_write_with_checksum_16(const unsigned char * const data,
 				"LDM %[sendbuf], {%[item1], %[item2], %[item3], %[item4]}\n\t" /* {item1, item2, item3, item4} = *sendbuf */
 				"ADD %[sendbuf], %[sendbuf], #16\n\t"
 				
-				ADD_SHIFT_STORE("checksum", "eink_base", "item1")
-				ADD_SHIFT_STORE("checksum", "eink_base", "item2")
-				ADD_SHIFT_STORE("checksum", "eink_base", "item3")
-				ADD_SHIFT_STORE("checksum", "eink_base", "item4")
+				"STM %[eink_base], {%[item1], %[item2], %[item3], %[item4]}\n\t"
+				
+				ADD_16("checksum", "item1")
+				ADD_16("checksum", "item2")
+				ADD_16("checksum", "item3")
+				ADD_16("checksum", "item4")
 				
 				: [checksum] "+r" (checksum), [item1] "=r" (item1), [item2] "=r" (item2), 
 					[item3] "=r" (item3), [item4] "=r" (item4), [sendbuf] "+r" (sendbuf) 
@@ -201,8 +286,10 @@ static void _eink_burst_write_with_checksum_8(const unsigned char * const data, 
 				"LDM %[sendbuf], {%[item1], %[item2]}\n\t"   /* {item1, item2} = *sendbuf */
 				"ADD %[sendbuf], %[sendbuf], #8\n\t"         /* sendbuf++ */
 				
-				ADD_SHIFT_STORE("checksum", "eink_base", "item1")
-				ADD_SHIFT_STORE("checksum", "eink_base", "item2")
+				"STM %[eink_base], {%[item1], %[item2]}\n\t"
+				
+				ADD_16("checksum", "item1")
+				ADD_16("checksum", "item2")
 				
 				: [checksum] "+r" (checksum), [item1] "=r" (item1), [item2] "=r" (item2), [sendbuf] "+r" (sendbuf) 
 				: [eink_base] "r" (eink_base)
@@ -237,7 +324,10 @@ static void _eink_burst_write_with_checksum_2(const unsigned char * const data, 
 
 static void eink_burst_write_with_checksum(const unsigned char * const data, unsigned int length)
 {
-	if(((length&0xf) == 0) && (((uint32_t)data&0xf) == 0)) {
+	if(((length&0x1f) == 0) && (((uint32_t)data&0x1f) == 0)) {
+		/* Optimized code path: data is on 32-byte boundary, length divisible by 32 */
+		_eink_burst_write_with_checksum_32(data, length/32);
+	} else if(((length&0xf) == 0) && (((uint32_t)data&0xf) == 0)) {
 		/* Optimized code path: data is on 16-byte boundary, length divisible by 16 */
 		_eink_burst_write_with_checksum_16(data, length/16);
 	} else if(((length&0x7) == 0) && (((uint32_t)data&0x7) == 0)) {
