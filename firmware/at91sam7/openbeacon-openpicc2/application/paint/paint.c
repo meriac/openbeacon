@@ -152,23 +152,25 @@ static void paint_task(void *params)
 	
 	error = 0;
 	
+	const int rounded_up_display_size = ROUND_UP(DISPLAY_LONG,8)*ROUND_UP(DISPLAY_SHORT,8);
+	
 	portTickType start = xTaskGetTickCount(), stop, cumulative=0;
 	error |= eink_image_buffer_load(blank_buffer, PACK_MODE_2BIT, ROTATION_MODE_90,
-			blank_data.data, ROUND_UP(DISPLAY_LONG,8)*ROUND_UP(DISPLAY_SHORT,8)) /8;
+			blank_data.data, rounded_up_display_size / 4) ;
 	stop = xTaskGetTickCount();
 	printf("Blank image: %li\n", (long)(stop-start));
 	cumulative += stop-start;
 	
 	start = xTaskGetTickCount();
 	error |= eink_image_buffer_load(black_buffer, PACK_MODE_2BIT, ROTATION_MODE_90,
-			black_data.data, ROUND_UP(DISPLAY_LONG,8)*ROUND_UP(DISPLAY_SHORT,8)) /8;
+			black_data.data, rounded_up_display_size / 4);
 	stop = xTaskGetTickCount();
 	printf("Black image: %li\n", (long)(stop-start));
 	cumulative += stop-start;
 	
 	start = xTaskGetTickCount();
 	error |= eink_image_buffer_load(bg_buffer, PACK_MODE_2BIT, ROTATION_MODE_90,
-			blank_data.data, ROUND_UP(DISPLAY_LONG,8)*ROUND_UP(DISPLAY_SHORT,8)) /8;
+			blank_data.data, rounded_up_display_size / 4);
 	stop = xTaskGetTickCount();
 	printf("Blank image: %li\n", (long)(stop-start));
 	cumulative += stop-start;
