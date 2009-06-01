@@ -12,6 +12,7 @@ struct splash_part {
 struct splash_image {
 	unsigned int width;
 	unsigned int height;
+	enum { SPLASH_BPP_2 = 2, SPLASH_BPP_4 = 4, SPLASH_BPP_8 = 8} bits_per_pixel;
 	const struct splash_part * const *splash_parts;
 };
 

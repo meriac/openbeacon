@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <math.h>
 #include <unistd.h>
+#include <stdint.h>
 
 #include <task.h>
 
@@ -38,6 +39,8 @@ extern unsigned char scratch_space[MAX_PART_SIZE] __attribute__((aligned (2)));
 struct image_buffer {
 	unsigned int width;
 	unsigned int height;
+	unsigned int size;
+	enum eink_pack_mode pack_mode;
 	u_int8_t __attribute__((aligned(32))) data[IMAGE_SIZE];
 };
 static struct image_buffer __attribute__ ((section (".sdram"))) blank_data, black_data, bg_data;
@@ -51,6 +54,7 @@ static void unpack_image(struct image_buffer *target, const struct splash_image 
 
 	led_set_red(1);
 	const struct splash_part * const * current_part = image_parts;
+	target->size = 0;
 	while(*current_part != 0) {
 		lzo_uint out_len = sizeof(scratch_space);
 		if(lzo1x_decompress_safe((unsigned char*)((*current_part)->data), (*current_part)->compress_len, scratch_space, &out_len, NULL) == LZO_E_OK) {
@@ -58,11 +62,17 @@ static void unpack_image(struct image_buffer *target, const struct splash_image 
 		} else break;
 		memcpy(current_target, scratch_space, out_len);
 		current_target += out_len;
+		target->size += out_len;
 		current_part++;
 	}
 	led_set_red(0);
 	target->width = source->width;
 	target->height = source->height;
+	switch(source->bits_per_pixel) {
+	case 2: target->pack_mode = PACK_MODE_2BIT; break;
+	case 4: target->pack_mode = PACK_MODE_4BIT; break;
+	case 8: target->pack_mode = PACK_MODE_1BYTE; break;
+	}
 }
 
 
@@ -176,10 +186,10 @@ static void paint_task(void *params)
 	cumulative += stop-start;
 	
 	start = xTaskGetTickCount();
-	error |= eink_image_buffer_load_area(bg_buffer, PACK_MODE_1BYTE, ROTATION_MODE_90,
+	error |= eink_image_buffer_load_area(bg_buffer, bg_data.pack_mode, ROTATION_MODE_90,
 			(DISPLAY_SHORT-bg_data.width)/2, (DISPLAY_LONG-bg_data.height)/2,
 			bg_data.width, bg_data.height,
-			bg_data.data, bg_data.height*bg_data.width);
+			bg_data.data, bg_data.size);
 	stop = xTaskGetTickCount();
 	printf("Background image: %li\n", (long)(stop-start));
 	cumulative += stop-start;
@@ -205,9 +215,12 @@ static void paint_task(void *params)
 	event_t received_event;
 	event_loop_running = 1;
 	int battery_update_counter = 5;
+#define WAIT_TIME 25
+#define MAX_IDLE ((10 * 60 * 1000) / WAIT_TIME)
+#define BATTERY_UPDATE ((2 * 1000) / WAIT_TIME)
 	while(1) {
 		received_event.class = EVENT_NONE;
-		event_receive(&received_event, 1000/portTICK_RATE_MS);
+		event_receive(&received_event, WAIT_TIME/portTICK_RATE_MS);
 		i++;
 
 		switch(received_event.class) {
@@ -224,13 +237,13 @@ static void paint_task(void *params)
 		} else {
 			idle_time=0;
 		}
-		if(idle_time > 600) {
+		if(idle_time > MAX_IDLE) {
 			clear_screen();
 			while(eink_job_count_pending() > 0) vTaskDelay(10/portTICK_RATE_MS);
 			power_off();
 		}
 		
-		if(battery_update_counter++ >= 2) {
+		if(battery_update_counter++ >= BATTERY_UPDATE) {
 			const int MIN_V = 600, MAX_V = 900;
 			int voltage = power_get_battery_voltage();
 			battery_update_counter = 0;
