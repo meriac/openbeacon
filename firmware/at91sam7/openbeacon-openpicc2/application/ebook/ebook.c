@@ -19,16 +19,15 @@
 #include "eink/eink.h"
 #include "eink/eink_flash.h"
 #include "ebook/event.h"
-#include "lzo/minilzo.h"
 #include "touch/slider.h"
 
 #include "image/splash.h"
+#include "image/image.h"
 
-extern const struct splash_image splash_image;
-extern const struct splash_image arrows_image;
-extern const struct splash_image directory_image;
+extern const struct splash_image splash_splash_image;
+extern const struct splash_image arrows_splash_image;
+extern const struct splash_image directory_splash_image;
 
-extern unsigned char scratch_space[MAX_PART_SIZE] __attribute__((aligned (2)));
 static signed char task_list[10*40]; /* 40 bytes per task, approx. 10 tasks */
 
 #define DISPLAY_SHORT (EINK_CURRENT_DISPLAY_CONFIGURATION->vsize)
@@ -52,34 +51,9 @@ static signed char task_list[10*40]; /* 40 bytes per task, approx. 10 tasks */
 
 #define ROUNDUP4(a) (4*((a+3)/4))
 
-struct image_buffer {
-	unsigned int width;
-	unsigned int height;
-	u_int8_t data[IMAGE_SIZE];
-};
-static struct image_buffer image_buffer[10] __attribute__ ((section (".sdram")));
+static struct image image_buffer[10];
+static uint8_t  __attribute__ ((section (".sdram"))) _image_data[10][IMAGE_SIZE];
 static unsigned char eink_mgmt_data[10240] __attribute__ ((section (".sdram")));
-
-static void unpack_image(struct image_buffer *target, const struct splash_image * const source)
-{
-	const struct splash_part * const * image_parts = source->splash_parts;
-	void *current_target = &target->data;
-
-	led_set_red(1);
-	const struct splash_part * const * current_part = image_parts;
-	while(*current_part != 0) {
-		lzo_uint out_len = sizeof(scratch_space);
-		if(lzo1x_decompress_safe((unsigned char*)((*current_part)->data), (*current_part)->compress_len, scratch_space, &out_len, NULL) == LZO_E_OK) {
-			//printf(".");
-		} else break;
-		memcpy(current_target, scratch_space, out_len);
-		current_target += out_len;
-		current_part++;
-	}
-	led_set_red(0);
-	target->width = source->width;
-	target->height = source->height;
-}
 
 static int is_portrait_oriented(enum ORIENTATION orientation)
 {
@@ -108,11 +82,11 @@ static void get_display_sizes(enum ORIENTATION orientation, unsigned int *displa
 	}
 }
 
-static int can_display(enum ORIENTATION orientation, const struct image_buffer *image)
+static int can_display(enum ORIENTATION orientation, const image_t image)
 {
 	unsigned int display_width, display_height;
 	get_display_sizes(orientation, &display_width, &display_height);
-	if(image->width > display_width || image->height > display_height)
+	if(image->width > (int)display_width || image->height > (int)display_height)
 		return 0;
 	return 1;
 }
@@ -283,14 +257,7 @@ static void ebook_task(void *params)
 	}
 #endif
 
-	if (lzo_init() != LZO_E_OK) {
-		printf("internal error - lzo_init() failed !!!\n");
-		printf("(this usually indicates a compiler bug - try recompiling\nwithout optimizations, and enable `-DLZO_DEBUG' for diagnostics)\n");
-	} else {
-		printf("LZO real-time data compression library (v%s, %s).\n",
-				lzo_version_string(), lzo_version_date());
-	}
-
+	vTaskDelay(5000);
 	printf("A\n");
 	eink_controller_reset();
 	printf("B\n");
@@ -299,6 +266,13 @@ static void ebook_task(void *params)
 	if(error < 0) ebook_die_error(-error);
 	printf("C\n");
 	
+	{
+		unsigned int i;
+		for(i=0; i<(sizeof(image_buffer)/sizeof(image_buffer[0])); i++) {
+			image_buffer[i].size = sizeof(_image_data[i]);
+			image_buffer[i].data = _image_data[i];
+		}
+	}
 	{
 		unsigned int i, j;
 		for(i=0; i < (sizeof(_buffers)/sizeof(_buffers[0])); i++) {
@@ -318,16 +292,17 @@ static void ebook_task(void *params)
 	 */
 	
 	/* Empty image in image buffer 0 */
-	memset(image_buffer[0].data, 0xff, sizeof(image_buffer[0].data));
+	image_buffer[0].bits_per_pixel = IMAGE_BPP_8;
+	image_create_solid(&image_buffer[0], 0xff, DISPLAY_LONG, DISPLAY_SHORT);
 	
 	/* Splash image in image buffer 1 */
-	unpack_image(&image_buffer[1], &splash_image);
+	image_unpack_splash(&image_buffer[1], &splash_splash_image);
 	
 	/* Directory image in buffer 2 */
-	unpack_image(&image_buffer[2], &directory_image);
+	image_unpack_splash(&image_buffer[2], &directory_splash_image);
 	
 	/* Prepared arrows in buffer 3 */
-	unpack_image(&image_buffer[3], &arrows_image);
+	image_unpack_splash(&image_buffer[3], &arrows_splash_image);
 	
 	portTickType start = xTaskGetTickCount(), stop;
 	{
@@ -339,21 +314,27 @@ static void ebook_task(void *params)
 			/* Clear the splash_buffer by loading from the white image into it, then paint the logo
 			 * by loading from the splash_image
 			 */
-			eink_image_buffer_load(splash_buffer[orient], PACK_MODE_1BYTE, rotation_map[orient],
-					image_buffer[0].data, width*height);
-			eink_image_buffer_load_area(splash_buffer[orient], PACK_MODE_1BYTE, rotation_map[orient],
+			eink_image_buffer_load(splash_buffer[orient], 
+					image_get_bpp_as_pack_mode(&image_buffer[0]), rotation_map[orient],
+					image_buffer[0].data, image_buffer[0].rowstride*image_buffer[0].height);
+			
+			eink_image_buffer_load_area(splash_buffer[orient], 
+					image_get_bpp_as_pack_mode(&image_buffer[1]), rotation_map[orient],
 					(width-image_buffer[1].width)/2, (height-image_buffer[1].height)/2,
 					image_buffer[1].width, image_buffer[1].height,
-					image_buffer[1].data, image_buffer[1].height*image_buffer[1].width);
+					image_buffer[1].data, image_buffer[1].rowstride*image_buffer[1].height);
 			
-			error = eink_image_buffer_load(blank_buffer[orient], PACK_MODE_1BYTE, rotation_map[orient],
-					image_buffer[0].data, width*height);
+			error = eink_image_buffer_load(blank_buffer[orient], 
+					image_get_bpp_as_pack_mode(&image_buffer[0]), rotation_map[orient],
+					image_buffer[0].data, image_buffer[0].rowstride*image_buffer[0].height);
 			
-			eink_image_buffer_load(directory_buffer[orient], PACK_MODE_1BYTE, rotation_map[orient],
-					image_buffer[2].data, image_buffer[2].height*image_buffer[2].width);
+			eink_image_buffer_load(directory_buffer[orient], 
+					image_get_bpp_as_pack_mode(&image_buffer[2]), rotation_map[orient],
+					image_buffer[2].data, image_buffer[2].rowstride*image_buffer[2].height);
 			
-			eink_image_buffer_load(arrows_buffer[orient], PACK_MODE_1BYTE, rotation_map[orient],
-					image_buffer[3].data, image_buffer[3].height*image_buffer[3].width);
+			eink_image_buffer_load(arrows_buffer[orient], 
+					image_get_bpp_as_pack_mode(&image_buffer[3]), rotation_map[orient],
+					image_buffer[3].data, image_buffer[3].rowstride*image_buffer[3].height);
 		}
 	}
 	stop = xTaskGetTickCount();

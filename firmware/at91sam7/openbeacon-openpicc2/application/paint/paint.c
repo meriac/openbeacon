@@ -48,16 +48,6 @@ static struct image blank_image = {
 		.size = sizeof(_bg_data),
 };
 
-static enum eink_pack_mode bpp_to_pack_mode(enum image_bpp in) {
-	switch(in) {
-	case IMAGE_BPP_2: return PACK_MODE_2BIT;
-	case IMAGE_BPP_4: return PACK_MODE_4BIT;
-	case IMAGE_BPP_8: return PACK_MODE_1BYTE;
-	}
-	return 0;
-}
-
-
 
 static void clear_screen(void)
 {
@@ -157,28 +147,28 @@ static void paint_task(void *params)
 	error = 0;
 	
 	portTickType start = xTaskGetTickCount(), stop, cumulative=0;
-	error |= eink_image_buffer_load(blank_buffer, bpp_to_pack_mode(blank_image.bits_per_pixel), ROTATION_MODE_90,
+	error |= eink_image_buffer_load(blank_buffer, image_get_bpp_as_pack_mode(&blank_image), ROTATION_MODE_90,
 			blank_image.data, blank_image.rowstride*blank_image.height) ;
 	stop = xTaskGetTickCount();
 	printf("Blank image: %li\n", (long)(stop-start));
 	cumulative += stop-start;
 	
 	start = xTaskGetTickCount();
-	error |= eink_image_buffer_load(black_buffer, bpp_to_pack_mode(black_image.bits_per_pixel), ROTATION_MODE_90,
+	error |= eink_image_buffer_load(black_buffer, image_get_bpp_as_pack_mode(&black_image), ROTATION_MODE_90,
 			black_image.data, black_image.rowstride*black_image.height);
 	stop = xTaskGetTickCount();
 	printf("Black image: %li\n", (long)(stop-start));
 	cumulative += stop-start;
 	
 	start = xTaskGetTickCount();
-	error |= eink_image_buffer_load(bg_buffer, bpp_to_pack_mode(blank_image.bits_per_pixel), ROTATION_MODE_90,
+	error |= eink_image_buffer_load(bg_buffer, image_get_bpp_as_pack_mode(&blank_image), ROTATION_MODE_90,
 			blank_image.data, blank_image.rowstride*blank_image.height);
 	stop = xTaskGetTickCount();
 	printf("Blank image: %li\n", (long)(stop-start));
 	cumulative += stop-start;
 	
 	start = xTaskGetTickCount();
-	error |= eink_image_buffer_load_area(bg_buffer, bpp_to_pack_mode(bg_image.bits_per_pixel), ROTATION_MODE_90,
+	error |= eink_image_buffer_load_area(bg_buffer, image_get_bpp_as_pack_mode(&bg_image), ROTATION_MODE_90,
 			(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
 			bg_image.width, bg_image.height,
 			bg_image.data, bg_image.size);

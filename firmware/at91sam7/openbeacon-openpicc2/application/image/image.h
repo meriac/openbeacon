@@ -29,5 +29,6 @@ typedef struct image *image_t;
 
 extern int image_unpack_splash(image_t target, const struct splash_image * const source);
 extern int image_create_solid(image_t target, uint8_t color, int width, int height);
+extern enum eink_pack_mode image_get_bpp_as_pack_mode(const image_t in);
 
 #endif /* IMAGE_H_ */

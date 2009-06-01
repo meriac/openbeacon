@@ -77,6 +77,7 @@ int image_unpack_splash(image_t target, const struct splash_image * const source
 	target->width = source->width;
 	target->height = source->height;
 	target->bits_per_pixel = source->bits_per_pixel;
+	target->rowstride = (target->width*target->bits_per_pixel) / 8;
 	return 0;
 }
 
@@ -93,7 +94,7 @@ int image_create_solid(image_t target, uint8_t color, int width, int height)
 	
 	if(target->width == 0) target->width = width;
 	if(target->height == 0) target->height = height;
-	if(target->rowstride == 0) target->rowstride = target->width;
+	if(target->rowstride == 0) target->rowstride = (target->width*target->bits_per_pixel) / 8;
 	
 	if((unsigned int) (target->rowstride * (height-1) + width) > target->size) {
 		return -ENOMEM;
@@ -115,5 +116,15 @@ int image_create_solid(image_t target, uint8_t color, int width, int height)
 		}
 	}
 	
+	return 0;
+}
+
+enum eink_pack_mode image_get_bpp_as_pack_mode(const image_t in) {
+	if(in == 0) return 0;
+	switch(in->bits_per_pixel) {
+	case IMAGE_BPP_2: return PACK_MODE_2BIT;
+	case IMAGE_BPP_4: return PACK_MODE_4BIT;
+	case IMAGE_BPP_8: return PACK_MODE_1BYTE;
+	}
 	return 0;
 }
