@@ -18,14 +18,11 @@
 #include "accelerometer.h"
 #include "eink/eink.h"
 #include "eink/eink_flash.h"
-#include "lzo/minilzo.h"
 #include "ebook/event.h"
 
-#include "splash.h"
+#include "image/splash.h"
 
-extern const struct splash_image bg_image;
-
-extern unsigned char scratch_space[MAX_PART_SIZE] __attribute__((aligned (2)));
+extern const struct splash_image bg_splash_image;
 
 #define DISPLAY_SHORT (EINK_CURRENT_DISPLAY_CONFIGURATION->vsize)
 #define DISPLAY_LONG (EINK_CURRENT_DISPLAY_CONFIGURATION->hsize)
@@ -36,43 +33,28 @@ extern unsigned char scratch_space[MAX_PART_SIZE] __attribute__((aligned (2)));
  */
 #define IMAGE_SIZE (1216*832)
 
-struct image_buffer {
-	unsigned int width;
-	unsigned int height;
-	unsigned int size;
-	enum eink_pack_mode pack_mode;
-	u_int8_t __attribute__((aligned(32))) data[IMAGE_SIZE];
-};
-static struct image_buffer __attribute__ ((section (".sdram"))) blank_data, black_data, bg_data;
+static uint8_t eink_mgmt_data[10240] __attribute__ ((section (".sdram")));
 static eink_image_buffer_t blank_buffer, black_buffer, bg_buffer;
-static unsigned char eink_mgmt_data[10240] __attribute__ ((section (".sdram")));
+static uint8_t __attribute__((aligned(32), section (".sdram")))
+	_blank_data[IMAGE_SIZE], _black_data[IMAGE_SIZE], _bg_data[IMAGE_SIZE];
+static struct image blank_image = {
+		.data = _blank_data,
+		.size = sizeof(_blank_data),
+}, black_image = {
+		.data = _black_data,
+		.size = sizeof(_black_data),
+}, bg_image = {
+		.data = _bg_data,
+		.size = sizeof(_bg_data),
+};
 
-static void unpack_image(struct image_buffer *target, const struct splash_image * const source)
-{
-	const struct splash_part * const * image_parts = source->splash_parts;
-	void *current_target = &target->data;
-
-	led_set_red(1);
-	const struct splash_part * const * current_part = image_parts;
-	target->size = 0;
-	while(*current_part != 0) {
-		lzo_uint out_len = sizeof(scratch_space);
-		if(lzo1x_decompress_safe((unsigned char*)((*current_part)->data), (*current_part)->compress_len, scratch_space, &out_len, NULL) == LZO_E_OK) {
-			//printf(".");
-		} else break;
-		memcpy(current_target, scratch_space, out_len);
-		current_target += out_len;
-		target->size += out_len;
-		current_part++;
+static enum eink_pack_mode bpp_to_pack_mode(enum image_bpp in) {
+	switch(in) {
+	case IMAGE_BPP_2: return PACK_MODE_2BIT;
+	case IMAGE_BPP_4: return PACK_MODE_4BIT;
+	case IMAGE_BPP_8: return PACK_MODE_1BYTE;
 	}
-	led_set_red(0);
-	target->width = source->width;
-	target->height = source->height;
-	switch(source->bits_per_pixel) {
-	case 2: target->pack_mode = PACK_MODE_2BIT; break;
-	case 4: target->pack_mode = PACK_MODE_4BIT; break;
-	case 8: target->pack_mode = PACK_MODE_1BYTE; break;
-	}
+	return 0;
 }
 
 
@@ -108,6 +90,22 @@ static void paint_task(void *params)
 	(void)params;
 	int error, idle_time=0;
 	vTaskDelay(100/portTICK_RATE_MS);
+	
+	/*
+	 * bg_splash_image is in the flash
+	 * black_data, blank_data, bg_data is in the microcontroller SDRAM
+	 * black_buffer, blank_buffer, bg_buffer are in the display controller SDRAM
+	 */
+	
+	error = image_unpack_splash(&bg_image, &bg_splash_image);
+	if(error < 0) {
+		printf("Error during splash unpack: %i (%s)\n", error, strerror(-error));
+		led_halt_blinking(3);
+	}
+	/* FIXME: black, blank */
+
+	
+	vTaskDelay(5000/portTICK_RATE_MS);
 
 	eink_mgmt_init(eink_mgmt_data, sizeof(eink_mgmt_data));
 
@@ -120,21 +118,12 @@ static void paint_task(void *params)
 	}
 #endif
 
-	if (lzo_init() != LZO_E_OK) {
-		printf("internal error - lzo_init() failed !!!\n");
-		printf("(this usually indicates a compiler bug - try recompiling\nwithout optimizations, and enable `-DLZO_DEBUG' for diagnostics)\n");
-	} else {
-		printf("LZO real-time data compression library (v%s, %s).\n",
-				lzo_version_string(), lzo_version_date());
-	}
-
 	eink_controller_reset();
 
 	printf("Initializing eInk controller ...\n");
 	error=eink_controller_init();
 	if(error < 0) paint_die_error(-error);
 	printf("OK\n");
-	
 	
 	if( (error=eink_image_buffer_acquire(&blank_buffer)) < 0) {
 		printf("Reason: %i\nCould not acquire blank image buffer\n", error);
@@ -149,47 +138,36 @@ static void paint_task(void *params)
 		led_halt_blinking(3);
 	}
 	
-	/*
-	 * bg_image is in the flash
-	 * black_data, blank_data, bg_data is in the microcontroller SDRAM
-	 * black_buffer, blank_buffer, bg_buffer are in the display controller SDRAM
-	 */
-	
-	memset(blank_data.data, 0xff, sizeof(blank_data.data));
-	memset(black_data.data, 0x00, sizeof(black_data.data));
-	
-	unpack_image(&bg_data, &bg_image);
-	
 	error = 0;
 	
 	const int rounded_up_display_size = ROUND_UP(DISPLAY_LONG,8)*ROUND_UP(DISPLAY_SHORT,8);
 	
 	portTickType start = xTaskGetTickCount(), stop, cumulative=0;
 	error |= eink_image_buffer_load(blank_buffer, PACK_MODE_2BIT, ROTATION_MODE_90,
-			blank_data.data, rounded_up_display_size / 4) ;
+			blank_image.data, rounded_up_display_size / 4) ;
 	stop = xTaskGetTickCount();
 	printf("Blank image: %li\n", (long)(stop-start));
 	cumulative += stop-start;
 	
 	start = xTaskGetTickCount();
 	error |= eink_image_buffer_load(black_buffer, PACK_MODE_2BIT, ROTATION_MODE_90,
-			black_data.data, rounded_up_display_size / 4);
+			black_image.data, rounded_up_display_size / 4);
 	stop = xTaskGetTickCount();
 	printf("Black image: %li\n", (long)(stop-start));
 	cumulative += stop-start;
 	
 	start = xTaskGetTickCount();
 	error |= eink_image_buffer_load(bg_buffer, PACK_MODE_2BIT, ROTATION_MODE_90,
-			blank_data.data, rounded_up_display_size / 4);
+			blank_image.data, rounded_up_display_size / 4);
 	stop = xTaskGetTickCount();
 	printf("Blank image: %li\n", (long)(stop-start));
 	cumulative += stop-start;
 	
 	start = xTaskGetTickCount();
-	error |= eink_image_buffer_load_area(bg_buffer, bg_data.pack_mode, ROTATION_MODE_90,
-			(DISPLAY_SHORT-bg_data.width)/2, (DISPLAY_LONG-bg_data.height)/2,
-			bg_data.width, bg_data.height,
-			bg_data.data, bg_data.size);
+	error |= eink_image_buffer_load_area(bg_buffer, bpp_to_pack_mode(bg_image.bits_per_pixel), ROTATION_MODE_90,
+			(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
+			bg_image.width, bg_image.height,
+			bg_image.data, bg_image.size);
 	stop = xTaskGetTickCount();
 	printf("Background image: %li\n", (long)(stop-start));
 	cumulative += stop-start;

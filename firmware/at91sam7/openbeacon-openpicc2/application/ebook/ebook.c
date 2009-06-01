@@ -22,7 +22,7 @@
 #include "lzo/minilzo.h"
 #include "touch/slider.h"
 
-#include "splash.h"
+#include "image/splash.h"
 
 extern const struct splash_image splash_image;
 extern const struct splash_image arrows_image;

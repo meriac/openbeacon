@@ -10,7 +10,7 @@
 
 
 #include "lzo/minilzo.h"
-#include "splash.h"
+#include "image/splash.h"
 
 #define IN_LEN MAX_PART_SIZE
 #define OUT_LEN     (IN_LEN + IN_LEN / 16 + 64 + 3)
@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
 		part++;
 	}
 	
-	printf("#include \"splash.h\"\n");
+	printf("#include \"image/splash.h\"\n");
 	
 	int i;
 	/* First print all the cached parts */
@@ -205,7 +205,7 @@ int main(int argc, char *argv[])
 	printf("\t0\n");
 	printf("};\n");
 	/* Then print header information */
-	printf("\nconst struct splash_image %s_image = {\n",
+	printf("\nconst struct splash_image %s_splash_image = {\n",
 			destination_basename);
 	printf("\t.width=%i,\n", rows);
 	printf("\t.height=%i,\n", cols);

@@ -52,7 +52,6 @@
 #include "nfc/libnfc_demo.h"
 #include "ebook/ebook.h"
 #include "paint/paint.h"
-#include "splash.h"
 
 static uint8_t sector[SECTOR_SIZE],sector1[SECTOR_SIZE],buffer[SECTOR_SIZE];
 
@@ -408,7 +407,6 @@ static void detect_board(void)
 	POWER_MODE_PIO->PIO_PPUDR = POWER_MODE_0_PIN | POWER_MODE_1_PIN;
 }
 
-unsigned char scratch_space[MAX_PART_SIZE] __attribute__((aligned (2), section(".sdram")));
 /**********************************************************************/
 void __attribute__((noreturn)) mainloop (void)
 {

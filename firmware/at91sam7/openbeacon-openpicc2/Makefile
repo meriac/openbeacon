@@ -34,6 +34,7 @@ APP_SRC= \
   application/nfc/picc_emu.c \
   application/nfc/libnfc_demo.c \
   application/nfc/pn532_libnfc_reader.c \
+  application/image/image.c \
   application/ebook/ebook.c \
   application/ebook/event.c \
   application/paint/paint.c
