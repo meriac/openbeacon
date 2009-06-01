@@ -79,3 +79,41 @@ int image_unpack_splash(image_t target, const struct splash_image * const source
 	target->bits_per_pixel = source->bits_per_pixel;
 	return 0;
 }
+
+/* Create (or fill) an image_t with a solid color.
+ * The target must already have set its data, size and bits_per_pixel members, the
+ * width, height and rowstride members will be set to default values if they are 0.
+ */
+int image_create_solid(image_t target, uint8_t color, int width, int height)
+{
+	if(target == NULL) return -EINVAL;
+	if(target->data == NULL) {
+		return -EFAULT;
+	}
+	
+	if(target->width == 0) target->width = width;
+	if(target->height == 0) target->height = height;
+	if(target->rowstride == 0) target->rowstride = target->width;
+	
+	if((unsigned int) (target->rowstride * (height-1) + width) > target->size) {
+		return -ENOMEM;
+	}
+	
+	uint8_t byteval = 0;
+	switch(target->bits_per_pixel) {
+	case IMAGE_BPP_8: byteval = color; break;
+	case IMAGE_BPP_4: byteval = (color & 0xF0) | (color >> 4); break;
+	case IMAGE_BPP_2: byteval = (color & 0xC0) | ((color&0xC0) >> 2) | ((color&0xC0) >> 4) | ((color&0xC0) >> 6); break;
+	}
+	
+	if(target->rowstride == width) {
+		memset(target->data, byteval, (width*height*target->bits_per_pixel) / 8);
+	} else {
+		int i;
+		for(i=0; i<height; i++) {
+			memset(target->data + i*target->rowstride, byteval, (width*target->bits_per_pixel)/8);
+		}
+	}
+	
+	return 0;
+}

@@ -102,8 +102,24 @@ static void paint_task(void *params)
 		printf("Error during splash unpack: %i (%s)\n", error, strerror(-error));
 		led_halt_blinking(3);
 	}
-	/* FIXME: black, blank */
+	
+	blank_image.bits_per_pixel = IMAGE_BPP_2;
+	blank_image.rowstride = ROUND_UP(DISPLAY_SHORT, 8) / 4;
+	
+	black_image.bits_per_pixel = IMAGE_BPP_2;
+	black_image.rowstride = ROUND_UP(DISPLAY_SHORT, 8) / 4;
+	
+	error = image_create_solid(&blank_image, 0xff, DISPLAY_SHORT, DISPLAY_LONG);
+	if(error < 0) {
+		printf("Error during blank create: %i (%s)\n", error, strerror(-error));
+		led_halt_blinking(3);
+	}
 
+	error = image_create_solid(&black_image, 0x00, DISPLAY_SHORT, DISPLAY_LONG);
+	if(error < 0) {
+		printf("Error during black create: %i (%s)\n", error, strerror(-error));
+		led_halt_blinking(3);
+	}
 	
 	vTaskDelay(5000/portTICK_RATE_MS);
 
@@ -140,25 +156,23 @@ static void paint_task(void *params)
 	
 	error = 0;
 	
-	const int rounded_up_display_size = ROUND_UP(DISPLAY_LONG,8)*ROUND_UP(DISPLAY_SHORT,8);
-	
 	portTickType start = xTaskGetTickCount(), stop, cumulative=0;
-	error |= eink_image_buffer_load(blank_buffer, PACK_MODE_2BIT, ROTATION_MODE_90,
-			blank_image.data, rounded_up_display_size / 4) ;
+	error |= eink_image_buffer_load(blank_buffer, bpp_to_pack_mode(blank_image.bits_per_pixel), ROTATION_MODE_90,
+			blank_image.data, blank_image.rowstride*blank_image.height) ;
 	stop = xTaskGetTickCount();
 	printf("Blank image: %li\n", (long)(stop-start));
 	cumulative += stop-start;
 	
 	start = xTaskGetTickCount();
-	error |= eink_image_buffer_load(black_buffer, PACK_MODE_2BIT, ROTATION_MODE_90,
-			black_image.data, rounded_up_display_size / 4);
+	error |= eink_image_buffer_load(black_buffer, bpp_to_pack_mode(black_image.bits_per_pixel), ROTATION_MODE_90,
+			black_image.data, black_image.rowstride*black_image.height);
 	stop = xTaskGetTickCount();
 	printf("Black image: %li\n", (long)(stop-start));
 	cumulative += stop-start;
 	
 	start = xTaskGetTickCount();
-	error |= eink_image_buffer_load(bg_buffer, PACK_MODE_2BIT, ROTATION_MODE_90,
-			blank_image.data, rounded_up_display_size / 4);
+	error |= eink_image_buffer_load(bg_buffer, bpp_to_pack_mode(blank_image.bits_per_pixel), ROTATION_MODE_90,
+			blank_image.data, blank_image.rowstride*blank_image.height);
 	stop = xTaskGetTickCount();
 	printf("Blank image: %li\n", (long)(stop-start));
 	cumulative += stop-start;
