@@ -65,6 +65,7 @@ static void __attribute__((unused)) eink_wait_for_irq(void)
 /* in eink_mgmt.c, not public */
 extern int eink_mgmt_flush_queue(void);
 xSemaphoreHandle eink_memory_access_mutex;
+xSemaphoreHandle eink_general_access_mutex;
 static void eink_main_task(void *parameter)
 {
 	(void)parameter;
@@ -133,16 +134,64 @@ static void eink_burst_write_begin(void)
 	streamed_checksum = 0;
 	
 	/* Burst Write, basically the same as writing the whole image to register 0x154 */
+	xSemaphoreTake(eink_general_access_mutex, portMAX_DELAY);
 	EINK_BEGIN_COMMAND();
 	eink_base[0] = EINK_CMD_WR_REG;
 	EINK_END_COMMAND();
 	eink_base[1] = 0x154;
 	eink_wait_for_completion();
+	xSemaphoreGive(eink_general_access_mutex);
 }
 
 #define ADD_16(checksum, item) \
 	"ADD %[" checksum "], %[" checksum "], %[" item "]\n\t" /* checksum += item */ \
 	"ADD %[" checksum "], %[" checksum "], %[" item "], LSR #16\n\t" /* checksum += item >> 16 */
+
+static void _eink_burst_write_with_checksum_40(const unsigned char * const data, unsigned int length)
+{
+	uint32_t checksum = streamed_checksum;
+	const void *sendbuf = data;
+	register unsigned int l asm("r10") = length;
+	while(l--) {
+		register uint32_t item1 asm("r0"),
+			item2 asm("r1"),
+			item3 asm("r2"),
+			item4 asm("r3"),
+			item5 asm("r4"),
+			item6 asm("r5"),
+			item7 asm("r6"),
+			item8 asm("r7"),
+			item9 asm("r8"),
+			item10 asm("r9");
+		
+		asm volatile(
+				"LDM %[sendbuf]!, {%[item1]-%[item10]}\n\t" /* {item1, ..., item10} = *sendbuf++ */
+				"STM %[eink_base], {%[item1]-%[item10]}\n\t"
+				
+				ADD_16("checksum", "item1")
+				ADD_16("checksum", "item2")
+				ADD_16("checksum", "item3")
+				ADD_16("checksum", "item4")
+				ADD_16("checksum", "item5")
+				ADD_16("checksum", "item6")
+				ADD_16("checksum", "item7")
+				ADD_16("checksum", "item8")
+				ADD_16("checksum", "item9")
+				ADD_16("checksum", "item10")
+				
+				: [checksum] "+r" (checksum), 
+					[item1] "=r" (item1), [item2] "=r" (item2), 
+					[item3] "=r" (item3), [item4] "=r" (item4), 
+					[item5] "=r" (item5), [item6] "=r" (item6), 
+					[item7] "=r" (item7), [item8] "=r" (item8), 
+					[item9] "=r" (item9), [item10] "=r" (item10), 
+					[sendbuf] "+r" (sendbuf) 
+				: [eink_base] "r" (eink_base)
+			);
+	}
+	streamed_checksum = checksum;
+}
+
 
 #if 0 /* This code would only work with an ARM6 core or above (the AT91SE has an ARM4 core) */
 static void _eink_burst_write_with_checksum_32(const unsigned char * const data, unsigned int length)
@@ -205,10 +254,8 @@ static void _eink_burst_write_with_checksum_32(const unsigned char * const data,
 			item8 asm("r7");
 		
 		asm volatile(
-				"LDM %[sendbuf], {%[item1], %[item2], %[item3], %[item4], %[item5], %[item6], %[item7], %[item8]}\n\t" /* {item1, item2, item3, item4, item5, item6, item7, item8} = *sendbuf */
-				"ADD %[sendbuf], %[sendbuf], #32\n\t" /* ((uint128_t*)sendbuf)++ */
-				
-				"STM %[eink_base], {%[item1], %[item2], %[item3], %[item4], %[item5], %[item6], %[item7], %[item8]}\n\t"
+				"LDM %[sendbuf]!, {%[item1]-%[item8]}\n\t" /* {item1, ..., item8} = *sendbuf++ */
+				"STM %[eink_base], {%[item1]-%[item8]}\n\t"
 				
 				ADD_16("checksum", "item1")
 				ADD_16("checksum", "item2")
@@ -334,7 +381,10 @@ static void _eink_burst_write_with_checksum_2(const unsigned char * const data, 
 static void eink_burst_write_with_checksum(const unsigned char * const data, unsigned int length)
 {
 	xSemaphoreTake(eink_memory_access_mutex, portMAX_DELAY);
-	if(((length&0x1f) == 0) && (((uint32_t)data&0x1f) == 0)) {
+	if(((length%40) == 0) && ((uint32_t)data%4) == 0) {
+		/* Optimized code path: data is on 40-byte boundary, length divisible by 40 */
+		_eink_burst_write_with_checksum_40(data, length/40);
+	} else if(((length&0x1f) == 0) && (((uint32_t)data&0x1f) == 0)) {
 		/* Optimized code path: data is on 32-byte boundary, length divisible by 32 */
 		_eink_burst_write_with_checksum_32(data, length/32);
 	} else if(((length&0xf) == 0) && (((uint32_t)data&0xf) == 0)) {
@@ -473,20 +523,25 @@ void eink_dump_raw_image(void)
 
 u_int16_t eink_read_register(const u_int16_t reg)
 {
+	xSemaphoreTake(eink_general_access_mutex, portMAX_DELAY);
 	EINK_BEGIN_COMMAND();
 	eink_base[0] = EINK_CMD_RD_REG;
 	EINK_END_COMMAND();
 	eink_base[1] = reg;
-	return eink_base[2];
+	uint16_t result = eink_base[2];
+	xSemaphoreGive(eink_general_access_mutex);
+	return result;
 }
 
 void eink_write_register(const u_int16_t reg, const u_int16_t value)
 {
+	xSemaphoreTake(eink_general_access_mutex, portMAX_DELAY);
 	EINK_BEGIN_COMMAND();
 	eink_base[0] = EINK_CMD_WR_REG;
 	EINK_END_COMMAND();
 	eink_base[1] = reg;
 	eink_base[2] = value;
+	xSemaphoreGive(eink_general_access_mutex);
 }
 
 int eink_perform_command(const u_int16_t command, 
@@ -495,11 +550,13 @@ int eink_perform_command(const u_int16_t command,
 {
 	unsigned int i;
 	eink_wait_for_completion();
+	xSemaphoreTake(eink_general_access_mutex, portMAX_DELAY);
 	EINK_BEGIN_COMMAND();
 	eink_base[0] = command;
 	EINK_END_COMMAND();
 	for(i = 0; i<params_len; i++) eink_base[i] = params[i];
 	for(i = 0; i<response_len; i++) response[i] = eink_base[i];
+	xSemaphoreGive(eink_general_access_mutex);
 	return 0;
 }
 
@@ -638,6 +695,7 @@ void eink_interface_init(void)
 	pio_irq_init_once();
 	vSemaphoreCreateBinary(eink_irq_semaphore);
 	eink_memory_access_mutex = xSemaphoreCreateMutex();
+	eink_general_access_mutex = xSemaphoreCreateMutex();
 	AT91F_PIO_CfgInput(FPC_HIRQ_PIO, FPC_HIRQ_PIN);
 	pio_irq_register(FPC_HIRQ_PIO, FPC_HIRQ_PIN, eink_irq);
 	xTaskCreate (eink_main_task, (signed portCHAR *) "EINK MAIN TASK", TASK_EINK_STACK, NULL, TASK_EINK_PRIORITY, NULL);
