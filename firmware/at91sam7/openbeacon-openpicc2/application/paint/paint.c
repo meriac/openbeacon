@@ -13,6 +13,7 @@
 
 #include <task.h>
 
+#include "utils.h"
 #include "led.h"
 #include "power.h"
 #include "accelerometer.h"
@@ -26,7 +27,6 @@ extern const struct splash_image bg_splash_image;
 
 #define DISPLAY_SHORT (EINK_CURRENT_DISPLAY_CONFIGURATION->vsize)
 #define DISPLAY_LONG (EINK_CURRENT_DISPLAY_CONFIGURATION->hsize)
-#define ROUND_UP(i,j) ((j)*(((i)+(j-1))/(j)))
 
 /* Warning: The actual display size must not exceed this definition. E.g.
  * assert( IMAGE_SIZE >= EINK_CURRENT_DISPLAY_CONFIGURATION->hsize * EINK_CURRENT_DISPLAY_CONFIGURATION->vsize );
@@ -35,7 +35,7 @@ extern const struct splash_image bg_splash_image;
 
 static uint8_t eink_mgmt_data[10240] __attribute__ ((section (".sdram")));
 static eink_image_buffer_t blank_buffer, black_buffer, bg_buffer;
-static uint8_t __attribute__((aligned(32), section (".sdram")))
+static uint8_t __attribute__((aligned(4), section (".sdram")))
 	_blank_data[IMAGE_SIZE], _black_data[IMAGE_SIZE], _bg_data[IMAGE_SIZE];
 static struct image blank_image = {
 		.data = _blank_data,
@@ -72,6 +72,13 @@ static void paint_die_error(enum eink_error error)
 		printf("eInk controller initialization: unknown error\n"); break;
 	}
 	led_halt_blinking(2);
+}
+
+#define RAND_MAX_ 100853
+int random(void) {
+	static int state = 3;
+	state = (state + 400243) % RAND_MAX;
+	return state;
 }
 
 static int event_loop_running = 0;
@@ -111,8 +118,6 @@ static void paint_task(void *params)
 		led_halt_blinking(3);
 	}
 	
-	vTaskDelay(5000/portTICK_RATE_MS);
-
 	eink_mgmt_init(eink_mgmt_data, sizeof(eink_mgmt_data));
 
 #if 0 /* FIXME Seems to be broken, sometimes (hangs at boot) */
@@ -193,7 +198,7 @@ static void paint_task(void *params)
 	eink_job_begin(&job, 0);
 	eink_job_add(job, bg_buffer, WAVEFORM_MODE_GC, UPDATE_MODE_FULL);
 	eink_job_commit(job);
-
+	
 	event_t received_event;
 	event_loop_running = 1;
 	int battery_update_counter = 5;
@@ -235,17 +240,28 @@ static void paint_task(void *params)
 			
 			eink_job_t job;
 			eink_job_begin(&job, 0);
-			if(barlen > 0) {
-				eink_job_add_area(job, blank_buffer, WAVEFORM_MODE_GU, UPDATE_MODE_FULL, 
+			if(barlen < DISPLAY_LONG-2) {
+				eink_job_add_area(job, blank_buffer, WAVEFORM_MODE_DU, UPDATE_MODE_FULL, 
 						DISPLAY_SHORT-1, 0, 
-						1, barlen);
+						1, DISPLAY_LONG-1 - barlen-1);
 			}
-			if(barlen < DISPLAY_LONG-1) {
-				eink_job_add_area(job, black_buffer, WAVEFORM_MODE_GU, UPDATE_MODE_FULL, 
+			if(barlen > 0) {
+				eink_job_add_area(job, black_buffer, WAVEFORM_MODE_DU, UPDATE_MODE_FULL, 
 						DISPLAY_SHORT-1, DISPLAY_LONG-1 - barlen, /* x, y */ 
-						1, DISPLAY_LONG-1); /* width, height */
+						1, barlen); /* width, height */
 			}
 			eink_job_commit(job);
+			
+			{
+				int x = random()%(DISPLAY_SHORT-1-10);
+				int y = random()%(DISPLAY_LONG-1-10);
+				eink_job_begin(&job, 0);
+				eink_job_add_area(job, black_buffer, WAVEFORM_MODE_GU, UPDATE_MODE_FULL, 
+						x, y, /* x, y */ 
+						10, 10); /* width, height */
+				eink_job_commit(job);
+			}
+			
 		}
 	}
 }
