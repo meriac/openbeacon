@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#include "led.h"
 #include "pio_irq.h"
 #include "eink/eink.h"
 #include "eink/eink_lowlevel.h"
@@ -62,7 +63,8 @@ static void __attribute__((unused)) eink_wait_for_irq(void)
 }
 
 /* in eink_mgmt.c, not public */
-extern void eink_mgmt_flush_queue(void);
+extern int eink_mgmt_flush_queue(void);
+xSemaphoreHandle eink_memory_access_mutex;
 static void eink_main_task(void *parameter)
 {
 	(void)parameter;
@@ -71,7 +73,14 @@ static void eink_main_task(void *parameter)
 		eink_wait_for_irq();
 		printf("eInk IRQ\n");
 #endif
-		eink_mgmt_flush_queue();
+		xSemaphoreTake(eink_memory_access_mutex, portMAX_DELAY);
+		if(eink_mgmt_flush_queue()) {
+			/* Display contents were modified, wait before allowing to start another memory transfer */
+			led_set_red(1);
+			while(eink_read_register(0x338) & (1L<<2)) vTaskDelay(3);
+			led_set_red(0);
+		}
+		xSemaphoreGive(eink_memory_access_mutex);
 		vTaskDelay(10);
 	}
 }
@@ -324,6 +333,7 @@ static void _eink_burst_write_with_checksum_2(const unsigned char * const data, 
 
 static void eink_burst_write_with_checksum(const unsigned char * const data, unsigned int length)
 {
+	xSemaphoreTake(eink_memory_access_mutex, portMAX_DELAY);
 	if(((length&0x1f) == 0) && (((uint32_t)data&0x1f) == 0)) {
 		/* Optimized code path: data is on 32-byte boundary, length divisible by 32 */
 		_eink_burst_write_with_checksum_32(data, length/32);
@@ -340,6 +350,7 @@ static void eink_burst_write_with_checksum(const unsigned char * const data, uns
 		/* Implicitly assume that all image data will be 16-bit aligned */
 		_eink_burst_write_with_checksum_2(data, length/2);
 	}
+	xSemaphoreGive(eink_memory_access_mutex);
 }
 
 static int eink_burst_write_check_checksum(void)
@@ -626,6 +637,7 @@ void eink_interface_init(void)
 	
 	pio_irq_init_once();
 	vSemaphoreCreateBinary(eink_irq_semaphore);
+	eink_memory_access_mutex = xSemaphoreCreateMutex();
 	AT91F_PIO_CfgInput(FPC_HIRQ_PIO, FPC_HIRQ_PIN);
 	pio_irq_register(FPC_HIRQ_PIO, FPC_HIRQ_PIN, eink_irq);
 	xTaskCreate (eink_main_task, (signed portCHAR *) "EINK MAIN TASK", TASK_EINK_STACK, NULL, TASK_EINK_PRIORITY, NULL);

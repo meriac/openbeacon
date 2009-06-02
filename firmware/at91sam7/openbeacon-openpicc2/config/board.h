@@ -220,7 +220,7 @@ extern const struct board_layout * BOARD;
 
 //#define TASK_EINK_PRIORITY	( TASK_WATCHDOG_PRIORITY + 3 )
 #define TASK_EINK_PRIORITY	( NEAR_IDLE_PRIORITY )
-#define TASK_EINK_STACK	( 256 )
+#define TASK_EINK_STACK	( 512 )
 
 #define OPENPICC_IRQ_PRIO_PIO   (AT91C_AIC_PRIOR_LOWEST+4)
 

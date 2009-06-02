@@ -142,6 +142,7 @@ enum eink_waveform_mode {
 enum eink_update_mode {
 	UPDATE_MODE_FULL,
 	UPDATE_MODE_PART,
+	UPDATE_MODE_PART_SPECIAL,
 	UPDATE_MODE_INIT,
 };
 

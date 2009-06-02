@@ -283,8 +283,8 @@ extern int eink_job_add_area_with_offset(eink_job_t job, eink_image_buffer_t buf
 
 static int eink_job_handle_part(eink_job_t job, unsigned int index);
 static int eink_job_find_conflicting_luts(eink_job_t job, unsigned int index);
+static int eink_find_free_luts(void);
 static void eink_job_cleanup_finished(void);
-static int next_lut = 0;
 int eink_job_commit(eink_job_t job)
 {
 	if(job==NULL) return -EINVAL;
@@ -307,7 +307,7 @@ int eink_job_commit(eink_job_t job)
 static int eink_job_execute(eink_job_t job)
 {
 	unsigned int i;
-	int r;
+	int r, free_luts = eink_find_free_luts();
 	job->state = JOB_RUNNING;
 	eink_write_register(0x330, eink_read_register(0x330) & ~0x80);
 #ifdef DEBUG_EINK_MGMT
@@ -315,8 +315,15 @@ static int eink_job_execute(eink_job_t job)
 #endif
 	//eink_wait_display_idle();
 	for(i=0; i<job->num_parts; i++) {
+		int next_lut = ffs(free_luts);
+		free_luts &= ~(1L<<next_lut);
+		if(next_lut >= 16) {
+			job->state = JOB_FREE;
+			printf("Aborted with %i out of %u\n", next_lut, free_luts);
+			return -EBUSY;
+		}
+		job->parts[i].lut = next_lut;
 		job->parts[i].running = 0;
-		job->parts[i].lut = next_lut; next_lut = (next_lut+1)%16; /* FIXME Better LUT assignment */
 	}
 	for(i=0; i<job->num_parts; i++) {
 #ifdef DEBUG_EINK_MGMT
@@ -355,6 +362,7 @@ static int eink_job_handle_part(eink_job_t job, unsigned int index)
 			eink_perform_command(EINK_CMD_UPD_INIT, 0, 0, 0, 0);
 			eink_wait_display_idle();
 			break;
+		case UPDATE_MODE_PART_SPECIAL: /* This is the same as UPDATE_MODE_PART, with different conflict semantics */ 
 		case UPDATE_MODE_PART:
 			eink_display_update_part(waveform_mode_map[job->parts[index].waveform_mode] | EINK_LUT_SELECT(lut));
 			break;
@@ -372,6 +380,7 @@ static int eink_job_handle_part(eink_job_t job, unsigned int index)
 			eink_set_display_address(job->parts[index].image_buffer->start_address-relative_off);
 		}
 		switch(job->parts[index].update_mode) {
+		case UPDATE_MODE_PART_SPECIAL: /* This is the same as UPDATE_MODE_PART, with different conflict semantics */ 
 		case UPDATE_MODE_PART:
 			eink_display_update_part_area(waveform_mode_map[job->parts[index].waveform_mode] | EINK_LUT_SELECT(lut), 
 					job->parts[index].x, job->parts[index].y, job->parts[index].w, job->parts[index].h);
@@ -403,6 +412,13 @@ static int eink_job_conflicts(const eink_job_t job1, unsigned int index1,
 		y1_2 = job2->parts[index2].y,
 		x2_2 = job2->parts[index2].x + job2->parts[index2].w,
 		y2_2 = job2->parts[index2].y + job2->parts[index2].h;
+	
+	if(job1->parts[index1].update_mode == UPDATE_MODE_PART_SPECIAL &&
+			job2->parts[index2].update_mode == UPDATE_MODE_PART_SPECIAL) {
+		/* Assume that two UPDATE_MODE_PART_SPECIAL do not conflict with each other,
+		 * (the application has to ensure that) */
+		return 0; 
+	}
 	
 	if(rectangle_contains(x1_1, y1_1, x2_1, y2_1,  x1_2, y1_2)) return 1;
 	if(rectangle_contains(x1_1, y1_1, x2_1, y2_1,  x2_2, y1_2)) return 1;
@@ -438,6 +454,32 @@ static int eink_job_find_conflicting_luts(eink_job_t job, unsigned int index)
 	return result;
 }
 
+static int eink_find_free_luts(void)
+{
+	unsigned int i, j, result = 0xffff;
+	for(i=0; i<EINK_MAX_JOB; i++) {
+		if(jobs[i].state != JOB_RUNNING) continue;
+		for(j=0; j<jobs[i].num_parts; j++) {
+			if(!jobs[i].parts[j].running) continue;
+			result &= ~(1L<<jobs[i].parts[j].lut);
+		}
+	}
+	return result;
+}
+
+static unsigned int eink_count_free_luts(void)
+{
+	unsigned int i, free_luts = eink_find_free_luts(), result = 0;
+	for(i=0; i<32; i++) {
+		if(free_luts & 1) result++;
+		free_luts >>= 1;
+	}
+	return result;
+}
+
+/* Check for each job whether all the LUTs assigned to that job
+ * have finished, and if so, free that job
+ */
 static void eink_job_cleanup_finished(void)
 {
 	unsigned int j,k;
@@ -471,6 +513,9 @@ static int eink_mgmt_find_runnable(void)
 	for(j=0; j<EINK_MAX_JOB; j++) {
 		if(jobs[j].state != JOB_WAITING) continue;
 		int eligible = 1;
+		if(eink_count_free_luts() < jobs[j].num_parts) {
+			eligible = 0;
+		}
 		for(k = 0; k<jobs[j].num_parts; k++) {
 			if(!jobs[j].parts[k].is_area_update) {
 				/* Full screen updates can only run when no other job runs */
@@ -491,6 +536,7 @@ static int eink_mgmt_find_runnable(void)
 				break;
 		}
 		if(eligible) {
+			/* From the set of eligible jobs, find the one with the smallest job_number */
 			if(result == -1 || jobs[result].job_number > jobs[j].job_number) {
 				result = j;
 			}
@@ -499,14 +545,16 @@ static int eink_mgmt_find_runnable(void)
 	return result;
 }
 
-void eink_mgmt_flush_queue(void)
+int eink_mgmt_flush_queue(void)
 {
 	eink_job_cleanup_finished();
-	int j;
+	int j, modified = 0;
 	while( (j=eink_mgmt_find_runnable()) >= 0 ) {
 		eink_job_execute(&jobs[j]);
 		eink_job_cleanup_finished();
+		modified = 1;
 	}
+	return modified;
 }
 
 int eink_job_count_pending(void)
