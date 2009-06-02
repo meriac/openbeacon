@@ -311,11 +311,17 @@ static int eink_job_execute(eink_job_t job)
 	job->state = JOB_RUNNING;
 	eink_write_register(0x330, eink_read_register(0x330) & ~0x80);
 #ifdef DEBUG_EINK_MGMT
-	printf("pr %04X %04X (%04X)\n", eink_read_register(0x336), eink_read_register(0x338), eink_read_register(0x33A) );
+	printf("pr %04X [%04X:%i] %04X (%04X)\n", eink_read_register(0x336), free_luts, ffs(free_luts), eink_read_register(0x338), eink_read_register(0x33A) );
 #endif
 	//eink_wait_display_idle();
 	for(i=0; i<job->num_parts; i++) {
 		int next_lut = ffs(free_luts);
+		if(next_lut == 0) {
+			job->state = JOB_FREE;
+			printf("Aborted due to no LUT available\n");
+			return -EBUSY;
+		}
+		next_lut = next_lut-1;
 		free_luts &= ~(1L<<next_lut);
 		if(next_lut >= 16) {
 			job->state = JOB_FREE;
@@ -446,8 +452,10 @@ static int eink_job_find_conflicting_luts(eink_job_t job, unsigned int index)
 				/* Full screen update conflicts with everything */
 				result |= 1<<(jobs[j].parts[k].lut);
 			} else {
-				if(!jobs[j].parts[k].is_area_update || eink_job_conflicts(job, index, &jobs[j], k))
+				if(!jobs[j].parts[k].is_area_update || eink_job_conflicts(job, index, &jobs[j], k)) {
 					result |= 1<<(jobs[j].parts[k].lut);
+					printf("%p:%i/%p:%i", job, index, &jobs[j], k);
+				}
 			}
 		}
 	}
