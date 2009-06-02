@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <string.h>
 
+#include "utils.h"
 #include "eink/eink.h"
 #include "lzo/minilzo.h"
 #include "image/splash.h"
@@ -77,7 +78,7 @@ int image_unpack_splash(image_t target, const struct splash_image * const source
 	target->width = source->width;
 	target->height = source->height;
 	target->bits_per_pixel = source->bits_per_pixel;
-	target->rowstride = (target->width*target->bits_per_pixel) / 8;
+	target->rowstride = ROUND_UP(target->width*target->bits_per_pixel, 8) / 8;
 	return 0;
 }
 
@@ -94,7 +95,7 @@ int image_create_solid(image_t target, uint8_t color, int width, int height)
 	
 	if(target->width == 0) target->width = width;
 	if(target->height == 0) target->height = height;
-	if(target->rowstride == 0) target->rowstride = (target->width*target->bits_per_pixel) / 8;
+	if(target->rowstride == 0) target->rowstride = ROUND_UP(target->width*target->bits_per_pixel, 8) / 8;
 	
 	if((unsigned int) (target->rowstride * (height-1) + width) > target->size) {
 		return -ENOMEM;
@@ -108,11 +109,11 @@ int image_create_solid(image_t target, uint8_t color, int width, int height)
 	}
 	
 	if(target->rowstride == width) {
-		memset(target->data, byteval, (width*height*target->bits_per_pixel) / 8);
+		memset(target->data, byteval, ROUND_UP(width*height*target->bits_per_pixel, 8) / 8);
 	} else {
 		int i;
 		for(i=0; i<height; i++) {
-			memset(target->data + i*target->rowstride, byteval, (width*target->bits_per_pixel)/8);
+			memset(target->data + i*target->rowstride, byteval, ROUND_UP(width*target->bits_per_pixel, 8)/8);
 		}
 	}
 	
