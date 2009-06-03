@@ -127,20 +127,28 @@ void eink_display_update_part_area(u_int16_t mode, u_int16_t x, u_int16_t y, u_i
 }
 
 static u_int16_t streamed_checksum;
+static u_int16_t received_checksum;
 static void eink_burst_write_begin(void)
 {
+	/* Always take the semaphores in the same order! First memory_access, then general access
+	 * Do not release general access until the download is complete, otherwise other threads
+	 * might get to perform register operations and upset our CMD_WR_REG. 
+	 */
+	xSemaphoreTake(eink_memory_access_mutex, portMAX_DELAY);
+	
 	/* Zero the checksum register */
 	eink_write_register(0x156, 0);
 	streamed_checksum = 0;
 	
-	/* Burst Write, basically the same as writing the whole image to register 0x154 */
+	/* Burst Write, basically the same as writing the whole image to register 0x154, e.g. one
+	 * long write_register */
 	xSemaphoreTake(eink_general_access_mutex, portMAX_DELAY);
+	
 	EINK_BEGIN_COMMAND();
 	eink_base[0] = EINK_CMD_WR_REG;
 	EINK_END_COMMAND();
 	eink_base[1] = 0x154;
 	eink_wait_for_completion();
-	xSemaphoreGive(eink_general_access_mutex);
 }
 
 #define ADD_16(checksum, item) \
@@ -220,7 +228,6 @@ static void _eink_burst_write_with_checksum_2(const unsigned char * const data, 
 
 static void eink_burst_write_with_checksum(const unsigned char * const data, unsigned int length)
 {
-	xSemaphoreTake(eink_memory_access_mutex, portMAX_DELAY);
 	if(((length%40) == 0) && ((uint32_t)data%4) == 0) {
 		/* Optimized code path: data is on 40-byte boundary, length divisible by 40 */
 		_eink_burst_write_with_checksum_40(data, length/40);
@@ -228,12 +235,21 @@ static void eink_burst_write_with_checksum(const unsigned char * const data, uns
 		/* Implicitly assume that all image data will be 16-bit aligned */
 		_eink_burst_write_with_checksum_2(data, length/2);
 	}
+}
+
+static void eink_burst_write_end(void)
+{
+	/* This ends the burst write, allowing other register operations. Reenable
+	 * memory operations only after the checksum register has been read.
+	 */
+	xSemaphoreGive(eink_general_access_mutex);
+	received_checksum = eink_read_register(0x156);
 	xSemaphoreGive(eink_memory_access_mutex);
 }
 
 static int eink_burst_write_check_checksum(void)
 {
-	return streamed_checksum == eink_read_register(0x156);
+	return streamed_checksum == received_checksum;
 }
 
 int eink_display_raw_image(const unsigned char *data, unsigned int length)
@@ -248,6 +264,8 @@ int eink_display_raw_image(const unsigned char *data, unsigned int length)
 	eink_burst_write_begin();
 	
 	eink_burst_write_with_checksum(data, length);
+	
+	eink_burst_write_end();
 	
 	eink_perform_command(EINK_CMD_BST_END_SDR, 0, 0, 0, 0);
 	eink_wait_for_completion();
@@ -307,6 +325,8 @@ void eink_display_streamed_image_update(const unsigned char *data, unsigned int 
 
 int eink_display_streamed_image_end(void)
 {
+	eink_burst_write_end();
+	
 	eink_perform_command(EINK_CMD_LD_IMG_END, 0, 0, 0, 0);
 	eink_wait_for_completion();
 	
