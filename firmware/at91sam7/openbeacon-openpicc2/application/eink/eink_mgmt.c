@@ -454,7 +454,7 @@ static int eink_job_find_conflicting_luts(eink_job_t job, unsigned int index)
 			} else {
 				if(!jobs[j].parts[k].is_area_update || eink_job_conflicts(job, index, &jobs[j], k)) {
 					result |= 1<<(jobs[j].parts[k].lut);
-					printf("%p:%i/%p:%i", job, index, &jobs[j], k);
+					//printf("%p:%i/%p:%i", job, index, &jobs[j], k);
 				}
 			}
 		}
