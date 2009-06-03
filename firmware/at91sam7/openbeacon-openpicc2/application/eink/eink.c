@@ -167,7 +167,21 @@ static void _eink_burst_write_with_checksum_40(const unsigned char * const data,
 		asm volatile(
 				"LDM %[sendbuf]!, {%[item1]-%[item10]}\n\t" /* {item1, ..., item10} = *sendbuf++ */
 				"STM %[eink_base], {%[item1]-%[item10]}\n\t"
+
+#if 0 /* ARM6 core (not on the AT91SAM7SE */
+				"ADD16 %[item1], %[item1], %[item2]\n\t"
+				"ADD16 %[item1], %[item1], %[item3]\n\t"
+				"ADD16 %[item1], %[item1], %[item4]\n\t"
+				"ADD16 %[item1], %[item1], %[item5]\n\t"
+				"ADD16 %[item1], %[item1], %[item6]\n\t"
+				"ADD16 %[item1], %[item1], %[item7]\n\t"
+				"ADD16 %[item1], %[item1], %[item8]\n\t"
+				"ADD16 %[item1], %[item1], %[item9]\n\t"
+				"ADD16 %[item1], %[item1], %[item10]\n\t"
 				
+				"ADD %[checksum], %[checksum], %[item1]\n\t"
+				"ADD %[checksum], %[checksum], %[item1], LSR #16\n\t"
+#else
 				ADD_16("checksum", "item1")
 				ADD_16("checksum", "item2")
 				ADD_16("checksum", "item3")
@@ -178,6 +192,7 @@ static void _eink_burst_write_with_checksum_40(const unsigned char * const data,
 				ADD_16("checksum", "item8")
 				ADD_16("checksum", "item9")
 				ADD_16("checksum", "item10")
+#endif
 				
 				: [checksum] "+r" (checksum), 
 					[item1] "=r" (item1), [item2] "=r" (item2), 
@@ -192,181 +207,6 @@ static void _eink_burst_write_with_checksum_40(const unsigned char * const data,
 	streamed_checksum = checksum;
 }
 
-
-#if 0 /* This code would only work with an ARM6 core or above (the AT91SE has an ARM4 core) */
-static void _eink_burst_write_with_checksum_32(const unsigned char * const data, unsigned int length)
-{
-	unsigned int i;
-	uint32_t checksum = streamed_checksum;
-	const void *sendbuf = data;
-	for(i=0; i<length; i++) {
-		register uint32_t item1 asm("r0"),
-			item2 asm("r1"),
-			item3 asm("r2"),
-			item4 asm("r3"),
-			item5 asm("r4"),
-			item6 asm("r5"),
-			item7 asm("r6"),
-			item8 asm("r7");
-		
-		asm volatile(
-				"LDM %[sendbuf], {%[item1], %[item2], %[item3], %[item4], %[item5], %[item6], %[item7], %[item8]}\n\t" /* {item1, item2, item3, item4, item5, item6, item7, item8} = *sendbuf */
-				"ADD %[sendbuf], %[sendbuf], #16\n\t"
-				
-				"STM %[eink_base], {%[item1], %[item2], %[item3], %[item4], %[item5], %[item6], %[item7], %[item8]}\n\t"
-				
-				"ADD16 %[item1], %[item1], %[item2]\n\t"
-				"ADD16 %[item1], %[item1], %[item3]\n\t"
-				"ADD16 %[item1], %[item1], %[item4]\n\t"
-				"ADD16 %[item1], %[item1], %[item5]\n\t"
-				"ADD16 %[item1], %[item1], %[item6]\n\t"
-				"ADD16 %[item1], %[item1], %[item7]\n\t"
-				"ADD16 %[item1], %[item1], %[item8]\n\t"
-				
-				"ADD %[checksum], %[checksum], %[item1]\n\t"
-				"ADD %[checksum], %[checksum], %[item1], LSR #16\n\t"
-				
-				: [checksum] "+r" (checksum), 
-					[item1] "=r" (item1), [item2] "=r" (item2), 
-					[item3] "=r" (item3), [item4] "=r" (item4), 
-					[item5] "=r" (item5), [item6] "=r" (item6), 
-					[item7] "=r" (item7), [item8] "=r" (item8), 
-					[sendbuf] "+r" (sendbuf) 
-				: [eink_base] "r" (eink_base)
-		);
-	}
-	streamed_checksum = checksum;
-}
-#else
-static void _eink_burst_write_with_checksum_32(const unsigned char * const data, unsigned int length)
-{
-	unsigned int i;
-	uint32_t checksum = streamed_checksum;
-	const void *sendbuf = data;
-	for(i=0; i<length; i++) {
-		register uint32_t item1 asm("r0"),
-			item2 asm("r1"),
-			item3 asm("r2"),
-			item4 asm("r3"),
-			item5 asm("r4"),
-			item6 asm("r5"),
-			item7 asm("r6"),
-			item8 asm("r7");
-		
-		asm volatile(
-				"LDM %[sendbuf]!, {%[item1]-%[item8]}\n\t" /* {item1, ..., item8} = *sendbuf++ */
-				"STM %[eink_base], {%[item1]-%[item8]}\n\t"
-				
-				ADD_16("checksum", "item1")
-				ADD_16("checksum", "item2")
-				ADD_16("checksum", "item3")
-				ADD_16("checksum", "item4")
-				ADD_16("checksum", "item5")
-				ADD_16("checksum", "item6")
-				ADD_16("checksum", "item7")
-				ADD_16("checksum", "item8")
-				
-				: [checksum] "+r" (checksum), 
-					[item1] "=r" (item1), [item2] "=r" (item2), 
-					[item3] "=r" (item3), [item4] "=r" (item4), 
-					[item5] "=r" (item5), [item6] "=r" (item6), 
-					[item7] "=r" (item7), [item8] "=r" (item8), 
-					[sendbuf] "+r" (sendbuf) 
-				: [eink_base] "r" (eink_base)
-			);
-	}
-	streamed_checksum = checksum;
-}
-#endif
-
-static void _eink_burst_write_with_checksum_16(const unsigned char * const data, unsigned int length)
-{
-	unsigned int i;
-	uint32_t checksum = streamed_checksum;
-	const void *sendbuf = data;
-	for(i=0; i<length; i++) {
-		uint32_t item1, item2, item3, item4;
-		
-		asm volatile(
-				"LDM %[sendbuf], {%[item1], %[item2], %[item3], %[item4]}\n\t" /* {item1, item2, item3, item4} = *sendbuf */
-				"ADD %[sendbuf], %[sendbuf], #16\n\t"
-				
-				"STM %[eink_base], {%[item1], %[item2], %[item3], %[item4]}\n\t"
-				
-				ADD_16("checksum", "item1")
-				ADD_16("checksum", "item2")
-				ADD_16("checksum", "item3")
-				ADD_16("checksum", "item4")
-				
-				: [checksum] "+r" (checksum), [item1] "=r" (item1), [item2] "=r" (item2), 
-					[item3] "=r" (item3), [item4] "=r" (item4), [sendbuf] "+r" (sendbuf) 
-				: [eink_base] "r" (eink_base)
-		);
-	}
-	streamed_checksum = checksum;
-}
-
-
-#if 0
-void _eink_burst_write_with_checksum_8(const unsigned char * const data, unsigned int length)
-{
-	unsigned int i;
-	const uint64_t * sendbuf = (const uint64_t*)data;
-	uint32_t checksum = streamed_checksum;
-	for(i=0; i<length; i++) {
-		const uint64_t item = (*(sendbuf++));
-		const uint32_t item1 = item, item2 = (item>>32);
-		
-		checksum += (uint16_t)item1;
-		eink_base[0] = (uint16_t)item1;
-		checksum += (uint16_t)(item1>>16);
-		eink_base[0] = (uint16_t)(item1>>16);
-		
-		checksum += (uint16_t)(item2);
-		eink_base[0] = (uint16_t)(item2);
-		checksum += (uint16_t)(item2>>16);
-		eink_base[0] = (uint16_t)(item2>>16);
-	}
-	streamed_checksum = checksum;
-}
-#else
-static void _eink_burst_write_with_checksum_8(const unsigned char * const data, unsigned int length)
-{
-	unsigned int i;
-	const uint64_t * sendbuf = (const uint64_t*)data;
-	uint32_t checksum = streamed_checksum;
-	for(i=0; i<length; i++) {
-		uint32_t item1, item2;
-		
-		asm volatile(
-				"LDM %[sendbuf], {%[item1], %[item2]}\n\t"   /* {item1, item2} = *sendbuf */
-				"ADD %[sendbuf], %[sendbuf], #8\n\t"         /* sendbuf++ */
-				
-				"STM %[eink_base], {%[item1], %[item2]}\n\t"
-				
-				ADD_16("checksum", "item1")
-				ADD_16("checksum", "item2")
-				
-				: [checksum] "+r" (checksum), [item1] "=r" (item1), [item2] "=r" (item2), [sendbuf] "+r" (sendbuf) 
-				: [eink_base] "r" (eink_base)
-		);
-	}
-	streamed_checksum = checksum;
-}
-#endif
-
-static void _eink_burst_write_with_checksum_4(const unsigned char * const data, unsigned int length)
-{
-	unsigned int i;
-	const uint32_t * sendbuf = (const u_int32_t*)data;
-	for(i=0; i<length; i++) {
-		const uint32_t item = (*(sendbuf++));
-		streamed_checksum += (uint16_t)item;
-		eink_base[0] = (uint16_t)item;
-		streamed_checksum += (uint16_t)(item>>16);
-		eink_base[0] = (uint16_t)(item>>16);
-	}
-}
 
 static void _eink_burst_write_with_checksum_2(const unsigned char * const data, unsigned int length)
 {
@@ -384,18 +224,6 @@ static void eink_burst_write_with_checksum(const unsigned char * const data, uns
 	if(((length%40) == 0) && ((uint32_t)data%4) == 0) {
 		/* Optimized code path: data is on 40-byte boundary, length divisible by 40 */
 		_eink_burst_write_with_checksum_40(data, length/40);
-	} else if(((length&0x1f) == 0) && (((uint32_t)data&0x1f) == 0)) {
-		/* Optimized code path: data is on 32-byte boundary, length divisible by 32 */
-		_eink_burst_write_with_checksum_32(data, length/32);
-	} else if(((length&0xf) == 0) && (((uint32_t)data&0xf) == 0)) {
-		/* Optimized code path: data is on 16-byte boundary, length divisible by 16 */
-		_eink_burst_write_with_checksum_16(data, length/16);
-	} else if(((length&0x7) == 0) && (((uint32_t)data&0x7) == 0)) {
-		/* Optimized code path: data is on 8-byte boundary, length divisible by 8 */
-		_eink_burst_write_with_checksum_8(data, length/8);
-	} else if(((length&0x3) == 0) && (((uint32_t)data&0x3) == 0)) {
-		/* Optimized code path: 4byte */
-		_eink_burst_write_with_checksum_4(data, length/4);
 	} else {
 		/* Implicitly assume that all image data will be 16-bit aligned */
 		_eink_burst_write_with_checksum_2(data, length/2);
