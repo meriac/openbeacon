@@ -100,8 +100,12 @@ static void paint_task(void *params)
 		led_halt_blinking(3);
 	}
 	
-	blank_image.bits_per_pixel = IMAGE_BPP_2;
-	blank_image.rowstride = ROUND_UP(DISPLAY_SHORT, 8) / 4;
+	/* The white image needs to have 4 bpp since the controller will unpack 2bpp to
+	 * 8bpp by appending 6 zero-bits. So 11b in 2 bpp gets 11000000b in 8 bpp, which
+	 * is a slight grey (even with the P4N LUT mode).
+	 */
+	blank_image.bits_per_pixel = IMAGE_BPP_4;
+	blank_image.rowstride = ROUND_UP(DISPLAY_SHORT, 4) / 2;
 	
 	black_image.bits_per_pixel = IMAGE_BPP_2;
 	black_image.rowstride = ROUND_UP(DISPLAY_SHORT, 8) / 4;
