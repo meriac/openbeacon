@@ -411,6 +411,7 @@ static void detect_board(void)
 void __attribute__((noreturn)) mainloop (void)
 {
   prvSetupHardware ();
+  AT91F_RSTSetMode(AT91C_BASE_RSTC, AT91F_RSTGetMode(AT91C_BASE_RSTC) | 0x11 );
 
   led_init ();
 
