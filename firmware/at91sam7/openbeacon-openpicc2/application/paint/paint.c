@@ -77,7 +77,7 @@ static void paint_die_error(enum eink_error error)
 #define RAND_MAX_ 100853
 int random(void) {
 	static int state = 3;
-	state = (state + 400243) % RAND_MAX;
+	state = (7*state + 400243) % RAND_MAX_;
 	return state;
 }
 
@@ -187,7 +187,7 @@ static void paint_task(void *params)
 		printf("All images loaded ok\n");
 		eink_job_t job;
 		eink_job_begin(&job, 0);
-		eink_job_add(job, blank_buffer, WAVEFORM_MODE_INIT, UPDATE_MODE_INIT);
+		eink_job_add(job, blank_buffer, WAVEFORM_MODE_INIT, UPDATE_MODE_FULL);
 		eink_job_commit(job);
 	} else {
 		printf("Image load error %i: %s\n", error, strerror(-error));
@@ -231,28 +231,30 @@ static void paint_task(void *params)
 		}
 		
 		if(battery_update_counter++ >= BATTERY_UPDATE) {
-			const int MIN_V = 600, MAX_V = 900;
+			const int MIN_V = 600, MAX_V = 910;
 			int voltage = power_get_battery_voltage();
 			battery_update_counter = 0;
 			int barlen = (DISPLAY_LONG * (voltage-MIN_V)) / (MAX_V-MIN_V);
 			if(barlen >= DISPLAY_LONG) barlen = DISPLAY_LONG-1;
 			if(barlen < 0) barlen = 0;
 			
+			printf("Battery: (%i) %i\n", voltage, barlen  );
+			
 			eink_job_t job;
 			eink_job_begin(&job, 0);
 			if(barlen < DISPLAY_LONG-2) {
-				eink_job_add_area(job, blank_buffer, WAVEFORM_MODE_DU, UPDATE_MODE_FULL, 
+				eink_job_add_area(job, blank_buffer, WAVEFORM_MODE_GU, UPDATE_MODE_FULL, 
 						DISPLAY_SHORT-1, 0, 
 						1, DISPLAY_LONG-1 - barlen-1);
 			}
 			if(barlen > 0) {
-				eink_job_add_area(job, black_buffer, WAVEFORM_MODE_DU, UPDATE_MODE_FULL, 
+				eink_job_add_area(job, black_buffer, WAVEFORM_MODE_GU, UPDATE_MODE_FULL, 
 						DISPLAY_SHORT-1, DISPLAY_LONG-1 - barlen, /* x, y */ 
 						1, barlen); /* width, height */
 			}
 			eink_job_commit(job);
 			
-			{
+			if(0) {
 				int x = random()%(DISPLAY_SHORT-1-10);
 				int y = random()%(DISPLAY_LONG-1-10);
 				eink_job_begin(&job, 0);
@@ -284,8 +286,8 @@ int paint_init(void)
 	if( (r=power_set_pressed_callback(power_pressed_cb)) < 0)
 		return r;
 
-	xTaskCreate(paint_task, (signed portCHAR *) "PAINT_ TASK", TASK_EBOOK_STACK,
-			NULL, TASK_EBOOK_PRIORITY, NULL);
+	xTaskCreate(paint_task, (signed portCHAR *) "PAINT TASK", TASK_PAINT_STACK,
+			NULL, TASK_PAINT_PRIORITY, NULL);
 
 	return 0;
 }
