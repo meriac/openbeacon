@@ -226,13 +226,23 @@ static void _eink_burst_write_with_checksum_2(const unsigned char * const data, 
 	}
 }
 
-static void eink_burst_write_with_checksum(const unsigned char * const data, unsigned int length)
+static void eink_burst_write_with_checksum(const unsigned char * data, unsigned int length)
 {
-	if(((length%40) == 0) && ((uint32_t)data%4) == 0) {
-		/* Optimized code path: data is on 40-byte boundary, length divisible by 40 */
-		_eink_burst_write_with_checksum_40(data, length/40);
-	} else {
-		/* Implicitly assume that all image data will be 16-bit aligned */
+	/* Guard that data must be 16-bit aligned, length a multiple of 16 bits and length at least one 16-bit transfer */
+	if(length < 2 || length % 2 != 0 || ((unsigned int)data)%2 != 0 ) return;
+	
+	/* Call the unoptimised transfer until the start is 32-bit aligned, then the optimised transfer for
+	 * a multiple of 40 bytes, then the unoptimised again for the remainder of the buffer.
+	 */
+	while( ((unsigned int)data)%4 != 0 ) {
+		_eink_burst_write_with_checksum_2(data, 1);
+		data += 2; length -= 2;
+	}
+	
+	_eink_burst_write_with_checksum_40(data, length/40);
+	data += 40*(length/40); length -= 40*(length/40);
+	
+	if(length > 0) {
 		_eink_burst_write_with_checksum_2(data, length/2);
 	}
 }
