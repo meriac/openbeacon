@@ -74,6 +74,9 @@ prvSetupHardware (void)
 void
 vApplicationIdleHook (void)
 {
+	/* Disable processor clock to set the core into Idle Mode. The clock will 
+	 * automatically be reenabled by any interrupt. */
+	AT91C_BASE_PMC->PMC_SCDR = 1; 
 }
 
 void
@@ -407,6 +410,28 @@ static void detect_board(void)
 	POWER_MODE_PIO->PIO_PPUDR = POWER_MODE_0_PIN | POWER_MODE_1_PIN;
 }
 
+void sdram_clear(void)
+{
+	register int r0 asm("r0") = 0xdeadbeef, 
+		r1 asm("r1") = 0xcafebabe,
+		r2 asm("r2") = 0xc0ded00d,
+		r3 asm("r3") = 0xb0bcad00,
+		r4 asm("r4") = 0,
+		r5 asm("r5") = 0,
+		r6 asm("r6") = 0,
+		r7 asm("r7") = SDRAM_SIZE / (8*4);
+	register volatile void *base asm("r8") = SDRAM_BASE;
+	while(r7-->0) {
+		asm volatile(
+				"STM %8!, {%0-%7}"
+				: "+r" (r0), "+r" (r1), "+r" (r2), "+r" (r3), 
+					"+r" (r4), "+r" (r5), "+r" (r6), "+r" (r7)
+				: "r" (base)
+				: "memory"
+		);
+	}
+}
+
 /**********************************************************************/
 void __attribute__((noreturn)) mainloop (void)
 {
@@ -418,12 +443,22 @@ void __attribute__((noreturn)) mainloop (void)
   detect_board();
 
   sdram_init ();
+  if(0) { /* This takes a lot of power and should only be done with a connected battery.
+			   Note: Since it writes to SDRAM and the tasks stack etc. are in SDRAM, it
+			   MUST be done directly after sdram_init() or not at all. The FreeRTOS code
+			   does not take kindly to messing around with the SDRAM contents after it
+			   has used it. */
+	  led_set_red(1);
+	  sdram_clear();
+	  led_set_red(0);
+  }
 
   if (!power_init ())
     {
       led_halt_blinking (1);
     }
   power_on ();
+  
 
   xTaskCreate (watchdog_restart_task, (signed portCHAR *) "WATCHDOG",
 	       TASK_WATCHDOG_STACK, NULL, TASK_WATCHDOG_PRIORITY, NULL);
