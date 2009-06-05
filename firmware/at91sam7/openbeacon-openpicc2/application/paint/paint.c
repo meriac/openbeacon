@@ -24,6 +24,7 @@
 #include "image/splash.h"
 
 extern const struct splash_image bg_splash_image;
+extern const struct splash_image txtr_composite_splash_image;
 
 #define DISPLAY_SHORT (EINK_CURRENT_DISPLAY_CONFIGURATION->vsize)
 #define DISPLAY_LONG (EINK_CURRENT_DISPLAY_CONFIGURATION->hsize)
@@ -34,9 +35,9 @@ extern const struct splash_image bg_splash_image;
 #define IMAGE_SIZE (1216*832)
 
 static uint8_t eink_mgmt_data[10240] __attribute__ ((section (".sdram")));
-static eink_image_buffer_t blank_buffer, black_buffer, bg_buffer;
+static eink_image_buffer_t blank_buffer, black_buffer, bg_buffer, composite_buffer;
 static uint8_t __attribute__((aligned(4), section (".sdram")))
-	_blank_data[IMAGE_SIZE], _black_data[IMAGE_SIZE], _bg_data[IMAGE_SIZE];
+	_blank_data[IMAGE_SIZE], _black_data[IMAGE_SIZE], _bg_data[IMAGE_SIZE], _composite_data[IMAGE_SIZE];
 static struct image blank_image = {
 		.data = _blank_data,
 		.size = sizeof(_blank_data),
@@ -46,6 +47,9 @@ static struct image blank_image = {
 }, bg_image = {
 		.data = _bg_data,
 		.size = sizeof(_bg_data),
+}, composite_image = {
+		.data = _composite_data,
+		.size = sizeof(_composite_data),
 };
 
 
@@ -97,6 +101,12 @@ static void paint_task(void *params)
 	error = image_unpack_splash(&bg_image, &bg_splash_image);
 	if(error < 0) {
 		printf("Error during splash unpack: %i (%s)\n", error, strerror(-error));
+		led_halt_blinking(3);
+	}
+	
+	error = image_unpack_splash(&composite_image, &txtr_composite_splash_image);
+	if(error < 0) {
+		printf("Error during composite unpack: %i (%s)\n", error, strerror(-error));
 		led_halt_blinking(3);
 	}
 	
@@ -152,6 +162,10 @@ static void paint_task(void *params)
 		printf("Reason: %i\nCould not acquire bg image buffer\n", error);
 		led_halt_blinking(3);
 	}
+	if( (error=eink_image_buffer_acquire(&composite_buffer)) < 0) {
+		printf("Reason: %i\nCould not acquire composite image buffer\n", error);
+		led_halt_blinking(3);
+	}
 	
 	error = 0;
 	
@@ -185,14 +199,24 @@ static void paint_task(void *params)
 	printf("Background image: %li\n", (long)(stop-start));
 	cumulative += stop-start;
 	
+	start = xTaskGetTickCount();
+	error |= eink_image_buffer_load_area(composite_buffer, image_get_bpp_as_pack_mode(&composite_image), ROTATION_MODE_90,
+			0, 0,
+			composite_image.width, composite_image.height,
+			composite_image.data, composite_image.size);
+	stop = xTaskGetTickCount();
+	printf("Composite image: %li\n", (long)(stop-start));
+	cumulative += stop-start;
+	
 	printf("All images loaded in %li ticks\n", (long)(cumulative));
 
 	if(error >= 0) {
 		printf("All images loaded ok\n");
 		eink_job_t job;
 		eink_job_begin(&job, 0);
-		eink_job_add(job, blank_buffer, WAVEFORM_MODE_INIT, UPDATE_MODE_FULL);
+		eink_job_add(job, blank_buffer, WAVEFORM_MODE_INIT, UPDATE_MODE_INIT);
 		eink_job_commit(job);
+		while(eink_job_count_pending() > 0) vTaskDelay(10/portTICK_RATE_MS);
 	} else {
 		printf("Image load error %i: %s\n", error, strerror(-error));
 	}
@@ -206,9 +230,11 @@ static void paint_task(void *params)
 	event_t received_event;
 	event_loop_running = 1;
 	int battery_update_counter = 5;
+	int spin_phase = 0, spin_counter=0;
 #define WAIT_TIME 25
 #define MAX_IDLE ((10 * 60 * 1000) / WAIT_TIME)
 #define BATTERY_UPDATE ((2 * 1000) / WAIT_TIME)
+#define SPIN_UPDATE (1000 / WAIT_TIME)
 	while(1) {
 		received_event.class = EVENT_NONE;
 		event_receive(&received_event, WAIT_TIME/portTICK_RATE_MS);
@@ -242,7 +268,7 @@ static void paint_task(void *params)
 			if(barlen >= DISPLAY_LONG) barlen = DISPLAY_LONG-1;
 			if(barlen < 0) barlen = 0;
 			
-			printf("Battery: (%i) %i\n", voltage, barlen  );
+			//printf("Battery: (%i) %i\n", voltage, barlen  );
 			
 			eink_job_t job;
 			eink_job_begin(&job, 0);
@@ -268,6 +294,19 @@ static void paint_task(void *params)
 				eink_job_commit(job);
 			}
 			
+		}
+		
+		if(spin_counter++ >= SPIN_UPDATE){
+			int x = (spin_phase%4);
+			int y = (spin_phase/4);
+			eink_job_begin(&job, 1);
+			eink_job_add_area_with_offset(job, composite_buffer, WAVEFORM_MODE_GU, UPDATE_MODE_FULL,
+					32, 64,
+					100, 100, 
+					-x*128+32, -y*128+64);
+			eink_job_commit(job);
+			spin_phase = (spin_phase+1)%12;
+			spin_counter = 0;
 		}
 	}
 }

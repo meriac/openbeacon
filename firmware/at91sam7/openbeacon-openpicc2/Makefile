@@ -7,7 +7,7 @@ OPTIM=-O2
 APP_CFLAGS=-Iapplication -DLZO_CFG_NO_UNALIGNED -DLZO_ALIGNED_OK_4 -DHAVE_FLASH_CONTENT -std=gnu99 -fgnu89-inline
 APP_LDFLAGS=-Lapplication/libnfc/linux -lm -lnfc
 
-IMAGES=splash directory arrows bg
+IMAGES=splash directory arrows bg txtr_composite
 
 APP_SRC= \
   application/main.c \
