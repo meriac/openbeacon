@@ -234,7 +234,7 @@ static void eink_burst_write_with_checksum(const unsigned char * data, unsigned 
 	/* Call the unoptimised transfer until the start is 32-bit aligned, then the optimised transfer for
 	 * a multiple of 40 bytes, then the unoptimised again for the remainder of the buffer.
 	 */
-	while( ((unsigned int)data)%4 != 0 ) {
+	while( ((unsigned int)data)%4 != 0 && length > 0 ) {
 		_eink_burst_write_with_checksum_2(data, 1);
 		data += 2; length -= 2;
 	}

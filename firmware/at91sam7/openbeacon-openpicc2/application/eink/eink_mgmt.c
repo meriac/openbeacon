@@ -265,6 +265,14 @@ int eink_job_add_area(eink_job_t job, eink_image_buffer_t buf,
 	return 0;
 }
 
+/* x,y are relative to the screen; xoffset, yoffset describe a relative shift of the image buffer
+ * E.g. to paint from coordinates a, b in the image buffer to coordinates x, y on the screen you'd
+ * call with  (job, buffer, waveform_mode, update_mode,   x, y,  w, h,  -a+x, -b+y)
+ * 
+ * Bad things may happen if xoffset and yoffset are not divisible by 32
+ * (More honestly: For ROTATION_MODE_0 and _180 xoffset needs to be divisible by 32 and
+ * for ROTATION_MODE_90 and _270 yoffset must be divisible by 32)
+ */
 extern int eink_job_add_area_with_offset(eink_job_t job, eink_image_buffer_t buf,
 		enum eink_waveform_mode waveform_mode, enum eink_update_mode update_mode,
 		unsigned int x, unsigned int y, unsigned int w, unsigned int h,
@@ -381,9 +389,27 @@ static int eink_job_handle_part(eink_job_t job, unsigned int index)
 		if(job->parts[index].xoffset == 0 && job->parts[index].yoffset == 0) {
 			eink_set_display_address(job->parts[index].image_buffer->start_address);
 		} else {
-			int relative_off = job->parts[index].xoffset * EINK_CURRENT_DISPLAY_CONFIGURATION->hsize + job->parts[index].yoffset;
-			/* FIXME Implement */
-			eink_set_display_address(job->parts[index].image_buffer->start_address-relative_off);
+			int xoffset = 0, yoffset = 0;
+			switch(job->parts[index].image_buffer->rotation_mode) {
+			case ROTATION_MODE_0:
+				yoffset =   job->parts[index].yoffset;
+				xoffset =   job->parts[index].xoffset;
+				break;
+			case ROTATION_MODE_90:
+				yoffset = - job->parts[index].xoffset;
+				xoffset =   job->parts[index].yoffset;
+				break;
+			case ROTATION_MODE_180:
+				yoffset = - job->parts[index].yoffset;
+				xoffset = - job->parts[index].xoffset;
+				break;
+			case ROTATION_MODE_270:
+				yoffset =   job->parts[index].xoffset;
+				xoffset = - job->parts[index].yoffset;
+				break;
+			}
+			int relative_off =  yoffset * _EINK_ROUND_UP_32(EINK_CURRENT_DISPLAY_CONFIGURATION->hsize) + xoffset;
+			eink_set_display_address(job->parts[index].image_buffer->start_address - relative_off);
 		}
 		switch(job->parts[index].update_mode) {
 		case UPDATE_MODE_PART_SPECIAL: /* This is the same as UPDATE_MODE_PART, with different conflict semantics */ 
