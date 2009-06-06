@@ -85,6 +85,20 @@ int random(void) {
 	return state;
 }
 
+#define NUM_ANTS 100
+struct ant {
+	int x, y, dir_x, dir_y;
+} ants[NUM_ANTS];
+
+void crawl_ant(struct ant *draw, struct image *bg_image)
+{
+	bg_image->data[draw->y*bg_image->rowstride + (draw->x*bg_image->bits_per_pixel)/8] &= ~((~((~0)<<bg_image->bits_per_pixel))<<( (draw->x*bg_image->bits_per_pixel) % 8));
+	if((draw->x + draw->dir_x >= bg_image->width) || (draw->x + draw->dir_x < 0)) draw->dir_x = -draw->dir_x;
+	if((draw->y + draw->dir_y >= bg_image->height) || (draw->y + draw->dir_y < 0)) draw->dir_y = -draw->dir_y;
+	draw->x += draw->dir_x;
+	draw->y += draw->dir_y;
+}
+
 static int event_loop_running = 0;
 static void paint_task(void *params)
 {
@@ -220,7 +234,6 @@ static void paint_task(void *params)
 	} else {
 		printf("Image load error %i: %s\n", error, strerror(-error));
 	}
-
 	int i=0;
 	eink_job_t job;
 	eink_job_begin(&job, 0);
@@ -231,6 +244,19 @@ static void paint_task(void *params)
 	event_loop_running = 1;
 	int battery_update_counter = 5;
 	int spin_phase = 0, spin_counter=0;
+	
+	portTickType last_draw = 0, now;
+	{ /* Initialize ants */
+		int j;
+		for(j=0; j<NUM_ANTS; j++) {
+			ants[j].x = ( (rand()/10000) * bg_image.width) / (RAND_MAX/10000);
+			ants[j].y = ( (rand()/10000) * bg_image.height) / (RAND_MAX/10000);
+			ants[j].dir_x = (rand() > (RAND_MAX/2)) ? 1 : -1;
+			ants[j].dir_y = (rand() > (RAND_MAX/2)) ? 1 : -1;
+		}
+	}
+
+	
 #define WAIT_TIME 25
 #define MAX_IDLE ((10 * 60 * 1000) / WAIT_TIME)
 #define BATTERY_UPDATE ((2 * 1000) / WAIT_TIME)
@@ -260,7 +286,29 @@ static void paint_task(void *params)
 			power_off();
 		}
 		
-		if(battery_update_counter++ >= BATTERY_UPDATE) {
+		{
+			int j;
+			for(j=0; j<NUM_ANTS; j++) {
+				crawl_ant(&ants[j], &bg_image);
+			}
+			
+			now = xTaskGetTickCount();
+			if(last_draw - now > 100) {
+				error = eink_image_buffer_load_area(bg_buffer, image_get_bpp_as_pack_mode(&bg_image), ROTATION_MODE_90,
+						(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
+						bg_image.width, bg_image.height,
+						bg_image.data, bg_image.size);
+				eink_job_t job;
+				eink_job_begin(&job, 0);
+				eink_job_add_area(job, bg_buffer, WAVEFORM_MODE_GU, UPDATE_MODE_PART_SPECIAL,
+						(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
+						bg_image.width, bg_image.height);
+				eink_job_commit(job);
+				last_draw = now;
+			}
+		}
+		
+		if(0) if(battery_update_counter++ >= BATTERY_UPDATE) {
 			const int MIN_V = 600, MAX_V = 910;
 			int voltage = power_get_battery_voltage();
 			battery_update_counter = 0;
@@ -296,7 +344,7 @@ static void paint_task(void *params)
 			
 		}
 		
-		if(spin_counter++ >= SPIN_UPDATE){
+		if(0) if(spin_counter++ >= SPIN_UPDATE){
 			int x = (spin_phase%4);
 			int y = (spin_phase/4);
 			eink_job_begin(&job, 1);
