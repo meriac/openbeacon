@@ -78,23 +78,31 @@ static void paint_die_error(enum eink_error error)
 	led_halt_blinking(2);
 }
 
-#define RAND_MAX_ 100853
-int random(void) {
-	static int state = 3;
-	state = (7*state + 400243) % RAND_MAX_;
-	return state;
-}
-
-#define NUM_ANTS 100
+#define NUM_ANTS 10
 struct ant {
-	int x, y, dir_x, dir_y;
+	int x, y, dir_x, dir_y, color;
 } ants[NUM_ANTS];
 
 void crawl_ant(struct ant *draw, struct image *bg_image)
 {
-	bg_image->data[draw->y*bg_image->rowstride + (draw->x*bg_image->bits_per_pixel)/8] &= ~((~((~0)<<bg_image->bits_per_pixel))<<( (draw->x*bg_image->bits_per_pixel) % 8));
-	if((draw->x + draw->dir_x >= bg_image->width) || (draw->x + draw->dir_x < 0)) draw->dir_x = -draw->dir_x;
-	if((draw->y + draw->dir_y >= bg_image->height) || (draw->y + draw->dir_y < 0)) draw->dir_y = -draw->dir_y;
+	image_set_pixel(bg_image, draw->x, draw->y,  draw->color);
+	image_set_pixel(bg_image, draw->x+1, draw->y+1, draw->color);
+	image_set_pixel(bg_image, draw->x+1, draw->y-1, draw->color);
+	image_set_pixel(bg_image, draw->x-1, draw->y+1, draw->color);
+	image_set_pixel(bg_image, draw->x-1, draw->y-1, draw->color);
+	
+	image_set_pixel(bg_image, draw->x+1, draw->y, draw->color);
+	image_set_pixel(bg_image, draw->x, draw->y-1, draw->color);
+	image_set_pixel(bg_image, draw->x, draw->y+1, draw->color);
+	image_set_pixel(bg_image, draw->x-1, draw->y, draw->color);
+
+	image_set_pixel(bg_image, draw->x+2, draw->y, draw->color);
+	image_set_pixel(bg_image, draw->x, draw->y-2, draw->color);
+	image_set_pixel(bg_image, draw->x, draw->y+2, draw->color);
+	image_set_pixel(bg_image, draw->x-2, draw->y, draw->color);
+
+	if((draw->x + draw->dir_x+3 >= bg_image->width)  || (draw->x + draw->dir_x-3 < 0)) draw->dir_x = -draw->dir_x;
+	if((draw->y + draw->dir_y+3 >= bg_image->height) || (draw->y + draw->dir_y-3 < 0)) draw->dir_y = -draw->dir_y;
 	draw->x += draw->dir_x;
 	draw->y += draw->dir_y;
 }
@@ -123,7 +131,7 @@ static void paint_task(void *params)
 		printf("Error during composite unpack: %i (%s)\n", error, strerror(-error));
 		led_halt_blinking(3);
 	}
-	
+
 	/* The white image needs to have 4 bpp since the controller will unpack 2bpp to
 	 * 8bpp by appending 6 zero-bits. So 11b in 2 bpp gets 11000000b in 8 bpp, which
 	 * is a slight grey (even with the P4N LUT mode).
@@ -249,14 +257,14 @@ static void paint_task(void *params)
 	{ /* Initialize ants */
 		int j;
 		for(j=0; j<NUM_ANTS; j++) {
-			ants[j].x = ( (rand()/10000) * bg_image.width) / (RAND_MAX/10000);
-			ants[j].y = ( (rand()/10000) * bg_image.height) / (RAND_MAX/10000);
-			ants[j].dir_x = (rand() > (RAND_MAX/2)) ? 1 : -1;
-			ants[j].dir_y = (rand() > (RAND_MAX/2)) ? 1 : -1;
+			ants[j].x = 10 + ( (rand()/10000) * (bg_image.width-2*10)) / (RAND_MAX/10000);
+			ants[j].y = 10 + ( (rand()/10000) * (bg_image.height-2*10)) / (RAND_MAX/10000);
+			ants[j].dir_x = ((rand() > (RAND_MAX/2)) ? 1 : -1)*((rand() > (RAND_MAX/2)) ? 1 : 2);
+			ants[j].dir_y = ((rand() > (RAND_MAX/2)) ? 1 : -1)*((rand() > (RAND_MAX/2)) ? 1 : 2);
+			ants[j].color = 0;
 		}
 	}
 
-	
 #define WAIT_TIME 25
 #define MAX_IDLE ((10 * 60 * 1000) / WAIT_TIME)
 #define BATTERY_UPDATE ((2 * 1000) / WAIT_TIME)
@@ -287,20 +295,22 @@ static void paint_task(void *params)
 		}
 		
 		{
-			int j;
-			for(j=0; j<NUM_ANTS; j++) {
-				crawl_ant(&ants[j], &bg_image);
+			int j, k;
+			for(k=0; k<3; k++) {
+				for(j=0; j<NUM_ANTS; j++) {
+					crawl_ant(&ants[j], &bg_image);
+				}
 			}
 			
 			now = xTaskGetTickCount();
-			if(last_draw - now > 100) {
+			if(last_draw - now > 50) {
 				error = eink_image_buffer_load_area(bg_buffer, image_get_bpp_as_pack_mode(&bg_image), ROTATION_MODE_90,
 						(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
 						bg_image.width, bg_image.height,
 						bg_image.data, bg_image.size);
 				eink_job_t job;
 				eink_job_begin(&job, 0);
-				eink_job_add_area(job, bg_buffer, WAVEFORM_MODE_GU, UPDATE_MODE_PART_SPECIAL,
+				eink_job_add_area(job, bg_buffer, WAVEFORM_MODE_GC, UPDATE_MODE_PART_SPECIAL,
 						(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
 						bg_image.width, bg_image.height);
 				eink_job_commit(job);
@@ -333,8 +343,8 @@ static void paint_task(void *params)
 			eink_job_commit(job);
 			
 			if(0) {
-				int x = random()%(DISPLAY_SHORT-1-10);
-				int y = random()%(DISPLAY_LONG-1-10);
+				int x = rand()%(DISPLAY_SHORT-1-10);
+				int y = rand()%(DISPLAY_LONG-1-10);
 				eink_job_begin(&job, 0);
 				eink_job_add_area(job, black_buffer, WAVEFORM_MODE_GU, UPDATE_MODE_FULL, 
 						x, y, /* x, y */ 

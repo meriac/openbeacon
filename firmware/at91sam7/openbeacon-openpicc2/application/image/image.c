@@ -129,3 +129,109 @@ enum eink_pack_mode image_get_bpp_as_pack_mode(const image_t in) {
 	}
 	return 0;
 }
+
+static void _get_display_size(enum eink_rotation_mode rotation, int *w, int *h)
+{
+	switch(rotation) {
+	case ROTATION_MODE_0:
+	case ROTATION_MODE_180:
+		*w = EINK_CURRENT_DISPLAY_CONFIGURATION->hsize;
+		*h = EINK_CURRENT_DISPLAY_CONFIGURATION->vsize;
+		break;
+	case ROTATION_MODE_90:
+	case ROTATION_MODE_270:
+		*w = EINK_CURRENT_DISPLAY_CONFIGURATION->vsize;
+		*h = EINK_CURRENT_DISPLAY_CONFIGURATION->hsize;
+		break;
+	}
+}
+
+int image_load_image_buffer(image_in_image_buffer_t target, eink_image_buffer_t buffer, image_t source,
+		enum eink_rotation_mode rotation_mode)
+{
+	return image_load_image_buffer_position(target, buffer, source, rotation_mode, 0, 0);
+}
+
+extern int image_load_image_buffer_centered(image_in_image_buffer_t target, eink_image_buffer_t buffer, image_t source,
+		enum eink_rotation_mode rotation_mode);
+
+int image_load_image_buffer_position(image_in_image_buffer_t target, eink_image_buffer_t buffer, image_t source,
+		enum eink_rotation_mode rotation_mode, int x, int y)
+{
+	if(target == NULL) return -EINVAL;
+	if(buffer == NULL) return -EINVAL;
+	if(source == NULL) return -EINVAL;
+	
+	return image_load_image_buffer_cropped(target, buffer, source, rotation_mode, x, y, source->width, source->height);
+}
+
+int image_load_image_buffer_cropped(image_in_image_buffer_t target, eink_image_buffer_t buffer, image_t source,
+		enum eink_rotation_mode rotation_mode, int x, int y, int w, int h)
+{
+	return image_load_image_buffer_offset(target, buffer, source, rotation_mode, x, y, 0, 0, w, h);
+}
+
+/* Download a sub-image from source of width w and height h at coordinates off_x, off_y (with respect to source)
+ * into the image buffer buffer at coordinates x,y and store relevant information about this relationship
+ * in target.
+ */
+int image_load_image_buffer_offset(image_in_image_buffer_t target, eink_image_buffer_t buffer, const image_t source,
+		enum eink_rotation_mode rotation_mode, int x, int y, int w, int h, int off_x, int off_y)
+{
+	if(target == NULL) return -EINVAL;
+	if(buffer == NULL) return -EINVAL;
+	if(source == NULL) return -EINVAL;
+	
+	int display_w=0, display_h=0;
+	_get_display_size(rotation_mode, &display_w, &display_h);
+
+	if(off_x >= source->width) return -EINVAL;
+	if(off_x < 0) return -EINVAL;
+	if(off_y >= source->height) return -EINVAL;
+	if(off_y < 0) return -EINVAL;
+	
+	if(x >= display_w) return -EINVAL;
+	if(x < 0) return -EINVAL;
+	if(y >= display_h) return -EINVAL;
+	if(y < 0) return -EINVAL;
+
+	if(w < 0) return -EINVAL;
+	if(h < 0) return -EINVAL;
+	
+	if(off_x+w > source->width) return -EINVAL;
+	if(off_y+h > source->height) return -EINVAL;
+	
+	if(x+w > display_w) return -EINVAL;
+	if(y+h > display_h) return -EINVAL;
+	
+	/* FIXME: Implement */
+	
+	return -1;
+}
+
+extern int image_update_image_buffer(image_in_image_buffer_t target);
+
+int image_get_pixel(const struct image * const image, int x, int y)
+{
+	/*
+	 * return (image->data[y*image->rowstride + (x*image->bits_per_pixel)/8] >> ((x*bg_image->bits_per_pixel) % 8))<<(8-image->bits_per_pixel);
+	 */
+	switch(image->bits_per_pixel) {
+	case IMAGE_BPP_2:
+		return (image->data[y*image->rowstride + x/4] >> (x%4))<<6;
+	case IMAGE_BPP_4:
+		return (image->data[y*image->rowstride + x/2] >> (x%2))<<4;
+	case IMAGE_BPP_8:
+		return image->data[y*image->rowstride + x];
+	}
+	return 0;
+}
+
+
+void image_set_pixel(image_t image, int x, int y, int value)
+{
+	int mask = ((0xff>>(8-image->bits_per_pixel)))<<( (x*image->bits_per_pixel) % 8);
+	int byteindex = y*image->rowstride + (x*image->bits_per_pixel)/8;
+	image->data[byteindex] = (image->data[byteindex] & ~mask)
+		| ( ((value >> (8-image->bits_per_pixel)) << ((x*image->bits_per_pixel) % 8)) & mask);
+}
