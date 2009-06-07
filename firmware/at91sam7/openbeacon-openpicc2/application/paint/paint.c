@@ -84,7 +84,7 @@ static void paint_draw_task(void *params)
 	(void)params;
 	struct ant {
 		int x, y, dir_x, dir_y, color;
-	} _ant = { 30, 40, 1, 1, 0};
+	} _ant = { 30, 30, 1, 1, 0};
 	struct ant * ant = &_ant;
 	image_t target_image = &bg_image;
 	
@@ -137,6 +137,13 @@ static void paint_task(void *params)
 	if(error < 0) {
 		printf("Error during splash unpack: %i (%s)\n", error, strerror(-error));
 		led_halt_blinking(3);
+	}
+	if(0) { /* Paint on blank */
+		int tmp = bg_image.size;
+		bg_image.size = sizeof(_bg_data);
+		error = image_create_solid(&bg_image, 0xff, bg_image.width, bg_image.height);
+		if(error < 0) printf(strerror(-error));
+		else bg_image.size = tmp;
 	}
 	
 	error = image_unpack_splash(&composite_image, &txtr_composite_splash_image);
@@ -299,7 +306,7 @@ static void paint_task(void *params)
 		if(1) {
 			now = xTaskGetTickCount();
 			if(last_draw - now > 100) {
-				/* Download the full bg_image every 100ms and send a partial update for alle changed pixels */
+				/* Download the full bg_image every 100ms and send a partial update for all changed pixels */
 				error = eink_image_buffer_load_area(bg_buffer, image_get_bpp_as_pack_mode(&bg_image), ROTATION_MODE_90,
 						(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
 						bg_image.width, bg_image.height,
