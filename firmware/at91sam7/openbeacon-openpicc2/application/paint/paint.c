@@ -78,36 +78,49 @@ static void paint_die_error(enum eink_error error)
 	led_halt_blinking(2);
 }
 
-#define NUM_ANTS 10
-struct ant {
-	int x, y, dir_x, dir_y, color;
-} ants[NUM_ANTS];
-
-void crawl_ant(struct ant *draw, struct image *bg_image)
+static int event_loop_running = 0;
+static void paint_draw_task(void *params)
 {
-	image_set_pixel(bg_image, draw->x, draw->y,  draw->color);
-	image_set_pixel(bg_image, draw->x+1, draw->y+1, draw->color);
-	image_set_pixel(bg_image, draw->x+1, draw->y-1, draw->color);
-	image_set_pixel(bg_image, draw->x-1, draw->y+1, draw->color);
-	image_set_pixel(bg_image, draw->x-1, draw->y-1, draw->color);
+	(void)params;
+	struct ant {
+		int x, y, dir_x, dir_y, color;
+	} _ant = { 30, 40, 1, 1, 0};
+	struct ant * ant = &_ant;
+	image_t target_image = &bg_image;
 	
-	image_set_pixel(bg_image, draw->x+1, draw->y, draw->color);
-	image_set_pixel(bg_image, draw->x, draw->y-1, draw->color);
-	image_set_pixel(bg_image, draw->x, draw->y+1, draw->color);
-	image_set_pixel(bg_image, draw->x-1, draw->y, draw->color);
-
-	image_set_pixel(bg_image, draw->x+2, draw->y, draw->color);
-	image_set_pixel(bg_image, draw->x, draw->y-2, draw->color);
-	image_set_pixel(bg_image, draw->x, draw->y+2, draw->color);
-	image_set_pixel(bg_image, draw->x-2, draw->y, draw->color);
-
-	if((draw->x + draw->dir_x+3 >= bg_image->width)  || (draw->x + draw->dir_x-3 < 0)) draw->dir_x = -draw->dir_x;
-	if((draw->y + draw->dir_y+3 >= bg_image->height) || (draw->y + draw->dir_y-3 < 0)) draw->dir_y = -draw->dir_y;
-	draw->x += draw->dir_x;
-	draw->y += draw->dir_y;
+	
+	while(!event_loop_running) { vTaskDelay(100/portTICK_RATE_MS); }
+	
+	while(1) {
+		if( (ant->dir_x != 1 && ant->dir_x != -1) || (ant->dir_y != 1 && ant->dir_y != -1)) {
+			printf("Error\n");
+		}
+		
+		image_set_pixel(target_image, ant->x,   ant->y,   ant->color);
+		image_set_pixel(target_image, ant->x+1, ant->y+1, ant->color);
+		image_set_pixel(target_image, ant->x+1, ant->y-1, ant->color);
+		image_set_pixel(target_image, ant->x-1, ant->y+1, ant->color);
+		image_set_pixel(target_image, ant->x-1, ant->y-1, ant->color);
+		
+		image_set_pixel(target_image, ant->x+1, ant->y,   ant->color);
+		image_set_pixel(target_image, ant->x,   ant->y-1, ant->color);
+		image_set_pixel(target_image, ant->x,   ant->y+1, ant->color);
+		image_set_pixel(target_image, ant->x-1, ant->y,   ant->color);
+		
+		image_set_pixel(target_image, ant->x+2, ant->y,   ant->color);
+		image_set_pixel(target_image, ant->x,   ant->y-2, ant->color);
+		image_set_pixel(target_image, ant->x,   ant->y+2, ant->color);
+		image_set_pixel(target_image, ant->x-2, ant->y,   ant->color);
+		
+		if((ant->x + ant->dir_x+3 >= target_image->width)  || (ant->x + ant->dir_x-3 < 0)) ant->dir_x = -ant->dir_x;
+		if((ant->y + ant->dir_y+3 >= target_image->height) || (ant->y + ant->dir_y-3 < 0)) ant->dir_y = -ant->dir_y;
+		ant->x += ant->dir_x;
+		ant->y += ant->dir_y;
+		
+		vTaskDelay(10/portTICK_RATE_MS);
+	}
 }
 
-static int event_loop_running = 0;
 static void paint_task(void *params)
 {
 	(void)params;
@@ -254,17 +267,6 @@ static void paint_task(void *params)
 	int spin_phase = 0, spin_counter=0;
 	
 	portTickType last_draw = 0, now;
-	{ /* Initialize ants */
-		int j;
-		for(j=0; j<NUM_ANTS; j++) {
-			ants[j].x = 10 + ( (rand()/10000) * (bg_image.width-2*10)) / (RAND_MAX/10000);
-			ants[j].y = 10 + ( (rand()/10000) * (bg_image.height-2*10)) / (RAND_MAX/10000);
-			ants[j].dir_x = ((rand() > (RAND_MAX/2)) ? 1 : -1)*((rand() > (RAND_MAX/2)) ? 1 : 2);
-			ants[j].dir_y = ((rand() > (RAND_MAX/2)) ? 1 : -1)*((rand() > (RAND_MAX/2)) ? 1 : 2);
-			ants[j].color = 0;
-		}
-	}
-
 #define WAIT_TIME 25
 #define MAX_IDLE ((10 * 60 * 1000) / WAIT_TIME)
 #define BATTERY_UPDATE ((2 * 1000) / WAIT_TIME)
@@ -294,27 +296,23 @@ static void paint_task(void *params)
 			power_off();
 		}
 		
-		{
-			int j, k;
-			for(k=0; k<3; k++) {
-				for(j=0; j<NUM_ANTS; j++) {
-					crawl_ant(&ants[j], &bg_image);
-				}
-			}
-			
+		if(1) {
 			now = xTaskGetTickCount();
-			if(last_draw - now > 50) {
+			if(last_draw - now > 100) {
+				/* Download the full bg_image every 100ms and send a partial update for alle changed pixels */
 				error = eink_image_buffer_load_area(bg_buffer, image_get_bpp_as_pack_mode(&bg_image), ROTATION_MODE_90,
 						(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
 						bg_image.width, bg_image.height,
 						bg_image.data, bg_image.size);
-				eink_job_t job;
-				eink_job_begin(&job, 0);
-				eink_job_add_area(job, bg_buffer, WAVEFORM_MODE_GC, UPDATE_MODE_PART_SPECIAL,
-						(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
-						bg_image.width, bg_image.height);
-				eink_job_commit(job);
-				last_draw = now;
+				if(error == 0) {
+					eink_job_t job;
+					eink_job_begin(&job, 2);
+					eink_job_add_area(job, bg_buffer, WAVEFORM_MODE_GC, UPDATE_MODE_PART_SPECIAL,
+							(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
+							bg_image.width, bg_image.height);
+					eink_job_commit(job);
+					last_draw = now;
+				} else printf("E\n");
 			}
 		}
 		
@@ -341,16 +339,6 @@ static void paint_task(void *params)
 						1, barlen); /* width, height */
 			}
 			eink_job_commit(job);
-			
-			if(0) {
-				int x = rand()%(DISPLAY_SHORT-1-10);
-				int y = rand()%(DISPLAY_LONG-1-10);
-				eink_job_begin(&job, 0);
-				eink_job_add_area(job, black_buffer, WAVEFORM_MODE_GU, UPDATE_MODE_FULL, 
-						x, y, /* x, y */ 
-						10, 10); /* width, height */
-				eink_job_commit(job);
-			}
 			
 		}
 		
@@ -388,6 +376,8 @@ int paint_init(void)
 		return r;
 
 	xTaskCreate(paint_task, (signed portCHAR *) "PAINT TASK", TASK_PAINT_STACK,
+			NULL, TASK_PAINT_PRIORITY, NULL);
+	xTaskCreate(paint_draw_task, (signed portCHAR *) "PAINT DRAW TASK", TASK_PAINT_STACK,
 			NULL, TASK_PAINT_PRIORITY, NULL);
 
 	return 0;
