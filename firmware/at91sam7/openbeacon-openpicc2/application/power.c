@@ -66,7 +66,7 @@ void power_set_bus_current(enum power_bus_current current)
  * Battery full seems to be 0x37F-0x380. Batcheck is the battery on a 27/12 voltage divider */
 int power_get_battery_voltage(void)
 {
-	adc_convert(&batcheck_adc);
+	//adc_convert(&batcheck_adc);
 	return batcheck_adc.results[POWER_BATTERY_CHANNEL];
 }
 
@@ -125,7 +125,7 @@ unsigned char power_init(void)
 {
 	pio_irq_init_once();
 	
-    adc_open(&batcheck_adc, 1<<POWER_BATTERY_CHANNEL);
+    //adc_open(&batcheck_adc, 1<<POWER_BATTERY_CHANNEL);
     
     AT91F_PIO_SetOutput(POWER_MODE_PIO, POWER_MODE_0_PIN | POWER_MODE_1_PIN);
     AT91F_PIO_CfgOutput(POWER_MODE_PIO, POWER_MODE_0_PIN | POWER_MODE_1_PIN);

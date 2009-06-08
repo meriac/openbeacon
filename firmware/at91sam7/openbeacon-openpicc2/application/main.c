@@ -486,7 +486,7 @@ void __attribute__((noreturn)) mainloop (void)
 
 
   eink_interface_init();
-  ad7147_init();
+  //ad7147_init();
   //accelerometer_init();
   //DFS_Init ();
   //pn532_init();
