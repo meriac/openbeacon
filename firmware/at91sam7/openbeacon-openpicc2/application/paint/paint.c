@@ -205,6 +205,19 @@ static void paint_task(void *params)
 	}
 #endif
 
+	{
+		int reset = (AT91C_BASE_RSTC->RSTC_RSR >> 8) & 0x7;
+		const char * const reasons[] = {
+				[0] = "PWR",
+				[2] = "WDT",
+				[3] = "Software reset",
+				[4] = "USR",
+				[5] = "Brownout reset",
+		};
+		if(reasons[reset] != NULL) printf("%s\n", reasons[reset]);
+	}
+	
+	
 	eink_controller_reset();
 
 	printf("Initializing eInk controller ...\n");
