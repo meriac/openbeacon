@@ -3,6 +3,8 @@
 #include <board.h>
 #include <beacontypes.h>
 
+#include <USB-CDC.h>
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -33,6 +35,8 @@ extern const struct splash_image txtr_composite_splash_image;
  * assert( IMAGE_SIZE >= EINK_CURRENT_DISPLAY_CONFIGURATION->hsize * EINK_CURRENT_DISPLAY_CONFIGURATION->vsize );
  */
 #define IMAGE_SIZE (1216*832)
+
+//#define DRAW_ON_WHITE
 
 static uint8_t eink_mgmt_data[10240] __attribute__ ((section (".sdram")));
 static eink_image_buffer_t blank_buffer, black_buffer, bg_buffer, composite_buffer;
@@ -78,47 +82,67 @@ static void paint_die_error(enum eink_error error)
 	led_halt_blinking(2);
 }
 
+static int pause_refreshing = 0;
+void process_line(image_t image, char *line, size_t length)
+{
+	(void)length;
+	if(strncmp(line, "clear", 5) == 0) {
+		pause_refreshing = 1;
+		while(eink_job_count_pending() > 0) vTaskDelay(10/portTICK_RATE_MS);
+#ifndef DRAW_ON_WHITE
+		int error = image_unpack_splash(image, &bg_splash_image);
+		if(error < 0) {
+			printf("Error during splash unpack: %i (%s)\n", error, strerror(-error));
+		}
+#else
+		memset(bg_image.data, 0xff, bg_image.size);
+#endif
+		pause_refreshing = 0;
+	} else if(strncmp(line, "init", 4) == 0) {
+		pause_refreshing = 1;
+		while(eink_job_count_pending() > 0) vTaskDelay(10/portTICK_RATE_MS);
+		eink_job_t job;
+		eink_job_begin(&job, 0);
+		eink_job_add(job, blank_buffer, WAVEFORM_MODE_INIT, UPDATE_MODE_FULL);
+		eink_job_commit(job);
+		while(eink_job_count_pending() > 0) vTaskDelay(10/portTICK_RATE_MS);
+		pause_refreshing = 0;
+	} else {
+		int x, y, r = 10, v = 0;
+		if(sscanf(line, " %i , %i , %i , %i ", &x, &y, &r, &v) >= 2) {
+			printf(">>%i,%i,%i\n", x, y, r);
+			image_draw_circle(image, x, y, r, v, 1);
+		}
+	}
+}
+
+
 static int event_loop_running = 0;
 static void paint_draw_task(void *params)
 {
 	(void)params;
-	struct ant {
-		int x, y, dir_x, dir_y, color;
-	} _ant = { 30, 30, 1, 1, 0};
-	struct ant * ant = &_ant;
 	image_t target_image = &bg_image;
+	char line[1024];
+	unsigned int pos = 0, received;
 	
-	
-	while(!event_loop_running) { vTaskDelay(100/portTICK_RATE_MS); }
+	while(!event_loop_running) vTaskDelay(100/portTICK_RATE_MS);
 	
 	while(1) {
-		if( (ant->dir_x != 1 && ant->dir_x != -1) || (ant->dir_y != 1 && ant->dir_y != -1)) {
-			printf("Error\n");
-		}
-		
-		image_set_pixel(target_image, ant->x,   ant->y,   ant->color);
-		image_set_pixel(target_image, ant->x+1, ant->y+1, ant->color);
-		image_set_pixel(target_image, ant->x+1, ant->y-1, ant->color);
-		image_set_pixel(target_image, ant->x-1, ant->y+1, ant->color);
-		image_set_pixel(target_image, ant->x-1, ant->y-1, ant->color);
-		
-		image_set_pixel(target_image, ant->x+1, ant->y,   ant->color);
-		image_set_pixel(target_image, ant->x,   ant->y-1, ant->color);
-		image_set_pixel(target_image, ant->x,   ant->y+1, ant->color);
-		image_set_pixel(target_image, ant->x-1, ant->y,   ant->color);
-		
-		image_set_pixel(target_image, ant->x+2, ant->y,   ant->color);
-		image_set_pixel(target_image, ant->x,   ant->y-2, ant->color);
-		image_set_pixel(target_image, ant->x,   ant->y+2, ant->color);
-		image_set_pixel(target_image, ant->x-2, ant->y,   ant->color);
-		
-		if((ant->x + ant->dir_x+3 >= target_image->width)  || (ant->x + ant->dir_x-3 < 0)) ant->dir_x = -ant->dir_x;
-		if((ant->y + ant->dir_y+3 >= target_image->height) || (ant->y + ant->dir_y-3 < 0)) ant->dir_y = -ant->dir_y;
-		ant->x += ant->dir_x;
-		ant->y += ant->dir_y;
-		
-		vTaskDelay(10/portTICK_RATE_MS);
+		received = vUSBRecvByte(line+pos, 1, portMAX_DELAY);
+		if(received == 0) continue;
+		vUSBSendByte(line[pos]);
+		if(line[pos] == '\r') vUSBSendByte('\n');
+		if(line[pos] == '\n' || line[pos] == '\r') {
+			line[pos+1] = 0;
+			process_line(target_image, line, pos+1);
+			pos = 0;
+		} else if(pos+2 >= sizeof(line)) {
+			line[pos+1] = 0;
+			process_line(target_image, line, pos+1);
+			pos = 0;
+		} else pos++;
 	}
+	
 }
 
 static void paint_task(void *params)
@@ -138,13 +162,9 @@ static void paint_task(void *params)
 		printf("Error during splash unpack: %i (%s)\n", error, strerror(-error));
 		led_halt_blinking(3);
 	}
-	if(0) { /* Paint on blank */
-		int tmp = bg_image.size;
-		bg_image.size = sizeof(_bg_data);
-		error = image_create_solid(&bg_image, 0xff, bg_image.width, bg_image.height);
-		if(error < 0) printf(strerror(-error));
-		else bg_image.size = tmp;
-	}
+#ifdef DRAW_ON_WHITE
+	memset(bg_image.data, 0xff, bg_image.size);
+#endif
 	
 	error = image_unpack_splash(&composite_image, &txtr_composite_splash_image);
 	if(error < 0) {
@@ -303,7 +323,7 @@ static void paint_task(void *params)
 			power_off();
 		}
 		
-		if(1) {
+		if(!pause_refreshing) {
 			now = xTaskGetTickCount();
 			if(last_draw - now > 100) {
 				/* Download the full bg_image every 100ms and send a partial update for all changed pixels */
@@ -314,9 +334,15 @@ static void paint_task(void *params)
 				if(error == 0) {
 					eink_job_t job;
 					eink_job_begin(&job, 2);
+#ifdef DRAW_ON_WHITE
+					eink_job_add_area(job, bg_buffer, WAVEFORM_MODE_DU, UPDATE_MODE_PART_SPECIAL,
+							(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
+							bg_image.width, bg_image.height);
+#else
 					eink_job_add_area(job, bg_buffer, WAVEFORM_MODE_GC, UPDATE_MODE_PART_SPECIAL,
 							(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
 							bg_image.width, bg_image.height);
+#endif
 					eink_job_commit(job);
 					last_draw = now;
 				} else printf("E\n");
@@ -385,7 +411,7 @@ int paint_init(void)
 	xTaskCreate(paint_task, (signed portCHAR *) "PAINT TASK", TASK_PAINT_STACK,
 			NULL, TASK_PAINT_PRIORITY, NULL);
 	xTaskCreate(paint_draw_task, (signed portCHAR *) "PAINT DRAW TASK", TASK_PAINT_STACK,
-			NULL, TASK_PAINT_PRIORITY, NULL);
+			NULL, TASK_PAINT_PRIORITY+1, NULL);
 
 	return 0;
 }

@@ -74,9 +74,15 @@ prvSetupHardware (void)
 void
 vApplicationIdleHook (void)
 {
+#if 0
+	/* Disable SDRAM clock and send SDRAM to self-refresh. The SDRAM will be
+	 * automatically reenabled on the next access.
+	 */
+	AT91C_BASE_SDRC->SDRC_SRR = 1;
 	/* Disable processor clock to set the core into Idle Mode. The clock will 
 	 * automatically be reenabled by any interrupt. */
-	AT91C_BASE_PMC->PMC_SCDR = 1; 
+	AT91C_BASE_PMC->PMC_SCDR = 1;
+#endif
 }
 
 void

@@ -228,10 +228,80 @@ int image_get_pixel(const struct image * const image, int x, int y)
 }
 
 
-void image_set_pixel(image_t image, int x, int y, int value)
+void image_set_pixel(image_t image, int x, int y, uint8_t value)
 {
-	int mask = ((0xff>>(8-image->bits_per_pixel)))<<( (x*image->bits_per_pixel) % 8);
-	int byteindex = y*image->rowstride + (x*image->bits_per_pixel)/8;
-	image->data[byteindex] = (image->data[byteindex] & ~mask)
-		| ( ((value >> (8-image->bits_per_pixel)) << ((x*image->bits_per_pixel) % 8)) & mask);
+	/*
+	 * int mask = ((0xff>>(8-image->bits_per_pixel)))<<( (x*image->bits_per_pixel) % 8);
+	 * int byteindex = y*image->rowstride + (x*image->bits_per_pixel)/8;
+	 * image->data[byteindex] = (image->data[byteindex] & ~mask)
+	 * 		| ( ((value >> (8-image->bits_per_pixel)) << ((x*image->bits_per_pixel) % 8)) & mask);
+	 */
+	int mask, byteindex;
+	switch(image->bits_per_pixel) {
+	case IMAGE_BPP_2:
+		mask = 0x3 << ((x*2)%8);
+		byteindex = y*image->rowstride + (x/4);
+		image->data[byteindex] = (image->data[byteindex] & ~mask) | ( ((value>>6)<<((x*2)%8)) & mask);
+		break;
+	case IMAGE_BPP_4:
+		byteindex = y*image->rowstride + (x/2);
+		if(x % 2 == 0) {
+			mask = 0x0f;
+			image->data[byteindex] = (image->data[byteindex] & ~mask) | ( (value>>4) & mask);
+		} else {
+			mask = 0xf0;
+			image->data[byteindex] = (image->data[byteindex] & ~mask) | ( value & mask);
+		}
+		break;
+	case IMAGE_BPP_8:
+		byteindex = y*image->rowstride + x;
+		image->data[byteindex] = value;
+		break;
+	}
+}
+
+int image_draw_circle(image_t image, int x, int y, int r, int value, int filled)
+{
+	if(image == NULL) return -EINVAL;
+	if(x-r < 0 || y-r < 0) return -EINVAL;
+	if(x+r >= image->width || y+r >= image->height) return -EINVAL;
+	
+	int x_ = 0, y_ = r, i;
+	int p = 5 - r;
+	
+	
+	 do {
+		 if(!filled) {
+			 image_set_pixel(image, x+x_, y+y_, value);
+			 image_set_pixel(image, x-x_, y+y_, value);
+			 image_set_pixel(image, x+x_, y-y_, value);
+			 image_set_pixel(image, x-x_, y-y_, value);
+			 image_set_pixel(image, x+y_, y+x_, value);
+			 image_set_pixel(image, x-y_, y+x_, value);
+			 image_set_pixel(image, x+y_, y-x_, value);
+			 image_set_pixel(image, x-y_, y-x_, value);
+		 } else {
+			 for(i=x_; i<y_; i++) {
+				 image_set_pixel(image, x+x_, y+i, value);
+				 image_set_pixel(image, x-x_, y+i, value);
+				 image_set_pixel(image, x+x_, y-i, value);
+				 image_set_pixel(image, x-x_, y-i, value);
+				 image_set_pixel(image, x+i, y+x_, value);
+				 image_set_pixel(image, x-i, y+x_, value);
+				 image_set_pixel(image, x+i, y-x_, value);
+				 image_set_pixel(image, x-i, y-x_, value);
+			 }
+		 }
+			
+		if(p < 0) {
+			x_++;
+			p += 4*2*x_ + 4*1;
+		} else {
+			x_++; y_--;
+			p += 4*2*x_ + 4*1 - 4*2*y_;
+		}
+		
+	} while(x_<y_);
+	
+	return 0;
 }

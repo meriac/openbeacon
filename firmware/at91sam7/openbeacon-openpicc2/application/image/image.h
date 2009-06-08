@@ -61,6 +61,8 @@ extern int image_load_image_buffer_offset(image_in_image_buffer_t target, eink_i
 extern int image_update_image_buffer(image_in_image_buffer_t target);
 
 extern int image_get_pixel(const struct image * const image, int x, int y);
-extern void image_set_pixel(image_t image, int x, int y, int value);
+extern void image_set_pixel(image_t image, int x, int y, uint8_t value);
+
+extern int image_draw_circle(image_t image, int x, int y, int r, int value, int filled);
 
 #endif /* IMAGE_H_ */
