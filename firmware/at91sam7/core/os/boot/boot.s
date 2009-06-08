@@ -149,8 +149,14 @@ _swi:   .word swi_handler				/* SWI			*/
 _pabt:  .word __pabt                    /* program abort			*/
 _dabt:  .word __dabt                    /* data abort				*/
 _fiq:   .word __fiq                     /* FIQ					*/
+_PIOB_BASE: .word 0xfffff600
 
 __undf: b     .                         /* undefined				*/
 __pabt: b     .                         /* program abort			*/
-__dabt: b     .                         /* data abort				*/
+__dabt: 
+	mov r0, #2
+	ldr r1, _PIOB_BASE
+	str r0, [r1, #52]
+	str r0, [r1, #48]
+	b     __dabt                         /* data abort				*/
 __fiq:  b     .                         /* FIQ					*/
