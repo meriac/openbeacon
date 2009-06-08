@@ -38,7 +38,7 @@ void AT91F_LowLevelInit (void)
     AT91C_BASE_WDTC->WDTC_WDMR = AT91C_WDTC_WDDIS;
 #else    
     //* Watchdog Enable
-    AT91C_BASE_WDTC->WDTC_WDMR = (0x80 << 16) | AT91C_WDTC_WDRSTEN | 0x80;
+    AT91C_BASE_WDTC->WDTC_WDMR =  AT91C_WDTC_WDDBGHLT | (0x80 << 16) | AT91C_WDTC_WDRSTEN | 0x80;
 #endif/*DISABLE_WATCHDOG*/
 
     //* Set MCK at 47 923 200
