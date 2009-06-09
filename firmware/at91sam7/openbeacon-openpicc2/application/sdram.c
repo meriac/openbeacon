@@ -3,6 +3,8 @@
 #include <board.h>
 #include <beacontypes.h>
 
+#include <stdint.h>
+
 #include "sdram.h"
 
 static void sdram_setup_pio(void)
@@ -101,8 +103,7 @@ void sdram_init(void)
 	//*** Step 6 *** (micron step 12)
 	//Mode Register Command
 	psdrc->SDRC_MR = AT91C_SDRC_DBW_32_BITS | AT91C_SDRC_MODE_LMR_CMD;	// Set LMR operation
-	*(SDRAM_BASE + SDRAM_MODE) = 0x0;	// Perform LMR burst=1, lat=2
-	//pSdram[SDRAM_MODE] = 0x1;
+	((uint32_t*)(SDRAM_BASE))[SDRAM_MODE] = 0x0;	// Perform LMR burst=1, lat=2
 	for(i=0;i<2;i++) ;
 
 	//*** Step 7 ***
