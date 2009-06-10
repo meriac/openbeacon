@@ -27,6 +27,7 @@
 /* Library includes. */
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <FreeRTOS.h>
 #include <AT91SAM7.h>
@@ -144,15 +145,42 @@ sdram_test_task (void *parameter)
 	}
 	
 	long start = xTaskGetTickCount(), stop;
-	for (i = 0; i < 4194304; i++) {
-		pSdram[i] = 0xbeef0000 ^ i;
+	volatile unsigned int *tmp = pSdram;
+	for (i = 0; i < 4194304 / 8; i++) {
+		asm volatile("MOV r9, %[index]\n\t"
+				"EOR r0, r9, %[beef]\n\t"
+				"ADD r9, r9, #1\n\t"
+				"EOR r1, r9, %[beef]\n\t"
+				"ADD r9, r9, #1\n\t"
+				"EOR r2, r9, %[beef]\n\t"
+				"ADD r9, r9, #1\n\t"
+				"EOR r3, r9, %[beef]\n\t"
+				"ADD r9, r9, #1\n\t"
+				"EOR r4, r9, %[beef]\n\t"
+				"ADD r9, r9, #1\n\t"
+				"EOR r5, r9, %[beef]\n\t"
+				"ADD r9, r9, #1\n\t"
+				"EOR r6, r9, %[beef]\n\t"
+				"ADD r9, r9, #1\n\t"
+				"EOR r7, r9, %[beef]\n\t"
+				"STM %[base]!, {r0-r7}\n\t"
+				: [base] "+r" (tmp)
+				: [beef] "r" (0xbeef0000), 
+					[index] "r" (i*8)
+				: "memory", "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r9");
+		
 	}
 	stop = xTaskGetTickCount();
 	printf("Loaded test pattern in %li ticks\n", (long)(stop-start));
 	
 	start = xTaskGetTickCount();
-	for (i = 0; i < 4194304; i++) {
-		(void)pSdram[i];
+	tmp = pSdram;
+	for (i = 0; i < 4194304 / 8; i++) {
+		asm volatile( "LDM %0!, {r0-r7}\n\t"
+				: "+r" (tmp)
+				:
+				: "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7");
+		
 	}
 	stop = xTaskGetTickCount();
 	printf("Read test pattern in %li ticks\n", (long)(stop-start));
@@ -162,12 +190,54 @@ sdram_test_task (void *parameter)
 		int ok = 1;
 		
 		start = xTaskGetTickCount();
-		for (i = 0; i < 4194304; i++)
+		for (i = 0; i < 4194304 / 8; i++)
 		{
-			u_int32_t test = pSdram[i];
-			if (test != (0xbeef0000 ^ i))
+			int j = rand() % (4194304 - 8);
+			register int i0 asm("r0"),
+				i1 asm("r1"),
+				i2 asm("r2"),
+				i3 asm("r3"),
+				i4 asm("r4"),
+				i5 asm("r5"),
+				i6 asm("r6"),
+				i7 asm("r7");
+
+			asm volatile("LDM %[base], {%0-%7}\n\t"
+					"MOV r9, %[index]\n\t"
+					"EOR %0, %0, %[beef]\n\t"
+					"SUB %0, %0, r9\n\r"
+					"ADD r9, r9, #1\n\t"
+					"EOR %1, %1, %[beef]\n\t"
+					"SUB %1, %1, r9\n\r"
+					"ADD r9, r9, #1\n\t"
+					"EOR %2, %2, %[beef]\n\t"
+					"SUB %2, %2, r9\n\r"
+					"ADD r9, r9, #1\n\t"
+					"EOR %3, %3, %[beef]\n\t"
+					"SUB %3, %3, r9\n\r"
+					"ADD r9, r9, #1\n\t"
+					"EOR %4, %4, %[beef]\n\t"
+					"SUB %4, %4, r9\n\r"
+					"ADD r9, r9, #1\n\t"
+					"EOR %5, %5, %[beef]\n\t"
+					"SUB %5, %5, r9\n\r"
+					"ADD r9, r9, #1\n\t"
+					"EOR %6, %6, %[beef]\n\t"
+					"SUB %6, %6, r9\n\r"
+					"ADD r9, r9, #1\n\t"
+					"EOR %7, %7, %[beef]\n\t"
+					"SUB %7, %7, r9\n\r"
+					
+					: "=&r" (i0), "=&r" (i1), "=&r" (i2), "=&r" (i3),
+						"=&r" (i4), "=&r" (i5), "=&r" (i6), "=&r" (i7)
+					: [base] "r" (pSdram + j),
+						[beef] "r" (0xbeef0000), 
+						[index] "r" (j)
+					: "r9");
+			if(i0 != 0 || i1 != 0 || i2 != 0 || i3 != 0 || i4 != 0 || i5 != 0 || i6 != 0 || i7 != 0)
 			{
-				if(ok) printf("Error at %i: %08X\n", i, (unsigned int)test);
+				if(ok) printf("Error at %i: %08X %08X %08X %08X %08X %08X %08X %08X\n", j, 
+					i0, i1, i2, i3, i4, i5, i6, i7);
 				ok = 0;
 			}
 		}
