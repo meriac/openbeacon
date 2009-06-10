@@ -44,7 +44,9 @@
 #include "sdram.h"
 #include "eink/eink.h"
 #include "eink/eink_flash.h"
+#include "eink/eink_lowlevel.h"
 #include "touch/ad7147.h"
+#include "touch/slider.h"
 #include "accelerometer.h"
 #include "dosfs.h"
 #include "nfc/pn532.h"
@@ -123,30 +125,83 @@ HexChar (unsigned char nibble)
 
 /**********************************************************************/
 
-void
-sdram_test_task (void *parameter)
+static void do_sdram_read_test(volatile unsigned int *base, unsigned int size)
 {
-	(void) parameter;
-	volatile int i;
+	long start, stop;
+
+	int ok = 1;
+	unsigned int i;
 	
-	vTaskDelay (1000 / portTICK_RATE_MS);
-	printf("Starting SDRAM test for %s\n", BOARD->friendly_name);
-	
-	for(i=0; i<4; i++) {
-		SDRAM_BASE[i] = i;
+	start = xTaskGetTickCount();
+	for (i = 0; i < (size/4) / 8; i++)
+	{
+		int j = rand() % ((size/4) - 8);
+		register int i0 asm("r0"),
+			i1 asm("r1"),
+			i2 asm("r2"),
+			i3 asm("r3"),
+			i4 asm("r4"),
+			i5 asm("r5"),
+			i6 asm("r6"),
+			i7 asm("r7");
+
+		asm volatile("LDM %[base], {%0-%7}\n\t"
+				"MOV r9, %[index]\n\t"
+				"EOR %0, %0, %[beef]\n\t"
+				"SUB %0, %0, r9\n\r"
+				"ADD r9, r9, #1\n\t"
+				"EOR %1, %1, %[beef]\n\t"
+				"SUB %1, %1, r9\n\r"
+				"ADD r9, r9, #1\n\t"
+				"EOR %2, %2, %[beef]\n\t"
+				"SUB %2, %2, r9\n\r"
+				"ADD r9, r9, #1\n\t"
+				"EOR %3, %3, %[beef]\n\t"
+				"SUB %3, %3, r9\n\r"
+				"ADD r9, r9, #1\n\t"
+				"EOR %4, %4, %[beef]\n\t"
+				"SUB %4, %4, r9\n\r"
+				"ADD r9, r9, #1\n\t"
+				"EOR %5, %5, %[beef]\n\t"
+				"SUB %5, %5, r9\n\r"
+				"ADD r9, r9, #1\n\t"
+				"EOR %6, %6, %[beef]\n\t"
+				"SUB %6, %6, r9\n\r"
+				"ADD r9, r9, #1\n\t"
+				"EOR %7, %7, %[beef]\n\t"
+				"SUB %7, %7, r9\n\r"
+				
+				: "=&r" (i0), "=&r" (i1), "=&r" (i2), "=&r" (i3),
+					"=&r" (i4), "=&r" (i5), "=&r" (i6), "=&r" (i7)
+				: [base] "r" (base + j),
+					[beef] "r" (0xbeef0000), 
+					[index] "r" (j)
+				: "r9");
+		if(i0 != 0 || i1 != 0 || i2 != 0 || i3 != 0 || i4 != 0 || i5 != 0 || i6 != 0 || i7 != 0)
+		{
+			if(ok) printf("Error at %i: %08X %08X %08X %08X %08X %08X %08X %08X\n", j, 
+				i0, i1, i2, i3, i4, i5, i6, i7);
+			ok = 0;
+		}
 	}
-	
-	volatile unsigned int *pSdram = (unsigned int *) SDRAM_BASE;
-	
-	if(pSdram[0] == 0x03020100) {
-		printf("Byte-wise SDRAM access OK\n");
-	} else {
-		printf("Byte-wise SDRAM access not OK\n");
-	}
-	
+	stop = xTaskGetTickCount();
+	led_set_red (0);
+	led_set_green (0);
+	vTaskDelay (100 / portTICK_RATE_MS);
+	led_set_red (!ok);
+	led_set_green (ok);
+	if (ok)
+		printf ("SDRAM ok (%li ticks)\n", (long)(stop-start));
+
+}
+
+static void do_sdram_write_test(volatile unsigned int *base, unsigned int size)
+{
 	long start = xTaskGetTickCount(), stop;
-	volatile unsigned int *tmp = pSdram;
-	for (i = 0; i < 4194304 / 8; i++) {
+	volatile unsigned int *tmp = base;
+	unsigned int i;
+	
+	for (i = 0; i < (size/4) / 8; i++) {
 		asm volatile("MOV r9, %[index]\n\t"
 				"EOR r0, r9, %[beef]\n\t"
 				"ADD r9, r9, #1\n\t"
@@ -174,8 +229,8 @@ sdram_test_task (void *parameter)
 	printf("Loaded test pattern in %li ticks\n", (long)(stop-start));
 	
 	start = xTaskGetTickCount();
-	tmp = pSdram;
-	for (i = 0; i < 4194304 / 8; i++) {
+	tmp = base;
+	for (i = 0; i < (size/4) / 8; i++) {
 		asm volatile( "LDM %0!, {r0-r7}\n\t"
 				: "+r" (tmp)
 				:
@@ -184,71 +239,54 @@ sdram_test_task (void *parameter)
 	}
 	stop = xTaskGetTickCount();
 	printf("Read test pattern in %li ticks\n", (long)(stop-start));
-	
-	while (1)
-	{
-		int ok = 1;
-		
-		start = xTaskGetTickCount();
-		for (i = 0; i < 4194304 / 8; i++)
-		{
-			int j = rand() % (4194304 - 8);
-			register int i0 asm("r0"),
-				i1 asm("r1"),
-				i2 asm("r2"),
-				i3 asm("r3"),
-				i4 asm("r4"),
-				i5 asm("r5"),
-				i6 asm("r6"),
-				i7 asm("r7");
+}
 
-			asm volatile("LDM %[base], {%0-%7}\n\t"
-					"MOV r9, %[index]\n\t"
-					"EOR %0, %0, %[beef]\n\t"
-					"SUB %0, %0, r9\n\r"
-					"ADD r9, r9, #1\n\t"
-					"EOR %1, %1, %[beef]\n\t"
-					"SUB %1, %1, r9\n\r"
-					"ADD r9, r9, #1\n\t"
-					"EOR %2, %2, %[beef]\n\t"
-					"SUB %2, %2, r9\n\r"
-					"ADD r9, r9, #1\n\t"
-					"EOR %3, %3, %[beef]\n\t"
-					"SUB %3, %3, r9\n\r"
-					"ADD r9, r9, #1\n\t"
-					"EOR %4, %4, %[beef]\n\t"
-					"SUB %4, %4, r9\n\r"
-					"ADD r9, r9, #1\n\t"
-					"EOR %5, %5, %[beef]\n\t"
-					"SUB %5, %5, r9\n\r"
-					"ADD r9, r9, #1\n\t"
-					"EOR %6, %6, %[beef]\n\t"
-					"SUB %6, %6, r9\n\r"
-					"ADD r9, r9, #1\n\t"
-					"EOR %7, %7, %[beef]\n\t"
-					"SUB %7, %7, r9\n\r"
-					
-					: "=&r" (i0), "=&r" (i1), "=&r" (i2), "=&r" (i3),
-						"=&r" (i4), "=&r" (i5), "=&r" (i6), "=&r" (i7)
-					: [base] "r" (pSdram + j),
-						[beef] "r" (0xbeef0000), 
-						[index] "r" (j)
-					: "r9");
-			if(i0 != 0 || i1 != 0 || i2 != 0 || i3 != 0 || i4 != 0 || i5 != 0 || i6 != 0 || i7 != 0)
-			{
-				if(ok) printf("Error at %i: %08X %08X %08X %08X %08X %08X %08X %08X\n", j, 
-					i0, i1, i2, i3, i4, i5, i6, i7);
-				ok = 0;
-			}
+
+void
+sdram_test_task (void *parameter)
+{
+	int extra_wait = (int)parameter;
+	volatile int i;
+	int offset = 1024*1024; /* Leave some room for malloc, e.g. the Task Control Blocks */
+	volatile unsigned int *pSdram = (unsigned int *) (SDRAM_BASE + offset);
+	
+	if(extra_wait == 0) {
+		vTaskDelay (1000 / portTICK_RATE_MS);
+		printf("Starting SDRAM test for %s\n", BOARD->friendly_name);
+		
+		for(i=0; i<4; i++) {
+			SDRAM_BASE[offset+i] = i;
 		}
-		stop = xTaskGetTickCount();
-		led_set_red (0);
-		led_set_green (0);
-		vTaskDelay (100 / portTICK_RATE_MS);
-		led_set_red (!ok);
-		led_set_green (ok);
-		if (ok)
-			printf ("SDRAM ok (%li ticks)\n", (long)(stop-start));
+		
+		if(pSdram[0] == 0x03020100) {
+			printf("Byte-wise SDRAM access OK\n");
+		} else {
+			printf("Byte-wise SDRAM access not OK\n");
+		}
+		
+		vTaskDelay(100 / portTICK_RATE_MS);
+		
+		do_sdram_write_test(pSdram, SDRAM_SIZE - offset);
+	} else {
+		vTaskDelay(extra_wait/portTICK_RATE_MS);
+	}
+	
+	while (1) {
+		do_sdram_read_test(pSdram, SDRAM_SIZE - offset);
+	}
+}
+
+void eink_traffic_test_task (void *parameter)
+{
+	(void)parameter;
+	vTaskDelay(10000/portTICK_RATE_MS);
+	printf("Fire in the hole\n");
+	
+	while(1) {
+		/* Don't try this at home, kids! */
+		eink_display_streamed_image_update((unsigned char*)SDRAM_BASE, SDRAM_SIZE);
+		printf("... Ok\n");
+		vTaskDelay(5000/portTICK_RATE_MS);
 	}
 }
 
@@ -486,6 +524,21 @@ static void detect_board(void)
 	POWER_MODE_PIO->PIO_PPUDR = POWER_MODE_0_PIN | POWER_MODE_1_PIN;
 }
 
+static long last_transfer = 0, count_old, count = 0;
+static void __attribute__((unused)) slider_update_cb(struct slider_state *state)
+{
+	/* This prints the slider report frequency */
+	(void)state;
+	long now = xTaskGetTickCount();
+	if( now - last_transfer > (long)(1000/portTICK_RATE_MS) ) {
+		count_old = count;
+		count = 0;
+		last_transfer = now;
+		printf("%li\n", count_old);
+	}
+	count++;
+}
+
 void sdram_clear(void)
 {
 	register int r0 asm("r0") = 0xdeadbeef, 
@@ -544,7 +597,12 @@ void __attribute__((noreturn)) mainloop (void)
 
   /* vInitProtocolLayer (); */
 
-  //xTaskCreate (sdram_test_task, (signed portCHAR *) "SDRAM_DEMO", 512, NULL, NEAR_IDLE_PRIORITY, NULL);
+  //xTaskCreate (sdram_test_task, (signed portCHAR *) "SDRAM_DEMO 0", 512, (void*)0, NEAR_IDLE_PRIORITY, NULL);
+  //xTaskCreate (sdram_test_task, (signed portCHAR *) "SDRAM_DEMO 1", 512, (void*)3000, NEAR_IDLE_PRIORITY, NULL);
+  //xTaskCreate (sdram_test_task, (signed portCHAR *) "SDRAM_DEMO 2", 512, (void*)4000, NEAR_IDLE_PRIORITY, NULL);
+  //xTaskCreate (sdram_test_task, (signed portCHAR *) "SDRAM_DEMO 2", 512, (void*)5000, NEAR_IDLE_PRIORITY, NULL);
+  //xTaskCreate(eink_traffic_test_task, (signed portCHAR *) "EINK TRAFFIC", 512, NULL, NEAR_IDLE_PRIORITY, NULL);
+  
   /*xTaskCreate (demo_task, (signed portCHAR *) "LED_DEMO", 512,
      NULL, NEAR_IDLE_PRIORITY, NULL); */
   /*xTaskCreate (sdcard_test_task, (signed portCHAR *) "SDCARD_DEMO", 1024,
@@ -565,6 +623,8 @@ void __attribute__((noreturn)) mainloop (void)
   //ebook_init();
   paint_init();
 
+  //slider_register_slider_update_callback(slider_update_cb);
+  
   led_set_green (1);
 
   vTaskStartScheduler ();
