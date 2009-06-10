@@ -260,13 +260,46 @@ void image_set_pixel(image_t image, int x, int y, uint8_t value)
 	}
 }
 
+inline int image_draw_straight_line(image_t image, int x1, int y, int x2, int value)
+{
+	int i;
+	switch(image->bits_per_pixel) {
+	case IMAGE_BPP_2:
+		for(i=x1; i<=x2; i++) image_set_pixel(image, i, y, value);
+		break;
+	case IMAGE_BPP_4: {
+			int start, end;
+			if(x1%2 == 1) {
+				image_set_pixel(image, x1, y, value);
+				start = x1+1;
+			} else {
+				start = x1;
+			}
+			if(x2%2 == 0) {
+				image_set_pixel(image, x2, y, value);
+				end = x2-1;
+			} else {
+				end = x2;
+			}
+			if(start < end) {
+				memset(image->data + image->rowstride*y + start/2, (value & 0xf0) | (value >> 4), (end-start+1)/2 );
+			}
+		}
+		break;
+	case IMAGE_BPP_8:
+		memset(image->data + image->rowstride*y + x1, value, x2-x1+1);
+		break;
+	}
+	return 0;
+}
+
 int image_draw_circle(image_t image, int x, int y, int r, int value, int filled)
 {
 	if(image == NULL) return -EINVAL;
 	if(x-r < 0 || y-r < 0) return -EINVAL;
 	if(x+r >= image->width || y+r >= image->height) return -EINVAL;
 	
-	int x_ = 0, y_ = r, i;
+	int x_ = 0, y_ = r;
 	int p = 5 - r;
 	
 	
@@ -281,16 +314,10 @@ int image_draw_circle(image_t image, int x, int y, int r, int value, int filled)
 			 image_set_pixel(image, x+y_, y-x_, value);
 			 image_set_pixel(image, x-y_, y-x_, value);
 		 } else {
-			 for(i=x_; i<=y_; i++) {
-				 image_set_pixel(image, x+x_, y+i, value);
-				 image_set_pixel(image, x-x_, y+i, value);
-				 image_set_pixel(image, x+x_, y-i, value);
-				 image_set_pixel(image, x-x_, y-i, value);
-				 image_set_pixel(image, x+i, y+x_, value);
-				 image_set_pixel(image, x-i, y+x_, value);
-				 image_set_pixel(image, x+i, y-x_, value);
-				 image_set_pixel(image, x-i, y-x_, value);
-			 }
+			 image_draw_straight_line(image, x-x_, y+y_, x+x_, value);
+			 image_draw_straight_line(image, x-x_, y-y_, x+x_, value);
+			 image_draw_straight_line(image, x-y_, y+x_, x+y_, value);
+			 image_draw_straight_line(image, x-y_, y-x_, x+y_, value);
 		 }
 			
 		if(p < 0) {
@@ -301,7 +328,7 @@ int image_draw_circle(image_t image, int x, int y, int r, int value, int filled)
 			p += 4*2*x_ + 4*1 - 4*2*y_;
 		}
 		
-	} while(x_<y_);
+	} while(x_<=y_);
 	
 	return 0;
 }
