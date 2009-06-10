@@ -281,7 +281,7 @@ int image_draw_circle(image_t image, int x, int y, int r, int value, int filled)
 			 image_set_pixel(image, x+y_, y-x_, value);
 			 image_set_pixel(image, x-y_, y-x_, value);
 		 } else {
-			 for(i=x_; i<y_; i++) {
+			 for(i=x_; i<=y_; i++) {
 				 image_set_pixel(image, x+x_, y+i, value);
 				 image_set_pixel(image, x-x_, y+i, value);
 				 image_set_pixel(image, x+x_, y-i, value);
