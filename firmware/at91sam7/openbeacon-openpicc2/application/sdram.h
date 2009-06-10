@@ -6,7 +6,7 @@
 #define SDRAM_NO_BANKS 4
 
 #define SDRAM_TR_TIME 0x250
-#define SDRAM_MODE (0x7 | (2L<<4))
+#define SDRAM_MODE (0x0 | (2L<<4))
 
 extern void sdram_init(void);
 

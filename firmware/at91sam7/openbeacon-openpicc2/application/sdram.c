@@ -71,40 +71,40 @@ void sdram_init(void)
 	pSdram[0] = 0x00000000;	// Perform PRCHG
 
 	// micron step 7
-	for(i=0;i<1;i++) ;
+	for(i=0;i<1000;i++) ;
 
 	//*** Step 5 *** (micron step 8)
 	//8 Refresh Command
-	psdrc->SDRC_MR = AT91C_SDRC_DBW_32_BITS | AT91C_SDRC_MODE_RFSH_CMD;	// Set 1st CBR
-	pSdram[1] = 0x00000001;	// Perform CBR
-	for(i=0;i<2;i++) ;
-	psdrc->SDRC_MR = AT91C_SDRC_DBW_32_BITS | AT91C_SDRC_MODE_RFSH_CMD;	// Set 2nd CBR
-	pSdram[2] = 0x00000002;	// Perform CBR
-	for(i=0;i<2;i++) ;
-	psdrc->SDRC_MR = AT91C_SDRC_DBW_32_BITS | AT91C_SDRC_MODE_RFSH_CMD;	// Set 3rd CBR
-	pSdram[3] = 0x00000003;	// Perform CBR
-	for(i=0;i<2;i++) ;
-	psdrc->SDRC_MR = AT91C_SDRC_DBW_32_BITS | AT91C_SDRC_MODE_RFSH_CMD;	// Set 4th CBR
-	pSdram[4] = 0x00000004;	// Perform CBR
-	for(i=0;i<2;i++) ;
-	psdrc->SDRC_MR = AT91C_SDRC_DBW_32_BITS | AT91C_SDRC_MODE_RFSH_CMD;	// Set 5th CBR
-	pSdram[5] = 0x00000005;	// Perform CBR
-	for(i=0;i<2;i++) ;
-	psdrc->SDRC_MR = AT91C_SDRC_DBW_32_BITS | AT91C_SDRC_MODE_RFSH_CMD;	// Set 6th CBR
-	pSdram[6] = 0x00000006;	// Perform CBR
-	for(i=0;i<2;i++) ;
-	psdrc->SDRC_MR = AT91C_SDRC_DBW_32_BITS | AT91C_SDRC_MODE_RFSH_CMD;	// Set 7th CBR
-	pSdram[7] = 0x00000007;	// Perform CBR
-	for(i=0;i<2;i++) ;
-	psdrc->SDRC_MR = AT91C_SDRC_DBW_32_BITS | AT91C_SDRC_MODE_RFSH_CMD;	// Set 8th CBR
-	pSdram[8] = 0x00000008;	// Perform CBR
-	for(i=0;i<2;i++) ;
+	volatile int j = 0;
+	for(j=0; j<8; j++) {
+		psdrc->SDRC_MR = AT91C_SDRC_DBW_32_BITS | AT91C_SDRC_MODE_RFSH_CMD;	// Set j-st CBR
+		pSdram[0] = 0;	// Perform CBR
+		for(i=0;i<2000;i++) ;
+	}
 
 	//*** Step 6 *** (micron step 12)
 	//Mode Register Command
 	psdrc->SDRC_MR = AT91C_SDRC_DBW_32_BITS | AT91C_SDRC_MODE_LMR_CMD;	// Set LMR operation
-	((uint32_t*)(SDRAM_BASE))[SDRAM_MODE] = 0x0;	// Perform LMR burst=1, lat=2
-	for(i=0;i<2;i++) ;
+	/* A note on the Mode Register programming:
+	 * The mode register is loaded with the data on the address lines of the SDRAM chip, e.g. A0-A11.
+	 * However, A0 on the SDRAM is connected to A2 on the AT91SAM7, so the mode register programming
+	 * access must really go to MODE_REGISTER_VALUE<<2. This is neatly accomplished by having 
+	 * pSdram of type int* and then accessing pSdram[MODE_REGISTER_VALUE], which will of course access
+	 * pSdram + MODE_REGISTER_VALUE * sizeof(*pSdram).
+	 * 
+	 * As far as I can tell, the example in the Atmel documentation (doc 6287) is wrong: 
+	 * 	*AT91C_SDRAM_BASE = 0x00000000;
+	 * would program the mode register with 0, leading to undefined operation.
+	 * Also, there are some examples on the internet that do
+	 *  *(pSdram + MODE_REGISTER_VALUE<<2) = 0;
+	 * (where MODE_REGISTER_VALUE<<2 is obfuscated by using the literal value 0x80) which is equivalent
+	 * to pSdram[MODE_REGISTER_VALUE<<2] and therefore an access to pSdram + (MODE_REGISTER_VALUE<<2) * sizeof(*pSdram)
+	 * which would program the mode register with a wrong value, again leading to undefined operation.
+	 * 
+	 * -- Henryk, 2009-06-10
+	 */
+	pSdram[SDRAM_MODE] = 0;	// Perform LMR burst=1, lat=2
+	for(i=0;i<2000;i++) ;
 
 	//*** Step 7 ***
 	//Normal Mode Command
