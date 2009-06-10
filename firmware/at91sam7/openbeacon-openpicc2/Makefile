@@ -55,7 +55,8 @@ app_clean:
 
 include ../core/Makefile.rules
 
-LDSCRIPT=config/atmel-rom_sdram.ld
+#LDSCRIPT=config/atmel-rom_sdram.ld
+LDSCRIPT=config/atmel-rom.ld
 
 generate_splash: generate_splash.c application/lzo/minilzo.c
 	gcc generate_splash.c application/lzo/minilzo.c -o generate_splash -Iapplication -lnetpbm -ggdb -lm -I/usr/include/netpbm/
