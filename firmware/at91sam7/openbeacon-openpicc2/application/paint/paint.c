@@ -26,7 +26,6 @@
 #include "image/splash.h"
 
 extern const struct splash_image bg_splash_image;
-extern const struct splash_image txtr_composite_splash_image;
 
 #define DISPLAY_SHORT (EINK_CURRENT_DISPLAY_CONFIGURATION->vsize)
 #define DISPLAY_LONG (EINK_CURRENT_DISPLAY_CONFIGURATION->hsize)
@@ -36,24 +35,17 @@ extern const struct splash_image txtr_composite_splash_image;
  */
 #define IMAGE_SIZE (1216*832)
 
-//#define DRAW_ON_WHITE
 
 static uint8_t eink_mgmt_data[10240] __attribute__ ((section (".sdram")));
-static eink_image_buffer_t blank_buffer, black_buffer, bg_buffer, composite_buffer;
+static eink_image_buffer_t blank_buffer, bg_buffer;
 static uint8_t __attribute__((aligned(4), section (".sdram")))
-	_blank_data[IMAGE_SIZE], _black_data[IMAGE_SIZE], _bg_data[IMAGE_SIZE], _composite_data[IMAGE_SIZE];
+	_blank_data[IMAGE_SIZE], _bg_data[IMAGE_SIZE];
 static struct image blank_image = {
 		.data = _blank_data,
 		.size = sizeof(_blank_data),
-}, black_image = {
-		.data = _black_data,
-		.size = sizeof(_black_data),
 }, bg_image = {
 		.data = _bg_data,
 		.size = sizeof(_bg_data),
-}, composite_image = {
-		.data = _composite_data,
-		.size = sizeof(_composite_data),
 };
 
 
@@ -82,36 +74,69 @@ static void paint_die_error(enum eink_error error)
 	led_halt_blinking(2);
 }
 
+enum {
+	MODE_BLANK,
+	MODE_BACKGROUND,
+} current_mode = MODE_BLANK;
+static void reset_background(void)
+{
+	switch(current_mode) {
+	case MODE_BLANK:
+		memset(bg_image.data, 0xff, bg_image.size);
+		break;
+	case MODE_BACKGROUND: 
+		{
+			int error = image_unpack_splash(&bg_image, &bg_splash_image);
+			if(error < 0) {
+				printf("Error during splash unpack: %i (%s)\n", error, strerror(-error));
+			}
+		}
+		break;
+	}
+}
+
 static int pause_refreshing = 0;
-void process_line(image_t image, char *line, size_t length)
+void stop_refreshing(void) {
+	pause_refreshing = 1;
+	while(eink_job_count_pending() > 0) vTaskDelay(10/portTICK_RATE_MS);
+}
+void start_refreshing(void) {
+	while(eink_job_count_pending() > 0) vTaskDelay(10/portTICK_RATE_MS);
+	pause_refreshing = 0;
+}
+
+void process_line(char *line, size_t length)
 {
 	(void)length;
 	if(strncmp(line, "clear", 5) == 0) {
-		pause_refreshing = 1;
-		while(eink_job_count_pending() > 0) vTaskDelay(10/portTICK_RATE_MS);
-#ifndef DRAW_ON_WHITE
-		int error = image_unpack_splash(image, &bg_splash_image);
-		if(error < 0) {
-			printf("Error during splash unpack: %i (%s)\n", error, strerror(-error));
-		}
-#else
-		memset(bg_image.data, 0xff, bg_image.size);
-#endif
-		pause_refreshing = 0;
+		stop_refreshing();
+		reset_background();
+		start_refreshing();
 	} else if(strncmp(line, "init", 4) == 0) {
-		pause_refreshing = 1;
-		while(eink_job_count_pending() > 0) vTaskDelay(10/portTICK_RATE_MS);
+		stop_refreshing();
 		eink_job_t job;
 		eink_job_begin(&job, 0);
 		eink_job_add(job, blank_buffer, WAVEFORM_MODE_INIT, UPDATE_MODE_FULL);
 		eink_job_commit(job);
-		while(eink_job_count_pending() > 0) vTaskDelay(10/portTICK_RATE_MS);
-		pause_refreshing = 0;
+		start_refreshing();
+	} else if(strncmp(line, "mode_blank", 10) == 0) {
+		stop_refreshing();
+		current_mode = MODE_BLANK;
+		reset_background();
+		/* This extra clear screen is necessary since WAVEFORM_MODE_DU will not overwrite the previously
+		 * painted background
+		 */
+		clear_screen();  
+		start_refreshing();
+	} else if(strncmp(line, "mode_background", 10) == 0) {
+		stop_refreshing();
+		current_mode = MODE_BACKGROUND;
+		reset_background();
+		start_refreshing();
 	} else {
 		int x, y, r = 10, v = 0;
 		if(sscanf(line, " %i , %i , %i , %i ", &x, &y, &r, &v) >= 2) {
-			printf(">>%i,%i,%i\n", x, y, r);
-			image_draw_circle(image, x, y, r, v, 1);
+			image_draw_circle(&bg_image, x, y, r, v, 1);
 		}
 	}
 }
@@ -121,7 +146,6 @@ static int event_loop_running = 0;
 static void paint_draw_task(void *params)
 {
 	(void)params;
-	image_t target_image = &bg_image;
 	char line[1024];
 	unsigned int pos = 0, received;
 	
@@ -134,11 +158,11 @@ static void paint_draw_task(void *params)
 		if(line[pos] == '\r') vUSBSendByte('\n');
 		if(line[pos] == '\n' || line[pos] == '\r') {
 			line[pos+1] = 0;
-			process_line(target_image, line, pos+1);
+			process_line(line, pos+1);
 			pos = 0;
 		} else if(pos+2 >= sizeof(line)) {
 			line[pos+1] = 0;
-			process_line(target_image, line, pos+1);
+			process_line(line, pos+1);
 			pos = 0;
 		} else pos++;
 	}
@@ -153,8 +177,8 @@ static void paint_task(void *params)
 	
 	/*
 	 * bg_splash_image is in the flash
-	 * black_data, blank_data, bg_data is in the microcontroller SDRAM
-	 * black_buffer, blank_buffer, bg_buffer are in the display controller SDRAM
+	 * blank_data, bg_data is in the microcontroller SDRAM
+	 * blank_buffer, bg_buffer are in the display controller SDRAM
 	 */
 	
 	error = image_unpack_splash(&bg_image, &bg_splash_image);
@@ -162,16 +186,12 @@ static void paint_task(void *params)
 		printf("Error during splash unpack: %i (%s)\n", error, strerror(-error));
 		led_halt_blinking(3);
 	}
-#ifdef DRAW_ON_WHITE
-	memset(bg_image.data, 0xff, bg_image.size);
-#endif
+	/* We unpack the splash image even when we're going to overwrite it with white, in order
+	 * to set up the width, height, rowstride and size.
+	 */
+	if(current_mode == MODE_BLANK)
+		reset_background();
 	
-	error = image_unpack_splash(&composite_image, &txtr_composite_splash_image);
-	if(error < 0) {
-		printf("Error during composite unpack: %i (%s)\n", error, strerror(-error));
-		led_halt_blinking(3);
-	}
-
 	/* The white image needs to have 4 bpp since the controller will unpack 2bpp to
 	 * 8bpp by appending 6 zero-bits. So 11b in 2 bpp gets 11000000b in 8 bpp, which
 	 * is a slight grey (even with the P4N LUT mode).
@@ -179,24 +199,15 @@ static void paint_task(void *params)
 	blank_image.bits_per_pixel = IMAGE_BPP_4;
 	blank_image.rowstride = ROUND_UP(DISPLAY_SHORT, 4) / 2;
 	
-	black_image.bits_per_pixel = IMAGE_BPP_2;
-	black_image.rowstride = ROUND_UP(DISPLAY_SHORT, 8) / 4;
-	
 	error = image_create_solid(&blank_image, 0xff, DISPLAY_SHORT, DISPLAY_LONG);
 	if(error < 0) {
 		printf("Error during blank create: %i (%s)\n", error, strerror(-error));
 		led_halt_blinking(3);
 	}
-
-	error = image_create_solid(&black_image, 0x00, DISPLAY_SHORT, DISPLAY_LONG);
-	if(error < 0) {
-		printf("Error during black create: %i (%s)\n", error, strerror(-error));
-		led_halt_blinking(3);
-	}
 	
 	eink_mgmt_init(eink_mgmt_data, sizeof(eink_mgmt_data));
 
-#if 0 /* FIXME Seems to be broken, sometimes (hangs at boot) */
+#if 0 /* Disabled since the flash image plus background image will overflow the AT91SAM7 flash */
 	error = eink_flash_conditional_reflash();
 	if(error > 0) { /* Not an error, but the controller was reinitialized and we must wait */
 		vTaskDelay(5/portTICK_RATE_MS);
@@ -229,16 +240,8 @@ static void paint_task(void *params)
 		printf("Reason: %i\nCould not acquire blank image buffer\n", error);
 		led_halt_blinking(3);
 	}
-	if( (error=eink_image_buffer_acquire(&black_buffer)) < 0) {
-		printf("Reason: %i\nCould not acquire black image buffer\n", error);
-		led_halt_blinking(3);
-	}
 	if( (error=eink_image_buffer_acquire(&bg_buffer)) < 0) {
 		printf("Reason: %i\nCould not acquire bg image buffer\n", error);
-		led_halt_blinking(3);
-	}
-	if( (error=eink_image_buffer_acquire(&composite_buffer)) < 0) {
-		printf("Reason: %i\nCould not acquire composite image buffer\n", error);
 		led_halt_blinking(3);
 	}
 	
@@ -249,13 +252,6 @@ static void paint_task(void *params)
 			blank_image.data, blank_image.rowstride*blank_image.height) ;
 	stop = xTaskGetTickCount();
 	printf("Blank image: %li\n", (long)(stop-start));
-	cumulative += stop-start;
-	
-	start = xTaskGetTickCount();
-	error |= eink_image_buffer_load(black_buffer, image_get_bpp_as_pack_mode(&black_image), ROTATION_MODE_90,
-			black_image.data, black_image.rowstride*black_image.height);
-	stop = xTaskGetTickCount();
-	printf("Black image: %li\n", (long)(stop-start));
 	cumulative += stop-start;
 	
 	start = xTaskGetTickCount();
@@ -272,15 +268,6 @@ static void paint_task(void *params)
 			bg_image.data, bg_image.size);
 	stop = xTaskGetTickCount();
 	printf("Background image: %li\n", (long)(stop-start));
-	cumulative += stop-start;
-	
-	start = xTaskGetTickCount();
-	error |= eink_image_buffer_load_area(composite_buffer, image_get_bpp_as_pack_mode(&composite_image), ROTATION_MODE_90,
-			0, 0,
-			composite_image.width, composite_image.height,
-			composite_image.data, composite_image.size);
-	stop = xTaskGetTickCount();
-	printf("Composite image: %li\n", (long)(stop-start));
 	cumulative += stop-start;
 	
 	printf("All images loaded in %li ticks\n", (long)(cumulative));
@@ -303,14 +290,10 @@ static void paint_task(void *params)
 	
 	event_t received_event;
 	event_loop_running = 1;
-	int battery_update_counter = 5;
-	int spin_phase = 0, spin_counter=0;
 	
 	portTickType last_draw = 0, now;
-#define WAIT_TIME 25
+#define WAIT_TIME 50
 #define MAX_IDLE ((10 * 60 * 1000) / WAIT_TIME)
-#define BATTERY_UPDATE ((2 * 1000) / WAIT_TIME)
-#define SPIN_UPDATE (1000 / WAIT_TIME)
 	while(1) {
 		received_event.class = EVENT_NONE;
 		event_receive(&received_event, WAIT_TIME/portTICK_RATE_MS);
@@ -331,9 +314,7 @@ static void paint_task(void *params)
 			idle_time=0;
 		}
 		if(idle_time > MAX_IDLE) {
-			clear_screen();
-			while(eink_job_count_pending() > 0) vTaskDelay(10/portTICK_RATE_MS);
-			power_off();
+			event_send(EVENT_POWEROFF, 0);
 		}
 		
 		if(!pause_refreshing) {
@@ -344,62 +325,27 @@ static void paint_task(void *params)
 						(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
 						bg_image.width, bg_image.height,
 						bg_image.data, bg_image.size);
-				if(error == 0) {
+				if(error == 0 && !pause_refreshing) {
 					eink_job_t job;
 					eink_job_begin(&job, 2);
-#ifdef DRAW_ON_WHITE
-					eink_job_add_area(job, bg_buffer, WAVEFORM_MODE_DU, UPDATE_MODE_PART_SPECIAL,
-							(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
-							bg_image.width, bg_image.height);
-#else
-					eink_job_add_area(job, bg_buffer, WAVEFORM_MODE_GC, UPDATE_MODE_PART_SPECIAL,
-							(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
-							bg_image.width, bg_image.height);
-#endif
+					switch(current_mode) {
+					case MODE_BLANK:
+						eink_job_add_area(job, bg_buffer, WAVEFORM_MODE_DU, UPDATE_MODE_PART_SPECIAL,
+								(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
+								bg_image.width, bg_image.height);
+						break;
+					case MODE_BACKGROUND:
+						eink_job_add_area(job, bg_buffer, WAVEFORM_MODE_GC, UPDATE_MODE_PART_SPECIAL,
+								(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
+								bg_image.width, bg_image.height);
+						break;
+					}
 					eink_job_commit(job);
 					last_draw = now;
 				} else printf("E\n");
 			}
 		}
 		
-		if(0) if(battery_update_counter++ >= BATTERY_UPDATE) {
-			const int MIN_V = 600, MAX_V = 910;
-			int voltage = power_get_battery_voltage();
-			battery_update_counter = 0;
-			int barlen = (DISPLAY_LONG * (voltage-MIN_V)) / (MAX_V-MIN_V);
-			if(barlen >= DISPLAY_LONG) barlen = DISPLAY_LONG-1;
-			if(barlen < 0) barlen = 0;
-			
-			//printf("Battery: (%i) %i\n", voltage, barlen  );
-			
-			eink_job_t job;
-			eink_job_begin(&job, 0);
-			if(barlen < DISPLAY_LONG-2) {
-				eink_job_add_area(job, blank_buffer, WAVEFORM_MODE_GU, UPDATE_MODE_FULL, 
-						DISPLAY_SHORT-1, 0, 
-						1, DISPLAY_LONG-1 - barlen-1);
-			}
-			if(barlen > 0) {
-				eink_job_add_area(job, black_buffer, WAVEFORM_MODE_GU, UPDATE_MODE_FULL, 
-						DISPLAY_SHORT-1, DISPLAY_LONG-1 - barlen, /* x, y */ 
-						1, barlen); /* width, height */
-			}
-			eink_job_commit(job);
-			
-		}
-		
-		if(0) if(spin_counter++ >= SPIN_UPDATE){
-			int x = (spin_phase%4);
-			int y = (spin_phase/4);
-			eink_job_begin(&job, 1);
-			eink_job_add_area_with_offset(job, composite_buffer, WAVEFORM_MODE_GU, UPDATE_MODE_FULL,
-					32, 64,
-					100, 100, 
-					-x*128+32, -y*128+64);
-			eink_job_commit(job);
-			spin_phase = (spin_phase+1)%12;
-			spin_counter = 0;
-		}
 	}
 }
 
