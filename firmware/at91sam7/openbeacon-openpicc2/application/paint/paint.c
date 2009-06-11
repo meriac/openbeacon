@@ -144,8 +144,10 @@ void process_line(char *line, size_t length)
 		eink_job_begin(&job, 0);
 		eink_job_add(job, blank_buffer, WAVEFORM_MODE_INIT, UPDATE_MODE_FULL);
 		eink_job_commit(job);
-		if(current_mode == MODE_BACKGROUND_FAST)
+		if(current_mode == MODE_BACKGROUND_FAST) {
+			reset_background();
 			reset_screen();
+		}
 		start_refreshing();
 	} else if(strncmp(line, "mode_blank", 10) == 0) {
 		stop_refreshing();
