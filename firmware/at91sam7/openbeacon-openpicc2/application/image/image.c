@@ -227,6 +227,33 @@ int image_get_pixel(const struct image * const image, int x, int y)
 	return 0;
 }
 
+static inline void image_set_pixel_2bpp(image_t image, int x, int y, uint8_t value)
+{
+	int mask, byteindex;
+	mask = 0x3 << ((x*2)%8);
+	byteindex = y*image->rowstride + (x/4);
+	image->data[byteindex] = (image->data[byteindex] & ~mask) | ( ((value>>6)<<((x*2)%8)) & mask);
+}
+
+static inline void image_set_pixel_4bpp(image_t image, int x, int y, uint8_t value)
+{
+	int mask, byteindex;
+	byteindex = y*image->rowstride + (x/2);
+	if(x % 2 == 0) {
+		mask = 0x0f;
+		image->data[byteindex] = (image->data[byteindex] & ~mask) | ( (value>>4) & mask);
+	} else {
+		mask = 0xf0;
+		image->data[byteindex] = (image->data[byteindex] & ~mask) | ( value & mask);
+	}
+}
+
+static inline void image_set_pixel_8bpp(image_t image, int x, int y, uint8_t value)
+{
+	int byteindex;
+	byteindex = y*image->rowstride + x;
+	image->data[byteindex] = value;
+}
 
 void image_set_pixel(image_t image, int x, int y, uint8_t value)
 {
@@ -236,26 +263,15 @@ void image_set_pixel(image_t image, int x, int y, uint8_t value)
 	 * image->data[byteindex] = (image->data[byteindex] & ~mask)
 	 * 		| ( ((value >> (8-image->bits_per_pixel)) << ((x*image->bits_per_pixel) % 8)) & mask);
 	 */
-	int mask, byteindex;
 	switch(image->bits_per_pixel) {
 	case IMAGE_BPP_2:
-		mask = 0x3 << ((x*2)%8);
-		byteindex = y*image->rowstride + (x/4);
-		image->data[byteindex] = (image->data[byteindex] & ~mask) | ( ((value>>6)<<((x*2)%8)) & mask);
+		image_set_pixel_2bpp(image, x, y, value);
 		break;
 	case IMAGE_BPP_4:
-		byteindex = y*image->rowstride + (x/2);
-		if(x % 2 == 0) {
-			mask = 0x0f;
-			image->data[byteindex] = (image->data[byteindex] & ~mask) | ( (value>>4) & mask);
-		} else {
-			mask = 0xf0;
-			image->data[byteindex] = (image->data[byteindex] & ~mask) | ( value & mask);
-		}
+		image_set_pixel_4bpp(image, x, y, value);
 		break;
 	case IMAGE_BPP_8:
-		byteindex = y*image->rowstride + x;
-		image->data[byteindex] = value;
+		image_set_pixel_8bpp(image, x, y, value);
 		break;
 	}
 }
@@ -265,18 +281,18 @@ inline int image_draw_straight_line(image_t image, int x1, int y, int x2, int va
 	int i;
 	switch(image->bits_per_pixel) {
 	case IMAGE_BPP_2:
-		for(i=x1; i<=x2; i++) image_set_pixel(image, i, y, value);
+		for(i=x1; i<=x2; i++) image_set_pixel_2bpp(image, i, y, value);
 		break;
 	case IMAGE_BPP_4: {
 			int start, end;
 			if(x1%2 == 1) {
-				image_set_pixel(image, x1, y, value);
+				image_set_pixel_4bpp(image, x1, y, value);
 				start = x1+1;
 			} else {
 				start = x1;
 			}
 			if(x2%2 == 0) {
-				image_set_pixel(image, x2, y, value);
+				image_set_pixel_4bpp(image, x2, y, value);
 				end = x2-1;
 			} else {
 				end = x2;

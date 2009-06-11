@@ -77,7 +77,7 @@ prvSetupHardware (void)
 void
 vApplicationIdleHook (void)
 {
-#if 0
+#if 1
 	/* Disable SDRAM clock and send SDRAM to self-refresh. The SDRAM will be
 	 * automatically reenabled on the next access.
 	 */

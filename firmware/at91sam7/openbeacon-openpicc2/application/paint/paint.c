@@ -123,7 +123,7 @@ void process_line(char *line, size_t length)
 		stop_refreshing();
 		current_mode = MODE_BLANK;
 		reset_background();
-		/* This extra clear screen is necessary since WAVEFORM_MODE_DU will not overwrite the previously
+		/* This extra clear_screen is necessary since WAVEFORM_MODE_DU will not overwrite the previously
 		 * painted background
 		 */
 		clear_screen();  
@@ -325,27 +325,28 @@ static void paint_task(void *params)
 						(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
 						bg_image.width, bg_image.height,
 						bg_image.data, bg_image.size);
-				if(error == 0 && !pause_refreshing) {
-					eink_job_t job;
-					eink_job_begin(&job, 2);
-					switch(current_mode) {
-					case MODE_BLANK:
-						eink_job_add_area(job, bg_buffer, WAVEFORM_MODE_DU, UPDATE_MODE_PART_SPECIAL,
-								(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
-								bg_image.width, bg_image.height);
-						break;
-					case MODE_BACKGROUND:
-						eink_job_add_area(job, bg_buffer, WAVEFORM_MODE_GC, UPDATE_MODE_PART_SPECIAL,
-								(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
-								bg_image.width, bg_image.height);
-						break;
-					}
-					eink_job_commit(job);
-					last_draw = now;
-				} else printf("E\n");
+				if(!pause_refreshing) { /* Might have been set in the mean time */ 
+					if(error == 0) {
+						eink_job_t job;
+						eink_job_begin(&job, 2);
+						switch(current_mode) {
+						case MODE_BLANK:
+							eink_job_add_area(job, bg_buffer, WAVEFORM_MODE_DU, UPDATE_MODE_PART_SPECIAL,
+									(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
+									bg_image.width, bg_image.height);
+							break;
+						case MODE_BACKGROUND:
+							eink_job_add_area(job, bg_buffer, WAVEFORM_MODE_GC, UPDATE_MODE_PART_SPECIAL,
+									(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
+									bg_image.width, bg_image.height);
+							break;
+						}
+						eink_job_commit(job);
+						last_draw = now;
+					} else printf("E\n");
+				}
 			}
 		}
-		
 	}
 }
 
