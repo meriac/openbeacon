@@ -154,13 +154,14 @@ static void paint_draw_task(void *params)
 	while(1) {
 		received = vUSBRecvByte(line+pos, 1, portMAX_DELAY);
 		if(received == 0) continue;
-		vUSBSendByte(line[pos]);
-		if(line[pos] == '\r') vUSBSendByte('\n');
+		if(line[pos] != '\n') printf("%c", line[pos]);
 		if(line[pos] == '\n' || line[pos] == '\r') {
+			printf("\n");
 			line[pos+1] = 0;
 			process_line(line, pos+1);
 			pos = 0;
 		} else if(pos+2 >= sizeof(line)) {
+			printf("\n");
 			line[pos+1] = 0;
 			process_line(line, pos+1);
 			pos = 0;
