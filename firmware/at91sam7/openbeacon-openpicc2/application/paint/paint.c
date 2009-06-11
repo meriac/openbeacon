@@ -37,7 +37,7 @@ extern const struct splash_image bg_splash_image;
 
 
 static uint8_t eink_mgmt_data[10240] __attribute__ ((section (".sdram")));
-static eink_image_buffer_t blank_buffer, bg_buffer;
+static eink_image_buffer_t blank_buffer, bg_buffer, bg_fast_buffer;
 static uint8_t __attribute__((aligned(4), section (".sdram")))
 	_blank_data[IMAGE_SIZE], _bg_data[IMAGE_SIZE];
 static struct image blank_image = {
@@ -75,13 +75,15 @@ static void paint_die_error(enum eink_error error)
 }
 
 enum {
-	MODE_BLANK,
-	MODE_BACKGROUND,
+	MODE_BLANK,            /* Direct update on white */
+	MODE_BACKGROUND,       /* Gray clear on background */
+	MODE_BACKGROUND_FAST,  /* Direct update on background, with a trick */
 } current_mode = MODE_BLANK;
 static void reset_background(void)
 {
 	switch(current_mode) {
 	case MODE_BLANK:
+	case MODE_BACKGROUND_FAST:
 		memset(bg_image.data, 0xff, bg_image.size);
 		break;
 	case MODE_BACKGROUND: 
@@ -92,6 +94,29 @@ static void reset_background(void)
 			}
 		}
 		break;
+	}
+	eink_image_buffer_load_area(bg_buffer, image_get_bpp_as_pack_mode(&bg_image), ROTATION_MODE_90,
+			(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
+			bg_image.width, bg_image.height,
+			bg_image.data, bg_image.size);
+}
+
+static void reset_screen(void)
+{
+	eink_job_t job;
+	if(current_mode == MODE_BACKGROUND_FAST) {
+		eink_job_begin(&job, 0);
+		eink_job_add(job, bg_fast_buffer, WAVEFORM_MODE_GC, UPDATE_MODE_FULL);
+		eink_job_commit(job);
+		while(eink_job_count_pending() > 0) vTaskDelay(10/portTICK_RATE_MS);
+		eink_job_begin(&job, 0);
+		eink_job_add(job, bg_buffer, WAVEFORM_MODE_GC, UPDATE_MODE_INIT);
+		eink_job_commit(job);
+		while(eink_job_count_pending() > 0) vTaskDelay(10/portTICK_RATE_MS);
+	} else {
+		eink_job_begin(&job, 0);
+		eink_job_add(job, bg_buffer, WAVEFORM_MODE_GC, UPDATE_MODE_FULL);
+		eink_job_commit(job);
 	}
 }
 
@@ -111,6 +136,7 @@ void process_line(char *line, size_t length)
 	if(strncmp(line, "clear", 5) == 0) {
 		stop_refreshing();
 		reset_background();
+		reset_screen();
 		start_refreshing();
 	} else if(strncmp(line, "init", 4) == 0) {
 		stop_refreshing();
@@ -118,20 +144,26 @@ void process_line(char *line, size_t length)
 		eink_job_begin(&job, 0);
 		eink_job_add(job, blank_buffer, WAVEFORM_MODE_INIT, UPDATE_MODE_FULL);
 		eink_job_commit(job);
+		if(current_mode == MODE_BACKGROUND_FAST)
+			reset_screen();
 		start_refreshing();
 	} else if(strncmp(line, "mode_blank", 10) == 0) {
 		stop_refreshing();
 		current_mode = MODE_BLANK;
 		reset_background();
-		/* This extra clear_screen is necessary since WAVEFORM_MODE_DU will not overwrite the previously
-		 * painted background
-		 */
-		clear_screen();  
+		reset_screen();  
 		start_refreshing();
-	} else if(strncmp(line, "mode_background", 10) == 0) {
+	} else if(strncmp(line, "mode_background_fast", 20) == 0) {
+		stop_refreshing();
+		current_mode = MODE_BACKGROUND_FAST;
+		reset_background();
+		reset_screen();
+		start_refreshing();
+	} else if(strncmp(line, "mode_background", 15) == 0) {
 		stop_refreshing();
 		current_mode = MODE_BACKGROUND;
 		reset_background();
+		reset_screen();
 		start_refreshing();
 	} else {
 		int x, y, r = 10, v = 0;
@@ -179,7 +211,7 @@ static void paint_task(void *params)
 	/*
 	 * bg_splash_image is in the flash
 	 * blank_data, bg_data is in the microcontroller SDRAM
-	 * blank_buffer, bg_buffer are in the display controller SDRAM
+	 * blank_buffer, bg_buffer, bg_fast_buffer are in the display controller SDRAM
 	 */
 	
 	error = image_unpack_splash(&bg_image, &bg_splash_image);
@@ -187,11 +219,6 @@ static void paint_task(void *params)
 		printf("Error during splash unpack: %i (%s)\n", error, strerror(-error));
 		led_halt_blinking(3);
 	}
-	/* We unpack the splash image even when we're going to overwrite it with white, in order
-	 * to set up the width, height, rowstride and size.
-	 */
-	if(current_mode == MODE_BLANK)
-		reset_background();
 	
 	/* The white image needs to have 4 bpp since the controller will unpack 2bpp to
 	 * 8bpp by appending 6 zero-bits. So 11b in 2 bpp gets 11000000b in 8 bpp, which
@@ -245,6 +272,10 @@ static void paint_task(void *params)
 		printf("Reason: %i\nCould not acquire bg image buffer\n", error);
 		led_halt_blinking(3);
 	}
+	if( (error=eink_image_buffer_acquire(&bg_fast_buffer)) < 0) {
+		printf("Reason: %i\nCould not acquire bg fast image buffer\n", error);
+		led_halt_blinking(3);
+	}
 	
 	error = 0;
 	
@@ -261,7 +292,29 @@ static void paint_task(void *params)
 	stop = xTaskGetTickCount();
 	printf("Blank image: %li\n", (long)(stop-start));
 	cumulative += stop-start;
-	
+
+	start = xTaskGetTickCount();
+	error |= eink_image_buffer_load(bg_fast_buffer, image_get_bpp_as_pack_mode(&blank_image), ROTATION_MODE_90,
+			blank_image.data, blank_image.rowstride*blank_image.height);
+	stop = xTaskGetTickCount();
+	printf("Blank image: %li\n", (long)(stop-start));
+	cumulative += stop-start;
+
+	start = xTaskGetTickCount();
+	error |= eink_image_buffer_load_area(bg_fast_buffer, image_get_bpp_as_pack_mode(&bg_image), ROTATION_MODE_90,
+			(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
+			bg_image.width, bg_image.height,
+			bg_image.data, bg_image.size);
+	stop = xTaskGetTickCount();
+	printf("Background image: %li\n", (long)(stop-start));
+	cumulative += stop-start;
+
+	/* We unpack the splash image even when we're going to overwrite it with white, in order
+	 * to set up the width, height, rowstride and size.
+	 */
+	if(current_mode == MODE_BLANK || current_mode == MODE_BACKGROUND_FAST)
+		reset_background();
+
 	start = xTaskGetTickCount();
 	error |= eink_image_buffer_load_area(bg_buffer, image_get_bpp_as_pack_mode(&bg_image), ROTATION_MODE_90,
 			(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
@@ -270,7 +323,7 @@ static void paint_task(void *params)
 	stop = xTaskGetTickCount();
 	printf("Background image: %li\n", (long)(stop-start));
 	cumulative += stop-start;
-	
+
 	printf("All images loaded in %li ticks\n", (long)(cumulative));
 
 	if(error >= 0) {
@@ -284,10 +337,8 @@ static void paint_task(void *params)
 		printf("Image load error %i: %s\n", error, strerror(-error));
 	}
 	int i=0;
-	eink_job_t job;
-	eink_job_begin(&job, 0);
-	eink_job_add(job, bg_buffer, WAVEFORM_MODE_GC, UPDATE_MODE_FULL);
-	eink_job_commit(job);
+	
+	reset_screen();
 	
 	event_t received_event;
 	event_loop_running = 1;
@@ -332,6 +383,7 @@ static void paint_task(void *params)
 						eink_job_begin(&job, 2);
 						switch(current_mode) {
 						case MODE_BLANK:
+						case MODE_BACKGROUND_FAST:
 							eink_job_add_area(job, bg_buffer, WAVEFORM_MODE_DU, UPDATE_MODE_PART_SPECIAL,
 									(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
 									bg_image.width, bg_image.height);
