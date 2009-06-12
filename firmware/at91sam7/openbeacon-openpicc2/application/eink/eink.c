@@ -519,8 +519,6 @@ int eink_controller_init(void)
 	eink_write_register(0x01A, 4);
 	eink_write_register(0x320, 0);
 	
-	if(0) {int i=0; for(i=0; i<0x20; i+=2) printf("%04X: %04X\n", i, eink_read_register(i)); }
-	
 	return 0;
 }
 
@@ -549,7 +547,7 @@ void eink_interface_init(void)
 	
 	/* 16-bit device on 16-bit interface, no extra float time, wait state enabled, 3 extra wait states (4 total),
 	 * no extra setup or hold time. */
-	AT91C_BASE_SMC->SMC2_CSR[0] = AT91C_SMC2_BAT | AT91C_SMC2_DBW_16 | (2L<<8) |
+	AT91C_BASE_SMC->SMC2_CSR[0] = AT91C_SMC2_BAT | AT91C_SMC2_DBW_16 | (0L<<8) |
 		AT91C_SMC2_WSEN | 3 | (0L<<24) | (0L<<28);
 	
 	pio_irq_init_once();

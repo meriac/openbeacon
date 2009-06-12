@@ -167,6 +167,10 @@ void process_line(char *line, size_t length)
 		reset_background();
 		reset_screen();
 		start_refreshing();
+	} else if(strncmp(line, "volt", 4) == 0) {
+		power_get_battery_voltage();
+		vTaskDelay(10);
+		printf("%i\n", power_get_battery_voltage());
 	} else {
 		int x, y, r = 10, v = 0;
 		if(sscanf(line, " %i , %i , %i , %i ", &x, &y, &r, &v) >= 2) {
