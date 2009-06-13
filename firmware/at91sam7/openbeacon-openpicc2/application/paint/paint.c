@@ -121,12 +121,14 @@ static void reset_screen(void)
 }
 
 static int pause_refreshing = 0;
+static int dirty = 1;
 void stop_refreshing(void) {
 	pause_refreshing = 1;
 	while(eink_job_count_pending() > 0) vTaskDelay(10/portTICK_RATE_MS);
 }
 void start_refreshing(void) {
 	while(eink_job_count_pending() > 0) vTaskDelay(10/portTICK_RATE_MS);
+	dirty = 1;
 	pause_refreshing = 0;
 }
 
@@ -177,6 +179,7 @@ void process_line(char *line, size_t length)
 			image_draw_circle(&bg_image, x, y, r, v, 1);
 		}
 	}
+	dirty = 1;
 }
 
 
@@ -377,7 +380,8 @@ static void paint_task(void *params)
 		
 		if(!pause_refreshing) {
 			now = xTaskGetTickCount();
-			if(last_draw - now > 100) {
+			if(last_draw - now > 100 && dirty) {
+				dirty = 0;
 				/* Download the full bg_image every 100ms and send a partial update for all changed pixels */
 				error = eink_image_buffer_load_area(bg_buffer, image_get_bpp_as_pack_mode(&bg_image), ROTATION_MODE_90,
 						(DISPLAY_SHORT-bg_image.width)/2, (DISPLAY_LONG-bg_image.height)/2,
