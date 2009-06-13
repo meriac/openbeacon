@@ -84,6 +84,7 @@ enum eink_error {
 
 enum eink_display_type {
 	EINK_DISPLAY_60,
+	EINK_DISPLAY_80,
 	EINK_DISPLAY_97,
 };
 struct eink_display_configuration {

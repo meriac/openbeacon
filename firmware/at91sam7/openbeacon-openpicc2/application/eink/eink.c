@@ -25,6 +25,15 @@ const struct eink_display_configuration EINK_DISPLAY_CONFIGURATIONS[] = {
 				.gdrv_cfg = 0x2,
 				.lutidxfmt = ( 4 | ( 1 << 7 ) )
 		},
+		[EINK_DISPLAY_80] = {
+				.hsize = 1024, .vsize = 768,
+				.fslen = 0,  .fblen = 4,  .felen = 80,
+				.lslen = 10, .lblen = 20, .lelen = 80,
+				.pixclkdiv = 3,
+				.sdrv_cfg = ( 100 | ( 0 << 8 ) | ( 1 << 9 ) ),
+				.gdrv_cfg = 0x2,
+				.lutidxfmt = ( 4 | ( 1 << 7 ) )
+		},
 		[EINK_DISPLAY_97] = {
 				.hsize = 1200, .vsize = 825,
 				.fslen = 0,  .fblen = 4,  .felen = 4,
