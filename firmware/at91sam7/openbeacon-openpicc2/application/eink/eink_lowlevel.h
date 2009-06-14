@@ -26,7 +26,7 @@ extern void eink_wait_display_idle(void);
 
 extern int eink_controller_check_supported(void);
 
-extern int eink_begin_use(void);
-extern int eink_end_use(void);
+extern void eink_begin_use(void);
+extern void eink_end_use(void);
 
 #endif /*EINK_LOWLEVEL_H_*/

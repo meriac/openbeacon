@@ -104,7 +104,7 @@ static void eink_wakeup(void)
 }
 
 /* Increment usage counter, maybe wake up controller */
-static void eink_begin_use(void)
+void eink_begin_use(void)
 {
 	xSemaphoreTake(eink_usage_counter_access_mutex, portMAX_DELAY);
 	if(eink_powersave_active) eink_wakeup();
@@ -113,7 +113,7 @@ static void eink_begin_use(void)
 }
 
 /* Decrement usage counter, eink_main_task will initiate standby when the usage counter was 0 for EINK_SLEEP_DELAY ms. */
-static void eink_end_use(void)
+void eink_end_use(void)
 {
 	xSemaphoreTake(eink_usage_counter_access_mutex, portMAX_DELAY);
 	eink_usage_counter--;
