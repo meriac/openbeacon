@@ -50,7 +50,7 @@ const struct eink_display_configuration *EINK_CURRENT_DISPLAY_CONFIGURATION = &(
 
 #define EINK_READY() AT91F_PIO_IsInputSet(FPC_NHRDY_PIO, FPC_NHRDY_PIN)
 /* Note that the address bits are not decoded */ 
-volatile u_int16_t *eink_base = (volatile u_int16_t*)0x10000000; 
+static volatile u_int16_t *eink_base = (volatile u_int16_t*)0x10000000; 
 
 #define EINK_BEGIN_COMMAND() AT91F_PIO_ClearOutput(FPC_HDC_PIO, FPC_HDC_PIN);
 #define EINK_END_COMMAND() AT91F_PIO_SetOutput(FPC_HDC_PIO, FPC_HDC_PIN);
@@ -73,8 +73,57 @@ static void __attribute__((unused)) eink_wait_for_irq(void)
 
 /* in eink_mgmt.c, not public */
 extern int eink_mgmt_flush_queue(void);
+
 xSemaphoreHandle eink_memory_access_mutex;
 xSemaphoreHandle eink_general_access_mutex;
+xSemaphoreHandle eink_usage_counter_access_mutex;
+static int eink_powersave_active = 0;
+static int eink_usage_counter = 0;
+static long eink_usage_counter_zero_time = 0;
+static int eink_was_initialized = 0;
+
+static int _eink_perform_command_unchecked(const u_int16_t command, const u_int16_t * const params, const size_t params_len, u_int16_t * const response, const size_t response_len);
+static void eink_wait_for_completion(void);
+
+/* Send controller to Standby (PLL active, RAM active) */
+static void eink_sleep(void)
+{
+	_eink_perform_command_unchecked(EINK_CMD_STBY, 0, 0, 0, 0);
+	eink_wait_for_completion();
+	//led_set_green(0);
+	eink_powersave_active = 1;
+}
+
+/* Wake up controller and send it to Run */
+static void eink_wakeup(void)
+{
+	_eink_perform_command_unchecked(EINK_CMD_RUN_SYS, 0, 0, 0, 0);
+	eink_wait_for_completion();
+	eink_powersave_active = 0;
+	//led_set_green(1);
+}
+
+/* Increment usage counter, maybe wake up controller */
+static void eink_begin_use(void)
+{
+	xSemaphoreTake(eink_usage_counter_access_mutex, portMAX_DELAY);
+	if(eink_powersave_active) eink_wakeup();
+	eink_usage_counter++;
+	xSemaphoreGive(eink_usage_counter_access_mutex);
+}
+
+/* Decrement usage counter, eink_main_task will initiate standby when the usage counter was 0 for EINK_SLEEP_DELAY ms. */
+static void eink_end_use(void)
+{
+	xSemaphoreTake(eink_usage_counter_access_mutex, portMAX_DELAY);
+	eink_usage_counter--;
+	if(eink_usage_counter <= 0) {
+		eink_usage_counter = 0;
+		eink_usage_counter_zero_time = xTaskGetTickCount();
+	}
+	xSemaphoreGive(eink_usage_counter_access_mutex);
+}
+
 static void eink_main_task(void *parameter)
 {
 	(void)parameter;
@@ -90,12 +139,33 @@ static void eink_main_task(void *parameter)
 			while(eink_read_register(0x338) & (1L<<2)) vTaskDelay(3);
 			led_set_red(0);
 		}
+		
+		xSemaphoreTake(eink_usage_counter_access_mutex, portMAX_DELAY);
+		if(eink_was_initialized
+				&& !eink_powersave_active
+				&& eink_usage_counter == 0 
+				&& (xTaskGetTickCount() - eink_usage_counter_zero_time) >= (EINK_SLEEP_DELAY/portTICK_RATE_MS)
+				&& eink_job_count_pending() == 0) {
+			/* Initiate sleep only when the usage counter was zero for some time *AND*
+			 * No jobs are pending. This guarantees that no current display activity 
+			 * is taking place (job_count_pending() only returns zero after all
+			 * scheduled LUTs have finished operating and the corresponding jobs have
+			 * been reaped), if only the eink_mgmt interface is used to perform
+			 * display operations. If the display is activated directly through the low-level
+			 * interface this will fail.
+			 * FIXME: All other eInk operations (e.g. flash) must be augmented to correctly
+			 * maintain the usage counter as well.
+			 */
+			eink_sleep();
+		}
+		xSemaphoreGive(eink_usage_counter_access_mutex);
+		
 		xSemaphoreGive(eink_memory_access_mutex);
 		vTaskDelay(10);
 	}
 }
 
-void eink_wait_for_completion(void) 
+static void eink_wait_for_completion(void) 
 {
 	while(!EINK_READY()) ;
 }
@@ -139,6 +209,8 @@ static u_int16_t streamed_checksum;
 static u_int16_t received_checksum;
 static void eink_burst_write_begin(void)
 {
+	eink_begin_use();
+
 	/* Always take the semaphores in the same order! First memory_access, then general access
 	 * Do not release general access until the download is complete, otherwise other threads
 	 * might get to perform register operations and upset our CMD_WR_REG. 
@@ -240,6 +312,8 @@ static void eink_burst_write_with_checksum(const unsigned char * data, unsigned 
 	/* Guard that data must be 16-bit aligned, length a multiple of 16 bits and length at least one 16-bit transfer */
 	if(length < 2 || length % 2 != 0 || ((unsigned int)data)%2 != 0 ) return;
 	
+	eink_begin_use();
+	
 	/* Call the unoptimised transfer until the start is 32-bit aligned, then the optimised transfer for
 	 * a multiple of 40 bytes, then the unoptimised again for the remainder of the buffer.
 	 */
@@ -254,6 +328,8 @@ static void eink_burst_write_with_checksum(const unsigned char * data, unsigned 
 	if(length > 0) {
 		_eink_burst_write_with_checksum_2(data, length/2);
 	}
+	
+	eink_end_use();
 }
 
 static void eink_burst_write_end(void)
@@ -264,6 +340,8 @@ static void eink_burst_write_end(void)
 	xSemaphoreGive(eink_general_access_mutex);
 	received_checksum = eink_read_register(0x156);
 	xSemaphoreGive(eink_memory_access_mutex);
+	
+	eink_end_use();
 }
 
 static int eink_burst_write_check_checksum(void)
@@ -390,6 +468,8 @@ void eink_dump_raw_image(void)
 
 u_int16_t eink_read_register(const u_int16_t reg)
 {
+	eink_begin_use();
+	
 	xSemaphoreTake(eink_general_access_mutex, portMAX_DELAY);
 	EINK_BEGIN_COMMAND();
 	eink_base[0] = EINK_CMD_RD_REG;
@@ -397,11 +477,16 @@ u_int16_t eink_read_register(const u_int16_t reg)
 	eink_base[1] = reg;
 	uint16_t result = eink_base[2];
 	xSemaphoreGive(eink_general_access_mutex);
+
+	eink_end_use();
+	
 	return result;
 }
 
 void eink_write_register(const u_int16_t reg, const u_int16_t value)
 {
+	eink_begin_use();
+	
 	xSemaphoreTake(eink_general_access_mutex, portMAX_DELAY);
 	EINK_BEGIN_COMMAND();
 	eink_base[0] = EINK_CMD_WR_REG;
@@ -409,9 +494,14 @@ void eink_write_register(const u_int16_t reg, const u_int16_t value)
 	eink_base[1] = reg;
 	eink_base[2] = value;
 	xSemaphoreGive(eink_general_access_mutex);
+	
+	eink_end_use();
 }
 
-int eink_perform_command(const u_int16_t command, 
+/* Perform a command without checking the usage counter.
+ * DO NOT USE THIS FUNCTION OUTSIDE OF THE SLEEP CODE!
+ */
+static int _eink_perform_command_unchecked(const u_int16_t command, 
 		const u_int16_t * const params, const size_t params_len,
 		u_int16_t * const response, const size_t response_len)
 {
@@ -426,6 +516,19 @@ int eink_perform_command(const u_int16_t command,
 	xSemaphoreGive(eink_general_access_mutex);
 	return 0;
 }
+
+int eink_perform_command(const u_int16_t command, 
+		const u_int16_t * const params, const size_t params_len,
+		u_int16_t * const response, const size_t response_len)
+{
+	eink_begin_use();
+	
+	_eink_perform_command_unchecked(command, params, params_len, response, response_len);
+	
+	eink_end_use();
+	return 0;
+}
+
 
 void eink_controller_reset(void)
 {
@@ -478,6 +581,7 @@ int eink_controller_check_supported(void)
 
 int eink_controller_init(void)
 {
+	eink_begin_use();
 	int result = eink_controller_check_supported();
 	if(result != 0) return result;
 	
@@ -485,8 +589,10 @@ int eink_controller_init(void)
 	eink_wait_for_completion();
 	
 	/* Perform comm test, use host memory count and checksum registers as scratch space */
-	if(!eink_comm_test(0x148, 0x156))
+	if(!eink_comm_test(0x148, 0x156)) {
+		eink_end_use();
 		return -EINK_ERROR_COMMUNICATIONS_FAILURE;
+	}
 	/* Now reset host memory interface */
 	eink_write_register(0x140, 1L<<15);
 
@@ -520,7 +626,10 @@ int eink_controller_init(void)
 	eink_wait_for_completion();
 	
 	u_int16_t status = eink_read_register(0x338);
-	if(status & 0x08F00) return -EINK_ERROR_CHECKSUM_ERROR;
+	if(status & 0x08F00) {
+		eink_end_use();
+		return -EINK_ERROR_CHECKSUM_ERROR;
+	}
 	
 	eink_init_rotmode(EINK_ROTATION_MODE_90);
 	
@@ -528,6 +637,8 @@ int eink_controller_init(void)
 	eink_write_register(0x01A, 4);
 	eink_write_register(0x320, 0);
 	
+	eink_was_initialized = 1;
+	eink_end_use();
 	return 0;
 }
 
@@ -563,6 +674,7 @@ void eink_interface_init(void)
 	vSemaphoreCreateBinary(eink_irq_semaphore);
 	eink_memory_access_mutex = xSemaphoreCreateMutex();
 	eink_general_access_mutex = xSemaphoreCreateMutex();
+	eink_usage_counter_access_mutex = xSemaphoreCreateMutex();
 	AT91F_PIO_CfgInput(FPC_HIRQ_PIO, FPC_HIRQ_PIN);
 	pio_irq_register(FPC_HIRQ_PIO, FPC_HIRQ_PIN, eink_irq);
 	xTaskCreate (eink_main_task, (signed portCHAR *) "EINK MAIN TASK", TASK_EINK_STACK, NULL, TASK_EINK_PRIORITY, NULL);

@@ -104,6 +104,7 @@ extern const struct eink_display_configuration *EINK_CURRENT_DISPLAY_CONFIGURATI
 	EINK_CURRENT_DISPLAY_CONFIGURATION->vsize) 
 #define EINK_UPDATE_BUFFER_START 0x0
 #define EINK_IMAGE_BUFFER_START ( EINK_IMAGE_SIZE * 2)
+#define EINK_SLEEP_DELAY (100) /* Time (in ms) the interface must have been idle before entering Sleep state */
 
 extern void eink_controller_reset(void);
 extern int eink_controller_init(void);
