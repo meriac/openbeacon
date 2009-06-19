@@ -167,6 +167,16 @@ int spi_transceive(spi_device *device, void *buf, unsigned int len)
 		return -ENODEV;
 	}
 	taskENTER_CRITICAL();
+	if(bus_exclusive != 0 && !device->flags.bus_exclusive) {
+		/* Another device holds the bus exclusively */
+		taskEXIT_CRITICAL();
+		return -EAGAIN;
+	}
+	if(device->flags.blocking_job_active) {
+		/* This device currently executes a blocking transceive */
+		taskEXIT_CRITICAL();
+		return -EAGAIN;
+	}
 	struct spi_job *job = get_free_job();
 	taskEXIT_CRITICAL();
 	if(job == NULL) return -EAGAIN;
@@ -231,6 +241,54 @@ int spi_transceive_automatic_retry(spi_device *device, void *buf, unsigned int l
 	int r;
 	while( (r=spi_transceive(device, buf, len)) == -EAGAIN) vTaskDelay(1);
 	return r;
+}
+
+int spi_transceive_blocking(spi_device *device, void *buf, unsigned int len)
+{
+	if(!device->flags.open) {
+		return -ENODEV;
+	}
+	
+	taskENTER_CRITICAL();
+	if(!device->flags.bus_exclusive) {
+		taskEXIT_CRITICAL();
+		return -EACCES;
+	}
+	if(current_job != NULL) {
+		taskEXIT_CRITICAL();
+		return -EAGAIN;
+	}
+	if(device->flags.blocking_job_active) {
+		taskEXIT_CRITICAL();
+		return -EAGAIN;
+	}
+	
+	device->flags.blocking_job_active = 1;
+	device->jobs_pending++;
+	/* Interrupts can be re-enabled now for the benefit of other interrupt handlers. The SPI interrupt will
+	 * stay disabled since a) the current device is bus_exclusive, so no other devices will be able to schedule
+	 * jobs, and b) spi_transceive() will refuse to run, until the blocking_job_active flag is cleared.
+	 */
+	taskEXIT_CRITICAL();
+	
+	/* Set up and start transfer */
+	AT91C_BASE_PDC_SPI->PDC_PTCR = AT91C_PDC_RXTDIS | AT91C_PDC_TXTDIS;
+	AT91F_SPI_SendFrame(AT91C_BASE_SPI, buf, len, NULL, 0);
+	AT91F_SPI_ReceiveFrame(AT91C_BASE_SPI, buf, len, NULL, 0);
+	AT91C_BASE_PDC_SPI->PDC_PTCR = AT91C_PDC_RXTEN | AT91C_PDC_TXTEN;
+	
+	/* Blocking wait for the end of transfer */
+	while(! (AT91C_BASE_SPI->SPI_SR & AT91C_SPI_TXEMPTY) ) ;
+	
+	taskENTER_CRITICAL();
+	
+	device->flags.blocking_job_active = 0;
+	device->jobs_pending--;
+	if(device->jobs_pending == 0) xSemaphoreGive(device->completion_semaphore);
+	
+	taskEXIT_CRITICAL();
+	
+	return 0;
 }
 
 static void spi_init(void)
@@ -307,6 +365,7 @@ int spi_get_flag(spi_device *device, enum spi_flag flag)
 	case SPI_FLAG_OPEN: return device->flags.open;
 	case SPI_FLAG_BUS_EXCLUSIVE: return device->flags.bus_exclusive;
 	case SPI_FLAG_DELAYED_CS_INACTIVE: return device->flags.delayed_cs_inactive;
+	case SPI_FLAG_BLOCKING_JOB_ACTIVE: return device->flags.blocking_job_active;
 	}
 	return 0;
 }
