@@ -224,10 +224,33 @@ static void paint_task(void *params)
 	 * blank_buffer, bg_buffer, bg_fast_buffer are in the display controller SDRAM
 	 */
 	
-	error = image_unpack_splash(&bg_image, &bg_splash_image);
-	if(error < 0) {
-		printf("Error during splash unpack: %i (%s)\n", error, strerror(-error));
-		led_halt_blinking(3);
+	int bg_image_loaded = 0;
+	if(fat_init() == 0) {
+		bg_image.bits_per_pixel = IMAGE_BPP_8;
+		bg_image.width = 824;
+		bg_image.rowstride = 824;
+		bg_image.height = 1200;
+		if(bg_image.size > (unsigned int)(bg_image.rowstride * bg_image.height)) {
+			bg_image.size = bg_image.rowstride * bg_image.height;
+		}
+		
+		portTickType start = xTaskGetTickCount();
+		int res = fat_load_data_buffer("test.raw", &bg_image.size, bg_image.data);
+		portTickType stop = xTaskGetTickCount();
+		printf("From card in %li ticks\n", stop-start);
+		if(res != 0) {
+			printf("Result: %i (%s)\n", -res, strerror(-res));
+		} else {
+			bg_image_loaded = 1;
+		}
+	}
+	
+	if(!bg_image_loaded) {
+		error = image_unpack_splash(&bg_image, &bg_splash_image);
+		if(error < 0) {
+			printf("Error during splash unpack: %i (%s)\n", error, strerror(-error));
+			led_halt_blinking(3);
+		}
 	}
 	
 	/* The white image needs to have 4 bpp since the controller will unpack 2bpp to
@@ -349,23 +372,6 @@ static void paint_task(void *params)
 	int i=0;
 	
 	reset_screen();
-	
-	if(fat_init() == 0) {
-		eink_image_buffer_load_begin_area(bg_buffer, PACK_MODE_1BYTE, ROTATION_MODE_90, 0, 0, 824, 1200);
-		start = xTaskGetTickCount();
-		int res = fat_loadimage((unsigned char*)"test.raw", 824*1200, bg_buffer);
-		stop = xTaskGetTickCount();
-		eink_image_buffer_load_end(bg_buffer);
-		printf("From card in %li ticks\n", stop-start);
-		if(res != 0) {
-			printf("Result: %i (%s)\n", -res, strerror(-res));
-		}
-		eink_job_t job;
-		eink_job_begin(&job, 0);
-		eink_job_add(job, bg_buffer, WAVEFORM_MODE_GC, UPDATE_MODE_FULL);
-		eink_job_commit(job);
-		dirty = 0;
-	}
 	
 	event_t received_event;
 	event_loop_running = 1;
