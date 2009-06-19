@@ -61,7 +61,7 @@ typedef enum {
 	(scbr << 8) | (1L << 16) | (0L << 24))
 
 static const int SCBR_INIT = ((int) (MCK / 4e5) + 1) & 0xFF;
-static const int SCBR = ((int) (MCK / 4e6) + 1) & 0xFF;
+static const int SCBR = ((int) (MCK / 15e6) + 1) & 0xFF;
 static spi_device sdcard_spi;
 static volatile int Stat = STA_NOINIT;	/* Disk status */
 static u_int8_t CardType;		/* b0:MMC, b1:SDv1, b2:SDv2, b3:Block addressing */
@@ -120,7 +120,7 @@ static inline void sdcard_transceive(u_int8_t * buff,	/* Data buffer to store re
 		u_int32_t btr	/* Byte count (must be even number) */
 )
 {
-	if(btr < 32) {
+	if(btr <= 512) {
 		/* For short transceive lengths, do a blocking transceive to get around the 
 		 * multiple context switchs and interrupts associated with a standard background
 		 * transceive.
