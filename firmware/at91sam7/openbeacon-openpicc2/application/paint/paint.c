@@ -22,6 +22,7 @@
 #include "eink/eink.h"
 #include "eink/eink_flash.h"
 #include "ebook/event.h"
+#include "dosfs/fat_helper.h"
 
 #include "image/splash.h"
 
@@ -78,7 +79,7 @@ enum {
 	MODE_BLANK,            /* Direct update on white */
 	MODE_BACKGROUND,       /* Gray clear on background */
 	MODE_BACKGROUND_FAST,  /* Direct update on background, with a trick */
-} current_mode = MODE_BLANK;
+} current_mode = MODE_BACKGROUND;
 static void reset_background(void)
 {
 	switch(current_mode) {
@@ -348,6 +349,23 @@ static void paint_task(void *params)
 	int i=0;
 	
 	reset_screen();
+	
+	if(fat_init() == 0) {
+		eink_image_buffer_load_begin_area(bg_buffer, PACK_MODE_1BYTE, ROTATION_MODE_90, 0, 0, 824, 1200);
+		start = xTaskGetTickCount();
+		int res = fat_loadimage((unsigned char*)"test.raw", 824*1200, bg_buffer);
+		stop = xTaskGetTickCount();
+		eink_image_buffer_load_end(bg_buffer);
+		printf("From card in %li ticks\n", stop-start);
+		if(res != 0) {
+			printf("Result: %i (%s)\n", -res, strerror(-res));
+		}
+		eink_job_t job;
+		eink_job_begin(&job, 0);
+		eink_job_add(job, bg_buffer, WAVEFORM_MODE_GC, UPDATE_MODE_FULL);
+		eink_job_commit(job);
+		dirty = 0;
+	}
 	
 	event_t received_event;
 	event_loop_running = 1;

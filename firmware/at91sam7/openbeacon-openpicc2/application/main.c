@@ -48,7 +48,7 @@
 #include "touch/ad7147.h"
 #include "touch/slider.h"
 #include "accelerometer.h"
-#include "dosfs.h"
+#include "dosfs/dosfs.h"
 #include "nfc/pn532.h"
 #include "nfc/pn532_demo.h"
 #include "nfc/picc_emu.h"
@@ -590,7 +590,7 @@ void __attribute__((noreturn)) mainloop (void)
 	eink_interface_init();
 	ad7147_init();
 	//accelerometer_init();
-	//DFS_Init ();
+	DFS_Init ();
 	//pn532_init();
 	//libnfc_demo_init();
 	//picc_emu_init();

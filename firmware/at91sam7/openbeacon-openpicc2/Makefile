@@ -11,14 +11,12 @@ IMAGES=splash directory arrows bg txtr_composite
 
 APP_SRC= \
   application/main.c \
-  application/dosfs.c \
   application/proto.c \
   application/xxtea.c \
   application/sdram.c \
   application/power.c \
   application/pio_irq.c \
   application/spi.c \
-  application/sdcard.c \
   application/adc.c \
   application/accelerometer.c \
   application/eink/eink.c \
@@ -34,6 +32,9 @@ APP_SRC= \
   application/nfc/picc_emu.c \
   application/nfc/libnfc_demo.c \
   application/nfc/pn532_libnfc_reader.c \
+  application/dosfs/dosfs.c \
+  application/dosfs/sdcard.c \
+  application/dosfs/fat_helper.c \
   application/image/image.c \
   application/ebook/ebook.c \
   application/ebook/event.c \
