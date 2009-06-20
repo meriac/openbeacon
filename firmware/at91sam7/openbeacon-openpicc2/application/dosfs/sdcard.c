@@ -156,12 +156,14 @@ static int sdcard_block_read(u_int8_t * buff,	/* Data buffer to store received d
 		token = rcvr_spi();
 		if (token != 0xFF)
 			break;
-	}
-	while (timeout--);
-	if (token != 0xFE)
+	} while (timeout--);
+	if (token != 0xFE) {
 		return 0;				/* If not valid data token, retutn with error */
+	}
 	
+	spi_force_transmit_pin(&sdcard_spi, 1);
 	sdcard_transceive(buff, btr);
+	spi_release_transmit_pin(&sdcard_spi);
 	
 	uint8_t scratch[2] = {0xff, 0xff};
 	sdcard_transceive(scratch, sizeof(scratch)); /* Discard CRC */
@@ -190,8 +192,9 @@ static int sdcard_send_cmd(u_int8_t cmd,	/* Command byte */
 	/* Select the card and wait for ready */
 	DESELECT();
 	SELECT();
-	if (cmd != CMD0 && wait_ready() != 0xff)
+	if (cmd != CMD0 && wait_ready() != 0xff) {
 		return 0xff;
+	}
 	
 	/* Send command packet */
 	data[0] = 0xFF;
@@ -285,7 +288,8 @@ int DFS_OpenCard(void)
 /*-----------------------------------------------------------------------*/
 
 static inline int sdcard_disk_read(u_int8_t * buff,	/* Pointer to the data buffer to store read data */
-		u_int32_t sector	/* Start sector number (LBA) */
+		u_int32_t sector,	/* Start sector number (LBA) */
+		u_int32_t block_count   /* Number of blocks to read */
 )
 {
 	int res = RES_ERROR;
@@ -298,9 +302,23 @@ static inline int sdcard_disk_read(u_int8_t * buff,	/* Pointer to the data buffe
 	
 	sdcard_claim();
 	
-	if ((sdcard_send_cmd(CMD17, sector) == 0)	/* READ_SINGLE_BLOCK */
-			&&sdcard_block_read(buff, SECTOR_SIZE))
-		res = RES_OK;
+	if(block_count == 1) {
+		if ((sdcard_send_cmd(CMD17, sector) == 0)	/* READ_SINGLE_BLOCK */
+				&&sdcard_block_read(buff, SECTOR_SIZE))
+			res = RES_OK;
+	} else {
+		if ((sdcard_send_cmd(CMD18, sector) == 0)) {	/* READ_MULTIPLE_BLOCK */
+			do {
+				if(!sdcard_block_read(buff, SECTOR_SIZE)) {
+					break;
+				}
+				buff += SECTOR_SIZE;
+			} while(--block_count);
+			sdcard_send_cmd(CMD12, 0);
+			if(block_count == 0)
+				res = RES_OK;
+		}
+	}
 	
 	sdcard_release();
 	
@@ -312,13 +330,8 @@ uint32_t DFS_ReadSector(uint8_t unit, uint8_t * buffer, uint32_t sector,
 {
 	(void) unit;
 	
-	sdcard_claim();
-	while (count--) {
-		if (sdcard_disk_read(buffer, sector++) != RES_OK)
-			return 1;
-		buffer += SECTOR_SIZE;
-	}
-	sdcard_release();
+	if (sdcard_disk_read(buffer, sector, count) != RES_OK)
+		return 1;
 	
 	return 0;
 }
