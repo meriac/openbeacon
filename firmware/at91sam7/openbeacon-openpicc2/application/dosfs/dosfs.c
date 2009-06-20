@@ -12,6 +12,7 @@
 #include <stdlib.h>
 
 #include "dosfs.h"
+#include "utils.h"
 
 /*
 	Get starting sector# of specified partition on drive #unit
@@ -718,12 +719,20 @@ DFS_ReadFile (PFILEINFO fileinfo, uint8_t * scratch, uint8_t * buffer,
 	  // [large] read requests would be able to go a cluster at a time).
 	  if (remain >= SECTOR_SIZE)
 	    {
+	      uint32_t cluster_end = ROUND_UP(fileinfo->pointer+1, fileinfo->volinfo->secperclus * SECTOR_SIZE);
+	      int sectors_to_read = 1;
+	      // Optimization: if we would read up to or over the cluster end anyway, perform a multi-sector
+	      // read to the cluster end
+	      if(fileinfo->pointer + remain >= cluster_end)
+	        {
+		  sectors_to_read = div(cluster_end - fileinfo->pointer, SECTOR_SIZE).quot;
+	        }
 	      result =
-		DFS_ReadSector (fileinfo->volinfo->unit, buffer, sector, 1);
-	      remain -= SECTOR_SIZE;
-	      buffer += SECTOR_SIZE;
-	      fileinfo->pointer += SECTOR_SIZE;
-	      bytesread = SECTOR_SIZE;
+		DFS_ReadSector (fileinfo->volinfo->unit, buffer, sector, sectors_to_read);
+	      remain -= sectors_to_read*SECTOR_SIZE;
+	      buffer += sectors_to_read*SECTOR_SIZE;
+	      fileinfo->pointer += sectors_to_read*SECTOR_SIZE;
+	      bytesread = sectors_to_read*SECTOR_SIZE;
 	    }
 	  // Case 2B - We are only reading a partial sector
 	  else
