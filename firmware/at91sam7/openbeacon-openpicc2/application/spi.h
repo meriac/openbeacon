@@ -17,6 +17,7 @@ typedef struct {
 		unsigned int now_job_scheduled:1;
 		unsigned int blocking_job_active:1; /* There is an ongoing call to spi_transceive_blocking(), decline
 			all calls to spi_transceive() since they would re-enable the interrupt. */
+		unsigned int force_output_pin:1; /* The output pin has been forced to a value. */
 	} flags;
 	unsigned int jobs_pending;
 	xSemaphoreHandle completion_semaphore;
@@ -47,5 +48,8 @@ extern int spi_transceive_automatic_retry(spi_device *device, void *buf, unsigne
 extern int spi_transceive_from_irq(spi_device *device, void *buf, unsigned int len, int now, portBASE_TYPE *xTaskWoken);
 extern int spi_transceive_blocking(spi_device *device, void *buf, unsigned int len);
 extern void spi_wait_for_completion(spi_device *device);
+
+extern int spi_force_transmit_pin(spi_device *device, int level);
+extern int spi_release_transmit_pin(spi_device *device);
 
 #endif /*SPI_H_*/

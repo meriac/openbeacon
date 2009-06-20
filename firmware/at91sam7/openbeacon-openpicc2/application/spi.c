@@ -291,6 +291,44 @@ int spi_transceive_blocking(spi_device *device, void *buf, unsigned int len)
 	return 0;
 }
 
+/* Force the transmit pin to a certain value. Useful when you must transmit some idle
+ * state, but don't want to have a memory buffer filled with that value for use in 
+ * transceive operations. This decouples the output pin from the SPI peripheral
+ * and sets a fixed value through the PIO controller.
+ * You can only call this, when the device is bus exclusive.
+ */
+int spi_force_transmit_pin(spi_device *device, int level)
+{
+	if(!device->flags.open) {
+		return -ENODEV;
+	}
+	if(!device->flags.bus_exclusive) {
+		return -EACCES;
+	}
+	
+	if(level) {
+		AT91F_PIO_SetOutput(SPI_PIO, SPI_MOSI);
+	} else {
+		AT91F_PIO_ClearOutput(SPI_PIO, SPI_MOSI);
+	}
+	AT91F_PIO_CfgOutput(SPI_PIO, SPI_MOSI);
+	device->flags.force_output_pin = 1;
+	return 0;
+}
+
+int spi_release_transmit_pin(spi_device *device)
+{
+	if(!device->flags.open) {
+		return -ENODEV;
+	}
+	if(device->flags.force_output_pin) {
+		AT91F_PIO_CfgPeriph(SPI_PIO, SPI_MOSI, 0);
+	}
+	device->flags.force_output_pin = 0;
+	return 0;
+}
+
+
 static void spi_init(void)
 {
 	bus_exclusive = 0;
@@ -438,6 +476,10 @@ void spi_stop_bus_exclusive(spi_device *device)
 {
 	taskENTER_CRITICAL();
 	if(bus_exclusive & (1L<<device->cs)) {
+		if(device->flags.force_output_pin) {
+			spi_release_transmit_pin(device);
+		}
+		
 		AT91F_SPI_CfgCs(AT91C_BASE_SPI, device->cs, device->config);
 		
 		device->flags.bus_exclusive = 0;
