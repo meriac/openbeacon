@@ -162,8 +162,9 @@ static int sdcard_block_read(u_int8_t * buff,	/* Data buffer to store received d
 		return 0;				/* If not valid data token, retutn with error */
 	
 	sdcard_transceive(buff, btr);
-	rcvr_spi();					/* Discard CRC */
-	rcvr_spi();
+	
+	uint8_t scratch[2] = {0xff, 0xff};
+	sdcard_transceive(scratch, sizeof(scratch)); /* Discard CRC */
 	
 	return 1;					/* Return with success */
 }
