@@ -65,6 +65,7 @@ static const int SCBR = ((int) (MCK / 15e6) + 1) & 0xFF;
 static spi_device sdcard_spi;
 static volatile int Stat = STA_NOINIT;	/* Disk status */
 static u_int8_t CardType;		/* b0:MMC, b1:SDv1, b2:SDv2, b3:Block addressing */
+static int claim_count = 0;
 
 
 static inline u_int8_t rcvr_spi(void)
@@ -97,13 +98,25 @@ static u_int8_t wait_ready(void)
 
 static void sdcard_claim(void)
 {
+	if(claim_count > 0) {
+		claim_count++;
+		return;
+	}
+	
 	int res;
 	while ((res = spi_start_bus_exclusive(&sdcard_spi)) == -EAGAIN)
 		vTaskDelay(1 / portTICK_RATE_MS);
+	
+	claim_count++;
 }
 
 static void sdcard_release(void)
 {
+	claim_count--;
+	if(claim_count > 0) {
+		return;
+	}
+	
 	DESELECT();
 	rcvr_spi();
 	
@@ -298,11 +311,14 @@ uint32_t DFS_ReadSector(uint8_t unit, uint8_t * buffer, uint32_t sector,
 {
 	(void) unit;
 	
+	sdcard_claim();
 	while (count--) {
 		if (sdcard_disk_read(buffer, sector++) != RES_OK)
 			return 1;
 		buffer += SECTOR_SIZE;
 	}
+	sdcard_release();
+	
 	return 0;
 }
 
