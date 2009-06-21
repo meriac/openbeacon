@@ -727,6 +727,8 @@ DFS_ReadFile (PFILEINFO fileinfo, uint8_t * scratch, uint8_t * buffer,
 	      // read to the cluster end
 	      // Otherwise, if we would read more than two sectors (but not over the cluster boundary) perform
 	      // a multi-sector read for an integer amount of clusters
+	      // Note: Since a multi-sector read has some overhead it might be better to set the cut-off
+	      // value below to something other than 2*SECTOR_SIZE.
 	      if(fileinfo->pointer + remain >= cluster_end)
 	        {
 		  sectors_to_read = div(cluster_end - fileinfo->pointer, SECTOR_SIZE).quot;
