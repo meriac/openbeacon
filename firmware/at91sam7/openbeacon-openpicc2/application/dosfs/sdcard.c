@@ -61,7 +61,7 @@ typedef enum {
 	(scbr << 8) | (1L << 16) | (0L << 24))
 
 static const int SCBR_INIT = ((int) (MCK / 4e5) + 1) & 0xFF;
-static const int SCBR = ((int) (MCK / 15e6) + 1) & 0xFF;
+static const int SCBR = 2;
 static spi_device sdcard_spi;
 static volatile int Stat = STA_NOINIT;	/* Disk status */
 static u_int8_t CardType;		/* b0:MMC, b1:SDv1, b2:SDv2, b3:Block addressing */
@@ -82,7 +82,7 @@ static inline u_int8_t rcvr_spi(void)
 static u_int8_t wait_ready(void)
 {
 	u_int8_t res = 0;
-	int timeout = 50;
+	int timeout = 255;
 	
 	res = rcvr_spi();
 	
@@ -150,7 +150,7 @@ static int sdcard_block_read(u_int8_t * buff,	/* Data buffer to store received d
 		u_int32_t btr	/* Byte count (must be even number) */
 )
 {
-	u_int8_t token, timeout = 50;
+	u_int8_t token, timeout = 255;
 	
 	do {						/* Wait for data packet in timeout of 100ms */
 		token = rcvr_spi();
@@ -218,7 +218,7 @@ static int sdcard_send_cmd(u_int8_t cmd,	/* Command byte */
 	/* Receive command response */
 	if (cmd == CMD12)
 		rcvr_spi();				/* Skip a stuff byte when stop reading */
-	n = 10;						/* Wait for a valid response in timeout of 10 attempts */
+	n = 50;						/* Wait for a valid response in timeout of 50 attempts */
 	do {
 		res = rcvr_spi();
 	}
