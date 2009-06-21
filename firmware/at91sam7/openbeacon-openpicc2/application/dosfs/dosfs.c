@@ -650,6 +650,7 @@ DFS_ReadFile (PFILEINFO fileinfo, uint8_t * scratch, uint8_t * buffer,
   uint32_t result = DFS_OK;
   uint32_t sector;
   uint32_t bytesread;
+  uint32_t scratch_integer = 0;
 
   // Don't try to read past EOF
   if (len > fileinfo->filelen - fileinfo->pointer)
@@ -678,6 +679,7 @@ DFS_ReadFile (PFILEINFO fileinfo, uint8_t * scratch, uint8_t * buffer,
 	  // We always have to go through scratch in this case
 	  result =
 	    DFS_ReadSector (fileinfo->volinfo->unit, scratch, sector, 1);
+	  scratch_integer = 0;
 
 	  // This is the number of bytes that we actually care about in the sector
 	  // just read.
@@ -739,6 +741,7 @@ DFS_ReadFile (PFILEINFO fileinfo, uint8_t * scratch, uint8_t * buffer,
 	    {
 	      result =
 		DFS_ReadSector (fileinfo->volinfo->unit, scratch, sector, 1);
+	      scratch_integer = 0;
 	      memcpy (buffer, scratch, remain);
 	      buffer += remain;
 	      fileinfo->pointer += remain;
@@ -756,9 +759,6 @@ DFS_ReadFile (PFILEINFO fileinfo, uint8_t * scratch, uint8_t * buffer,
 	  div (fileinfo->pointer,
 	       fileinfo->volinfo->secperclus * SECTOR_SIZE).quot)
 	{
-	  // An act of minor evil - we use bytesread as a scratch integer, knowing that
-	  // its value is not used after updating *successcount above
-	  bytesread = 0;
 	  if (((fileinfo->volinfo->filesystem == FAT12)
 	       && (fileinfo->cluster >= 0xff8))
 	      || ((fileinfo->volinfo->filesystem == FAT16)
@@ -768,7 +768,7 @@ DFS_ReadFile (PFILEINFO fileinfo, uint8_t * scratch, uint8_t * buffer,
 	    result = DFS_EOF;
 	  else
 	    fileinfo->cluster =
-	      DFS_GetFAT (fileinfo->volinfo, scratch, &bytesread,
+	      DFS_GetFAT (fileinfo->volinfo, scratch, &scratch_integer,
 			  fileinfo->cluster);
 	}
     }
