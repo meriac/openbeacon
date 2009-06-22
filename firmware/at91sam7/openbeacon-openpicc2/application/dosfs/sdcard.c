@@ -147,7 +147,7 @@ static inline void sdcard_transceive(u_int8_t * buff,	/* Data buffer to store re
 
 
 static uint8_t _buff[512] __attribute__((aligned(4)));
-int sdcard_block_read(u_int8_t * buff,	/* Data buffer to store received data */
+static int sdcard_block_read(u_int8_t * buff,	/* Data buffer to store received data */
 		u_int32_t btr	/* Byte count (must be even number) */
 )
 {
