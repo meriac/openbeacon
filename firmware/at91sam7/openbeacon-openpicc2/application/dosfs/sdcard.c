@@ -146,7 +146,8 @@ static inline void sdcard_transceive(u_int8_t * buff,	/* Data buffer to store re
 }
 
 
-static int sdcard_block_read(u_int8_t * buff,	/* Data buffer to store received data */
+static uint8_t _buff[512] __attribute__((aligned(4)));
+int sdcard_block_read(u_int8_t * buff,	/* Data buffer to store received data */
 		u_int32_t btr	/* Byte count (must be even number) */
 )
 {
@@ -162,12 +163,39 @@ static int sdcard_block_read(u_int8_t * buff,	/* Data buffer to store received d
 	}
 	
 	spi_force_transmit_pin(&sdcard_spi, 1);
-	sdcard_transceive(buff, btr);
-	spi_release_transmit_pin(&sdcard_spi);
+	if(btr == 512 && ((unsigned int)buff%4) == 0) {
+		/* SPI receive is byte-wise. It is slightly faster to receive into internal SRAM
+		 * and then do a massive load-multiple/store-multiple word transfer into SDRAM
+		 * than to do a direct receive into SDRAM.
+		 */
+		sdcard_transceive(_buff, 512);
+		uint32_t *a = (uint32_t*)_buff, *b = (uint32_t*)buff;
+		/* Manually unrolled transfer loop */
+#define TRANSFER_32 \
+		asm volatile( \
+				"LDM %0!, {r0-r7}\n\t" \
+				"STM %1!, {r0-r7}\n\r" \
+				: "+r" (a), "+r" (b) \
+				: \
+				: "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "memory");
+#define TRANSFER_128 TRANSFER_32 TRANSFER_32 TRANSFER_32 TRANSFER_32
+#define TRANSFER_512 TRANSFER_128 TRANSFER_128 TRANSFER_128 TRANSFER_128
+		
+		TRANSFER_512
+		
+#undef TRANSFER_512
+#undef TRANSFER_128
+#undef TRANSFER_32
+		
+	} else {
+		sdcard_transceive(buff, btr);
+	}
 	
-	uint8_t scratch[2] = {0xff, 0xff};
+	uint8_t scratch[2];
 	sdcard_transceive(scratch, sizeof(scratch)); /* Discard CRC */
-	
+
+	spi_release_transmit_pin(&sdcard_spi);
+
 	return 1;					/* Return with success */
 }
 
