@@ -390,7 +390,11 @@ int spi_change_config(spi_device *device, u_int32_t config)
 		taskEXIT_CRITICAL();
 		return -ENODEV;
 	}
-	AT91F_SPI_CfgCs(AT91C_BASE_SPI, device->cs, config);
+	if(device->flags.bus_exclusive) {
+		AT91F_SPI_CfgCs(AT91C_BASE_SPI, device->cs, config | AT91C_SPI_CSAAT);
+	} else {
+		AT91F_SPI_CfgCs(AT91C_BASE_SPI, device->cs, config);
+	}
 	device->config = config;
 	taskEXIT_CRITICAL();
 	return 0;
