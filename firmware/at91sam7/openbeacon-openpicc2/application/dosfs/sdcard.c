@@ -159,11 +159,11 @@ static int sdcard_block_read(u_int8_t * buff,	/* Data buffer to store received d
 			break;
 	} while (timeout--);
 	if (token != 0xFE) {
-		return 0;				/* If not valid data token, retutn with error */
+		return 0;				/* If not valid data token, return with error */
 	}
 	
 	spi_force_transmit_pin(&sdcard_spi, 1);
-	if(btr == 512 && ((unsigned int)buff%4) == 0) {
+	if(btr == 512 && ((unsigned int)buff)%4 == 0 && ((unsigned int)buff) > 0x300000) {
 		/* SPI receive is byte-wise. It is slightly faster to receive into internal SRAM
 		 * and then do a massive load-multiple/store-multiple word transfer into SDRAM
 		 * than to do a direct receive into SDRAM.
