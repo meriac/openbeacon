@@ -239,6 +239,7 @@ static int readline(unsigned char * const line, unsigned int *linelen)
 
 	while(1) {
 		vUSBRecvByte(&b, 1, portMAX_DELAY);
+		//vUSBSendByte(b);
 		//DumpUIntToUSB(b); printf("\n");
 		switch(b) {
 		case '0'...'9':
@@ -302,7 +303,11 @@ static int handle_apdu(const unsigned char * const command, unsigned int cmdlen,
 	memcpy(response, fixed_resp, sizeof(fixed_resp));
 	*resplen = sizeof(fixed_resp);
 #else
-	readline(response, resplen);
+	unsigned int original_resplen = *resplen;
+	do {
+		*resplen = original_resplen;
+		readline(response, resplen); 
+	} while(*resplen == 0);
 #endif
 	return 0;
 }
@@ -332,14 +337,14 @@ static void picc_emu_task(void *parameter)
 		int r = picc_get_data(buffer, &buflen, portMAX_DELAY);
 
 		if(r == 0) {
-			if(DBG) printf("INF: Received APDU\n");
+			if(DBG) printf("INF: Received C-APDU\n");
 
 			unsigned int cmdlen = buflen, resplen = sizeof(buffer);
 			handle_apdu(buffer, cmdlen, buffer, &resplen);
 
 			r = picc_put_data(buffer, resplen, portMAX_DELAY);
 			if(r == 0) {
-				if(DBG) printf("INF: Sent APDU\n");
+				if(DBG) printf("INF: Sent R-APDU\n");
 			} else if(r == 0x29) {
 				if(DBG) printf("INF: Target lost (2)\n");
 				reset_state();
