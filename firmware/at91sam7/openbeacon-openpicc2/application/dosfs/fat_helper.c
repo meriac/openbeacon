@@ -35,6 +35,22 @@ int fat_init(void ) {
 	return 0;
 }
 
+int fat_helper_open(uint8_t *filename, FILEINFO *fi)
+{
+	int res;
+	
+	if( !filename ) {
+		return -EINVAL;
+	}
+	
+	if( ( res = DFS_OpenFile ( &vi, filename, DFS_READ, scratch, fi) ) != DFS_OK ) {
+		printf( "Can't open file: %s, reason: %d\n", filename, res );
+		return -res;
+	}
+
+	return res;
+}
+
 static int _fat_loadimage( uint8_t *filename, size_t *length, eink_image_buffer_t img_buf, uint8_t *data_buf)
 {
 	FILEINFO fi;
@@ -45,18 +61,11 @@ static int _fat_loadimage( uint8_t *filename, size_t *length, eink_image_buffer_
 	/* *length will now contain the amount of data already read */
 	*length = 0;
 	
-	if( !filename ) {
-		return -EINVAL;
-	}
-	
 	if ( !img_buf && !data_buf ) {
 		return -EINVAL;
 	}
 	
-	if( ( res = DFS_OpenFile ( &vi, filename, DFS_READ, scratch, &fi) ) != DFS_OK ) {
-		printf( "Can't open file: %s, reason: %d\n", filename, res );
-		return -res;
-	}
+	res = fat_helper_open(filename, &fi);
 	
 	printf( "Opening file: %s, length: %lu\n", filename, fi.filelen );
 	
