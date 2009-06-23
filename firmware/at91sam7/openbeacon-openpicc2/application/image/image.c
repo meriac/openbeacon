@@ -17,6 +17,8 @@
 #include "utils.h"
 #include "eink/eink.h"
 #include "lzo/minilzo.h"
+#include "dosfs/dosfs.h"
+#include "dosfs/fat_helper.h"
 #include "image/splash.h"
 
 static int lzo_initialized = 0;
@@ -378,6 +380,136 @@ int image_draw_circle(image_t image, int x, int y, int r, int value, int filled)
 		}
 		
 	} while(x_<=y_);
+	
+	return 0;
+}
+
+/* Load an image from a pgm file.
+ * *target must either be NULL and will then be acquired through image_acquire, or
+ * already have its data and size members set.
+ * Will use scratch_space as a temporary buffer.
+ */
+int image_load_pgm(image_t *target, char *filename)
+{
+	uint32_t preload_size = 512;
+	uint8_t *scratch = scratch_space;
+	uint8_t *filehead = scratch_space+SECTOR_SIZE;
+	FILEINFO fi;
+	int res, image_start = -1;
+	int width, height, maxval;
+	
+	if(target == NULL) return -EINVAL;
+	if(filename == NULL) return -EINVAL;
+	if(sizeof(scratch_space) < SECTOR_SIZE + preload_size) return -EMSGSIZE;
+	
+	/* Theory of operation: Read the start of the file into the "filehead" buffer
+	 * Go through that buffer and operate on it byte-wise:
+	 *  + All comments (from # till the end of the line) will be overwritten with spaces
+	 *  + All transitions non-whitespace to whitespace will be used as a possible header end
+	 *    and we try to parse it with sscanf. If that succeeds and yields the correct number
+	 *    of header fields we're in business and the image will start right after that point.
+	 */
+	
+	res = fat_helper_open((unsigned char*)filename, &fi);
+	if(res != DFS_OK) {
+		switch(res) {
+		case DFS_NOTFOUND: return -ENOENT;
+		default: return -EIO;
+		}
+	}
+	
+	res = DFS_ReadFile(&fi, scratch, filehead, &preload_size, preload_size);
+	if(res != DFS_OK && res != DFS_EOF) {
+		return -EIO;
+	}
+	
+	if(filehead[0] != 'P' || filehead[1] != '5') {
+		return -EILSEQ;
+	}
+	
+	{
+		unsigned int i, last_was_space=0, is_comment = 0;
+		uint8_t backup;
+		
+		for(i=0; i<preload_size; i++) {
+			if(is_comment) {
+				if(filehead[i] == '\r' || filehead[i] == '\n') {
+					is_comment = 0;
+				} else {
+					filehead[i] = ' ';
+				}
+			} else {
+				if(filehead[i] == '#') {
+					is_comment = 1;
+					filehead[i] = ' ';
+				}
+			}
+			
+			switch(filehead[i]) {
+			case ' ': case '\t': case '\r': case '\n': case '\v':
+				/* Whitespace */
+				if(last_was_space) {
+					continue;
+				}
+				last_was_space = 1;
+				break;
+			default:
+				last_was_space = 0;
+				continue;
+			}
+			
+			backup = filehead[i]; filehead[i] = 0;
+			res = sscanf((const char*)filehead, "P5 %i %i %i", &width, &height, &maxval);
+			filehead[i] = backup;
+			if(res == 3) {
+				/* i is now the white space following the header, the next byte is
+				 * the first byte of the image. There might be something more complicated
+				 * going on when there was a comment right after the header, but for
+				 * now we're going to ignore that case.
+				 */
+				image_start = i+1;
+				break;
+			}
+		}
+	}
+	
+	if(image_start == -1) {
+		/* No PGM start found within the first preload_size bytes */
+		return -ENOMSG;
+	}
+	
+	//printf("PGM found: %ix%i at %i colors, starting at offset %i\n", width, height, maxval, image_start);
+	if(maxval >= 256) {
+		return -ENOTSUP;
+	}
+	
+	DFS_Seek(&fi, image_start, scratch);
+	if(fi.pointer != (unsigned int)image_start) {
+		return -EIO;
+	}
+	
+	if(*target == NULL) {
+		res = image_acquire(target, width, height, width, IMAGE_BPP_8);
+		if(res < 0) {
+			return res;
+		}
+	} else {
+		if((unsigned)(width*height) > (*target)->size) {
+			return -ENOMEM;
+		} else {
+			(*target)->width = width;
+			(*target)->height = height;
+			(*target)->rowstride = width;
+			(*target)->bits_per_pixel = IMAGE_BPP_8;
+		}
+	}
+	
+	uint32_t tmp = (*target)->size;
+	res = DFS_ReadFile(&fi, scratch, (*target)->data, &tmp, width*height);
+	(*target)->size = tmp;
+	if(res != DFS_OK && res != DFS_EOF) {
+		return -EIO;
+	}
 	
 	return 0;
 }

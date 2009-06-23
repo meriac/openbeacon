@@ -226,16 +226,9 @@ static void paint_task(void *params)
 	
 	int bg_image_loaded = 0;
 	if(fat_init() == 0) {
-		bg_image.bits_per_pixel = IMAGE_BPP_8;
-		bg_image.width = 824;
-		bg_image.rowstride = 824;
-		bg_image.height = 1200;
-		if(bg_image.size > (unsigned int)(bg_image.rowstride * bg_image.height)) {
-			bg_image.size = bg_image.rowstride * bg_image.height;
-		}
-		
+		image_t test = &bg_image;
 		portTickType start = xTaskGetTickCount();
-		int res = fat_load_data_buffer("test.raw", &bg_image.size, bg_image.data);
+		int res = image_load_pgm(&test, "test.pgm");
 		portTickType stop = xTaskGetTickCount();
 		printf("From card in %li ticks\n", stop-start);
 		if(res != 0) {

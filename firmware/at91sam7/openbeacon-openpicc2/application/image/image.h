@@ -52,6 +52,7 @@ extern enum eink_pack_mode image_get_bpp_as_pack_mode(const image_t in);
 
 extern int image_acquire(image_t *target, int width, int height, int rowstride, enum image_bpp bits_per_pixel);
 extern int image_release(image_t *target);
+extern int image_load_pgm(image_t *target, char *filename);
 
 extern int image_load_image_buffer(image_in_image_buffer_t target, eink_image_buffer_t buffer, image_t source,
 		enum eink_rotation_mode rotation_mode);
