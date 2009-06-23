@@ -28,6 +28,9 @@ struct image {
 		int x1, y1;
 		int x2, y2;
 	} damage_region; /* Damaged region since last upload (set all to -1 for n/a) */
+	struct {
+		int malloced:1; /* data has been acquired through malloc() and needs to be free'd */
+	} flags;
 	uint8_t *data;
 };
 typedef struct image *image_t;
@@ -46,6 +49,9 @@ typedef struct image_in_image_buffer *image_in_image_buffer_t;
 extern int image_unpack_splash(image_t target, const struct splash_image * const source);
 extern int image_create_solid(image_t target, uint8_t color, int width, int height);
 extern enum eink_pack_mode image_get_bpp_as_pack_mode(const image_t in);
+
+extern int image_acquire(image_t *target, int width, int height, int rowstride, enum image_bpp bits_per_pixel);
+extern int image_release(image_t *target);
 
 extern int image_load_image_buffer(image_in_image_buffer_t target, eink_image_buffer_t buffer, image_t source,
 		enum eink_rotation_mode rotation_mode);
