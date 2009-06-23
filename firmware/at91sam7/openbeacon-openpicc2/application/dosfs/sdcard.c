@@ -61,7 +61,7 @@ typedef enum {
 	(scbr << 8) | (1L << 16) | (0L << 24))
 
 static const int SCBR_INIT = ((int) (MCK / 4e5) + 1) & 0xFF;
-static const int SCBR = 2;
+static const int SCBR = 3;
 static spi_device sdcard_spi;
 static volatile int Stat = STA_NOINIT;	/* Disk status */
 static u_int8_t CardType;		/* b0:MMC, b1:SDv1, b2:SDv2, b3:Block addressing */
@@ -146,7 +146,6 @@ static inline void sdcard_transceive(u_int8_t * buff,	/* Data buffer to store re
 }
 
 
-static uint8_t _buff[512] __attribute__((aligned(4)));
 static int sdcard_block_read(u_int8_t * buff,	/* Data buffer to store received data */
 		u_int32_t btr	/* Byte count (must be even number) */
 )
@@ -163,33 +162,7 @@ static int sdcard_block_read(u_int8_t * buff,	/* Data buffer to store received d
 	}
 	
 	spi_force_transmit_pin(&sdcard_spi, 1);
-	if(btr == 512 && ((unsigned int)buff)%4 == 0 && ((unsigned int)buff) > 0x300000) {
-		/* SPI receive is byte-wise. It is slightly faster to receive into internal SRAM
-		 * and then do a massive load-multiple/store-multiple word transfer into SDRAM
-		 * than to do a direct receive into SDRAM.
-		 */
-		sdcard_transceive(_buff, 512);
-		uint32_t *a = (uint32_t*)_buff, *b = (uint32_t*)buff;
-		/* Manually unrolled transfer loop */
-#define TRANSFER_32 \
-		asm volatile( \
-				"LDM %0!, {r0-r7}\n\t" \
-				"STM %1!, {r0-r7}\n\r" \
-				: "+r" (a), "+r" (b) \
-				: \
-				: "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "memory");
-#define TRANSFER_128 TRANSFER_32 TRANSFER_32 TRANSFER_32 TRANSFER_32
-#define TRANSFER_512 TRANSFER_128 TRANSFER_128 TRANSFER_128 TRANSFER_128
-		
-		TRANSFER_512
-		
-#undef TRANSFER_512
-#undef TRANSFER_128
-#undef TRANSFER_32
-		
-	} else {
-		sdcard_transceive(buff, btr);
-	}
+	sdcard_transceive(buff, btr);
 	
 	uint8_t scratch[2];
 	sdcard_transceive(scratch, sizeof(scratch)); /* Discard CRC */
