@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <errno.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "utils.h"
@@ -129,6 +130,38 @@ enum eink_pack_mode image_get_bpp_as_pack_mode(const image_t in) {
 	}
 	return 0;
 }
+
+int image_acquire(image_t *target, int width, int height, int rowstride, enum image_bpp bits_per_pixel)
+{
+	if(!target) return -EINVAL;
+	if(!rowstride) rowstride = (width*bits_per_pixel+7)/8;   // rowstride = ceil( width / pixels_per_byte )
+	
+	int size = rowstride*height;
+	uint8_t *data = malloc(size);
+	if(!data) return -ENOMEM;
+	
+	(*target)->width = width;
+	(*target)->height = height;
+	(*target)->rowstride = rowstride;
+	(*target)->bits_per_pixel = bits_per_pixel;
+	(*target)->size = size;
+	memset( &((*target)->damage_region), 0, sizeof((*target)->damage_region) );
+	(*target)->data = data;
+	(*target)->flags.malloced = 1;
+	
+	return 1;
+}
+
+int image_release(image_t *target)
+{
+	if(!target) return -EINVAL;
+	if( (*target)->flags.malloced ) free((*target)->data);
+	(*target)->flags.malloced = 0;
+	(*target)->data = NULL;
+	
+	return 1;
+}
+
 
 static void _get_display_size(enum eink_rotation_mode rotation, int *w, int *h)
 {
@@ -298,7 +331,7 @@ inline int image_draw_straight_line(image_t image, int x1, int y, int x2, int va
 				end = x2;
 			}
 			if(start < end) {
-				memset(image->data + image->rowstride*y + start/2, (value & 0xf0) | (value >> 4), (end-start+1)/2 );
+				memset(image->data + image->rowstride*y + start/2, (value & 0xf0) | ((value&0xf0) >> 4), (end-start+1)/2 );
 			}
 		}
 		break;
