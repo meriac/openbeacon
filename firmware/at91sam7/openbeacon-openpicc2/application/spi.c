@@ -42,7 +42,8 @@ static int deadmansbrake = 0;
 
 static void __attribute__ ((section (".ramfunc"))) _spi_irq(void)
 {
-	portBASE_TYPE xTaskWoken = pdFALSE;
+	static portBASE_TYPE xTaskWoken;
+	xTaskWoken = pdFALSE;
 	u_int32_t sr = AT91C_BASE_SPI->SPI_SR;
 	
 #ifdef DEBUG_IRQ_STORM
