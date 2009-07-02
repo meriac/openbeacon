@@ -178,6 +178,8 @@ void process_line(char *line, size_t length)
 		int x, y, r = 10, v = 0;
 		if(sscanf(line, " %i , %i , %i , %i ", &x, &y, &r, &v) >= 2) {
 			image_draw_circle(&bg_image, x, y, r, v, 1);
+		} else if(sscanf(line, " %i , %i , %i , %i ", &x, &y, &r, &v) >= 2) {
+			image_draw_circle(&bg_image, x, y, r, v, 0);
 		}
 	}
 	dirty = 1;
