@@ -637,6 +637,12 @@ int eink_controller_init(void)
 	eink_write_register(0x01A, 4);
 	eink_write_register(0x320, 0);
 	
+	/* Set eInk controller SDRAM column address count to 512 */
+	eink_write_register(0x100, (eink_read_register(0x100) & ~0x6) | 0x1<<1 );
+	/* Set eInk controller SDRAM size to 32MB */
+	eink_write_register(0x10A, eink_read_register(0x10A) | 6);
+	
+	
 	eink_was_initialized = 1;
 	eink_end_use();
 	return 0;
