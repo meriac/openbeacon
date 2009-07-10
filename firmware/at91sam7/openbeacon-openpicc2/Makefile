@@ -43,6 +43,10 @@ APP_SRC= \
 IMAGES_C=$(foreach i,$(IMAGES),application/$(i)_pgm.c)
 APP_SRC+=$(IMAGES_C)
 
+all_foo:
+	make OPTIM=-O0 application/spi.o
+	make all
+
 all: application/libnfc/linux/libnfc.a  $(TARGET).bin 
 
 app_clean:
