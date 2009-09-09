@@ -1,0 +1,2108 @@
+2009-09-09 20:20  meriac
+
+	* core/os/core/MemMang/heap_1.c, core/os/core/MemMang/heap_2.c,
+	  core/os/core/MemMang/heap_3.c, core/os/core/include/FreeRTOS.h,
+	  core/os/core/include/StackMacros.h,
+	  core/os/core/include/croutine.h, core/os/core/include/list.h,
+	  core/os/core/include/portable.h, core/os/core/include/projdefs.h,
+	  core/os/core/include/queue.h, core/os/core/include/semphr.h,
+	  core/os/core/include/task.h, core/os/core/list.c,
+	  core/os/core/port.c, core/os/core/portISR.c,
+	  core/os/core/portmacro.h, core/os/core/queue.c,
+	  core/os/core/tasks.c: updated operating system to lastest
+	  FreeRTOS.org version 5.4.2
+
+2009-08-16 16:51  meriac
+
+	* openbeacon-wlan, openbeacon-wlan/Makefile,
+	  openbeacon-wlan/application, openbeacon-wlan/application/main.c,
+	  openbeacon-wlan/application/openbeacon.h,
+	  openbeacon-wlan/application/proto.c,
+	  openbeacon-wlan/application/proto.h,
+	  openbeacon-wlan/application/sdram.c,
+	  openbeacon-wlan/application/sdram.h,
+	  openbeacon-wlan/application/spi.c,
+	  openbeacon-wlan/application/spi.h,
+	  openbeacon-wlan/application/utils.h,
+	  openbeacon-wlan/application/xxtea.c,
+	  openbeacon-wlan/application/xxtea.h, openbeacon-wlan/config,
+	  openbeacon-wlan/config/FreeRTOSConfig.h,
+	  openbeacon-wlan/config/atmel-rom.ld,
+	  openbeacon-wlan/config/board.h,
+	  openbeacon-wlan/config/descriptors.h, openbeacon-wlan/doc,
+	  openbeacon-wlan/doc/dosfs-example.c,
+	  openbeacon-wlan/doc/dosfs-readme.txt: initial check in of
+	  OpenBeacon WLAN
+
+2009-07-10 17:20  henryk
+
+	* openbeacon-openpicc2/Makefile: Regression: spi.c can only be
+	  compiled with -O0, not -O2. This was broken in r357. Revert
+	  Makefile to earlier workaround while I'm looking for a proper fix
+
+2009-07-02 23:52  henryk
+
+	* openbeacon-openpicc2/application/paint/paint.c: Fix last commit
+
+2009-07-02 17:00  henryk
+
+	* openbeacon-openpicc2/application/paint/paint.c: Add command to
+	  draw non-filled circle
+
+2009-07-02 17:00  henryk
+
+	* openbeacon-openpicc2/application/eink/eink.c: Let the eInk
+	  controller know that its SDRAM is actually 32MB and not 16MB
+
+2009-06-28 21:48  henryk
+
+	* openbeacon-openpicc2/Makefile,
+	  openbeacon-openpicc2/application/spi.c: Work around the internal
+	  compiler error. For some reason "&xTaskWoken" leads to an
+	  internal compiler error, unless xTaskWoken is global or static
+
+2009-06-23 11:53  henryk
+
+	* openbeacon-openpicc2/application/image/image.c,
+	  openbeacon-openpicc2/application/image/image.h,
+	  openbeacon-openpicc2/application/paint/paint.c: Add function to
+	  load image from PGM file
+
+2009-06-23 11:50  henryk
+
+	* openbeacon-openpicc2/openocd.cfg: Enable fast memory access
+
+2009-06-23 11:48  henryk
+
+	* openbeacon-openpicc2/application/dosfs/fat_helper.c,
+	  openbeacon-openpicc2/application/dosfs/fat_helper.h: Add
+	  fat_helper_open
+
+2009-06-23 11:46  henryk
+
+	* openbeacon-openpicc2/application/dosfs/sdcard.c: Undo r526, not
+	  worth the trouble.
+	  Also reduce sdcard bus speed, doesn't seem stable
+
+2009-06-23 00:59  henryk
+
+	* openbeacon-openpicc2/application/image/image.h: Forgotten
+	  prototypes
+
+2009-06-23 00:58  henryk
+
+	* openbeacon-openpicc2/application/image/image.c: Add functions to
+	  allocate images from malloc (not used currently since
+	  malloc-memory is in SRAM)
+
+2009-06-22 14:23  henryk
+
+	* openbeacon-openpicc2/application/nfc/picc_emu.c: Ignore empty
+	  lines
+
+2009-06-22 14:23  henryk
+
+	* openbeacon-openpicc2/application/spi.c: Fix change config when
+	  called from bus exclusive
+
+2009-06-22 10:20  henryk
+
+	* openbeacon-openpicc2/application/dosfs/sdcard.c: Restrict
+	  enhancement to non-SRAM areas
+
+2009-06-22 09:56  henryk
+
+	* openbeacon-openpicc2/application/dosfs/sdcard.c: bla
+
+2009-06-22 09:39  henryk
+
+	* openbeacon-openpicc2/application/dosfs/sdcard.c: Small
+	  performance increase (about 2%, now at 1.81 MB/s)
+
+2009-06-21 22:21  henryk
+
+	* openbeacon-openpicc2/application/dosfs/sdcard.c: Even further
+	  increase the bus speed (and correspondingly increase timeout
+	  counters).
+	  This brings the speed up to 1.77 MB/s (56% increase) but may be
+	  even more unreliable (the spec says we're still in the clear,
+	  though).
+
+2009-06-21 11:08  henryk
+
+	* openbeacon-openpicc2/application/dosfs/dosfs.c: Add note about
+	  possible tweaking. Probably not worth the effort to properly
+	  investigate.
+
+2009-06-21 11:04  henryk
+
+	* openbeacon-openpicc2/application/dosfs/dosfs.c: Enhance the
+	  multi-sector optimization to also apply for reads longer than two
+	  sectors but shorter than the complete cluster. Less than 1%
+	  performance increase.
+
+2009-06-21 10:49  henryk
+
+	* openbeacon-openpicc2/application/dosfs/dosfs.c: Properly maintain
+	  the FAT cache, 3% performance increase (now 1.12 MB/s)
+
+2009-06-20 20:57  henryk
+
+	* openbeacon-openpicc2/application/dosfs/sdcard.c: Properly
+	  implement READ_MULTIPLE_BLOCK in sdcard_disk_read(). HUGE
+	  performance increase, now at 1.09 MB/s.
+
+2009-06-20 20:56  henryk
+
+	* openbeacon-openpicc2/application/spi.c,
+	  openbeacon-openpicc2/application/spi.h: Add
+	  spi_force_transmit_pin()/spi_release_transmit_pin() to be used in
+	  bus exclusive mode to force the MOSI pin to a specific logic
+	  level regardless of the transmitted data values in transceive
+
+2009-06-20 17:10  henryk
+
+	* openbeacon-openpicc2/application/dosfs/dosfs.c: Implement
+	  multi-sector read optimiziation within a cluster, brings another
+	  ten or so percent; speed is now 0.598 MB/s
+
+2009-06-20 11:17  henryk
+
+	* openbeacon-openpicc2/application/dosfs/sdcard.c: Optimize CRC
+	  discard, slight performance increase (2%)
+
+2009-06-20 11:07  henryk
+
+	* openbeacon-openpicc2/application/dosfs/sdcard.c: Make
+	  sdcard_claim()/_release() nestable and bracket DFS_ReadSector()
+	  with a claim/release pair. This means that the SPI will only be
+	  put into bus exclusive once per call to DFS_ReadSector()
+	  Obviously this will only really bring benefits when
+	  DFS_ReadSector() is called with a count > 1. Preliminary results
+	  show a speed-up of up to 10%
+
+2009-06-19 21:21  henryk
+
+	* openbeacon-openpicc2/application/dosfs/sdcard.c: Aggressively
+	  optimize the sdcard reading: decrease the clock divisor (to 4,
+	  leading to a SPI clock rate of about 11.98 megahertz) and
+	  increase the cutoff for blocking mode (thereby basically
+	  eliminating the background mode calls). This brings the sdcard
+	  read speed up to 0.54 megabytes per second, but beware that this
+	  is potentially unsafe, leading to watchdog resets
+
+2009-06-19 20:50  henryk
+
+	* openbeacon-openpicc2/application/dosfs/sdcard.c,
+	  openbeacon-openpicc2/application/dosfs/sdcard.h,
+	  openbeacon-openpicc2/application/spi.c,
+	  openbeacon-openpicc2/application/spi.h: Add a blocking mode to
+	  SPI, can only be invoked while the device is bus_exclusive
+	  Fix spi_transceive for the bus_exclusive case (should reject new
+	  jobs until the bus is free again)
+	  Convert sdcard code to use the blocking mode for short transfers,
+	  brings sdcard read speed to about 0.29 MB/s (up from 0.22 MB/s)
+	  Fix sdcard.[ch] indentation
+
+2009-06-19 14:13  henryk
+
+	* openbeacon-openpicc2/application/dosfs/fat_helper.c,
+	  openbeacon-openpicc2/application/dosfs/fat_helper.h,
+	  openbeacon-openpicc2/application/paint/paint.c: Add function to
+	  load from file into a data buffer
+	  API change: fat_loadimage() is now fat_load_eink_image_buffer(),
+	  length parameter is now a pointer
+
+2009-06-19 00:27  henryk
+
+	* openbeacon-openpicc2/Makefile,
+	  openbeacon-openpicc2/application/dosfs,
+	  openbeacon-openpicc2/application/dosfs.c,
+	  openbeacon-openpicc2/application/dosfs.h,
+	  openbeacon-openpicc2/application/dosfs/dosfs.c,
+	  openbeacon-openpicc2/application/dosfs/dosfs.h,
+	  openbeacon-openpicc2/application/dosfs/fat_helper.c,
+	  openbeacon-openpicc2/application/dosfs/fat_helper.h,
+	  openbeacon-openpicc2/application/dosfs/sdcard.c,
+	  openbeacon-openpicc2/application/dosfs/sdcard.h,
+	  openbeacon-openpicc2/application/main.c,
+	  openbeacon-openpicc2/application/paint/paint.c,
+	  openbeacon-openpicc2/application/sdcard.c,
+	  openbeacon-openpicc2/application/sdcard.h: Add fat_helper from
+	  erdgeist, allows to load directly from sdcard to an eink
+	  image_buffer
+
+2009-06-14 09:00  henryk
+
+	* openbeacon-openpicc2/application/eink/eink.c,
+	  openbeacon-openpicc2/application/eink/eink_lowlevel.h: Bla
+
+2009-06-14 08:27  henryk
+
+	* openbeacon-openpicc2/application/eink/eink.c,
+	  openbeacon-openpicc2/application/eink/eink.h,
+	  openbeacon-openpicc2/application/eink/eink_lowlevel.h: Implement
+	  sleep (STANDBY) for the eInk controller. When the fixed PCBs are
+	  available (where the PLL will actually turn on reliably) the
+	  sleep mode may even be changed to SLEEP (PLL off).
+
+2009-06-13 15:28  henryk
+
+	* openbeacon-openpicc2/application/eink/eink.c,
+	  openbeacon-openpicc2/application/eink/eink.h: Add definitions for
+	  8" display
+
+2009-06-13 10:42  henryk
+
+	* openbeacon-openpicc2/application/paint/paint.c: Only schedule
+	  updates after a command was executed
+
+2009-06-12 06:33  henryk
+
+	* openbeacon-openpicc2/application/eink/eink.c,
+	  openbeacon-openpicc2/application/paint/paint.c,
+	  openbeacon-openpicc2/application/power.c: Reenable ADC (was off
+	  for debugging)
+	  Add command to query power
+
+2009-06-11 15:21  henryk
+
+	* openbeacon-openpicc2/application/paint/paint.c: Forgot one
+	  reset_background
+
+2009-06-11 15:18  henryk
+
+	* openbeacon-openpicc2/application/paint/paint.c: Add a kludgy hack
+	  to be able to paint black Direct Update on a grayscale
+	  background.
+	  The trick is to first paint the grayscale image, then fill the
+	  update buffer with white and paint on that white.
+	  Due to the bi-stable display technology the grayscale image will
+	  persist, but be overwritten by black pixel when a real update
+	  comes
+
+2009-06-11 14:01  henryk
+
+	* openbeacon-openpicc2/application/paint/paint.c: There was some
+	  strange output problem
+
+2009-06-11 13:33  henryk
+
+	* openbeacon-openpicc2/application/main.c: Sanitize indentation
+
+2009-06-11 10:30  henryk
+
+	* openbeacon-openpicc2/application/image/image.c,
+	  openbeacon-openpicc2/application/main.c,
+	  openbeacon-openpicc2/application/paint/paint.c: Slight speedup in
+	  circle drawing
+	  Reenable power-save
+
+2009-06-11 05:11  henryk
+
+	* openbeacon-openpicc2/application/paint/paint.c: Radically cleanup
+	  paint.c.
+	  New feature: Modes (background=image, background=blank) can be
+	  switched with a command: mode_blank for black/white drawing on
+	  white, mode_background for grayscale drawing on a background
+	  image
+
+2009-06-10 17:19  henryk
+
+	* openbeacon-openpicc2/application/image/image.c: Dramatically
+	  speed up filled circle code
+
+2009-06-10 16:08  henryk
+
+	* openbeacon-openpicc2/application/image/image.c: Fix circle shape
+
+2009-06-10 15:32  henryk
+
+	* openbeacon-openpicc2/Makefile: Move stack to SRAM again,
+	  eliminates the crashes. Just don't stark too many/too big tasks.
+	  (with paint and eink activated about 26k of 32k SRAM are being
+	  used)
+
+2009-06-10 15:30  henryk
+
+	* openbeacon-openpicc2/application/main.c: Better (and concurrent)
+	  SDRAM test
+
+2009-06-10 05:28  henryk
+
+	* openbeacon-openpicc2/application/main.c: Use inline ASM for
+	  faster (and bursty) SDRAM test.
+	  Perform random SDRAM accesses in SDRAM test
+
+2009-06-10 03:29  henryk
+
+	* openbeacon-openpicc2/application/sdram.c,
+	  openbeacon-openpicc2/application/sdram.h: Increase all the wait
+	  times in the SDRAM initialization on a hint from Milosch. Still
+	  not working any better
+
+2009-06-09 13:13  henryk
+
+	* openbeacon-openpicc2/flash.txt: Flash-script, execute with sam7 <
+	  flash.txt
+	  Will enable the power self-hold circuit, so you only need to have
+	  pressed power down at the beginning.
+	  Also activates the LEDs: Red -> Still Flashing, Green -> Flash
+	  complete
+
+2009-06-09 10:20  henryk
+
+	* openbeacon-openpicc2/application/sdram.c: (Hopefully) fix SDRAM
+	  Mode Register initialization
+
+2009-06-08 12:02  henryk
+
+	* core/os/boot/boot.s: Flash green LED in case of Data Abort.
+	  Warning: overwrites registers 0 and 1
+
+2009-06-08 11:51  henryk
+
+	* core/os/boot/Cstartup_SAM7.c: Disable watchdog in debug halt
+
+2009-06-08 11:09  henryk
+
+	* openbeacon-openpicc2/application/eink/eink.c,
+	  openbeacon-openpicc2/application/main.c,
+	  openbeacon-openpicc2/application/power.c: Disable ADC and AD7147
+
+2009-06-08 10:28  henryk
+
+	* openbeacon-openpicc2/application/paint/paint.c: Print reset
+	  reason
+
+2009-06-08 04:51  henryk
+
+	* openbeacon-openpicc2/application/image/image.c,
+	  openbeacon-openpicc2/application/image/image.h,
+	  openbeacon-openpicc2/application/main.c,
+	  openbeacon-openpicc2/application/paint/paint.c: Somewhat working
+	  paint application. Still extremely crashy
+
+2009-06-07 05:57  henryk
+
+	* openbeacon-openpicc2/application/paint/paint.c: bla
+
+2009-06-07 00:43  henryk
+
+	* openbeacon-openpicc2/application/paint/paint.c: Continuous update
+
+2009-06-06 21:14  henryk
+
+	* openbeacon-openpicc2/application/image/image.c,
+	  openbeacon-openpicc2/application/image/image.h,
+	  openbeacon-openpicc2/application/paint/paint.c: More photogenic
+	  ants
+
+2009-06-06 03:10  henryk
+
+	* openbeacon-openpicc2/application/paint/paint.c: Darkened by a
+	  hundred ants
+
+2009-06-06 02:27  henryk
+
+	* openbeacon-openpicc2/application/eink/eink.c,
+	  openbeacon-openpicc2/application/eink/eink.h: Fix image size
+	  computation
+	  Revert wait state setting, doesn't seem to do much
+
+2009-06-05 06:21  henryk
+
+	* openbeacon-openpicc2/Makefile,
+	  openbeacon-openpicc2/application/paint/paint.c,
+	  openbeacon-openpicc2/txtr_composite.pgm,
+	  openbeacon-openpicc2/txtr_composite.xcf: Add a demonstration
+	  spinner
+
+2009-06-05 04:28  henryk
+
+	* openbeacon-openpicc2/application/main.c: Put the processor into
+	  Idle Mode when no task is running
+	  Add ASM SDRAM write and speed test. Disabled since it takes a lot
+	  of power
+
+2009-06-05 03:04  henryk
+
+	* openbeacon-openpicc2/application/eink/eink.c,
+	  openbeacon-openpicc2/application/eink/eink_mgmt.c: Finally fix
+	  eink_job_add_area_with_offset functionality
+
+2009-06-04 03:49  henryk
+
+	* openbeacon-openpicc2/application/eink/eink_image_buffer.dia: Add
+	  eink_burst_write_end to the diagram
+
+2009-06-04 03:14  henryk
+
+	* openbeacon-openpicc2/application/eink/eink.c: Use the optimized
+	  40-byte transfer for most of the image downloads regardless of
+	  the regardless of the size or alignment of the buffer
+
+2009-06-03 23:13  henryk
+
+	* openbeacon-openpicc2/application/paint/paint.c: Solve the mystery
+	  of the unwhite white
+
+2009-06-03 21:10  henryk
+
+	* openbeacon-openpicc2/application/eink/eink.c: Fix a lingering
+	  problem with the mutexes and their order
+	  Add a new function eink_burst_write_end that must be called after
+	  eink_burst_write_begin and before any other register or memory
+	  actions and frees the mutexes that were taken by
+	  eink_burst_write_begin again.
+
+2009-06-03 08:20  henryk
+
+	* openbeacon-openpicc2/application/eink/eink.c: Remove some cruft
+
+2009-06-03 04:33  henryk
+
+	* openbeacon-openpicc2/application/main.c: Enable external reset
+	  button
+
+2009-06-03 04:32  henryk
+
+	* openbeacon-openpicc2/application/eink/eink.c: Increase wait
+	  states again (is this more stable?), speed down to 8.96 MB/s
+
+2009-06-03 04:31  henryk
+
+	* openbeacon-openpicc2/application/eink/eink_mgmt.c: Disable debug
+	  output
+
+2009-06-03 04:31  henryk
+
+	* openbeacon-openpicc2/application/paint/paint.c,
+	  openbeacon-openpicc2/config/board.h: Increase stack size
+
+2009-06-03 04:30  henryk
+
+	* openbeacon-openpicc2/openocd.cfg: Set CPU Id
+
+2009-06-02 14:46  henryk
+
+	* openbeacon-openpicc2, openbeacon-openpicc2/application,
+	  openbeacon-openpicc2/application/paint/paint.c: Add concurrent
+	  drawing of black rectangles for demonstration purposes
+
+2009-06-02 14:42  henryk
+
+	* openbeacon-openpicc2/application/eink/eink.c: Add mutex
+	  protection for all eInk accesses
+
+2009-06-02 14:41  henryk
+
+	* openbeacon-openpicc2/application/eink/eink_mgmt.c: Bug fix for
+	  LUT assignment
+
+2009-06-02 14:40  henryk
+
+	* openbeacon-openpicc2/application/image/image.c,
+	  openbeacon-openpicc2/application/utils.h: Properly round up sizes
+
+2009-06-02 14:39  henryk
+
+	* openbeacon-openpicc2/openocd.cfg: openocd configuration (not
+	  tested)
+
+2009-06-02 04:24  henryk
+
+	* openbeacon-openpicc2/application/eink/eink_image_buffer.dia:
+	  Relationships between the different controller memory access
+	  functions
+
+2009-06-02 04:21  henryk
+
+	* openbeacon-openpicc2/application/eink/eink.c,
+	  openbeacon-openpicc2/application/eink/eink.h,
+	  openbeacon-openpicc2/application/eink/eink_mgmt.c,
+	  openbeacon-openpicc2/config/board.h: Add new
+	  UPDATE_MODE_PART_SPECIAL with additional semantics (this smells
+	  like a hack, not sure whether it will stay)
+	  Implement (hopefully) correct LUT assignment
+	  Protect memory access vs. update buffer synthesis with mutex.
+	  Probably still need mutexes for all the other eink_* functions
+
+2009-06-01 06:51  henryk
+
+	* openbeacon-openpicc2/application/ebook/ebook.c,
+	  openbeacon-openpicc2/application/image/image.c,
+	  openbeacon-openpicc2/application/image/image.h,
+	  openbeacon-openpicc2/application/paint/paint.c: Accessor method
+	  to get BPP as enum eink_pack_mode
+	  Convert ebook to image api
+
+2009-06-01 06:20  henryk
+
+	* openbeacon-openpicc2/application/image/image.c,
+	  openbeacon-openpicc2/application/image/image.h,
+	  openbeacon-openpicc2/application/paint/paint.c: Add method to
+	  create (or fill) an image_t with a solid color
+
+2009-06-01 05:42  henryk
+
+	* openbeacon-openpicc2/Makefile,
+	  openbeacon-openpicc2/application/ebook/ebook.c,
+	  openbeacon-openpicc2/application/image,
+	  openbeacon-openpicc2/application/image/image.c,
+	  openbeacon-openpicc2/application/image/image.h,
+	  openbeacon-openpicc2/application/image/splash.h,
+	  openbeacon-openpicc2/application/main.c,
+	  openbeacon-openpicc2/application/paint/paint.c,
+	  openbeacon-openpicc2/application/splash.h,
+	  openbeacon-openpicc2/generate_splash.c: Refactor splash code to a
+	  newly created image module
+	  Move paint.c to this new API (still need to convert ebook.c)
+
+2009-06-01 04:19  henryk
+
+	* openbeacon-openpicc2/application/paint/paint.c,
+	  openbeacon-openpicc2/application/splash.h,
+	  openbeacon-openpicc2/generate_splash.c: Give the option of
+	  packing splash images with more than one pixel per byte. Reduces
+	  image size, dramatically reduces load time (e.g. half time for
+	  4bpp, that's 49ms per full image)
+
+2009-05-31 04:18  henryk
+
+	* openbeacon-openpicc2/application/paint/paint.c: Properly
+	  calculate size for the monochrome images, reduces time for those
+	  images to 25%. Start time is now at 175ms (was at 397 with the
+	  latest assembler code, was at 1200 last morning before the
+	  assembler code).
+
+2009-05-31 03:57  henryk
+
+	* openbeacon-openpicc2/application/eink/eink.c,
+	  openbeacon-openpicc2/application/paint/paint.c: Use Store
+	  Multiple instead of multiple stores, reduces times somewhat
+	  Add 32-byte optimized code path. This path is now at 99ms per
+	  image (9.98 MB/s!).
+
+2009-05-30 11:28  henryk
+
+	* openbeacon-openpicc2/application/eink/eink.c,
+	  openbeacon-openpicc2/application/paint/paint.c: Better living
+	  through preprocessor defines
+	  Also new case for 16-byte alignment, brings time per image down
+	  to 144 ms (that's 6.86 MB/s!)
+
+2009-05-30 10:56  henryk
+
+	* openbeacon-openpicc2/application/eink/eink.c: Complete optimized
+	  inline ASM for 8-byte case, is now 166 milliseconds per full
+	  image load (down from 243 ms this morning, yeah!)
+
+2009-05-30 10:12  henryk
+
+	* openbeacon-openpicc2/application/eink/eink.c: Speed up the 8-byte
+	  case by 17%
+
+2009-05-29 15:50  henryk
+
+	* openbeacon-openpicc2/application/eink/eink.c: Separate the
+	  different optimized codepaths for easier analysis
+
+2009-05-29 15:20  henryk
+
+	* openbeacon-openpicc2/application/eink/eink.c: Optimized case for
+	  8-byte alignment
+
+2009-05-29 15:14  henryk
+
+	* openbeacon-openpicc2/application/eink/eink.c,
+	  openbeacon-openpicc2/application/paint/paint.c: Optimized loader
+	  code for the 32-bit aligned case
+
+2009-05-29 13:46  henryk
+
+	* openbeacon-openpicc2/application/main.c,
+	  openbeacon-openpicc2/application/paint/paint.c,
+	  openbeacon-openpicc2/application/splash.h,
+	  openbeacon-openpicc2/bg.pgm, openbeacon-openpicc2/bg.xcf: Better
+	  BG image
+	  Move splash decompression to SDRAM
+	  Have battery bar at the right edge
+
+2009-05-28 20:33  henryk
+
+	* openbeacon-openpicc2/bg.pgm, openbeacon-openpicc2/bg.xcf: Add
+	  missing background image
+
+2009-05-28 20:12  henryk
+
+	* openbeacon-openpicc2/Makefile,
+	  openbeacon-openpicc2/application/ebook/ebook.c,
+	  openbeacon-openpicc2/application/main.c,
+	  openbeacon-openpicc2/application/paint,
+	  openbeacon-openpicc2/application/paint/paint.c,
+	  openbeacon-openpicc2/application/paint/paint.h: Begin paint
+	  application
+
+2009-05-28 19:47  henryk
+
+	* openbeacon-openpicc2/application/ebook/ebook.c: bla
+
+2009-05-28 19:19  henryk
+
+	* openbeacon-openpicc2/application/main.c: Measure SDRAM test time
+
+2009-05-28 19:19  henryk
+
+	* openbeacon-openpicc2/application/ebook/ebook.c,
+	  openbeacon-openpicc2/application/eink/eink.c: Lower waitstates
+	  (slightly increase interface speed)
+
+2009-05-28 11:26  henryk
+
+	* openbeacon-openpicc2/application/ebook/ebook.c,
+	  openbeacon-openpicc2/application/eink/eink.c,
+	  openbeacon-openpicc2/application/eink/eink.h,
+	  openbeacon-openpicc2/application/eink/eink_mgmt.c,
+	  openbeacon-openpicc2/application/main.c: 9.7" display
+	  initializisation working, some buffer management problems
+	  remaining
+
+2009-05-28 11:22  henryk
+
+	* openbeacon-openpicc2/application/nfc/libnfc_demo.c: bla
+
+2009-05-27 18:31  henryk
+
+	* openbeacon-openpicc2/application/ebook/ebook.c,
+	  openbeacon-openpicc2/application/eink/eink.c: Whitespace?
+
+2009-05-27 18:26  henryk
+
+	* openbeacon-openpicc2/application/eink/eink.c,
+	  openbeacon-openpicc2/application/eink/eink_flash.c: Fix previous
+	  change to the communications check code.
+	  As it turns out, registers > 0x0100 can not be used before
+	  SYS_RUN has been issued
+	  Move the comm check in the normal codepath behind the SYS_RUN
+	  Add a simplified comm check in the flash codepath and just check
+	  whether the PLL settings were received correctly
+
+2009-05-20 20:29  henryk
+
+	* openbeacon-openpicc2/Makefile,
+	  openbeacon-openpicc2/application/main.c,
+	  openbeacon-openpicc2/config/atmel-rom_sdram.ld: Add new linker
+	  file, puts the RAM that malloc() uses into SDRAM.
+	  Warning: Do not call malloc (or a function that calls malloc)
+	  before initializing SDRAM
+	  Warning: Does not run on BOARD_V0_1 anymore
+
+2009-04-24 13:55  henryk
+
+	* openbeacon-openpicc2/application/eink/eink.c,
+	  openbeacon-openpicc2/application/eink/eink_flash.c,
+	  openbeacon-openpicc2/application/eink/eink_lowlevel.h,
+	  openbeacon-openpicc2/application/eink/eink_mgmt.c: Add new
+	  lowlevel function eink_controller_check_supported() which does
+	  revision check and communications check and use it in the
+	  flash_acquire code (otherwise it might be possible to enter
+	  conditional_reflash with malfunctioning FPC cable)
+
+2009-04-15 22:24  henryk
+
+	* openbeacon-openpicc2/application/main.c,
+	  openbeacon-openpicc2/application/sdram.c,
+	  openbeacon-openpicc2/config/board.h: Add infrastructure for
+	  multiple board layouts
+	  Add new board v0.2
+
+2009-04-14 15:19  henryk
+
+	* openbeacon-openpicc2/application/nfc/libnfc_demo.c: libnfc
+	  performance test
+
+2009-04-14 15:19  henryk
+
+	* core/Makefile.rules: Add possibility to add additional object
+	  files
+
+2009-04-14 15:18  henryk
+
+	* core/openbeacon/beacontypes.h: Not used anymore, clash with
+	  libnfc
+
+2009-04-11 16:37  henryk
+
+	* openbeacon-openpicc2/Makefile, openbeacon-openpicc2/application,
+	  openbeacon-openpicc2/application/main.c,
+	  openbeacon-openpicc2/application/nfc/libnfc_demo.c,
+	  openbeacon-openpicc2/application/nfc/libnfc_demo.h,
+	  openbeacon-openpicc2/application/nfc/pn532_libnfc_reader.c,
+	  openbeacon-openpicc2/application/nfc/pn532_libnfc_reader.h: Add
+	  demo for libnfc use (Warning: Lots of ugly print debugs,
+	  circumventing printf since it's crashing too often. hope that
+	  gets better when we have the additional RAM)
+
+2009-04-11 15:49  henryk
+
+	* openbeacon-openpicc2/application/nfc/picc_emu.c,
+	  openbeacon-openpicc2/application/nfc/pn532.c,
+	  openbeacon-openpicc2/application/nfc/pn532.h,
+	  openbeacon-openpicc2/application/nfc/pn532_demo.c: Changed
+	  signedness
+
+2009-04-11 12:46  henryk
+
+	* openbeacon-openpicc2/application/libnfc/Makefile.rules,
+	  openbeacon-openpicc2/application/libnfc/linux/Makefile,
+	  openbeacon-openpicc2/application/libnfc/macosx/Makefile: Move
+	  common linux/macos Makefile code to include file
+
+2009-04-11 12:41  henryk
+
+	* openbeacon-openpicc2/application/libnfc/dev_acr122.c,
+	  openbeacon-openpicc2/application/libnfc/dev_acr122.h,
+	  openbeacon-openpicc2/application/libnfc/dev_pn531.c,
+	  openbeacon-openpicc2/application/libnfc/dev_pn531.h,
+	  openbeacon-openpicc2/application/libnfc/libnfc.c,
+	  openbeacon-openpicc2/application/libnfc/linux/Makefile,
+	  openbeacon-openpicc2/application/libnfc/types.h: Move to new
+	  reader driver API, change linux Makefile accordingly
+
+2009-04-11 12:38  henryk
+
+	* openbeacon-openpicc2/application/libnfc/dev_pn531.c: Make
+	  GNU-Source, fixes compile error in libusb
+
+2009-04-11 12:35  henryk
+
+	* openbeacon-openpicc2/application/libnfc/libnfc.h: Fix prototype
+
+2009-04-11 12:30  henryk
+
+	* openbeacon-openpicc2/application/libnfc/bitutils.c: Swap
+	  keywords, for more pedantic compile options
+
+2009-04-11 12:29  henryk
+
+	* openbeacon-openpicc2/application/libnfc/anticol.c,
+	  openbeacon-openpicc2/application/libnfc/bitutils.c,
+	  openbeacon-openpicc2/application/libnfc/bitutils.h,
+	  openbeacon-openpicc2/application/libnfc/defines.h,
+	  openbeacon-openpicc2/application/libnfc/dev_acr122.c,
+	  openbeacon-openpicc2/application/libnfc/dev_acr122.h,
+	  openbeacon-openpicc2/application/libnfc/dev_pn531.c,
+	  openbeacon-openpicc2/application/libnfc/dev_pn531.h,
+	  openbeacon-openpicc2/application/libnfc/libnfc.c,
+	  openbeacon-openpicc2/application/libnfc/libnfc.h,
+	  openbeacon-openpicc2/application/libnfc/list.c,
+	  openbeacon-openpicc2/application/libnfc/mftool.c,
+	  openbeacon-openpicc2/application/libnfc/mifaretag.h,
+	  openbeacon-openpicc2/application/libnfc/relay.c,
+	  openbeacon-openpicc2/application/libnfc/simulate.c,
+	  openbeacon-openpicc2/application/libnfc/types.h: Sanitize line
+	  endings
+
+2009-04-11 12:20  henryk
+
+	* openbeacon-openpicc2/application/libnfc,
+	  openbeacon-openpicc2/application/libnfc/LICENSE.TXT,
+	  openbeacon-openpicc2/application/libnfc/README.TXT,
+	  openbeacon-openpicc2/application/libnfc/anticol.c,
+	  openbeacon-openpicc2/application/libnfc/bitutils.c,
+	  openbeacon-openpicc2/application/libnfc/bitutils.h,
+	  openbeacon-openpicc2/application/libnfc/defines.h,
+	  openbeacon-openpicc2/application/libnfc/dev_acr122.c,
+	  openbeacon-openpicc2/application/libnfc/dev_acr122.h,
+	  openbeacon-openpicc2/application/libnfc/dev_pn531.c,
+	  openbeacon-openpicc2/application/libnfc/dev_pn531.h,
+	  openbeacon-openpicc2/application/libnfc/libnfc.c,
+	  openbeacon-openpicc2/application/libnfc/libnfc.h,
+	  openbeacon-openpicc2/application/libnfc/linux,
+	  openbeacon-openpicc2/application/libnfc/linux/Makefile,
+	  openbeacon-openpicc2/application/libnfc/list.c,
+	  openbeacon-openpicc2/application/libnfc/macosx,
+	  openbeacon-openpicc2/application/libnfc/macosx/Makefile,
+	  openbeacon-openpicc2/application/libnfc/mftool.c,
+	  openbeacon-openpicc2/application/libnfc/mifaretag.h,
+	  openbeacon-openpicc2/application/libnfc/relay.c,
+	  openbeacon-openpicc2/application/libnfc/simulate.c,
+	  openbeacon-openpicc2/application/libnfc/types.h,
+	  openbeacon-openpicc2/application/libnfc/win32,
+	  openbeacon-openpicc2/application/libnfc/win32/anticol.vcproj,
+	  openbeacon-openpicc2/application/libnfc/win32/bin,
+	  openbeacon-openpicc2/application/libnfc/win32/bin/anticol.exe,
+	  openbeacon-openpicc2/application/libnfc/win32/bin/libnfc.dll,
+	  openbeacon-openpicc2/application/libnfc/win32/bin/libnfc.lib,
+	  openbeacon-openpicc2/application/libnfc/win32/bin/list.exe,
+	  openbeacon-openpicc2/application/libnfc/win32/bin/mftool.exe,
+	  openbeacon-openpicc2/application/libnfc/win32/bin/relay.exe,
+	  openbeacon-openpicc2/application/libnfc/win32/bin/simulate.exe,
+	  openbeacon-openpicc2/application/libnfc/win32/drivers,
+	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v1,
+	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v1/Release.txt,
+	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v1/acr122.cat,
+	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v1/acr122.inf,
+	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v1/acr122.sys,
+	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v1/acr122x64.sys,
+	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v2,
+	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v2/98ME,
+	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v2/98ME/a122w98.sys,
+	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v2/98ME/acr122.inf,
+	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v2/Jacspcsc.dll,
+	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v2/acr122.cat,
+	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v2/acr122.inf,
+	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v2/acr122.sys,
+	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v2/acr122x64.sys,
+	  openbeacon-openpicc2/application/libnfc/win32/drivers/pn531,
+	  openbeacon-openpicc2/application/libnfc/win32/drivers/pn531/libusb0.dll,
+	  openbeacon-openpicc2/application/libnfc/win32/drivers/pn531/libusb0.sys,
+	  openbeacon-openpicc2/application/libnfc/win32/drivers/pn531/libusb0_x64.dll,
+	  openbeacon-openpicc2/application/libnfc/win32/drivers/pn531/libusb0_x64.sys,
+	  openbeacon-openpicc2/application/libnfc/win32/drivers/pn531/pn531.cat,
+	  openbeacon-openpicc2/application/libnfc/win32/drivers/pn531/pn531.inf,
+	  openbeacon-openpicc2/application/libnfc/win32/drivers/pn531/pn531_x64.cat,
+	  openbeacon-openpicc2/application/libnfc/win32/libnfc.def,
+	  openbeacon-openpicc2/application/libnfc/win32/libnfc.sln,
+	  openbeacon-openpicc2/application/libnfc/win32/libnfc.vcproj,
+	  openbeacon-openpicc2/application/libnfc/win32/libusb,
+	  openbeacon-openpicc2/application/libnfc/win32/libusb/libusb.lib,
+	  openbeacon-openpicc2/application/libnfc/win32/libusb/libusb0.dll,
+	  openbeacon-openpicc2/application/libnfc/win32/libusb/libusb0_x64.dll,
+	  openbeacon-openpicc2/application/libnfc/win32/libusb/usb.h,
+	  openbeacon-openpicc2/application/libnfc/win32/list.vcproj,
+	  openbeacon-openpicc2/application/libnfc/win32/mftool.vcproj,
+	  openbeacon-openpicc2/application/libnfc/win32/relay.vcproj,
+	  openbeacon-openpicc2/application/libnfc/win32/simulate.vcproj,
+	  openbeacon-openpicc2/application/libnfc/win32/winscard.lib: Add
+	  and commit an unmodified libnfc 1.1.0 release from
+	  http://www.libnfc.org/ to add my own patches
+
+2009-03-11 12:51  meriac
+
+	* core/openbeacon/env.c, core/openbeacon/env.h: added support for
+	  resetting boot loader
+
+2009-03-11 12:51  meriac
+
+	* core/os/usb/USB-CDC.c, core/os/usb/USB-CDC.h: added USB detach
+	  code
+
+2009-03-06 01:35  meriac
+
+	* bootloader/Makefile, bootloader/application/console.c,
+	  bootloader/application/update, bootloader/application/update.c,
+	  bootloader/application/update.h, bootloader/application/update.s,
+	  bootloader/application/update/AT91SAM7S128-bootloader-orig.bin,
+	  bootloader/application/update/AT91SAM7S128-bootloader.bin,
+	  bootloader/config/atmel-rom.ld: addedd bootloader code
+
+2009-03-03 21:40  meriac
+
+	* openbeacon-openpicc2/application/adc.c: indent
+
+2009-03-03 21:39  meriac
+
+	* openbeacon-openpicc2/application/adc.c: fixed ADC watchdog reset
+	  problem
+
+2009-03-03 19:31  henryk
+
+	* openbeacon-openpicc2/application/nfc/picc_emu.c: Enable debugging
+	  messages
+
+2009-02-27 18:16  meriac
+
+	* bootloader/application/console.c: added Xon/Xoffsupport
+
+2009-02-27 16:05  meriac
+
+	* bootloader/application/console.c: added intel HEX file parsing
+
+2009-02-27 14:31  meriac
+
+	* bootloader, bootloader/Makefile, bootloader/application,
+	  bootloader/application/console.c,
+	  bootloader/application/console.h, bootloader/application/main.c,
+	  bootloader/config, bootloader/config/FreeRTOSConfig.h,
+	  bootloader/config/atmel-rom.ld, bootloader/config/board.h,
+	  bootloader/config/descriptors.h: initial boot loader console code
+	  checkin
+
+2009-02-24 20:21  meriac
+
+	* usb-id-list.txt: added USB id for boot loader
+
+2009-02-24 20:20  meriac
+
+	* openbeacon-blinkenlights/application/main.c,
+	  openbeacon-estimator/application/main.c,
+	  openbeacon-network/application/main.c,
+	  openbeacon-openpicc2/application/main.c,
+	  openbeacon-sniffer/application/main.c,
+	  openbouncer/application/main.c: changed name of 'main' function
+	  to 'mainloop' to get rid of compiler warning
+
+2009-02-24 20:08  meriac
+
+	* core/openbeacon/nRF24L01/nRF_CMD.c: only compile code if CE_PIN
+	  define is set
+
+2009-02-24 19:56  meriac
+
+	* core/os/boot/boot.s: changed name of 'main' function to
+	  'mainloop' to get rid of compiler warning
+
+2009-02-24 16:37  meriac
+
+	* openbeacon-openpicc2/generate_splash.c: ran indent to reformat
+	  code
+
+2009-02-24 16:05  meriac
+
+	* core/Makefile.rules, core/os/boot/boot.s: fixed section garbage
+	  collection
+
+2009-02-24 16:02  meriac
+
+	* core/openbeacon/nRF24L01/nRF_CMD.c: removed unneccesary RAMFUNC
+	  declaration to save RAM
+
+2009-02-24 14:22  meriac
+
+	* openbeacon-sniffer/application/proto.c,
+	  openbeacon-sniffer/application/xxtea.c,
+	  openbeacon-sniffer/application/xxtea.h: removed unnecessary
+	  RAMFUNC declaration
+
+2009-02-12 02:13  meriac
+
+	* openbeacon-openpicc2/application/main.c,
+	  openbeacon-openpicc2/application/sdcard.c: reformatting / add
+	  speed increase
+
+2009-02-12 01:43  meriac
+
+	* openbeacon-openpicc2/Makefile,
+	  openbeacon-openpicc2/application/README.LZO,
+	  openbeacon-openpicc2/application/dosfs.c,
+	  openbeacon-openpicc2/application/dosfs.h,
+	  openbeacon-openpicc2/application/lzo/README.LZO,
+	  openbeacon-openpicc2/application/main.c,
+	  openbeacon-openpicc2/application/sdcard.c,
+	  openbeacon-openpicc2/application/sdcard.h,
+	  openbeacon-openpicc2/doc/dosfs-example.c,
+	  openbeacon-openpicc2/doc/dosfs-readme.txt: added FAT32 support
+	  for SD card
+
+2009-02-11 22:36  meriac
+
+	* usb-id-list.txt: added txtr.mini usb id
+
+2009-02-11 22:36  meriac
+
+	* openbeacon-estimator/config/descriptors.h: fixed product ID and
+	  descriptor
+
+2009-02-11 22:34  meriac
+
+	* openbeacon-openpicc2/config/descriptors.h: fixed product ID
+
+2009-02-11 22:32  meriac
+
+	* openbeacon-blinkenlights/config/descriptors.h,
+	  openbeacon-network/config/descriptors.h,
+	  openbeacon-sniffer/config/descriptors.h,
+	  openbouncer/config/descriptors.h: fixed product id and
+	  description
+
+2009-02-11 22:20  meriac
+
+	* openbeacon-blinkenlights/config/descriptors.h,
+	  openbeacon-network/config/descriptors.h,
+	  openbeacon-sniffer/config/descriptors.h,
+	  openbouncer/config/descriptors.h: reverted to new descriptor type
+
+2009-02-11 22:15  meriac
+
+	* openbouncer/application/authentication.c,
+	  openbouncer/application/openbouncer.h: fixed types
+
+2009-02-11 22:14  meriac
+
+	* core/openbeacon/env.c, core/openbeacon/env.h,
+	  core/openbeacon/sort.c, core/openbeacon/sort.h: removed ramfuncs
+
+2009-01-29 15:57  meriac
+
+	* openbeacon-openpicc2/application/sdcard.c: added copyright
+
+2009-01-26 06:08  henryk
+
+	* openbeacon-openpicc2/application/nfc/picc_emu.c: Move PN532 reset
+	  into the retry path
+
+2009-01-24 11:46  meriac
+
+	* openbeacon-openpicc2/application/main.c,
+	  openbeacon-openpicc2/application/sdcard.c: added sdcard benchmark
+	  code and increased clock
+
+2009-01-24 07:34  meriac
+
+	* openbeacon-openpicc2/application/sdcard.c: fixed comment
+
+2009-01-24 07:17  meriac
+
+	* openbeacon-openpicc2/application/main.c,
+	  openbeacon-openpicc2/application/sdcard.c,
+	  openbeacon-openpicc2/application/sdcard.h: added SDcard code
+
+2009-01-23 12:09  henryk
+
+	* openbeacon-openpicc2/Makefile,
+	  openbeacon-openpicc2/application/main.c,
+	  openbeacon-openpicc2/application/nfc/picc_emu.c,
+	  openbeacon-openpicc2/application/nfc/picc_emu.h,
+	  openbeacon-openpicc2/application/nfc/pn532.c: PICC emulation
+	  wokring
+
+2009-01-23 05:27  henryk
+
+	* openbeacon-openpicc2/application/nfc/pn532.c,
+	  openbeacon-openpicc2/application/nfc/pn532.h,
+	  openbeacon-openpicc2/application/nfc/pn532_demo.c: Add wait_time
+	  parameter to pn532_recv_frame_queue()
+
+2009-01-22 23:04  henryk
+
+	* openbeacon-openpicc2/application/nfc/pn532.c,
+	  openbeacon-openpicc2/application/nfc/pn532_demo.c: PICC target
+	  demo working
+
+2009-01-21 19:21  henryk
+
+	* openbeacon-openpicc2/application/ebook/ebook.c,
+	  openbeacon-openpicc2/application/eink/eink_mgmt.c: Add erdgeists
+	  changes, fix horizontal swipe, naive implementation of
+	  eink_job_add_area_with_offset() (probably needs fixing for
+	  rotation)
+
+2009-01-21 18:48  henryk
+
+	* openbeacon-openpicc2/application/nfc/pn532.c,
+	  openbeacon-openpicc2/application/nfc/pn532_demo.c: Theoretically
+	  start target, doesn't work
+
+2009-01-21 12:49  henryk
+
+	* openbeacon-openpicc2/application/nfc/pn532.c,
+	  openbeacon-openpicc2/application/nfc/pn532_demo.c: Check return
+	  codes
+
+2009-01-21 12:15  henryk
+
+	* openbeacon-openpicc2/application/nfc/pn532.c,
+	  openbeacon-openpicc2/application/nfc/pn532.h,
+	  openbeacon-openpicc2/application/nfc/pn532_demo.c: Get basic
+	  communication queues to work. API needs a little cleanup
+
+2009-01-21 09:06  henryk
+
+	* openbeacon-openpicc2/application/nfc/pn532.c,
+	  openbeacon-openpicc2/application/nfc/pn532.h,
+	  openbeacon-openpicc2/application/nfc/pn532_demo.c: Sending and
+	  receiving works in principle
+
+2009-01-20 14:24  henryk
+
+	* openbeacon-openpicc2/application/ebook/ebook.c: Forgotten in the
+	  last commit
+
+2009-01-20 14:12  henryk
+
+	* openbeacon-openpicc2/application/splash.h,
+	  openbeacon-openpicc2/generate_splash.c: Make pointers const,
+	  saves 5172 bytes of RAM!
+
+2009-01-14 13:58  meriac
+
+	* core/Makefile.rules, core/openbeacon/led.h,
+	  core/openbeacon/syscalls.c,
+	  core/os/core/ARM7_AT91SAM7/AT91SAM7.h,
+	  core/os/core/ARM7_AT91SAM7/AT91SAM7SE512.h,
+	  core/os/core/ARM7_AT91SAM7/lib_AT91SAM7.h, core/os/usb/USB-CDC.c,
+	  core/os/usb/USB-CDC.h, openbeacon-openpicc2: moved Henryk
+	  Ploetz's modifications related to OpenPICC2 to mainline
+
+2008-10-30 02:59  henryk
+
+	* ., core/Makefile.rules, core/openbeacon/led.c,
+	  core/openbeacon/led.h, openbeacon-blinkenlights/Makefile,
+	  openbeacon-blinkenlights/application/led.c,
+	  openbeacon-blinkenlights/application/led.h,
+	  openbeacon-blinkenlights/config/board.h,
+	  openbeacon-estimator/Makefile,
+	  openbeacon-estimator/application/led.c,
+	  openbeacon-estimator/application/led.h,
+	  openbeacon-estimator/config/board.h, openbeacon-network/Makefile,
+	  openbeacon-network/application/led.c,
+	  openbeacon-network/application/led.h,
+	  openbeacon-network/config/board.h, openbeacon-sniffer/Makefile,
+	  openbeacon-sniffer/application/led.c,
+	  openbeacon-sniffer/application/led.h,
+	  openbeacon-sniffer/config/board.h, openbouncer/Makefile,
+	  openbouncer/application/led.c, openbouncer/application/led.h,
+	  openbouncer/config/board.h: Merge r158 from openpicc2 branch to
+	  trunk:
+	  Consolidate LED support into the core
+
+2008-10-21 18:56  henryk
+
+	* openbouncer/Makefile, openbouncer/application/authentication.c,
+	  openbouncer/application/main.c: Continue work on door
+	  authentication side
+
+2008-10-04 21:22  meriac
+
+	* openbeacon-blinkenlights/application/main.h,
+	  openbeacon-blinkenlights/application/proto.c,
+	  openbeacon-blinkenlights/application/proto.h,
+	  openbeacon-blinkenlights/application/usbshell.c,
+	  openbeacon-blinkenlights/config/board.h,
+	  openbeacon-network/application/bprotocol.c,
+	  openbeacon-network/application/openbeacon.h,
+	  openbeacon-network/application/xxtea.c,
+	  openbeacon-network/config/board.h: upgraded blinkenlights
+	  specific code to latest blinkenlights SVN repository release 847
+
+2008-10-02 16:50  meriac
+
+	* openbouncer/docs/protocol.pdf: added compiled pdf version of the
+	  protocol description
+
+2008-09-29 14:43  meriac
+
+	* openbeacon-network/application/xxtea.c: latest changes from
+	  blinkenlights repository - revision 688
+
+2008-09-29 14:41  meriac
+
+	* core/openbeacon/crc32.c, core/openbeacon/crc32.h,
+	  core/openbeacon/rnd.c, core/openbeacon/rnd.h: latest changes from
+	  blinkenlights repository - revision 688
+
+2008-09-29 14:40  meriac
+
+	* core/openbeacon/env.h, core/openbeacon/nRF24L01/nRF_HW.h: latest
+	  changes from blinkenlights repository - revision 688
+
+2008-09-29 11:16  meriac
+
+	* openbeacon-network/Makefile,
+	  openbeacon-network/application/bprotocol.c,
+	  openbeacon-network/application/bprotocol.h,
+	  openbeacon-network/application/debug_printf.c,
+	  openbeacon-network/application/debug_printf.h,
+	  openbeacon-network/application/led.c,
+	  openbeacon-network/application/lwipopts.h,
+	  openbeacon-network/application/main.c,
+	  openbeacon-network/application/network.c,
+	  openbeacon-network/application/proto.c,
+	  openbeacon-network/application/proto.h,
+	  openbeacon-network/application/usbshell.c,
+	  openbeacon-network/application/xxtea.c,
+	  openbeacon-network/config/board.h: latest changes from
+	  blinkenlights repository - revision 688
+
+2008-09-29 11:12  meriac
+
+	* openbeacon-blinkenlights/Makefile,
+	  openbeacon-blinkenlights/application/dimmer.c,
+	  openbeacon-blinkenlights/application/dimmer.h,
+	  openbeacon-blinkenlights/application/main.c,
+	  openbeacon-blinkenlights/application/openbeacon.h,
+	  openbeacon-blinkenlights/application/proto.c,
+	  openbeacon-blinkenlights/application/proto.h,
+	  openbeacon-blinkenlights/application/update.c,
+	  openbeacon-blinkenlights/application/usbshell.c,
+	  openbeacon-blinkenlights/config/board.h: latest changes from
+	  blinkenlights repository - revision 688
+
+2008-09-16 18:35  henryk
+
+	* openbouncer/application/authentication.c,
+	  openbouncer/application/openbouncer.h: Fix types
+
+2008-09-16 18:09  meriac
+
+	* openbouncer/application/authentication.c,
+	  openbouncer/application/authentication.h: added becontypes
+
+2008-09-16 18:04  henryk
+
+	* openbouncer/Makefile, openbouncer/application/authentication.c,
+	  openbouncer/application/authentication.h: Start authentication
+	  protocol implementation
+
+2008-09-16 16:17  henryk
+
+	* at91flash/at91flash_automatic: Change at91flash_automatic to work
+	  without cut
+
+2008-09-14 18:39  meriac
+
+	* openbeacon-estimator/Makefile, openbeacon-sniffer/Makefile,
+	  openbouncer/Makefile: added ARCH setting to Makefile
+
+2008-09-14 18:22  meriac
+
+	* openbeacon-network/application/bprotocol.c,
+	  openbeacon-network/application/bprotocol.h,
+	  openbeacon-network/application/debug_printf.c,
+	  openbeacon-network/application/debug_printf.h,
+	  openbeacon-network/application/led.c,
+	  openbeacon-network/application/network.c,
+	  openbeacon-network/application/proto.c,
+	  openbeacon-network/application/proto.h,
+	  openbeacon-network/application/usbshell.c,
+	  openbeacon-network/application/xxtea.c: minor reformatting
+
+2008-09-14 17:42  meriac
+
+	* openbeacon-network/application/xxtea.c: sync from blinkenlights
+	  subversion
+
+2008-09-14 17:41  meriac
+
+	* openbeacon-network/Makefile,
+	  openbeacon-network/application/bprotocol.c,
+	  openbeacon-network/application/bprotocol.h,
+	  openbeacon-network/application/debug_printf.c,
+	  openbeacon-network/application/debug_printf.h,
+	  openbeacon-network/application/lwipopts.h,
+	  openbeacon-network/application/main.c,
+	  openbeacon-network/application/network.c,
+	  openbeacon-network/application/network.h,
+	  openbeacon-network/application/openbeacon.h,
+	  openbeacon-network/application/proto.c,
+	  openbeacon-network/application/proto.h,
+	  openbeacon-network/application/usbshell.c,
+	  openbeacon-network/application/usbshell.h,
+	  openbeacon-network/application/xxtea.c,
+	  openbeacon-network/application/xxtea.h,
+	  openbeacon-network/config/board.h,
+	  openbeacon-network/network/port/arch/cc.h,
+	  openbeacon-network/network/port/emac/SAM7_EMAC.c,
+	  openbeacon-network/network/port/emac/SAM7_EMAC.h,
+	  openbeacon-network/network/src/core/ipv4/icmp.c,
+	  openbeacon-network/network/src/include/lwip/opt.h,
+	  openbeacon-network/network/src/netif/ethernetif.c: sync from
+	  blinkenlights subversion
+
+2008-09-14 17:38  meriac
+
+	* openbeacon-network/network/src/api,
+	  openbeacon-network/network/src/core/tcp.c,
+	  openbeacon-network/network/src/core/tcp_in.c,
+	  openbeacon-network/network/src/core/tcp_out.c: sync from
+	  blinkenlights subversion
+
+2008-09-14 17:21  meriac
+
+	* openbeacon-blinkenlights/Makefile, openbeacon-blinkenlights/TODO,
+	  openbeacon-blinkenlights/application/debug_print.c,
+	  openbeacon-blinkenlights/application/debug_print.h,
+	  openbeacon-blinkenlights/application/dimmer.c,
+	  openbeacon-blinkenlights/application/dimmer.h,
+	  openbeacon-blinkenlights/application/main.c,
+	  openbeacon-blinkenlights/application/openbeacon.h,
+	  openbeacon-blinkenlights/application/proto.c,
+	  openbeacon-blinkenlights/application/proto.h,
+	  openbeacon-blinkenlights/application/update,
+	  openbeacon-blinkenlights/application/update.c,
+	  openbeacon-blinkenlights/application/update.h,
+	  openbeacon-blinkenlights/application/update.s,
+	  openbeacon-blinkenlights/application/update/AT91SAM7S64-bootloader-orig.bin,
+	  openbeacon-blinkenlights/application/update/AT91SAM7S64-bootloader.bin,
+	  openbeacon-blinkenlights/application/usbshell.c,
+	  openbeacon-blinkenlights/application/usbshell.h,
+	  openbeacon-blinkenlights/application/xxtea.c,
+	  openbeacon-blinkenlights/application/xxtea.h,
+	  openbeacon-blinkenlights/config/atmel-rom.ld,
+	  openbeacon-blinkenlights/config/board.h,
+	  openbeacon-blinkenlights/config/descriptors.h: sync from
+	  blinkenlights subversion
+
+2008-09-14 17:03  meriac
+
+	* readme.txt: added revert-to-update for AT91SAM7X
+
+2008-09-14 17:02  meriac
+
+	* core/Makefile.rules, core/openbeacon/env.c,
+	  core/openbeacon/env.h, core/os/core/ARM7_AT91SAM7/AT91SAM7.h,
+	  core/os/core/ARM7_AT91SAM7/lib_AT91SAM7X.h,
+	  core/os/usb/USB-CDC.h: added revert-to-update for AT91SAM7X
+
+2008-09-09 21:34  henryk
+
+	* openbouncer/Makefile, openbouncer/application/openbouncer.h,
+	  openbouncer/application/proto.c, openbouncer/application/xxtea.c,
+	  openbouncer/application/xxtea.h: Add dummy protocol
+	  implementation to makefile
+
+2008-09-09 21:29  meriac
+
+	* openbouncer/Makefile, openbouncer/application/xxtea.c: moved
+	  XXTEA to application
+
+2008-09-09 21:28  meriac
+
+	* openbouncer/application/cmd/xxtea.c,
+	  openbouncer/application/cmd/xxtea.h,
+	  openbouncer/application/xxtea.c, openbouncer/application/xxtea.h:
+	  moved XXTEA to application
+
+2008-09-09 21:25  meriac
+
+	* openbouncer/application/cmd/xxtea.c,
+	  openbouncer/application/cmd/xxtea.h: initial XXTEA checkin
+
+2008-09-09 21:24  meriac
+
+	* openbouncer/application/cmd/xxtea.c,
+	  openbouncer/application/cmd/xxtea.h: initial XXTEA checkin
+
+2008-09-09 21:24  henryk
+
+	* openbouncer/application/main.c,
+	  openbouncer/application/openbouncer.h,
+	  openbouncer/application/proto.c, openbouncer/application/proto.h:
+	  Dummy protocol implementation
+
+2008-09-09 15:27  henryk
+
+	* openbouncer/docs/protocol.tex: Increase key length to 128 bits
+	  Change random number generator
+
+2008-09-09 10:33  henryk
+
+	* openbouncer/docs/protocol.tex: Different figure style
+
+2008-09-09 04:17  henryk
+
+	* openbouncer/docs/protocol.tex: Further protocol description
+
+2008-09-07 14:48  henryk
+
+	* openbouncer/docs/protocol.tex: docs update
+
+2008-09-07 13:14  henryk
+
+	* openbouncer/docs/protocol.tex: Fix counter/lastrnd lengths
+
+2008-09-07 13:11  henryk
+
+	* openbouncer/docs/protocol.tex: Clarifications, corrections
+
+2008-09-07 12:47  henryk
+
+	* openbouncer/docs, openbouncer/docs/protocol.tex: Preliminary
+	  protocol description
+
+2008-09-07 10:04  henryk
+
+	* openbouncer/application/BurgWaechter_TSE_3000/lock.c,
+	  openbouncer/application/BurgWaechter_TSE_3000/lock.h,
+	  openbouncer/application/cmd/cmd_key.c: Convert to interrupt based
+	  operation again
+	  Add return value to lock open routines
+
+2008-09-06 17:44  henryk
+
+	* openbouncer/application/BurgWaechter_TSE_3000/lock.c: Working
+	  bit-banging manchester output code
+
+2008-09-06 14:27  henryk
+
+	* openbouncer/application/BurgWaechter_TSE_3000/lock.c: Fix timer
+	  routines (works at least sometimes)
+
+2008-08-09 20:57  meriac
+
+	* core/Makefile.rules: removed linker garbage collection
+
+2008-08-09 20:48  meriac
+
+	* at91flash/at91flash: added boot_from_flash for SAM7X
+
+2008-08-09 20:35  meriac
+
+	* openbeacon-network/application/lwipopts.h,
+	  openbeacon-network/application/network.c,
+	  openbeacon-network/network/src/netif/ethernetif.c.NEW,
+	  openbeacon-network/network/src/netif/ethernetif.c.old: arping to
+	  device IP address works
+
+2008-08-09 20:08  meriac
+
+	* openbeacon-network/network/src/include/lwip/opt.h: changed
+	  default header options
+
+2008-08-09 20:07  meriac
+
+	* openbeacon-network/network/port/emac/SAM7_EMAC.h: changed default
+	  IP address to 10.1.0.6/16 - gateway 10.1.0.1
+
+2008-08-09 17:59  meriac
+
+	* openbeacon-network/application/network.c,
+	  openbeacon-network/network/port/arch/cc.h,
+	  openbeacon-network/network/src/include/lwip/debug.h,
+	  openbeacon-network/network/src/include/lwip/opt.h: network rx
+	  still broken
+
+2008-08-09 14:18  meriac
+
+	* openbeacon-network/application/network.c: removed stats
+
+2008-08-09 13:23  meriac
+
+	* openbeacon-network/application/network.c,
+	  openbeacon-network/network/doc/snmp_agent.txt,
+	  openbeacon-network/network/src/core/init.c,
+	  openbeacon-network/network/src/core/ipv4/icmp.c,
+	  openbeacon-network/network/src/core/ipv4/ip.c,
+	  openbeacon-network/network/src/core/ipv4/ip_frag.c,
+	  openbeacon-network/network/src/core/netif.c,
+	  openbeacon-network/network/src/core/raw.c,
+	  openbeacon-network/network/src/core/tcp.c,
+	  openbeacon-network/network/src/core/tcp_in.c,
+	  openbeacon-network/network/src/core/tcp_out.c,
+	  openbeacon-network/network/src/core/udp.c,
+	  openbeacon-network/network/src/include/lwip/arch.h,
+	  openbeacon-network/network/src/include/lwip/netif.h,
+	  openbeacon-network/network/src/include/lwip/opt.h,
+	  openbeacon-network/network/src/netif/etharp.c,
+	  openbeacon-network/network/src/netif/ethernetif.c: removed SNMP
+	  code
+
+2008-08-09 12:48  meriac
+
+	* openbeacon-network/network/src/include/lwip/snmp.h,
+	  openbeacon-network/network/src/include/lwip/snmp_asn1.h,
+	  openbeacon-network/network/src/include/lwip/snmp_msg.h,
+	  openbeacon-network/network/src/include/lwip/snmp_structs.h:
+	  remove SNMP headers
+
+2008-08-09 12:38  meriac
+
+	* openbeacon-network/application/debug_printf.c,
+	  openbeacon-network/application/lwipopts.h,
+	  openbeacon-network/application/main.c,
+	  openbeacon-network/application/network.c,
+	  openbeacon-network/config/board.h,
+	  openbeacon-network/network/port/arch/cc.h,
+	  openbeacon-network/network/port/emac/SAM7_EMAC.c,
+	  openbeacon-network/network/port/emac/SAM7_EMAC.h,
+	  openbeacon-network/network/port/sys_arch.c,
+	  openbeacon-network/network/src/api/api_lib.c,
+	  openbeacon-network/network/src/api/api_msg.c,
+	  openbeacon-network/network/src/api/netbuf.c,
+	  openbeacon-network/network/src/api/sockets.c,
+	  openbeacon-network/network/src/core/dhcp.c,
+	  openbeacon-network/network/src/core/ipv4/igmp.c,
+	  openbeacon-network/network/src/core/memp.c,
+	  openbeacon-network/network/src/core/pbuf.c,
+	  openbeacon-network/network/src/core/tcp_out.c,
+	  openbeacon-network/network/src/include/ipv4/lwip/icmp.h,
+	  openbeacon-network/network/src/include/ipv4/lwip/ip.h,
+	  openbeacon-network/network/src/include/ipv6/lwip/ip_addr.h,
+	  openbeacon-network/network/src/include/lwip/debug.h,
+	  openbeacon-network/network/src/include/lwip/tcp.h,
+	  openbeacon-network/network/src/netif/etharp.c,
+	  openbeacon-network/network/src/netif/loopif.c: fixed networking
+	  crash - network still broken
+
+2008-08-09 12:06  henryk
+
+	* core/os/boot/Cstartup_SAM7.c: Properly disable the watchdog when
+	  WATCHDOG_DISABLE is set (otherwise the watchdog will run with
+	  default values)
+
+2008-08-09 11:08  cuccato
+
+	* openbouncer/Makefile,
+	  openbouncer/application/BurgWaechter_TSE_3000,
+	  openbouncer/application/BurgWaechter_TSE_3000/lock.c,
+	  openbouncer/application/BurgWaechter_TSE_3000/lock.h,
+	  openbouncer/application/cmd/cmd_key.c,
+	  openbouncer/application/cmd/cmd_key.h,
+	  openbouncer/application/led.h, openbouncer/application/main.c,
+	  openbouncer/config/board.h: add fisrt version of BurgWaechter TSE
+	  3000 open sequenze
+
+2008-08-09 09:14  meriac
+
+	* openbeacon-estimator/application/main.c,
+	  openbeacon-sniffer/application/proto.c,
+	  openbeacon-sniffer/application/xxtea.c: fixed checkin mistake
+
+2008-08-09 09:12  meriac
+
+	* openbeacon-blinkenlights/config/atmel-rom.ld: added linker
+	  garbage collection
+
+2008-08-09 09:05  meriac
+
+	* openbeacon-estimator/application/main.c,
+	  openbeacon-estimator/config/atmel-rom.ld,
+	  openbeacon-sniffer/application/proto.c,
+	  openbeacon-sniffer/application/xxtea.c,
+	  openbeacon-sniffer/config/atmel-rom.ld,
+	  openbouncer/config/atmel-rom.ld: added linker garbage collection
+
+2008-08-09 09:02  meriac
+
+	* core/Makefile.rules: added linker garbage collection
+
+2008-08-09 09:01  meriac
+
+	* core/os/boot/Cstartup_SAM7.c: added switch to disable watchdog
+
+2008-08-09 08:58  meriac
+
+	* openbeacon-network/Makefile,
+	  openbeacon-network/application/debug_printf.c,
+	  openbeacon-network/application/lwipopts.h,
+	  openbeacon-network/application/main.c,
+	  openbeacon-network/application/network.c,
+	  openbeacon-network/application/network.h,
+	  openbeacon-network/application/proto.c,
+	  openbeacon-network/application/proto.h,
+	  openbeacon-network/config/atmel-rom.ld,
+	  openbeacon-network/config/board.h, openbeacon-network/network,
+	  openbeacon-network/network/CHANGELOG,
+	  openbeacon-network/network/COPYING,
+	  openbeacon-network/network/FILES,
+	  openbeacon-network/network/README.lwip,
+	  openbeacon-network/network/doc,
+	  openbeacon-network/network/doc/FILES,
+	  openbeacon-network/network/doc/contrib.txt,
+	  openbeacon-network/network/doc/rawapi.txt,
+	  openbeacon-network/network/doc/savannah.txt,
+	  openbeacon-network/network/doc/snmp_agent.txt,
+	  openbeacon-network/network/doc/sys_arch.txt,
+	  openbeacon-network/network/port,
+	  openbeacon-network/network/port/arch,
+	  openbeacon-network/network/port/arch/cc.h,
+	  openbeacon-network/network/port/arch/cpu.h,
+	  openbeacon-network/network/port/arch/init.h,
+	  openbeacon-network/network/port/arch/lib.h,
+	  openbeacon-network/network/port/arch/perf.h,
+	  openbeacon-network/network/port/arch/sys_arch.h,
+	  openbeacon-network/network/port/emac,
+	  openbeacon-network/network/port/emac/Emac.h,
+	  openbeacon-network/network/port/emac/SAM7_EMAC.c,
+	  openbeacon-network/network/port/emac/SAM7_EMAC.h,
+	  openbeacon-network/network/port/emac/SAM7_EMAC_ISR.c,
+	  openbeacon-network/network/port/emac/mii.h,
+	  openbeacon-network/network/port/sys_arch.c,
+	  openbeacon-network/network/src,
+	  openbeacon-network/network/src/FILES,
+	  openbeacon-network/network/src/api,
+	  openbeacon-network/network/src/api/api_lib.c,
+	  openbeacon-network/network/src/api/api_msg.c,
+	  openbeacon-network/network/src/api/err.c,
+	  openbeacon-network/network/src/api/netbuf.c,
+	  openbeacon-network/network/src/api/netdb.c,
+	  openbeacon-network/network/src/api/netifapi.c,
+	  openbeacon-network/network/src/api/sockets.c,
+	  openbeacon-network/network/src/api/tcpip.c,
+	  openbeacon-network/network/src/core,
+	  openbeacon-network/network/src/core/dhcp.c,
+	  openbeacon-network/network/src/core/dns.c,
+	  openbeacon-network/network/src/core/init.c,
+	  openbeacon-network/network/src/core/ipv4,
+	  openbeacon-network/network/src/core/ipv4/autoip.c,
+	  openbeacon-network/network/src/core/ipv4/icmp.c,
+	  openbeacon-network/network/src/core/ipv4/igmp.c,
+	  openbeacon-network/network/src/core/ipv4/inet.c,
+	  openbeacon-network/network/src/core/ipv4/inet_chksum.c,
+	  openbeacon-network/network/src/core/ipv4/ip.c,
+	  openbeacon-network/network/src/core/ipv4/ip_addr.c,
+	  openbeacon-network/network/src/core/ipv4/ip_frag.c,
+	  openbeacon-network/network/src/core/ipv6,
+	  openbeacon-network/network/src/core/ipv6/README,
+	  openbeacon-network/network/src/core/ipv6/icmp6.c,
+	  openbeacon-network/network/src/core/ipv6/inet6.c,
+	  openbeacon-network/network/src/core/ipv6/ip6.c,
+	  openbeacon-network/network/src/core/ipv6/ip6_addr.c,
+	  openbeacon-network/network/src/core/mem.c,
+	  openbeacon-network/network/src/core/memp.c,
+	  openbeacon-network/network/src/core/netif.c,
+	  openbeacon-network/network/src/core/pbuf.c,
+	  openbeacon-network/network/src/core/raw.c,
+	  openbeacon-network/network/src/core/stats.c,
+	  openbeacon-network/network/src/core/sys.c,
+	  openbeacon-network/network/src/core/tcp.c,
+	  openbeacon-network/network/src/core/tcp_in.c,
+	  openbeacon-network/network/src/core/tcp_out.c,
+	  openbeacon-network/network/src/core/udp.c,
+	  openbeacon-network/network/src/include,
+	  openbeacon-network/network/src/include/ipv4,
+	  openbeacon-network/network/src/include/ipv4/lwip,
+	  openbeacon-network/network/src/include/ipv4/lwip/autoip.h,
+	  openbeacon-network/network/src/include/ipv4/lwip/icmp.h,
+	  openbeacon-network/network/src/include/ipv4/lwip/igmp.h,
+	  openbeacon-network/network/src/include/ipv4/lwip/inet.h,
+	  openbeacon-network/network/src/include/ipv4/lwip/inet_chksum.h,
+	  openbeacon-network/network/src/include/ipv4/lwip/ip.h,
+	  openbeacon-network/network/src/include/ipv4/lwip/ip_addr.h,
+	  openbeacon-network/network/src/include/ipv4/lwip/ip_frag.h,
+	  openbeacon-network/network/src/include/ipv6,
+	  openbeacon-network/network/src/include/ipv6/lwip,
+	  openbeacon-network/network/src/include/ipv6/lwip/icmp.h,
+	  openbeacon-network/network/src/include/ipv6/lwip/inet.h,
+	  openbeacon-network/network/src/include/ipv6/lwip/ip.h,
+	  openbeacon-network/network/src/include/ipv6/lwip/ip_addr.h,
+	  openbeacon-network/network/src/include/lwip,
+	  openbeacon-network/network/src/include/lwip/api.h,
+	  openbeacon-network/network/src/include/lwip/api_msg.h,
+	  openbeacon-network/network/src/include/lwip/arch.h,
+	  openbeacon-network/network/src/include/lwip/debug.h,
+	  openbeacon-network/network/src/include/lwip/def.h,
+	  openbeacon-network/network/src/include/lwip/dhcp.h,
+	  openbeacon-network/network/src/include/lwip/dns.h,
+	  openbeacon-network/network/src/include/lwip/err.h,
+	  openbeacon-network/network/src/include/lwip/init.h,
+	  openbeacon-network/network/src/include/lwip/mem.h,
+	  openbeacon-network/network/src/include/lwip/memp.h,
+	  openbeacon-network/network/src/include/lwip/memp_std.h,
+	  openbeacon-network/network/src/include/lwip/netbuf.h,
+	  openbeacon-network/network/src/include/lwip/netdb.h,
+	  openbeacon-network/network/src/include/lwip/netif.h,
+	  openbeacon-network/network/src/include/lwip/netifapi.h,
+	  openbeacon-network/network/src/include/lwip/opt.h,
+	  openbeacon-network/network/src/include/lwip/pbuf.h,
+	  openbeacon-network/network/src/include/lwip/raw.h,
+	  openbeacon-network/network/src/include/lwip/sio.h,
+	  openbeacon-network/network/src/include/lwip/snmp.h,
+	  openbeacon-network/network/src/include/lwip/snmp_asn1.h,
+	  openbeacon-network/network/src/include/lwip/snmp_msg.h,
+	  openbeacon-network/network/src/include/lwip/snmp_structs.h,
+	  openbeacon-network/network/src/include/lwip/sockets.h,
+	  openbeacon-network/network/src/include/lwip/stats.h,
+	  openbeacon-network/network/src/include/lwip/sys.h,
+	  openbeacon-network/network/src/include/lwip/tcp.h,
+	  openbeacon-network/network/src/include/lwip/tcpip.h,
+	  openbeacon-network/network/src/include/lwip/udp.h,
+	  openbeacon-network/network/src/include/netif,
+	  openbeacon-network/network/src/include/netif/etharp.h,
+	  openbeacon-network/network/src/include/netif/loopif.h,
+	  openbeacon-network/network/src/include/netif/ppp_oe.h,
+	  openbeacon-network/network/src/include/netif/slipif.h,
+	  openbeacon-network/network/src/netif,
+	  openbeacon-network/network/src/netif/FILES,
+	  openbeacon-network/network/src/netif/etharp.c,
+	  openbeacon-network/network/src/netif/ethernetif.c,
+	  openbeacon-network/network/src/netif/ethernetif.c.NEW,
+	  openbeacon-network/network/src/netif/ethernetif.c.old,
+	  openbeacon-network/network/src/netif/loopif.c: added intial IP
+	  stack / EMAC support (broken)
+
+2008-08-08 23:30  meriac
+
+	* usb-id-list.txt: added sam7x support
+
+2008-08-08 23:30  meriac
+
+	* openbeacon-network/Makefile, openbeacon-network/application,
+	  openbeacon-network/application/led.c,
+	  openbeacon-network/application/led.h,
+	  openbeacon-network/application/main.c,
+	  openbeacon-network/application/openbeacon.h,
+	  openbeacon-network/application/proto.c,
+	  openbeacon-network/application/proto.h,
+	  openbeacon-network/application/xxtea.c,
+	  openbeacon-network/application/xxtea.h,
+	  openbeacon-network/config,
+	  openbeacon-network/config/FreeRTOSConfig.h,
+	  openbeacon-network/config/atmel-rom.ld,
+	  openbeacon-network/config/board.h,
+	  openbeacon-network/config/descriptors.h: added sam7x support
+
+2008-08-08 23:24  meriac
+
+	* core/openbeacon/nRF24L01/nRF_CMD.c: added sam7x support
+
+2008-08-08 22:50  meriac
+
+	* core/openbeacon/nRF24L01/nRF_CMD.c: added sam7x support
+
+2008-08-08 22:21  meriac
+
+	* core/openbeacon/dbgu.c, core/openbeacon/env.c,
+	  core/os/core/ARM7_AT91SAM7/AT91SAM7X.h,
+	  core/os/core/ARM7_AT91SAM7/lib_AT91SAM7.c,
+	  core/os/core/ARM7_AT91SAM7/lib_AT91SAM7X.h, core/os/core/port.c:
+	  added sam7x support
+
+2008-08-08 22:19  meriac
+
+	* core/openbeacon/nRF24L01/nRF_CMD.c: added sam7x support - default
+	  spi port
+
+2008-08-08 16:37  meriac
+
+	* openbeacon-network: created new project directory for OpenBeacon
+	  Ethernet Reader
+
+2008-08-07 16:39  meriac
+
+	* core/os/core/ARM7_AT91SAM7,
+	  core/os/core/ARM7_AT91SAM7/AT91SAM7.h,
+	  core/os/core/ARM7_AT91SAM7/AT91SAM7S.h,
+	  core/os/core/ARM7_AT91SAM7/AT91SAM7X.h,
+	  core/os/core/ARM7_AT91SAM7/lib_AT91SAM7.c,
+	  core/os/core/ARM7_AT91SAM7/lib_AT91SAM7.h,
+	  core/os/core/ARM7_AT91SAM7/lib_AT91SAM7X.h: restructuring
+	  directory to support ethernet version
+
+2008-08-06 16:50  meriac
+
+	* core/Makefile.rules, core/os/core/ARM7_AT91SAM7S,
+	  core/os/core/include/portable.h, core/os/core/port.c,
+	  core/os/core/portISR.c, core/os/core/portmacro.h: restructuring
+	  directory to support ethernet version
+
+2008-07-29 06:13  meriac
+
+	* openbeacon-blinkenlights/application/proto.c: updated dimming -
+	  up & down counting
+
+2008-07-19 03:30  meriac
+
+	* openbeacon-sniffer/application/proto.c: fixed crc problem
+
+2008-07-15 19:40  meriac
+
+	* openbeacon-blinkenlights/application/proto.c: simple stand alone
+	  dimming
+
+2008-07-11 01:47  meriac
+
+	* openbeacon-blinkenlights/application/proto.c,
+	  openbeacon-blinkenlights/config/board.h: verified trimmer support
+
+2008-07-07 00:27  meriac
+
+	* openbeacon-blinkenlights/application/proto.c: changed default
+	  phototriac LED flash time to 250us
+
+2008-07-07 00:10  meriac
+
+	* openbeacon-blinkenlights/application/proto.c: changed default
+	  dimmer value to 50% brightness
+
+2008-07-06 23:30  meriac
+
+	* openbeacon-blinkenlights/application/led.c,
+	  openbeacon-blinkenlights/application/led.h,
+	  openbeacon-blinkenlights/application/proto.c,
+	  openbeacon-blinkenlights/config/FreeRTOSConfig.h,
+	  openbeacon-blinkenlights/config/board.h: added delayed
+	  trigger-on-edge code
+
+2008-07-05 12:35  meriac
+
+	* openbeacon-blinkenlights/config/atmel-rom.ld: Modified to support
+	  AT91SAM7S64
+
+2008-07-05 12:34  meriac
+
+	* openbeacon-blinkenlights/config/descriptors.h: modified USB
+	  product ID and description
+
+2008-07-05 12:34  meriac
+
+	* openbouncer/config/descriptors.h: modified USB product ID
+
+2008-07-05 12:33  meriac
+
+	* usb-id-list.txt: added list of USB IDs s spent
+
+2008-07-05 12:27  meriac
+
+	* openbeacon-estimator/config/descriptors.h: changed USB device id
+
+2008-07-05 12:20  meriac
+
+	* openbeacon-blinkenlights, openbeacon-blinkenlights/Makefile,
+	  openbeacon-blinkenlights/application,
+	  openbeacon-blinkenlights/application/led.c,
+	  openbeacon-blinkenlights/application/led.h,
+	  openbeacon-blinkenlights/application/main.c,
+	  openbeacon-blinkenlights/application/openbeacon.h,
+	  openbeacon-blinkenlights/application/proto.c,
+	  openbeacon-blinkenlights/application/proto.h,
+	  openbeacon-blinkenlights/application/xxtea.c,
+	  openbeacon-blinkenlights/application/xxtea.h,
+	  openbeacon-blinkenlights/config,
+	  openbeacon-blinkenlights/config/FreeRTOSConfig.h,
+	  openbeacon-blinkenlights/config/atmel-rom.ld,
+	  openbeacon-blinkenlights/config/board.h,
+	  openbeacon-blinkenlights/config/descriptors.h: initial checkin of
+	  openbeacon blinkenlights code
+
+2008-06-11 10:11  meriac
+
+	* openbouncer/config, openbouncer/config/FreeRTOSConfig.h,
+	  openbouncer/config/atmel-rom.ld, openbouncer/config/board.h,
+	  openbouncer/config/descriptors.h: minor changes to get it running
+
+2008-06-11 10:04  meriac
+
+	* openbouncer/application/cmd/cmd.c,
+	  openbouncer/application/cmd/cmd.h, openbouncer/application/led.c,
+	  openbouncer/application/led.h, openbouncer/application/main.c:
+	  minor changes to get it running
+
+2008-06-11 10:02  meriac
+
+	* openbouncer/Makefile, openbouncer/application/cmd,
+	  openbouncer/application/cmd/cmd_key.c,
+	  openbouncer/application/cmd/cmd_key.h,
+	  openbouncer/application/cmd/cmd_main.c,
+	  openbouncer/application/cmd/cmd_main.h,
+	  openbouncer/application/cmd/cmd_user.c,
+	  openbouncer/application/cmd/cmd_user.h,
+	  openbouncer/application/cmd/commandline.c,
+	  openbouncer/application/cmd/commandline.h,
+	  openbouncer/application/cmd/login.c,
+	  openbouncer/application/cmd/login.h,
+	  openbouncer/application/cmd/usbio.c,
+	  openbouncer/application/cmd/usbio.h,
+	  openbouncer/application/cmd/vsprintf.c,
+	  openbouncer/application/cmd/vsprintf.h,
+	  openbouncer/application/cmd/vt100.c,
+	  openbouncer/application/cmd/vt100.h,
+	  openbouncer/application/cmd_key.c,
+	  openbouncer/application/cmd_key.h,
+	  openbouncer/application/cmd_main.c,
+	  openbouncer/application/cmd_main.h,
+	  openbouncer/application/cmd_user.c,
+	  openbouncer/application/cmd_user.h,
+	  openbouncer/application/commandline.c,
+	  openbouncer/application/commandline.h,
+	  openbouncer/application/login.c, openbouncer/application/login.h,
+	  openbouncer/application/usbio.c, openbouncer/application/usbio.h,
+	  openbouncer/application/vsprintf.c,
+	  openbouncer/application/vsprintf.h,
+	  openbouncer/application/vt100.c, openbouncer/application/vt100.h:
+	  minor changes to get it running
+
+2008-06-11 09:12  meriac
+
+	* openbouncer/Makefile: minor changes to make it compile
+
+2008-06-11 08:48  meriac
+
+	* openbouncer/Makefile, openbouncer/application,
+	  openbouncer/application/cmd_key.c,
+	  openbouncer/application/cmd_key.h,
+	  openbouncer/application/cmd_main.c,
+	  openbouncer/application/cmd_main.h,
+	  openbouncer/application/cmd_user.c,
+	  openbouncer/application/cmd_user.h,
+	  openbouncer/application/commandline.c,
+	  openbouncer/application/commandline.h,
+	  openbouncer/application/login.c, openbouncer/application/login.h,
+	  openbouncer/application/usbio.c, openbouncer/application/usbio.h,
+	  openbouncer/application/vsprintf.c,
+	  openbouncer/application/vsprintf.h,
+	  openbouncer/application/vt100.c, openbouncer/application/vt100.h:
+	  initial checkin of Cookies code
+
+2008-06-02 00:22  meriac
+
+	* drivers, drivers/OpenBeaconSniffer.inf: Added Microsoft Windows
+	  Vista (tm) driver for OpenBeacon
+
+2008-06-01 22:57  meriac
+
+	* core/openbeacon/nRF24L01/nRF_CMD.c: fixed ack IRQ problem
+
+2008-06-01 22:56  meriac
+
+	* openbeacon-estimator/application/led.c,
+	  openbeacon-sniffer/application/led.c: fixed led halt loop to
+	  support watchdog
+
+2008-06-01 21:42  meriac
+
+	* openbeacon-sniffer, openbeacon-sniffer/Makefile,
+	  openbeacon-sniffer/application,
+	  openbeacon-sniffer/application/led.c,
+	  openbeacon-sniffer/application/led.h,
+	  openbeacon-sniffer/application/main.c,
+	  openbeacon-sniffer/application/openbeacon.h,
+	  openbeacon-sniffer/application/proto.c,
+	  openbeacon-sniffer/application/proto.h,
+	  openbeacon-sniffer/application/xxtea.c,
+	  openbeacon-sniffer/application/xxtea.h,
+	  openbeacon-sniffer/config,
+	  openbeacon-sniffer/config/FreeRTOSConfig.h,
+	  openbeacon-sniffer/config/atmel-rom.ld,
+	  openbeacon-sniffer/config/board.h,
+	  openbeacon-sniffer/config/descriptors.h: openbecon usb sniffer -
+	  initial check in
+
+2008-06-01 20:21  meriac
+
+	* openbeacon-estimator, openbeacon-estimator/Makefile,
+	  openbeacon-estimator/application,
+	  openbeacon-estimator/application/cmd.c,
+	  openbeacon-estimator/application/cmd.h,
+	  openbeacon-estimator/application/led.c,
+	  openbeacon-estimator/application/led.h,
+	  openbeacon-estimator/application/main.c,
+	  openbeacon-estimator/application/openbeacon.h,
+	  openbeacon-estimator/application/proto.c,
+	  openbeacon-estimator/application/proto.h,
+	  openbeacon-estimator/application/xxtea.c,
+	  openbeacon-estimator/application/xxtea.h,
+	  openbeacon-estimator/config,
+	  openbeacon-estimator/config/FreeRTOSConfig.h,
+	  openbeacon-estimator/config/atmel-rom.ld,
+	  openbeacon-estimator/config/board.h,
+	  openbeacon-estimator/config/descriptors.h: moved openbeacon-usb
+	  to openbeacon-estimator
+
+2008-06-01 20:21  meriac
+
+	* openbeacon-estimator: moved openbeacon-usb to
+	  openbeacon-estimator
+
+2008-06-01 20:20  meriac
+
+	* openbeacon-estimator, openbeacon-estimator/application/xxtea.c,
+	  openbeacon-estimator/config/descriptors.h,
+	  openbeacon-estimator/obj: moved openbeacon-usb to
+	  openbeacon-estimator
+
+2008-06-01 20:20  meriac
+
+	* openbeacon-usb: moved openbeacon-usb to openbeacon-estimator
+
+2008-05-31 03:22  henryk
+
+	* at91flash/at91flash_automatic: Add a short attention beep upon
+	  device detection to make it easier to notice when you have two
+	  at91flash_automatic instances running
+
+2008-05-31 00:49  henryk
+
+	* at91flash/at91flash_automatic: Add automatic at91flash tool
+
+2008-05-30 21:35  meriac
+
+	* openbeacon-usb/application/xxtea.c, readme.txt: changed
+	  encryption key to common dummy key
+
+2008-05-30 20:05  meriac
+
+	* openbeacon-usb/obj: deleted unused directory
+
+2008-05-30 19:54  meriac
+
+	* core/os/usb/descriptors.h, openbeacon-usb/config/descriptors.h,
+	  openbouncer: moved usb descriptor to application specific
+	  directory
+
+2008-05-30 19:45  meriac
+
+	* openbeacon-usb/application/cmd.c: fixed check-in of update to
+	  FreeRTOS 5.0
+
+2008-05-30 19:40  meriac
+
+	* core/os/usb/descriptors.h, openbeacon-usb/application/cmd.c:
+	  fixed check-in of update to FreeRTOS 5.0
+
+2008-05-30 18:44  meriac
+
+	* at91flash, at91flash/at91flash, core/Makefile.rules,
+	  core/openbeacon/nRF24L01/nRF_CMD.c,
+	  core/os/core/ARM7_AT91SAM7S/portmacro.h,
+	  core/os/core/include/FreeRTOS.h, core/os/core/include/blocktim.h,
+	  core/os/core/include/comtest.h, core/os/core/include/comtest2.h,
+	  core/os/core/include/crhook.h, core/os/core/include/croutine.h,
+	  core/os/core/include/death.h, core/os/core/include/dynamic.h,
+	  core/os/core/include/fileIO.h, core/os/core/include/list.h,
+	  core/os/core/include/mevents.h, core/os/core/include/print.h,
+	  core/os/core/include/projdefs.h, core/os/core/include/queue.h,
+	  core/os/core/include/semphr.h, core/os/core/include/serial.h,
+	  core/os/core/include/task.h, core/os/core/queue.c,
+	  core/os/core/tasks.c, core/os/usb/USB-CDC.c,
+	  core/os/usb/USBIsr.c, core/os/usb/descriptors.h,
+	  core/os/usb/usb.h: initial check-in of update to FreeRTOS 5.0
+
+2008-05-30 16:39  meriac
+
+	* openbouncer: create directory for OpenBouncer doorlock project
+
+2008-05-30 16:34  meriac
+
+	* ., core, core/Makefile.rules, core/openbeacon,
+	  core/openbeacon/beacontypes.h, core/openbeacon/dbgu.c,
+	  core/openbeacon/dbgu.h, core/openbeacon/env.c,
+	  core/openbeacon/env.h, core/openbeacon/nRF24L01,
+	  core/openbeacon/nRF24L01/nRF_API.c,
+	  core/openbeacon/nRF24L01/nRF_API.h,
+	  core/openbeacon/nRF24L01/nRF_CMD.c,
+	  core/openbeacon/nRF24L01/nRF_CMD.h,
+	  core/openbeacon/nRF24L01/nRF_HW.h, core/openbeacon/sort.c,
+	  core/openbeacon/sort.h, core/os, core/os/boot,
+	  core/os/boot/Cstartup_SAM7.c, core/os/boot/boot.s, core/os/core,
+	  core/os/core/ARM7_AT91SAM7S,
+	  core/os/core/ARM7_AT91SAM7S/AT91SAM7.h,
+	  core/os/core/ARM7_AT91SAM7S/lib_AT91SAM7.c,
+	  core/os/core/ARM7_AT91SAM7S/lib_AT91SAM7.h,
+	  core/os/core/ARM7_AT91SAM7S/port.c,
+	  core/os/core/ARM7_AT91SAM7S/portISR.c,
+	  core/os/core/ARM7_AT91SAM7S/portmacro.h, core/os/core/MemMang,
+	  core/os/core/MemMang/heap_1.c, core/os/core/MemMang/heap_2.c,
+	  core/os/core/MemMang/heap_3.c, core/os/core/include,
+	  core/os/core/include/FreeRTOS.h, core/os/core/include/blocktim.h,
+	  core/os/core/include/comtest.h, core/os/core/include/comtest2.h,
+	  core/os/core/include/crhook.h, core/os/core/include/croutine.h,
+	  core/os/core/include/death.h, core/os/core/include/dynamic.h,
+	  core/os/core/include/fileIO.h, core/os/core/include/list.h,
+	  core/os/core/include/mevents.h, core/os/core/include/portable.h,
+	  core/os/core/include/print.h, core/os/core/include/projdefs.h,
+	  core/os/core/include/queue.h, core/os/core/include/semphr.h,
+	  core/os/core/include/serial.h, core/os/core/include/task.h,
+	  core/os/core/list.c, core/os/core/queue.c, core/os/core/tasks.c,
+	  core/os/license.txt, core/os/usb, core/os/usb/USB-CDC.c,
+	  core/os/usb/USB-CDC.h, core/os/usb/USBIsr.c,
+	  core/os/usb/descriptors.h, core/os/usb/usb.h, license.txt,
+	  openbeacon-usb, openbeacon-usb/Makefile,
+	  openbeacon-usb/application, openbeacon-usb/application/cmd.c,
+	  openbeacon-usb/application/cmd.h,
+	  openbeacon-usb/application/led.c,
+	  openbeacon-usb/application/led.h,
+	  openbeacon-usb/application/main.c,
+	  openbeacon-usb/application/openbeacon.h,
+	  openbeacon-usb/application/proto.c,
+	  openbeacon-usb/application/proto.h,
+	  openbeacon-usb/application/xxtea.c,
+	  openbeacon-usb/application/xxtea.h, openbeacon-usb/config,
+	  openbeacon-usb/config/FreeRTOSConfig.h,
+	  openbeacon-usb/config/atmel-rom.ld,
+	  openbeacon-usb/config/board.h, openbeacon-usb/obj, readme.txt:
+	  initial check-in of estimator.006 tree - splitted to support
+	  multiple application sharing the same source core
+
