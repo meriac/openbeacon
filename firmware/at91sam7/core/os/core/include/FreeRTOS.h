@@ -1,49 +1,47 @@
 /*
-	FreeRTOS.org V5.0.0 - Copyright (C) 2003-2008 Richard Barry.
+	FreeRTOS V5.4.2 - Copyright (C) 2009 Real Time Engineers Ltd.
 
-	This file is part of the FreeRTOS.org distribution.
+	This file is part of the FreeRTOS distribution.
 
-	FreeRTOS.org is free software; you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation; either version 2 of the License, or
-	(at your option) any later version.
+	FreeRTOS is free software; you can redistribute it and/or modify it	under 
+	the terms of the GNU General Public License (version 2) as published by the 
+	Free Software Foundation and modified by the FreeRTOS exception.
+	**NOTE** The exception to the GPL is included to allow you to distribute a
+	combined work that includes FreeRTOS without being obliged to provide the 
+	source code for proprietary components outside of the FreeRTOS kernel.  
+	Alternative commercial license and support terms are also available upon 
+	request.  See the licensing section of http://www.FreeRTOS.org for full 
+	license details.
 
-	FreeRTOS.org is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+	FreeRTOS is distributed in the hope that it will be useful,	but WITHOUT
+	ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+	FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+	more details.
 
-	You should have received a copy of the GNU General Public License
-	along with FreeRTOS.org; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+	You should have received a copy of the GNU General Public License along
+	with FreeRTOS; if not, write to the Free Software Foundation, Inc., 59
+	Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
-	A special exception to the GPL can be applied should you wish to distribute
-	a combined work that includes FreeRTOS.org, without being obliged to provide
-	the source code for any proprietary components.  See the licensing section
-	of http://www.FreeRTOS.org for full details of how and when the exception
-	can be applied.
 
-    ***************************************************************************
-    ***************************************************************************
-    *                                                                         *
-    * SAVE TIME AND MONEY!  We can port FreeRTOS.org to your own hardware,    *
-    * and even write all or part of your application on your behalf.          *
-    * See http://www.OpenRTOS.com for details of the services we provide to   *
-    * expedite your project.                                                  *
-    *                                                                         *
-    ***************************************************************************
-    ***************************************************************************
+	***************************************************************************
+	*                                                                         *
+	* Looking for a quick start?  Then check out the FreeRTOS eBook!          *
+	* See http://www.FreeRTOS.org/Documentation for details                   *
+	*                                                                         *
+	***************************************************************************
+
+	1 tab == 4 spaces!
 
 	Please ensure to read the configuration and relevant port sections of the
 	online documentation.
 
-	http://www.FreeRTOS.org - Documentation, latest information, license and 
+	http://www.FreeRTOS.org - Documentation, latest information, license and
 	contact details.
 
-	http://www.SafeRTOS.com - A version that is certified for use in safety 
+	http://www.SafeRTOS.com - A version that is certified for use in safety
 	critical systems.
 
-	http://www.OpenRTOS.com - Commercial support, development, porting, 
+	http://www.OpenRTOS.com - Commercial support, development, porting,
 	licensing and training services.
 */
 
@@ -186,6 +184,26 @@ typedef portBASE_TYPE (*pdTASK_HOOK_CODE) (void *);
 #ifndef INCLUDE_xTaskGetCurrentTaskHandle
 #define INCLUDE_xTaskGetCurrentTaskHandle 0
 #endif
+#endif
+
+
+#ifndef portSET_INTERRUPT_MASK_FROM_ISR
+#define portSET_INTERRUPT_MASK_FROM_ISR() 0
+#endif
+
+#ifndef portCLEAR_INTERRUPT_MASK_FROM_ISR
+#define portCLEAR_INTERRUPT_MASK_FROM_ISR( uxSavedStatusValue ) ( void ) uxSavedStatusValue
+#endif
+
+
+#ifndef configQUEUE_REGISTRY_SIZE
+#define configQUEUE_REGISTRY_SIZE 0
+#endif
+
+#if configQUEUE_REGISTRY_SIZE < 1
+#define configQUEUE_REGISTRY_SIZE 0
+#define vQueueAddToRegistry( xQueue, pcName )
+#define vQueueUnregisterQueue( xQueue )
 #endif
 
 
@@ -350,6 +368,30 @@ typedef portBASE_TYPE (*pdTASK_HOOK_CODE) (void *);
 
 #ifndef traceTASK_INCREMENT_TICK
 #define traceTASK_INCREMENT_TICK( xTickCount )
+#endif
+
+#ifndef configGENERATE_RUN_TIME_STATS
+#define configGENERATE_RUN_TIME_STATS 0
+#endif
+
+#if ( configGENERATE_RUN_TIME_STATS == 1 )
+
+#ifndef portCONFIGURE_TIMER_FOR_RUN_TIME_STATS
+#error If configGENERATE_RUN_TIME_STATS is defined then portCONFIGURE_TIMER_FOR_RUN_TIME_STATS must also be defined.  portCONFIGURE_TIMER_FOR_RUN_TIME_STATS should call a port layer function to setup a peripheral timer/counter that can then be used as the run time counter time base.
+#endif /* portCONFIGURE_TIMER_FOR_RUN_TIME_STATS */
+
+#ifndef portGET_RUN_TIME_COUNTER_VALUE
+#error If configGENERATE_RUN_TIME_STATS is defined then portGET_RUN_TIME_COUNTER_VALUE must also be defined.  portGET_RUN_TIME_COUNTER_VALUE should evaluate to the counter value of the timer/counter peripheral used as the run time counter time base.
+#endif /* portGET_RUN_TIME_COUNTER_VALUE */
+
+#endif /* configGENERATE_RUN_TIME_STATS */
+
+#ifndef portCONFIGURE_TIMER_FOR_RUN_TIME_STATS
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()
+#endif
+
+#ifndef configUSE_MALLOC_FAILED_HOOK
+#define configUSE_MALLOC_FAILED_HOOK 0
 #endif
 
 #endif /* INC_FREERTOS_H */

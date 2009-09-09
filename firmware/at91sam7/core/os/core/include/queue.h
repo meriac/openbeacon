@@ -1,51 +1,56 @@
 /*
-	FreeRTOS.org V5.0.0 - Copyright (C) 2003-2008 Richard Barry.
+	FreeRTOS V5.4.2 - Copyright (C) 2009 Real Time Engineers Ltd.
 
-	This file is part of the FreeRTOS.org distribution.
+	This file is part of the FreeRTOS distribution.
 
-	FreeRTOS.org is free software; you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation; either version 2 of the License, or
-	(at your option) any later version.
+	FreeRTOS is free software; you can redistribute it and/or modify it	under 
+	the terms of the GNU General Public License (version 2) as published by the 
+	Free Software Foundation and modified by the FreeRTOS exception.
+	**NOTE** The exception to the GPL is included to allow you to distribute a
+	combined work that includes FreeRTOS without being obliged to provide the 
+	source code for proprietary components outside of the FreeRTOS kernel.  
+	Alternative commercial license and support terms are also available upon 
+	request.  See the licensing section of http://www.FreeRTOS.org for full 
+	license details.
 
-	FreeRTOS.org is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+	FreeRTOS is distributed in the hope that it will be useful,	but WITHOUT
+	ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+	FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+	more details.
 
-	You should have received a copy of the GNU General Public License
-	along with FreeRTOS.org; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+	You should have received a copy of the GNU General Public License along
+	with FreeRTOS; if not, write to the Free Software Foundation, Inc., 59
+	Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
-	A special exception to the GPL can be applied should you wish to distribute
-	a combined work that includes FreeRTOS.org, without being obliged to provide
-	the source code for any proprietary components.  See the licensing section
-	of http://www.FreeRTOS.org for full details of how and when the exception
-	can be applied.
 
-    ***************************************************************************
-    ***************************************************************************
-    *                                                                         *
-    * SAVE TIME AND MONEY!  We can port FreeRTOS.org to your own hardware,    *
-    * and even write all or part of your application on your behalf.          *
-    * See http://www.OpenRTOS.com for details of the services we provide to   *
-    * expedite your project.                                                  *
-    *                                                                         *
-    ***************************************************************************
-    ***************************************************************************
+	***************************************************************************
+	*                                                                         *
+	* Looking for a quick start?  Then check out the FreeRTOS eBook!          *
+	* See http://www.FreeRTOS.org/Documentation for details                   *
+	*                                                                         *
+	***************************************************************************
+
+	1 tab == 4 spaces!
 
 	Please ensure to read the configuration and relevant port sections of the
 	online documentation.
 
-	http://www.FreeRTOS.org - Documentation, latest information, license and 
+	http://www.FreeRTOS.org - Documentation, latest information, license and
 	contact details.
 
-	http://www.SafeRTOS.com - A version that is certified for use in safety 
+	http://www.SafeRTOS.com - A version that is certified for use in safety
 	critical systems.
 
-	http://www.OpenRTOS.com - Commercial support, development, porting, 
+	http://www.OpenRTOS.com - Commercial support, development, porting,
 	licensing and training services.
 */
+
+#ifndef INC_FREERTOS_H
+#error "#include FreeRTOS.h" must appear in source files before "#include queue.h"
+#endif
+
+
+
 
 #ifndef QUEUE_H
 #define QUEUE_H
@@ -146,9 +151,9 @@ extern "C"
  *
  * @param xTicksToWait The maximum amount of time the task should block
  * waiting for space to become available on the queue, should it already
- * be full.  The call will return immediately if this is set to 0.  The
- * time is defined in tick periods so the constant portTICK_RATE_MS
- * should be used to convert to real time if this is required.
+ * be full.  The call will return immediately if this is set to 0 and the
+ * queue is full.  The time is defined in tick periods so the constant 
+ * portTICK_RATE_MS should be used to convert to real time if this is required.
  *
  * @return pdTRUE if the item was successfully posted, otherwise errQUEUE_FULL.
  *
@@ -228,9 +233,9 @@ extern "C"
  *
  * @param xTicksToWait The maximum amount of time the task should block
  * waiting for space to become available on the queue, should it already
- * be full.  The call will return immediately if this is set to 0.  The
- * time is defined in tick periods so the constant portTICK_RATE_MS
- * should be used to convert to real time if this is required.
+ * be full.  The call will return immediately if this is set to 0 and the queue
+ * is full.  The  time is defined in tick periods so the constant 
+ * portTICK_RATE_MS should be used to convert to real time if this is required.
  *
  * @return pdTRUE if the item was successfully posted, otherwise errQUEUE_FULL.
  *
@@ -312,9 +317,9 @@ extern "C"
  *
  * @param xTicksToWait The maximum amount of time the task should block
  * waiting for space to become available on the queue, should it already
- * be full.  The call will return immediately if this is set to 0.  The
- * time is defined in tick periods so the constant portTICK_RATE_MS
- * should be used to convert to real time if this is required.
+ * be full.  The call will return immediately if this is set to 0 and the
+ * queue is full.  The time is defined in tick periods so the constant 
+ * portTICK_RATE_MS should be used to convert to real time if this is required.
  *
  * @return pdTRUE if the item was successfully posted, otherwise errQUEUE_FULL.
  *
@@ -396,9 +401,9 @@ extern "C"
  *
  * @param xTicksToWait The maximum amount of time the task should block
  * waiting for space to become available on the queue, should it already
- * be full.  The call will return immediately if this is set to 0.  The
- * time is defined in tick periods so the constant portTICK_RATE_MS
- * should be used to convert to real time if this is required.
+ * be full.  The call will return immediately if this is set to 0 and the
+ * queue is full.  The time is defined in tick periods so the constant 
+ * portTICK_RATE_MS should be used to convert to real time if this is required.
  *
  * @param xCopyPosition Can take the value queueSEND_TO_BACK to place the
  * item at the back of the queue, or queueSEND_TO_FRONT to place the item
@@ -490,6 +495,8 @@ extern "C"
  * waiting for an item to receive should the queue be empty at the time
  * of the call.    The time is defined in tick periods so the constant
  * portTICK_RATE_MS should be used to convert to real time if this is required.
+ * xQueuePeek() will return immediately if xTicksToWait is 0 and the queue
+ * is empty.
  *
  * @return pdTRUE if an item was successfully received from the queue,
  * otherwise pdFALSE.
@@ -579,8 +586,10 @@ extern "C"
  *
  * @param xTicksToWait The maximum amount of time the task should block
  * waiting for an item to receive should the queue be empty at the time
- * of the call.    The time is defined in tick periods so the constant
- * portTICK_RATE_MS should be used to convert to real time if this is required.
+ * of the call.    xQueueReceive() will return immediately if xTicksToWait
+ * is zero and the queue is empty.  The time is defined in tick periods so the 
+ * constant portTICK_RATE_MS should be used to convert to real time if this is 
+ * required.
  *
  * @return pdTRUE if an item was successfully received from the queue,
  * otherwise pdFALSE.
@@ -673,6 +682,8 @@ extern "C"
  * waiting for an item to receive should the queue be empty at the time
  * of the call.    The time is defined in tick periods so the constant
  * portTICK_RATE_MS should be used to convert to real time if this is required.
+ * xQueueGenericReceive() will return immediately if the queue is empty and
+ * xTicksToWait is 0.
  *
  * @param xJustPeek When set to true, the item received from the queue is not
  * actually removed from the queue - meaning a subsequent call to
@@ -777,7 +788,7 @@ extern "C"
  portBASE_TYPE xQueueSendToFrontFromISR(
                                          xQueueHandle pxQueue,
                                          const void *pvItemToQueue,
-                                         portBASE_TYPE xTaskPreviouslyWoken
+                                         portBASE_TYPE *pxHigherPriorityTaskWoken
                                       );
  </pre>
  *
@@ -848,7 +859,7 @@ extern "C"
  portBASE_TYPE xQueueSendToBackFromISR(
                                          xQueueHandle pxQueue,
                                          const void *pvItemToQueue,
-                                         portBASE_TYPE xTaskPreviouslyWoken
+                                         portBASE_TYPE *pxHigherPriorityTaskWoken
                                       );
  </pre>
  *
@@ -918,7 +929,7 @@ extern "C"
  portBASE_TYPE xQueueSendFromISR(
                                      xQueueHandle pxQueue,
                                      const void *pvItemToQueue,
-                                     portBASE_TYPE xTaskPreviouslyWoken
+                                     portBASE_TYPE *pxHigherPriorityTaskWoken
                                 );
  </pre>
  *
@@ -1238,6 +1249,32 @@ extern "C"
   portBASE_TYPE xQueueTakeMutexRecursive (xQueueHandle xMutex,
 					  portTickType xBlockTime);
   portBASE_TYPE xQueueGiveMutexRecursive (xQueueHandle xMutex);
+
+/*
+ * The registry is provided as a means for kernel aware debuggers to
+ * locate queues, semaphores and mutexes.  Call vQueueAddToRegistry() add
+ * a queue, semaphore or mutex handle to the registry if you want the handle 
+ * to be available to a kernel aware debugger.  If you are not using a kernel 
+ * aware debugger then this function can be ignored.
+ *
+ * configQUEUE_REGISTRY_SIZE defines the maximum number of handles the
+ * registry can hold.  configQUEUE_REGISTRY_SIZE must be greater than 0 
+ * within FreeRTOSConfig.h for the registry to be available.  Its value
+ * does not effect the number of queues, semaphores and mutexes that can be 
+ * created - just the number that the registry can hold.
+ *
+ * @param xQueue The handle of the queue being added to the registry.  This
+ * is the handle returned by a call to xQueueCreate().  Semaphore and mutex
+ * handles can also be passed in here.
+ *
+ * @param pcName The name to be associated with the handle.  This is the
+ * name that the kernel aware debugger will display.
+ */
+#if configQUEUE_REGISTRY_SIZE > 0
+  void vQueueAddToRegistry (xQueueHandle xQueue, signed portCHAR * pcName);
+#endif
+
+
 
 
 #ifdef __cplusplus
