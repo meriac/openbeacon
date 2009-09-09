@@ -1,0 +1,4 @@
+#!/bin/sh
+
+svn update
+svn2cl -i
