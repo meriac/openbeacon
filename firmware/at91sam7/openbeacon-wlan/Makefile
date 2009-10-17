@@ -13,6 +13,7 @@ APP_SRC= \
   application/proto.c \
   application/xxtea.c \
   application/sdram.c \
+  application/uart.c \
   application/spi.c
 
 APP_SRC+=$(IMAGES_C)

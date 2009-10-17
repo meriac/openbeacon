@@ -67,14 +67,27 @@
 /*-------------------------------*/
 #define SDCARD_CS_PIO	AT91C_BASE_PIOA
 #define SDCARD_CS_PIN	(1L<<26)
-#define SDCARD_CS		1
+#define SDCARD_CS	1
 
 /*-------------------------------*/
 /* power declaration             */
 /*-------------------------------*/
 
 #define USB_DETECT_PIO AT91C_BASE_PIOA
-#define USB_DETECT_PIN (1L<<20)
+#define USB_DETECT_PIN	(1L<<20)
+
+/*-------------------------------*/
+/* serial port WLAN declaration  */
+/*-------------------------------*/
+
+#define WLAN_PIO AT91C_BASE_PIOA
+#define WLAN_ADHOC	(1L<<4)
+#define WLAN_RXD	(1L<<5)
+#define WLAN_TXD	(1L<<6)
+#define WLAN_RTS	(1L<<7)
+#define WLAN_CTS	(1L<<9)
+#define WLAN_RESET	(1L<<21)
+#define WLAN_WAKE	(1L<<22)
 
 /*-------------------------------*/
 /* nRF declaration               */

@@ -42,6 +42,7 @@
 
 #include "proto.h"
 #include "sdram.h"
+#include "uart.h"
 
 /**********************************************************************/
 static inline void
@@ -53,9 +54,10 @@ prvSetupHardware (void)
   AT91C_BASE_AIC->AIC_EOICR = 0;
 
   /*  Enable the peripheral clock. */
-  AT91C_BASE_PMC->PMC_PCER = 1 << AT91C_ID_PIOA;
-  AT91C_BASE_PMC->PMC_PCER = 1 << AT91C_ID_PIOB;
-  AT91C_BASE_PMC->PMC_PCER = 1 << AT91C_ID_PIOC;
+  AT91C_BASE_PMC->PMC_PCER =
+	(1 << AT91C_ID_PIOA)|
+	(1 << AT91C_ID_PIOB)|
+	(1 << AT91C_ID_PIOC);
 }
 
 /**********************************************************************/
@@ -223,6 +225,7 @@ void __attribute__((noreturn)) mainloop (void)
 	
 	led_init ();
 	sdram_init ();
+	uart_init ();
 
 	xTaskCreate (watchdog_restart_task, (signed portCHAR *) "WATCHDOG",
 			TASK_WATCHDOG_STACK, NULL, TASK_WATCHDOG_PRIORITY, NULL);

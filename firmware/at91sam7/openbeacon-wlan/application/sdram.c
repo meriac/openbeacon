@@ -7,7 +7,7 @@
 
 #include "sdram.h"
 
-static void sdram_setup_pio(void)
+static inline void sdram_setup_pio(void)
 {
 	AT91F_PIO_CfgPeriph(AT91C_BASE_PIOA, 0,
 		(1L<<0)|(1L<<1)|(1L<<3)|(1L<<9)|(1L<<18)|(0x1ffL<<23) );
