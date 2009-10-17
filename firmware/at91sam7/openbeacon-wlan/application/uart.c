@@ -31,7 +31,14 @@ vnRFtaskUart (void *parameter)
 {
     (void) parameter;
 
-    AT91F_PIO_SetOutput(WLAN_PIO, WLAN_RESET);
+    // remove reset line
+    AT91F_PIO_SetOutput(WLAN_PIO, WLAN_RESET|WLAN_WAKE);
+    // tickle On button fpr WLAN module
+    vTaskDelay(1/portTICK_RATE_MS);
+    AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_WAKE);
+
+    // enable UART0
+    AT91C_BASE_US0->US_CR = AT91C_US_RXEN|AT91C_US_TXEN;
 
     for(;;)
     {
