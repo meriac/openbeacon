@@ -80,14 +80,14 @@
 /* serial port WLAN declaration  */
 /*-------------------------------*/
 
-#define WLAN_BAUDRATE	115200
+#define WLAN_BAUDRATE	9600
 
 #define WLAN_PIO AT91C_BASE_PIOA
 #define WLAN_ADHOC	(1L<<4)
 #define WLAN_RXD	(1L<<5)
 #define WLAN_TXD	(1L<<6)
 #define WLAN_RTS	(1L<<7)
-#define WLAN_CTS	(1L<<9)
+#define WLAN_CTS	(1L<<8)
 #define WLAN_RESET	(1L<<21)
 #define WLAN_WAKE	(1L<<22)
 
