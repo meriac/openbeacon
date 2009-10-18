@@ -25,25 +25,82 @@
 #include <task.h>
 #include <string.h>
 #include <board.h>
+#include <beacontypes.h>
+#include <USB-CDC.h>
+
+#define UART_QUEUE_SIZE 128
+
+static xQueueHandle uart_queue_rx;
+
+void uart_isr_handler(void)
+{
+    u_int8_t data,woken;
+    u_int32_t reason;
+
+    // get reason for IRQ
+    reason=AT91C_BASE_US0->US_CSR;
+
+    // on RX character
+    if(reason & AT91C_US_RXRDY)
+    {
+	data=(unsigned char)(AT91C_BASE_US0->US_RHR);
+	xQueueSend(uart_queue_rx, &data, 0);
+	woken=pdTRUE;
+    }
+    else
+	woken=pdFALSE;
+
+    // ack IRQ
+    AT91C_BASE_AIC->AIC_EOICR = 0;
+    // wake up ?
+    if(woken)
+	portYIELD_FROM_ISR();
+}
+
+static void __attribute__((naked))
+uart_isr(void)
+{
+    portSAVE_CONTEXT();
+    uart_isr_handler();
+    portRESTORE_CONTEXT();
+}
 
 static void
-vnRFtaskUart (void *parameter)
+uart_task (void *parameter)
 {
     (void) parameter;
+    u_int8_t data;
+
+    vTaskDelay(11000/portTICK_RATE_MS);
+
+    AT91F_AIC_ConfigureIt(AT91C_ID_US0, 4, AT91C_AIC_SRCTYPE_INT_POSITIVE_EDGE, uart_isr );
+    // enable UART0
+    AT91C_BASE_US0->US_CR = AT91C_US_RXEN|AT91C_US_TXEN;
+    // enable IRQ
+    AT91C_BASE_US0->US_IER = AT91C_US_RXRDY|AT91C_US_TXRDY|AT91C_US_ENDRX|AT91C_US_ENDTX;
 
     // remove reset line
     AT91F_PIO_SetOutput(WLAN_PIO, WLAN_RESET|WLAN_WAKE);
-    // tickle On button fpr WLAN module
+    // tickle On button for WLAN module
     vTaskDelay(1/portTICK_RATE_MS);
     AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_WAKE);
 
-    // enable UART0
-    AT91C_BASE_US0->US_CR = AT91C_US_RXEN|AT91C_US_TXEN;
-
     for(;;)
     {
-	vTaskDelay(1000/portTICK_RATE_MS);
+	if( xQueueReceive(uart_queue_rx, &data, ( portTickType ) 1000 ) )
+	    vUSBSendByte(data);
+
+	vUSBSendByte('#');
+
+	AT91C_BASE_US0->US_THR = 0x55;
     }
+}
+
+
+static inline void
+uart_set_baudrate(unsigned int Baudrate)
+{
+    AT91F_US_SetBaudrate(AT91C_BASE_US0, MCK, Baudrate);
 }
 
 void
@@ -62,11 +119,10 @@ uart_init (void)
 
     // Standard Asynchronous Mode : 8 bits , 1 stop , no parity
     AT91C_BASE_US0->US_MR = AT91C_US_ASYNC_MODE;
-    AT91F_US_SetBaudrate(AT91C_BASE_US0, MCK, WLAN_BAUDRATE);
+    uart_set_baudrate(WLAN_BAUDRATE);
 
     // no IRQs
     AT91C_BASE_US0->US_IDR = 0xFFFF;
-//    AT91C_BASE_US0->US_IER = AT91C_US_RXRDY;
 
     // receiver time-out (disabled)
     AT91C_BASE_US0->US_RTOR = 0;
@@ -77,6 +133,10 @@ uart_init (void)
     // IrDA Filter value (disabled)
     AT91C_BASE_US0->US_IF = 0;
 
-    xTaskCreate (vnRFtaskUart, (signed portCHAR *) "vnRFtaskUart", TASK_NRF_STACK,
-	       NULL, TASK_NRF_PRIORITY, NULL);
+    // create UART queue with minimum buffer size
+    uart_queue_rx = xQueueCreate (UART_QUEUE_SIZE,
+	(unsigned portCHAR) sizeof (signed portCHAR));
+
+    xTaskCreate (uart_task, (signed portCHAR *) "uart_task", TASK_NRF_STACK,
+	NULL, TASK_NRF_PRIORITY, NULL);
 }
