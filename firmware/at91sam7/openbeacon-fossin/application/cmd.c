@@ -109,37 +109,44 @@ atoiEx (const char *nptr)
   return sign * curval;
 }
 
+static void
+vBeep (int frequency)
+{
+	int duration;
+	
+	if(frequency>=100)
+	{
+		duration = (MCK / 8) / frequency;
+
+		AT91C_BASE_PWMC_CH0->PWMC_CDTYR = duration / 2;
+		AT91C_BASE_PWMC_CH0->PWMC_CPRDR = duration;
+	}
+	else
+		AT91C_BASE_PWMC_CH0->PWMC_CDTYR = AT91C_BASE_PWMC_CH0->PWMC_CPRDR = 0;
+}
+
 /**********************************************************************/
 
 // A task to read commands from USB
 void
 vCmdRecvUsbCode (void *pvParameters)
 {
-  int duration,freq;
-
+  int freq;
   char data;
   (void) pvParameters;
 
   for (;;)
     {
-      if (vUSBRecvByte (&data, 1, 100))
-	{
-	if (data >= '1' && data <= '9')
-	  {
-		freq = notes[data-'1'];
+		if (vUSBRecvByte (&data, 1, 100) && (data >= '1' && data <= '9'))
+		  {
+			freq = notes[data-'1'];
 
-		DumpUIntToUSB(freq);
-		DumpStringToUSB("\n\r");
-
-		duration = (MCK / 8) / freq;
-
-		AT91C_BASE_PWMC_CH0->PWMC_CDTYR = duration / 2;
-		AT91C_BASE_PWMC_CH0->PWMC_CPRDR = duration;
-	  }
-	else
-		AT91C_BASE_PWMC_CH0->PWMC_CDTYR = AT91C_BASE_PWMC_CH0->PWMC_CPRDR = 0;
+			DumpUIntToUSB(freq);
+			DumpStringToUSB("\n\r");
+		
+			vBeep(freq);
+		  }
 	}
-    }
 }
 
 portBASE_TYPE
