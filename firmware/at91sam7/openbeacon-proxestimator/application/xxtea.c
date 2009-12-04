@@ -1,3 +1,4 @@
+
 /***************************************************************
  *
  * OpenBeacon.org - XXTEA based block encryption
@@ -37,8 +38,7 @@
 //
 // 25C3 encryption key
 //
-//const long tea_key[4] = { 0x7013F569,0x4417CA7E,0x07AAA968,0x822D7554 };
-const long tea_key[4] = { 0xbf0c3a08,0x1d4228fc,0x4244b2b0,0x0b4492e9 };
+const long tea_key[4] = { 0xab94ec75, 0x160869c5, 0xfbf908da, 0x60bedc73 };
 
 unsigned long z, y, sum, tmp, mx;
 unsigned char e;
