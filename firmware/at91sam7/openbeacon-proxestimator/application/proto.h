@@ -27,16 +27,17 @@
 
 #define FIFO_DEPTH 256
 
-typedef struct {
-    u_int16_t tag_oid;
-    u_int8_t tag_strength;
-    u_int8_t packet_count;
-} __attribute__((packed)) TBeaconSort;
+typedef struct
+{
+  u_int16_t tag_oid;
+  u_int8_t tag_strength;
+  u_int8_t packet_count;
+} __attribute__ ((packed)) TBeaconSort;
 
 extern TBeaconEnvelope g_Beacon;
 
-extern void vInitProtocolLayer(void);
-extern int PtSetFifoLifetimeSeconds(int Seconds);
-extern int PtGetFifoLifetimeSeconds(void);
+extern void vInitProtocolLayer (void);
+extern int PtSetFifoLifetimeSeconds (int Seconds);
+extern int PtGetFifoLifetimeSeconds (void);
 
 #endif/*__PROTO_H__*/
