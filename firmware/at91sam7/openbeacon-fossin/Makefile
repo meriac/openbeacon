@@ -5,18 +5,17 @@ DEBUG=-g
 OPTIM=-O2
 
 AUDIO_FILE=audio.wav
-AUDIO_FREQUENCY=12000
+AUDIO_FREQUENCY=8000
 
 APP_CFLAGS=-Iapplication -DAUDIO_FREQUENCY=$(AUDIO_FREQUENCY)
 APP_SRC= \
   application/main.c \
-  application/cmd.c
+  application/cmd.c \
+  application/audio.s
 
 AUDIO_SRC=$(AUDIO_FILE:.wav=.raw)
 
-all: $(TARGET).bin
-
-$(TARGET).bin: $(AUDIO_SRC)
+all: $(AUDIO_SRC) $(TARGET).bin
 
 %.raw: %.wav
 	sox $< -c1 -1 -u -r $(AUDIO_FREQUENCY) $@

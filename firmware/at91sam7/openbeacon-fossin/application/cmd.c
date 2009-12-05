@@ -14,6 +14,8 @@
 #include "led.h"
 #include "nRF24L01/nRF_CMD.h"
 
+extern unsigned char audio_start,audio_end;
+
 static const int notes[]={440,494,523,587,659,698,783,880,988};
 #define NOTE_COUNT (sizeof(notes)/sizeof(notes[0]))
 
@@ -131,7 +133,7 @@ static void
 vSweep(int maxfrequency)
 {
   int i;
-  
+
   for (i=100;i<maxfrequency;i++)
     {
 		vBeep(i);
@@ -141,8 +143,23 @@ vSweep(int maxfrequency)
 
 /**********************************************************************/
 
+static void
+vPlaySample(unsigned char* data, u_int32_t size, u_int32_t frequency)
+{
+  (void) data;
+  (void) size;
+  (void) frequency;
+
+  DumpStringToUSB("Playing Samples=");
+  DumpUIntToUSB(size);
+  DumpStringToUSB(" Frequency=");
+  DumpUIntToUSB(frequency);
+  DumpStringToUSB("\n\r");
+}
+
+/**********************************************************************/
 // A task to read commands from USB
-void
+static void
 vCmdRecvUsbCode (void *pvParameters)
 {
   int freq;
@@ -170,6 +187,9 @@ vCmdRecvUsbCode (void *pvParameters)
 						break;
 			 		case 's':
 			 			vSweep(20000);
+			 			break;
+			 		case 'p':
+			 			vPlaySample(&audio_start,(int)(&audio_end-&audio_start),AUDIO_FREQUENCY);
 			 			break;
 			 	}
 		}		  
