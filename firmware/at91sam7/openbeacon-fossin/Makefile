@@ -10,8 +10,9 @@ AUDIO_FREQUENCY=8000
 APP_CFLAGS=-Iapplication -DAUDIO_FREQUENCY=$(AUDIO_FREQUENCY)
 APP_SRC= \
   application/main.c \
-  application/cmd.c \
-  application/audio.s
+  application/cmd.c
+
+BOOTLOADER=application/audio.s
 
 AUDIO_SRC=$(AUDIO_FILE:.wav=.raw)
 
