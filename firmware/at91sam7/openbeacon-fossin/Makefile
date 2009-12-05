@@ -25,6 +25,6 @@ play: $(AUDIO_SRC)
 
 app_clean:
 	find application -name '*.o' -exec rm \{\} \;
-	rm -rf $(AUDIO_SRC)
+#	rm -rf $(AUDIO_SRC)
 
 include ../core/Makefile.rules
