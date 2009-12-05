@@ -4,23 +4,25 @@ CPU=$(ARCH)128
 DEBUG=-g
 OPTIM=-O2
 
-APP_CFLAGS=-Iapplication
+AUDIO_FILE=audio.wav
+AUDIO_FREQUENCY=12000
 
+APP_CFLAGS=-Iapplication -DAUDIO_FREQUENCY=$(AUDIO_FREQUENCY)
 APP_SRC= \
   application/main.c \
   application/cmd.c
 
-AUDIO_SRC=audio.raw
+AUDIO_SRC=$(AUDIO_FILE:.wav=.raw)
 
 all: $(TARGET).bin
 
 $(TARGET).bin: $(AUDIO_SRC)
 
 %.raw: %.wav
-	sox $< -c1 -1 -u -r 12000 $@
+	sox $< -c1 -1 -u -r $(AUDIO_FREQUENCY) $@
 
 play: $(AUDIO_SRC)
-	play -r 12000 -u -1 -c1 $<
+	play -r $(AUDIO_FREQUENCY) -u -1 -c1 $<
 
 app_clean:
 	find application -name '*.o' -exec rm \{\} \;
