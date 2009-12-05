@@ -127,6 +127,20 @@ vBeep (int frequency)
 
 /**********************************************************************/
 
+static void
+vSweep(int maxfrequency)
+{
+  int i;
+  
+  for (i=100;i<maxfrequency;i++)
+    {
+		vBeep(i);
+		vTaskDelay(2 / portTICK_RATE_MS);
+    }
+}
+
+/**********************************************************************/
+
 // A task to read commands from USB
 void
 vCmdRecvUsbCode (void *pvParameters)
@@ -137,15 +151,28 @@ vCmdRecvUsbCode (void *pvParameters)
 
   for (;;)
     {
-		if (vUSBRecvByte (&data, 1, 100) && (data >= '1' && data <= '9'))
-		  {
-			freq = notes[data-'1'];
+		if (vUSBRecvByte (&data, 1, 100))
+		{
+			if((data >= '1' && data <= '9'))			
+			  {
+				freq = notes[data-'1'];
 
-			DumpUIntToUSB(freq);
-			DumpStringToUSB("\n\r");
+				DumpUIntToUSB(freq);
+				DumpStringToUSB("\n\r");
 		
-			vBeep(freq);
-		  }
+				vBeep(freq);
+			  }
+			 else
+			 	switch(data)
+			 	{
+					case '0':
+						vBeep(0);
+						break;
+			 		case 's':
+			 			vSweep(20000);
+			 			break;
+			 	}
+		}		  
 	}
 }
 
