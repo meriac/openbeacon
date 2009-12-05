@@ -20,13 +20,15 @@ static const int notes[]={440,494,523,587,659,698,783,880,988};
 #define NOTE_COUNT (sizeof(notes)/sizeof(notes[0]))
 
 /**********************************************************************/
-#define PWM_DIVA 0 
-#define PWM_DIVB 16 
+#define PWM_DIVA 0
+#define PWM_DIVB 16
 /**********************************************************************/
-#define PWM_CHANNEL0 (1L<<0) 
-#define PWM_CHANNEL1 (1L<<1) 
-#define PWM_CHANNEL2 (1L<<2) 
-#define PWM_CHANNEL3 (1L<<3) 
+#define PWM_CHANNEL0 (1L<<0)
+#define PWM_CHANNEL1 (1L<<1)
+#define PWM_CHANNEL2 (1L<<2)
+#define PWM_CHANNEL3 (1L<<3)
+/**********************************************************************/
+#define PWMC_DEFAULTCMR ((3<<PWM_DIVA) | (3<<PWM_DIVB))
 /**********************************************************************/
 
 xTaskHandle xCmdRecvUsbTask;
@@ -146,15 +148,33 @@ vSweep(int maxfrequency)
 static void
 vPlaySample(unsigned char* data, u_int32_t size, u_int32_t frequency)
 {
+  int i;
   (void) data;
   (void) size;
   (void) frequency;
 
-  DumpStringToUSB("Playing Samples=");
+  AT91C_BASE_PWMC_CH0->PWMC_CMR = ((1<<PWM_DIVA) | (1<<PWM_DIVB));
+  AT91C_BASE_PWMC_CH0->PWMC_CPRDR = 0x100;
+
+  for(i=0;i<255;i++)
+  {
+    vTaskDelay(10 / portTICK_RATE_MS);
+    AT91C_BASE_PWMC_CH0->PWMC_CDTYR=i;
+  }
+
+  for(i=255;i>=255;i--)
+  {
+    vTaskDelay(10 / portTICK_RATE_MS);
+    AT91C_BASE_PWMC_CH0->PWMC_CDTYR=i;
+  }
+
+/*  DumpStringToUSB("Playing Samples=");
   DumpUIntToUSB(size);
   DumpStringToUSB(" Frequency=");
   DumpUIntToUSB(frequency);
-  DumpStringToUSB("\n\r");
+  DumpStringToUSB("\n\r");*/
+
+  AT91C_BASE_PWMC_CH0->PWMC_CMR = PWMC_DEFAULTCMR;
 }
 
 /**********************************************************************/
@@ -200,9 +220,10 @@ portBASE_TYPE
 vCmdInit (void)
 {
   AT91F_PIO_CfgPeriph (PWM_PIO, 0,PWM_AUDIO);
+  AT91C_BASE_PWMC_CH0->PWMC_CMR = PWMC_DEFAULTCMR;
   AT91C_BASE_PWMC->PWMC_IDR = PWM_CHANNEL0 | PWM_CHANNEL1 | PWM_CHANNEL2 | PWM_CHANNEL3;
+  AT91C_BASE_PWMC->PWMC_MR  = 1 << PWM_DIVA | 1 << PWM_DIVB;
   AT91C_BASE_PWMC->PWMC_ENA = PWM_CHANNEL0;
-  AT91C_BASE_PWMC_CH0->PWMC_CMR = 3 << PWM_DIVA | 3 << PWM_DIVB;
 
   if (xTaskCreate
       (vCmdRecvUsbCode, (signed portCHAR *) "CMDUSB", TASK_CMD_STACK, NULL,

@@ -4,7 +4,6 @@ CPU=$(ARCH)128
 DEBUG=-g
 OPTIM=-O2
 
-AUDIO_FILE=audio.wav
 AUDIO_FREQUENCY=8000
 
 APP_CFLAGS=-Iapplication -DAUDIO_FREQUENCY=$(AUDIO_FREQUENCY)
@@ -14,7 +13,7 @@ APP_SRC= \
 
 BOOTLOADER=application/audio.s
 
-AUDIO_SRC=$(AUDIO_FILE:.wav=.raw)
+AUDIO_SRC=audio.raw
 
 all: $(AUDIO_SRC) $(TARGET).bin
 
