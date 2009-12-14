@@ -36,7 +36,11 @@
 
 #ifdef  CE_PIN
 
+#ifndef CSN_PIN_PIO
 #define NRF_SPI_PINS (CSN_PIN|MOSI_PIN|SCK_PIN|MISO_PIN)
+#else
+#define NRF_SPI_PINS (MOSI_PIN|SCK_PIN|MISO_PIN)
+#endif/*CSN_PIN_PIO*/
 
 #ifdef  __AT91SAM7X256__
 
@@ -81,12 +85,12 @@ unsigned char nRFCMD_ReadWriteBuffer(const unsigned char *tx_data, unsigned char
     AT91C_BASE_PDC_SPI->PDC_PTCR = AT91C_PDC_RXTEN|AT91C_PDC_TXTEN;
 
     return xSemaphoreTake(xnRF_SemaphoreDMA,100)!=pdTRUE;
-} 
+}
 
 static unsigned char nRFCMD_ReadWriteByte(unsigned char reg)
 {
     u_int8_t res;
-    
+
     nRFCMD_ReadWriteBuffer(&reg, &res, 1);
 
     return res;
@@ -181,12 +185,12 @@ static portBASE_TYPE nRFCMD_ProcessNextMacro(void)
 void nRFCMD_ISR_DMA_Handler(void)
 {
     portBASE_TYPE xTaskWokenDMA = pdFALSE;    
-    
+
     if((AT91C_BASE_SPI->SPI_SR & AT91C_SPI_ENDTX) && (nRFCMD_ProcessNextMacro()))
 	xTaskWokenDMA = xSemaphoreGiveFromISR( xnRF_SemaphoreDMA, &xTaskWokenDMA );
-    
+
     AT91C_BASE_AIC->AIC_EOICR = 0;
-    
+
     if(xTaskWokenDMA)
 	portYIELD_FROM_ISR();	
 }
@@ -235,7 +239,7 @@ unsigned char nRFCMD_Init(void)
 {
     volatile int dummy;
     const int SCBR = ((int)(MCK / 8e6) + 1)&0xFF;
-    
+
     nRFCMD_Macro=nRFCMD_MacroResult=NULL;
 
     vSemaphoreCreateBinary(xnRF_SemaphoreDMA);
@@ -248,12 +252,15 @@ unsigned char nRFCMD_Init(void)
 
     AT91F_SPI_CfgPMC();
     AT91F_PIO_CfgPeriph(AT91C_BASE_PIOA, NRF_SPI_PINS_PERIPHERAL_A, NRF_SPI_PINS_PERIPHERAL_B);
+#ifdef  CSN_PIN_PIO
+    AT91F_PIO_CfgPeriph(CSN_PIN_PIO, CSN_PIN, 0);
+#endif/*CSN_PIN_PIO*/
     AT91F_PIO_CfgInput(AT91C_BASE_PIOA, IRQ_PIN);
     AT91F_PIO_ClearOutput(AT91C_BASE_PIOA, CE_PIN);
     AT91F_PIO_CfgOutput(AT91C_BASE_PIOA, CE_PIN);  
 
     portENTER_CRITICAL();
-    
+
     /* CPOL = 0, NCPHA = 1, CSAAT = 0, BITS = 0000, SCBR = <8MHz, 
      * DLYBS = 0, DLYBCT = 0 */
     AT91C_BASE_SPI->SPI_MR = AT91C_SPI_MSTR | AT91C_SPI_PS_FIXED;
@@ -268,11 +275,11 @@ unsigned char nRFCMD_Init(void)
     /* reset IRQ status */
     dummy = AT91C_BASE_PIOA->PIO_ISR;
     AT91C_BASE_PIOA->PIO_IER = IRQ_PIN;
-    
+
     AT91C_BASE_AIC->AIC_IECR = (0x1 << AT91C_ID_SPI) | (0x1 << AT91C_ID_PIOA) ;
-    
+
     portEXIT_CRITICAL();
-    
+
     return 0;
 }
 
