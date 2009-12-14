@@ -25,39 +25,84 @@
 #include <task.h>
 #include <string.h>
 #include <board.h>
+#include <led.h>
 #include <beacontypes.h>
 #include <USB-CDC.h>
 
-#define UART_QUEUE_SIZE 128
+#define UART_QUEUE_SIZE 1024
 
 static xQueueHandle uart_queue_rx;
 
+static inline void
+DumpUIntToUSB (unsigned int data)
+{
+    int i = 0;
+    unsigned char buffer[10], *p = &buffer[sizeof (buffer)];
+
+    do
+    {
+	*--p = '0' + (unsigned char) (data % 10);
+	data /= 10;
+	i++;
+    } while (data);
+
+    while (i--)
+        vUSBSendByte (*p++);
+}
+
+static void printnibble(unsigned char nib)
+{
+  char a;
+
+  nib &= 0xf;
+
+  if (nib >= 10)
+    a = nib - 10 + 'a';
+  else
+    a = nib + '0';
+
+  vUSBSendByte(a);
+}
+
+static void printbyte(unsigned char byte)
+{
+  printnibble(byte >> 4);
+  printnibble(byte);
+}
+
+void
+DumpHexToUSB (unsigned int v, char bytes)
+{
+  while (bytes)
+    {
+      char c = v >> ((bytes - 1) * 8);
+      printbyte(c);
+      bytes--;
+    }
+}
+
 void uart_isr_handler(void)
 {
-    u_int8_t data,woken;
-    u_int32_t reason;
-
-    // get reason for IRQ
-    reason=AT91C_BASE_US0->US_CSR;
+    u_int8_t data;
+    portBASE_TYPE woken = pdFALSE;
 
     // on RX character
-    if(reason & AT91C_US_RXRDY)
+    while(AT91C_BASE_US0->US_CSR & AT91C_US_RXRDY)
     {
 	data=(unsigned char)(AT91C_BASE_US0->US_RHR);
-	xQueueSend(uart_queue_rx, &data, 0);
-	woken=pdTRUE;
+	xQueueSendFromISR(uart_queue_rx, &data, &woken);
     }
-    else
-	woken=pdFALSE;
 
     // ack IRQ
-    AT91C_BASE_AIC->AIC_EOICR = 0;
+    AT91C_BASE_US0->US_CR = AT91C_US_RSTSTA;
+    AT91F_AIC_AcknowledgeIt();
+
     // wake up ?
     if(woken)
 	portYIELD_FROM_ISR();
 }
 
-static void __attribute__((naked))
+void __attribute__((naked))
 uart_isr(void)
 {
     portSAVE_CONTEXT();
@@ -70,14 +115,38 @@ uart_task (void *parameter)
 {
     (void) parameter;
     u_int8_t data;
+    u_int32_t size;
+    portCHAR buffer[1024],*c;
 
     vTaskDelay(11000/portTICK_RATE_MS);
 
-    AT91F_AIC_ConfigureIt(AT91C_ID_US0, 4, AT91C_AIC_SRCTYPE_INT_POSITIVE_EDGE, uart_isr );
+/*    // remove reset line
+    AT91F_PIO_SetOutput(WLAN_PIO, WLAN_RESET|WLAN_WAKE);
+    vTaskDelay(11000/portTICK_RATE_MS);
+    AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_WAKE);
+
+    vTaskDelay(2000/portTICK_RATE_MS);
+
+    for(data=0;data<5;data++)
+    {
+	led_set_green (1);
+	vTaskDelay(500/portTICK_RATE_MS);
+	AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_ADHOC);
+	led_set_green (0);
+	vTaskDelay(500/portTICK_RATE_MS);
+	AT91F_PIO_SetOutput(WLAN_PIO, WLAN_ADHOC);
+    }
+    vTaskDelay(5000/portTICK_RATE_MS);
+    AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_RESET);
+    vTaskDelay(1000/portTICK_RATE_MS);*/
+
     // enable UART0
     AT91C_BASE_US0->US_CR = AT91C_US_RXEN|AT91C_US_TXEN;
+
     // enable IRQ
-    AT91C_BASE_US0->US_IER = AT91C_US_RXRDY|AT91C_US_TXRDY|AT91C_US_ENDRX|AT91C_US_ENDTX;
+    AT91F_AIC_ConfigureIt(AT91C_ID_US0, 4, AT91C_AIC_SRCTYPE_INT_HIGH_LEVEL, uart_isr );
+    AT91C_BASE_US0->US_IER = AT91C_US_RXRDY;//|AT91C_US_ENDRX;//|AT91C_US_TXRDY|AT91C_US_ENDRX|AT91C_US_ENDTX;
+    AT91F_AIC_EnableIt(AT91C_ID_US0);
 
     // remove reset line
     AT91F_PIO_SetOutput(WLAN_PIO, WLAN_RESET|WLAN_WAKE);
@@ -87,20 +156,18 @@ uart_task (void *parameter)
 
     for(;;)
     {
-	if( xQueueReceive(uart_queue_rx, &data, ( portTickType ) 1000 ) )
+	if( xQueueReceive(uart_queue_rx, &data, ( portTickType ) 100 ) )
 	    vUSBSendByte(data);
-
-	vUSBSendByte('#');
-
-	AT91C_BASE_US0->US_THR = 0x55;
+	if( (size=vUSBRecvByte(buffer,sizeof(buffer),0) )>0 )
+	{
+	    c=buffer;
+	    while(size--)
+	    {
+		AT91C_BASE_US0->US_THR=*c++;
+		vTaskDelay(10/portTICK_RATE_MS);
+	    }
+	}
     }
-}
-
-
-static inline void
-uart_set_baudrate(unsigned int Baudrate)
-{
-    AT91F_US_SetBaudrate(AT91C_BASE_US0, MCK, Baudrate);
 }
 
 void
@@ -113,19 +180,21 @@ uart_init (void)
     // configure IOs
     AT91F_PIO_CfgOutput(WLAN_PIO, WLAN_ADHOC|WLAN_RESET|WLAN_WAKE);
     AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_RESET|WLAN_ADHOC|WLAN_WAKE);
-
-    // reset and disable UART0
-    AT91C_BASE_US0->US_CR = AT91C_US_RSTRX|AT91C_US_RSTTX|AT91C_US_RXDIS|AT91C_US_TXDIS;
+/*    AT91F_PIO_SetOutput(WLAN_PIO, WLAN_ADHOC);
+    AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_RESET|WLAN_WAKE);*/
 
     // Standard Asynchronous Mode : 8 bits , 1 stop , no parity
     AT91C_BASE_US0->US_MR = AT91C_US_ASYNC_MODE;
-    uart_set_baudrate(WLAN_BAUDRATE);
+    AT91F_US_SetBaudrate(AT91C_BASE_US0, MCK, WLAN_BAUDRATE);
 
     // no IRQs
     AT91C_BASE_US0->US_IDR = 0xFFFF;
 
-    // receiver time-out (disabled)
-    AT91C_BASE_US0->US_RTOR = 0;
+    // reset and disable UART0
+    AT91C_BASE_US0->US_CR = AT91C_US_RSTRX|AT91C_US_RSTTX|AT91C_US_RXDIS|AT91C_US_TXDIS;
+
+    // receiver time-out (20 bit periods)
+    AT91C_BASE_US0->US_RTOR = 20;
     // transmitter timeguard (disabled)
     AT91C_BASE_US0->US_TTGR = 0;
     // FI over DI Ratio Value (disabled)

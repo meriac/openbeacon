@@ -96,13 +96,29 @@
 /*-------------------------------*/
 
 #define DEFAULT_CHANNEL 81
+#define NRF_PRIMARY
 
-#define CSN_PIN		(1L<<11)
+#ifdef NRF_PRIMARY
+#define CSN_PIN_PIO	AT91C_BASE_PIOB
+#define CSN_PIN		(1L<<3)
+#define CE_PIN		(1L<<15)
+#define IRQ_PIN		(1L<<16)
+#endif/*NRF_PRIMARY*/
+
+#ifdef  NRF_SECONDARY
+#define CSN_PIN_PIO	AT91C_BASE_PIOB
+#define CSN_PIN		(1L<<9)
+#define CE_PIN		(1L<<19)
+#define IRQ_PIN		(1L<<17)
+#endif/*NRF_SECONDARY*/
+
+#if defined (NRF_PRIMARY) || defined (NRF_SECONDARY)
 #define MISO_PIN	(1L<<12)
 #define MOSI_PIN	(1L<<13)
 #define SCK_PIN		(1L<<14)
-#define IRQ_PIN		(1L<<19)
-#define CE_PIN		(1L<<26)
+#else
+#error please define either NRF_PRIMARY or NRF_SECONDARY to select interface
+#endif/*NRF_PRIMARY || NRF_SECONDARY*/
 
 /*-------------------------------*/
 /* utils settings                */

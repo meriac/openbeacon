@@ -75,7 +75,7 @@ vApplicationIdleHook (void)
 #endif
 }
 
-void
+static void
 watchdog_restart_task (void *parameter)
 {
 	(void) parameter;
@@ -95,8 +95,8 @@ HexChar (unsigned char nibble)
 }
 
 /**********************************************************************/
-
-void
+/*
+static inline void
 sdram_test_task (void *parameter)
 {
 	volatile int i;
@@ -182,41 +182,7 @@ sdram_test_task (void *parameter)
 
 	}
 }
-
-void
-hex_dump (const unsigned char *buf, unsigned int addr, unsigned int len)
-{
-	unsigned int start, i, j;
-	char c;
-	start = addr & ~0xf;
-	
-	for (j = 0; j < len; j += 16) {
-		printf ("%08x:", start + j);
-		
-		for (i = 0; i < 16; i++) {
-			if (start + i + j >= addr && start + i + j < addr + len) {
-				printf (" %02x", buf[start + i + j]);
-			} else {
-				printf ("   ");
-			}
-		}
-		printf ("  |");
-		for (i = 0; i < 16; i++) {
-			if (start + i + j >= addr && start + i + j < addr + len) {
-				c = buf[start + i + j];
-				if (c >= ' ' && c < 127) {
-					printf ("%c", c);
-				} else {
-					printf (".");
-				}
-			} else {
-				printf (" ");
-			}
-		}
-		printf ("|\n");
-	}
-}
-
+*/
 /**********************************************************************/
 void __attribute__((noreturn)) mainloop (void)
 {
@@ -233,10 +199,11 @@ void __attribute__((noreturn)) mainloop (void)
 	xTaskCreate (vUSBCDCTask, (signed portCHAR *) "USB        ", TASK_USB_STACK,
 			NULL, TASK_USB_PRIORITY, NULL);
 			
-	xTaskCreate (sdram_test_task, (signed portCHAR *) "SDRAM_DEMO 0", 512, (void*)0, NEAR_IDLE_PRIORITY, NULL);
+//	xTaskCreate (sdram_test_task, (signed portCHAR *) "SDRAM_DEMO 0", 512, (void*)0, NEAR_IDLE_PRIORITY, NULL);
 
+	vInitProtocolLayer ();
 
-	led_set_red (1);
+	led_set_green (1);
 	
 	vTaskStartScheduler ();
 	

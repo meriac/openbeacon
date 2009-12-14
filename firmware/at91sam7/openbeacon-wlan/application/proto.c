@@ -43,7 +43,7 @@ TBeaconEnvelope g_Beacon;
                         g_Beacon.datab[b]=tmp;
 
 /**********************************************************************/
-void RAMFUNC
+static void RAMFUNC
 shuffle_tx_byteorder (void)
 {
   unsigned char tmp;
@@ -133,7 +133,7 @@ DumpStringToUSB (char *text)
       vUSBSendByte (data);
 }
 
-void
+static void
 vnRFtaskRx (void *parameter)
 {
   u_int16_t crc;
@@ -148,7 +148,7 @@ vnRFtaskRx (void *parameter)
     {
       if (nRFCMD_WaitRx (10))
 	{
-	  vLedSetRed (1);
+	  vLedSetGreen (0);
 
 	  do
 	    {
@@ -180,8 +180,8 @@ vnRFtaskRx (void *parameter)
 	    }
 	  while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
 
-	  vLedSetRed (0);
 	  nRFAPI_GetFifoStatus ();
+	  vLedSetGreen (1);
 	}
       nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
     }

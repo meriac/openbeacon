@@ -13,14 +13,9 @@ APP_SRC= \
   application/proto.c \
   application/xxtea.c \
   application/sdram.c \
-  application/uart.c \
-  application/spi.c
+  application/uart.c
 
 APP_SRC+=$(IMAGES_C)
-
-all_foo:
-	make OPTIM=-O0 application/spi.o
-	make all
 
 all: $(TARGET).bin 
 
