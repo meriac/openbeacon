@@ -3,7 +3,7 @@
 
 #include <queue.h>
 
-#define MAX_CMD_LEN 32
+#define MAX_CMD_LEN 128
 
 typedef struct {
 	enum { SRC_USB, SRC_RF } source;
@@ -12,8 +12,8 @@ typedef struct {
 
 portBASE_TYPE vCmdInit(void);
 extern void DumpUIntToUSB(unsigned int data);
-extern void DumpStringToUSB(char *string);
-extern void DumpBufferToUSB(char* buffer, int len);
+extern void DumpStringToUSB(const char *string);
+extern void DumpBufferToUSB(const char* buffer, int len);
 extern xQueueHandle xCmdQueue;
 
 #endif /*CMD_H_*/

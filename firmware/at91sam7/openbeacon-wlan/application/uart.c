@@ -29,57 +29,11 @@
 #include <beacontypes.h>
 #include <USB-CDC.h>
 
+#include "cmd.h"
+
 #define UART_QUEUE_SIZE 1024
 
 static xQueueHandle uart_queue_rx;
-
-static inline void
-DumpUIntToUSB (unsigned int data)
-{
-    int i = 0;
-    unsigned char buffer[10], *p = &buffer[sizeof (buffer)];
-
-    do
-    {
-	*--p = '0' + (unsigned char) (data % 10);
-	data /= 10;
-	i++;
-    } while (data);
-
-    while (i--)
-        vUSBSendByte (*p++);
-}
-
-static void printnibble(unsigned char nib)
-{
-  char a;
-
-  nib &= 0xf;
-
-  if (nib >= 10)
-    a = nib - 10 + 'a';
-  else
-    a = nib + '0';
-
-  vUSBSendByte(a);
-}
-
-static void printbyte(unsigned char byte)
-{
-  printnibble(byte >> 4);
-  printnibble(byte);
-}
-
-void
-DumpHexToUSB (unsigned int v, char bytes)
-{
-  while (bytes)
-    {
-      char c = v >> ((bytes - 1) * 8);
-      printbyte(c);
-      bytes--;
-    }
-}
 
 void uart_isr_handler(void)
 {
@@ -110,35 +64,49 @@ uart_isr(void)
     portRESTORE_CONTEXT();
 }
 
+void uart_set_baudrate(unsigned int baud)
+{
+    unsigned int FP,CD;
+
+    switch(baud)
+    {
+	case 921600:
+	    FP=2;
+	    break;
+	case 460800:
+	    FP=4;
+	    break;
+	default:
+	    FP=0;
+    }
+
+    CD=(MCK / (16*baud))&0xFFFF;
+
+    AT91C_BASE_US0->US_BRGR = CD | ((FP&0x7)<<16);
+
+    DumpStringToUSB("baud rate set to ");
+    DumpUIntToUSB(MCK/((16*CD)+(2*FP)));
+    DumpStringToUSB("\n\r");
+}
+
+void uart_tx(const void* data,unsigned int size)
+{
+    const unsigned char* c=(const unsigned char*)data;
+
+    while(size--)
+    {
+	AT91C_BASE_US0->US_THR=*c++;
+	vTaskDelay(10/portTICK_RATE_MS);
+    }
+}
+
 static void
 uart_task (void *parameter)
 {
     (void) parameter;
     u_int8_t data;
-    u_int32_t size;
-    portCHAR buffer[1024],*c;
 
     vTaskDelay(11000/portTICK_RATE_MS);
-
-/*    // remove reset line
-    AT91F_PIO_SetOutput(WLAN_PIO, WLAN_RESET|WLAN_WAKE);
-    vTaskDelay(11000/portTICK_RATE_MS);
-    AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_WAKE);
-
-    vTaskDelay(2000/portTICK_RATE_MS);
-
-    for(data=0;data<5;data++)
-    {
-	led_set_red (1);
-	vTaskDelay(500/portTICK_RATE_MS);
-	AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_ADHOC);
-	led_set_red (0);
-	vTaskDelay(500/portTICK_RATE_MS);
-	AT91F_PIO_SetOutput(WLAN_PIO, WLAN_ADHOC);
-    }
-    vTaskDelay(5000/portTICK_RATE_MS);
-    AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_RESET);
-    vTaskDelay(1000/portTICK_RATE_MS);*/
 
     // enable UART0
     AT91C_BASE_US0->US_CR = AT91C_US_RXEN|AT91C_US_TXEN;
@@ -158,15 +126,6 @@ uart_task (void *parameter)
     {
 	if( xQueueReceive(uart_queue_rx, &data, ( portTickType ) 100 ) )
 	    vUSBSendByte(data);
-	if( (size=vUSBRecvByte(buffer,sizeof(buffer),0) )>0 )
-	{
-	    c=buffer;
-	    while(size--)
-	    {
-		AT91C_BASE_US0->US_THR=*c++;
-		vTaskDelay(10/portTICK_RATE_MS);
-	    }
-	}
     }
 }
 
@@ -185,7 +144,7 @@ uart_init (void)
 
     // Standard Asynchronous Mode : 8 bits , 1 stop , no parity
     AT91C_BASE_US0->US_MR = AT91C_US_ASYNC_MODE;
-    AT91F_US_SetBaudrate(AT91C_BASE_US0, MCK, WLAN_BAUDRATE);
+    uart_set_baudrate(WLAN_BAUDRATE);
 
     // no IRQs
     AT91C_BASE_US0->US_IDR = 0xFFFF;

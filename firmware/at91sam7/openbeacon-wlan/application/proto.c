@@ -32,6 +32,7 @@
 #include "xxtea.h"
 #include "proto.h"
 #include "env.h"
+#include "cmd.h"
 #include "nRF24L01/nRF_HW.h"
 #include "nRF24L01/nRF_CMD.h"
 #include "nRF24L01/nRF_API.h"
@@ -245,37 +246,6 @@ vnRFCopyRating (TBeaconSort * Sort, int Items)
     return 0;
 }
 
-static void
-DumpUIntToUSB (unsigned int data)
-{
-  int i = 0;
-  unsigned char buffer[10], *p = &buffer[sizeof (buffer)];
-
-  do
-    {
-      *--p = '0' + (unsigned char) (data % 10);
-      data /= 10;
-      i++;
-    }
-  while (data);
-
-  while (i--)
-    vUSBSendByte (*p++);
-}
-
-static void
-DumpStringToUSB (char *text)
-{
-  unsigned char data;
-
-  if (text)
-    while ((data = *text++) != 0)
-      vUSBSendByte (data);
-}
-
-
-
-
 void
 vnRFtaskRxTx (void *parameter)
 {
@@ -393,11 +363,10 @@ vnRFtaskRating (void *parameter)
 
   for (;;)
     {
-      DumpStringToUSB ("RX:");
-
       count = vnRFCopyRating (g_BeaconSortPrint, SORT_PRINT_DEPTH);
       if (count > 0)
 	{
+	  DumpStringToUSB ("RX:");
 	  for (i = 0; i < count; i++)
 	    {
 	      DumpStringToUSB (" ");
@@ -405,9 +374,8 @@ vnRFtaskRating (void *parameter)
 	      DumpStringToUSB (",");
 	      DumpUIntToUSB (g_BeaconSortPrint[i].tag_oid);
 	    }
+	  DumpStringToUSB ("\n\r");
 	}
-
-      DumpStringToUSB ("\n\r");
 
       vTaskDelay (portTICK_RATE_MS * 950);
     }

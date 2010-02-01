@@ -7,6 +7,7 @@
 #include <beacontypes.h>
 #include <dbgu.h>
 #include <env.h>
+#include <string.h>
 
 #include "proto.h"
 #include "cmd.h"
@@ -14,6 +15,7 @@
 #include "nRF24L01/nRF_HW.h"
 #include "led.h"
 #include "nRF24L01/nRF_CMD.h"
+#include "uart.h"
 
 xQueueHandle xCmdQueue;
 xTaskHandle xCmdTask;
@@ -53,7 +55,7 @@ void DumpUIntToUSB(unsigned int data)
 }
 /**********************************************************************/
 
-void DumpStringToUSB(char* text)
+void DumpStringToUSB(const char* text)
 {
     unsigned char data;
 
@@ -69,7 +71,7 @@ static inline unsigned char HexChar(unsigned char nibble)
 }
 /**********************************************************************/
 
-void DumpBufferToUSB(char* buffer, int len)
+void DumpBufferToUSB(const char* buffer, int len)
 {
     int i;
 
@@ -139,6 +141,18 @@ void prvExecCommand(u_int32_t cmd, portCHAR *args) {
 			DumpStringToUSB("\n\r");
 		    }			
 		    break;
+		case 'BAUD':
+		    i=atoiEx(args);
+		    if(i!=0)
+			uart_set_baudrate(i);
+		    break;
+		case 'WIFI':
+		    if(args && (i=strlen(args))>0)
+		    {
+			uart_tx(args,i+1);
+			uart_tx("\n\r",2);
+		    }
+		    break;
 		case 'I':
 		    i=atoiEx(args);
 		    if(i!=0) {
@@ -196,6 +210,7 @@ void prvExecCommand(u_int32_t cmd, portCHAR *args) {
 			" * C          - print configuration\n\r"
 			" * I [id]     - set reader id\n\r"
 			" * FIFO [sec] - set FIFO cache lifetime in seconds\n\r"
+			" * BAUD [rate]- WIFI module baud rate\n\r"
 			" * WIFI [cmd] - send cmd to WIFI module\n\r"
 			" * 0          - receive only mode\n\r"
 			" * 1..4       - automatic transmit at selected power levels\n\r"
@@ -248,7 +263,7 @@ void vCmdRecvUsbCode(void *pvParameters) {
 	portBASE_TYPE len=0;
 	cmd_type next_command = { source: SRC_USB, command: ""};
 	(void) pvParameters;
-    
+
 	for( ;; ) {
 		if(vUSBRecvByte(&next_command.command[len], 1, 100)) {
 			next_command.command[len+1] = 0;

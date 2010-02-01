@@ -88,7 +88,7 @@ watchdog_restart_task (void *parameter)
 }
 
 /**********************************************************************/
-
+#ifdef  SDRAM_TASK
 static inline unsigned char
 HexChar (unsigned char nibble)
 {
@@ -179,8 +179,9 @@ sdram_test_task (void *parameter)
 		}
 	}
 }
-
+#endif/*SDRAM_TASK*/
 /**********************************************************************/
+
 void __attribute__((noreturn)) mainloop (void)
 {
 	prvSetupHardware ();
@@ -195,9 +196,9 @@ void __attribute__((noreturn)) mainloop (void)
 
 	xTaskCreate (vUSBCDCTask, (signed portCHAR *) "USB", TASK_USB_STACK,
 			NULL, TASK_USB_PRIORITY, NULL);
-
+#ifdef  SDRAM_TASK
 	xTaskCreate (sdram_test_task, (signed portCHAR *) "SDRAM_DEMO 0", 512, (void*)0, NEAR_IDLE_PRIORITY, NULL);
-
+#endif/*SDRAM_TASK*/
 	vCmdInit();
 	vInitProtocolLayer ();
 

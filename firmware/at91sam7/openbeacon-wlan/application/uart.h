@@ -24,5 +24,7 @@
 #define __UART_H__
 
 extern void uart_init (void);
+extern void uart_tx(const void* data,unsigned int size);
+extern void uart_set_baudrate(unsigned int baud);
 
 #endif/*__UART_H__*/
