@@ -43,6 +43,7 @@
 #include "proto.h"
 #include "sdram.h"
 #include "uart.h"
+#include "cmd.h"
 
 /**********************************************************************/
 static inline void
@@ -61,10 +62,9 @@ prvSetupHardware (void)
 }
 
 /**********************************************************************/
-void
-vApplicationIdleHook (void)
+
+void vApplicationIdleHook (void)
 {
-#if 1
 	/* Disable SDRAM clock and send SDRAM to self-refresh. The SDRAM will be
 	 * automatically reenabled on the next access.
 	 */
@@ -72,8 +72,9 @@ vApplicationIdleHook (void)
 	/* Disable processor clock to set the core into Idle Mode. The clock will 
 	 * automatically be reenabled by any interrupt. */
 	AT91C_BASE_PMC->PMC_SCDR = 1;
-#endif
 }
+
+/**********************************************************************/
 
 static void
 watchdog_restart_task (void *parameter)
@@ -95,7 +96,7 @@ HexChar (unsigned char nibble)
 }
 
 /**********************************************************************/
-/*
+
 static inline void
 sdram_test_task (void *parameter)
 {
@@ -107,8 +108,6 @@ sdram_test_task (void *parameter)
 	printf("SDRAM Init");
 	vTaskDelay (10000 / portTICK_RATE_MS);
 	printf("Starting SDRAM test");
-	
-	led_set_green (1);
 	
 	for(i=0; i<4; i++) {
 		SDRAM_BASE[i] = i;
@@ -178,34 +177,33 @@ sdram_test_task (void *parameter)
 			vTaskDelay(100 / portTICK_RATE_MS);
 		    }
 		}
-
-
 	}
 }
-*/
+
 /**********************************************************************/
 void __attribute__((noreturn)) mainloop (void)
 {
 	prvSetupHardware ();
 	AT91F_RSTSetMode(AT91C_BASE_RSTC, AT91F_RSTGetMode(AT91C_BASE_RSTC) | 0x11 );
-	
+
 	led_init ();
 	sdram_init ();
 	uart_init ();
 
 	xTaskCreate (watchdog_restart_task, (signed portCHAR *) "WATCHDOG",
 			TASK_WATCHDOG_STACK, NULL, TASK_WATCHDOG_PRIORITY, NULL);
-	
-	xTaskCreate (vUSBCDCTask, (signed portCHAR *) "USB        ", TASK_USB_STACK,
-			NULL, TASK_USB_PRIORITY, NULL);
-			
-//	xTaskCreate (sdram_test_task, (signed portCHAR *) "SDRAM_DEMO 0", 512, (void*)0, NEAR_IDLE_PRIORITY, NULL);
 
+	xTaskCreate (vUSBCDCTask, (signed portCHAR *) "USB", TASK_USB_STACK,
+			NULL, TASK_USB_PRIORITY, NULL);
+
+	xTaskCreate (sdram_test_task, (signed portCHAR *) "SDRAM_DEMO 0", 512, (void*)0, NEAR_IDLE_PRIORITY, NULL);
+
+	vCmdInit();
 	vInitProtocolLayer ();
 
 	led_set_green (1);
-	
+
 	vTaskStartScheduler ();
-	
+
 	while(1);
 }

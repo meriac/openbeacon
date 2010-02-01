@@ -129,10 +129,10 @@ uart_task (void *parameter)
 
     for(data=0;data<5;data++)
     {
-	led_set_green (1);
+	led_set_red (1);
 	vTaskDelay(500/portTICK_RATE_MS);
 	AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_ADHOC);
-	led_set_green (0);
+	led_set_red (0);
 	vTaskDelay(500/portTICK_RATE_MS);
 	AT91F_PIO_SetOutput(WLAN_PIO, WLAN_ADHOC);
     }

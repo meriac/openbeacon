@@ -96,11 +96,12 @@
 /*-------------------------------*/
 
 #define DEFAULT_CHANNEL 81
-#define NRF_PRIMARY
+#define NRF_SECONDARY
 
 #ifdef NRF_PRIMARY
 #define CSN_PIN_PIO	AT91C_BASE_PIOB
 #define CSN_PIN		(1L<<3)
+#define CSN_ID		(3)
 #define CE_PIN		(1L<<15)
 #define IRQ_PIN		(1L<<16)
 #endif/*NRF_PRIMARY*/
@@ -108,6 +109,7 @@
 #ifdef  NRF_SECONDARY
 #define CSN_PIN_PIO	AT91C_BASE_PIOB
 #define CSN_PIN		(1L<<9)
+#define CSN_ID		(1)
 #define CE_PIN		(1L<<19)
 #define IRQ_PIN		(1L<<17)
 #endif/*NRF_SECONDARY*/
@@ -155,7 +157,7 @@ typedef struct
 {
     unsigned int magic,size,crc16;
     unsigned int mode,speed;
-    unsigned int tag_id;
+    unsigned int reader_id;
 } TEnvironment;
 
 /*----------------------------------*/
