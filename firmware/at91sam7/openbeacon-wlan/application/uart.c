@@ -70,6 +70,9 @@ void uart_set_baudrate(unsigned int baud)
 
     switch(baud)
     {
+	case 1843200:
+	    FP=5;
+	    break;
 	case 921600:
 	    FP=2;
 	    break;
