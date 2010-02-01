@@ -188,7 +188,7 @@ void prvExecCommand(u_int32_t cmd, portCHAR *args) {
 		case '?':
 		    DumpStringToUSB(
 			" *****************************************************\n\r"
-			" * OpenBeacon USB terminal                           *\n\r"
+			" * OpenBeacon WLAN terminal                          *\n\r"
 			" * (C) 2007 Milosch Meriac <meriac@openbeacon.de>    *\n\r"
 			" *****************************************************\n\r"
 			" *\n\r"
@@ -196,6 +196,7 @@ void prvExecCommand(u_int32_t cmd, portCHAR *args) {
 			" * C          - print configuration\n\r"
 			" * I [id]     - set reader id\n\r"
 			" * FIFO [sec] - set FIFO cache lifetime in seconds\n\r"
+			" * WIFI [cmd] - send cmd to WIFI module\n\r"
 			" * 0          - receive only mode\n\r"
 			" * 1..4       - automatic transmit at selected power levels\n\r"
 			" * ?,H        - display this help screen\n\r"

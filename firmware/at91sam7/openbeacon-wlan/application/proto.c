@@ -288,6 +288,8 @@ vnRFtaskRxTx (void *parameter)
   if (!PtInitNRF ())
     return;
 
+  vLedSetGreen (1);
+
   LastUpdateTicks = xTaskGetTickCount ();
 
   for (;;)
@@ -391,7 +393,6 @@ vnRFtaskRating (void *parameter)
 
   for (;;)
     {
-      vLedSetGreen (1);
       DumpStringToUSB ("RX:");
 
       count = vnRFCopyRating (g_BeaconSortPrint, SORT_PRINT_DEPTH);
@@ -407,7 +408,6 @@ vnRFtaskRating (void *parameter)
 	}
 
       DumpStringToUSB ("\n\r");
-      vLedSetGreen (0);
 
       vTaskDelay (portTICK_RATE_MS * 950);
     }

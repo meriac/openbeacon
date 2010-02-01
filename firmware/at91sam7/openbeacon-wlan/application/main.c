@@ -201,8 +201,6 @@ void __attribute__((noreturn)) mainloop (void)
 	vCmdInit();
 	vInitProtocolLayer ();
 
-	led_set_green (1);
-
 	vTaskStartScheduler ();
 
 	while(1);
