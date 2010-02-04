@@ -92,6 +92,7 @@ typedef struct
 {
   uint32_t last_seen, fifo_pos;
   uint32_t tag_id, reader_id;
+  uint32_t timestamp;
   const TReaderItem *reader;
   TTagItem *tag;
   uint8_t strength[STRENGTH_LEVELS_COUNT];
@@ -517,7 +518,7 @@ main (void)
 			    {
 			      printf ("unkown reader 0x%08X\n", reader_id);
 			      item->reader = NULL;
-			      iten->reader_id = 0;
+			      item->reader_id = 0;
 			      reader_id = 0;
 			    }
 			}
