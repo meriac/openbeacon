@@ -1,4 +1,4 @@
-AC_INIT([openbeacon-estimator],[0.1],[meriac@bitmanufaktur.de])
+AC_INIT([estimator],[0.1],[meriac@bitmanufaktur.de])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_PROG_CC
 AC_CONFIG_HEADERS([config.h])
