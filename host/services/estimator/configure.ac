@@ -1,5 +1,6 @@
 AC_INIT([estimator],[0.1],[meriac@bitmanufaktur.de])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+WITH_MYSQL()
 AC_PROG_CC
 AC_PROG_CXX
 AC_CONFIG_HEADERS([config.h])
