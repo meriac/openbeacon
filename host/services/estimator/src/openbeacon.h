@@ -1,12 +1,12 @@
 /*
     OpenBeacon.org - OnAir protocol specification and definition
-    Copyright 2006 Milosch Meriac <meriac@openbeacon.de>
+    Copyright 2006 Milosch Meriac <meriac@bitmanufaktur.de>
 
-    This proximity protocol added by Ciro Cattuto <ciro.cattuto@gmail.com>
+    Proximity protocol added by Ciro Cattuto <ciro.cattuto@gmail.com>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; version 2.
+    the Free Software Foundation; version 3.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
