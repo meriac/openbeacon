@@ -56,7 +56,7 @@ const long tea_key_th[4] = { 0xB4595344, 0xD3E119B6, 0xA814D0EC, 0xEFF5A24E };
 #define MX  ( (((z>>5)^(y<<2))+((y>>3)^(z<<4)))^((sum^y)+(tea_key[(p&3)^e]^z)) )
 #define DELTA 0x9e3779b9UL
 
-#define UDP_PORT 2342
+#define UDP_PORT 3300
 #define STRENGTH_LEVELS_COUNT 4
 #define TAGSIGHTINGFLAG_SHORT_SEQUENCE 0x01
 #define TAGSIGHTINGFLAG_BUTTON_PRESS 0x02
@@ -314,7 +314,7 @@ ThreadIterateForceCalculate (void *Context)
   tag->vy += (F * delta_t) / TAG_MASS;
   tag->py += F * delta_t * delta_t / (TAG_MASS * 2.0);
 
-//  printf ("tag id=%u px=%f py=%f\n", tag->id, tag->px, tag->py);
+  printf ("tag id=%u px=%f py=%f\n", tag->id, tag->px, tag->py);
   sprintf (sql_req,
 	   "INSERT INTO distance ("
 	   "tag_id,"
@@ -393,7 +393,7 @@ main (void)
 	      pkt = &((TBeaconEnvelopeForwarded *) & beacons)->env;
 	      reader_id =
 		ntohl (((TBeaconEnvelopeForwarded *) & beacons)->src_ip);
-	      tea_key = tea_key_th;
+	      tea_key = tea_key_jr;
 	      break;
 	    case sizeof (TBeaconEnvelope):
 	      items = 1;
@@ -480,14 +480,14 @@ main (void)
 				       (tag_sighting >> 11) & 0x7,
 				       (tag_sighting >> 14) & 0x3);
 
-			      printf (sql_req);
+//			      printf (sql_req);
 //                            db_do_query (g_db, sql_req);
 			    }
 			}
 		      break;
 
 		    default:
-		      printf ("unknown packet protocol [%i]\n", pkt->proto);
+//		      printf ("unknown packet protocol [%i]\n", pkt->proto);
 		      tag_strength = -1;
 		      tag_sequence = 0;
 		    }
@@ -516,7 +516,7 @@ main (void)
 			    item->reader_id = reader_id;
 			  else
 			    {
-			      printf ("unkown reader 0x%08X\n", reader_id);
+			      printf ("unknown reader 0x%08X\n", reader_id);
 			      item->reader = NULL;
 			      item->reader_id = 0;
 			      reader_id = 0;
