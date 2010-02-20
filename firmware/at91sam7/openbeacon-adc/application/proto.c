@@ -32,20 +32,15 @@
 #include "proto.h"
 
 /**********************************************************************/
-#define PWM_CHANNEL0 (1L<<0)
-#define PWM_CHANNEL1 (1L<<1)
-#define PWM_CHANNEL2 (1L<<2)
-#define PWM_CHANNEL3 (1L<<3)
-/**********************************************************************/
-#define PWMC_DEFAULTCMR (3|(1<<10))
-/**********************************************************************/
 #define INT_LEVEL_ADC 4
 #define ADC_LEN 100
+/**********************************************************************/
 
 // Global variables
-unsigned short npBuffer[ADC_LEN]; // Buffer
+static unsigned short ADC_Buffer[2][ADC_LEN]; // Buffer
+volatile unsigned int value=0;
 
-void
+static void
 vnRFtaskRating (void *parameter)
 {
   (void)parameter;
@@ -61,17 +56,28 @@ vnRFtaskRating (void *parameter)
 
 void adc_isr_handler(void)
 {
-    static int i=0;
+    int count,val;
+    static unsigned int ADC_Buffer_Pos=0;
+    unsigned short *p;
 
-    i=i?0:1;
-    led_set_red(i);
+    led_set_red(1);
 
-    AT91F_PDC_SetRx(AT91C_BASE_PDC_ADC, (unsigned char*) &npBuffer, ADC_LEN);    // Setup DMA and clear ENDRX flag
+    p=ADC_Buffer[ADC_Buffer_Pos];
+    AT91F_PDC_SetNextRx(AT91C_BASE_PDC_ADC, (unsigned char*)p, ADC_LEN);    // Setup DMA and clear ENDRX flag
+    ADC_Buffer_Pos=ADC_Buffer_Pos?0:1;
+
+    count=ADC_LEN;
+    val=0;
+    while(count--)
+	val+=(*p++)&0x3FF;
+    value=val;
+
+    led_set_red(0);
 
     AT91C_BASE_AIC->AIC_EOICR = 0;
 }
 
-void __attribute__ ((naked)) adc_isr (void)
+static void __attribute__ ((naked)) adc_isr (void)
 {
   portSAVE_CONTEXT ();
   adc_isr_handler ();
@@ -93,7 +99,9 @@ vInitProtocolLayer (void)
 	AT91C_ADC_SLEEP_NORMAL_MODE;
   AT91C_BASE_ADC->ADC_CHER=
 	AT91C_ADC_CH4;
-  AT91F_PDC_SetRx(AT91C_BASE_PDC_ADC, (unsigned char*)&npBuffer, ADC_LEN);    // Setup DMA
+  // Setup DMA
+  AT91F_PDC_SetRx(AT91C_BASE_PDC_ADC, (unsigned char*)ADC_Buffer[0], ADC_LEN);
+  AT91F_PDC_SetNextRx(AT91C_BASE_PDC_ADC, (unsigned char*)ADC_Buffer[1], ADC_LEN);
   AT91F_PDC_EnableRx(AT91C_BASE_PDC_ADC);
 
   // Setup interrupts

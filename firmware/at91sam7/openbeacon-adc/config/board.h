@@ -58,7 +58,7 @@
 /* PWM audio declaration         */
 /*-------------------------------*/
 
-#define ADC_CLOCK_FREQUENCY	1000
+#define ADC_CLOCK_FREQUENCY	200000
 #define ADC_CLOCK_PIO		AT91C_BASE_PIOA
 #define ADC_CLOCK_PIN		(1L<<0)
 
