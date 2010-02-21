@@ -21,13 +21,21 @@
 
 static void my_putc(char c) 
 {
+#ifdef  DISABLE_USB
+	(void)c;
+#else
 	vUSBSendByte(c);
+#endif/*DISABLE_USB*/
 }
 
 static char my_getc( void )
 {
+#ifdef  DISABLE_USB
+	return 0;
+#else
 	char c;
 	return vUSBRecvByte(&c, sizeof(c), portMAX_DELAY);
+#endif/*DISABLE_USB*/
 }
 
 _ssize_t _read_r(

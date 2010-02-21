@@ -40,15 +40,18 @@
 
 */
 
-/* Scheduler includes. */
 #include <FreeRTOS.h>
+#include <board.h>
+#ifndef DISABLE_USB
+
+/* Scheduler includes. */
 #include <task.h>
 #include <queue.h>
 
 /* Demo application includes. */
-#include <board.h>
 #include "usb.h"
 #include "USB-CDC.h"
+
 
 #define usbINT_CLEAR_MASK	(AT91C_UDP_TXCOMP | AT91C_UDP_STALLSENT | AT91C_UDP_RXSETUP | AT91C_UDP_RX_DATA_BK0 | AT91C_UDP_RX_DATA_BK1 )
 /*-----------------------------------------------------------*/
@@ -186,3 +189,4 @@ vUSB_ISR_Wrapper (void)
   /* Restore the context of whichever task will execute next. */
   portRESTORE_CONTEXT ();
 }
+#endif /*DISABLE_USB*/
