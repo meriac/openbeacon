@@ -31,7 +31,6 @@
 
 #include <FreeRTOS.h>
 #include <AT91SAM7.h>
-#include <USB-CDC.h>
 #include <task.h>
 #include <beacontypes.h>
 #include <board.h>
@@ -66,8 +65,6 @@ void __attribute__((noreturn)) mainloop (void)
 
 	led_init ();
 
-	xTaskCreate (vUSBCDCTask, (signed portCHAR *) "USB", TASK_USB_STACK,
-			NULL, TASK_USB_PRIORITY, NULL);
 	vInitProtocolLayer ();
 
 	vTaskStartScheduler ();

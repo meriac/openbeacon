@@ -4,7 +4,7 @@ CPU=$(ARCH)32
 DEBUG=-g
 OPTIM=-O2
 
-APP_CFLAGS=-Iapplication -std=gnu99 -fgnu89-inline -DDISABLE_WATCHDOG
+APP_CFLAGS=-Iapplication -std=gnu99 -fgnu89-inline -DDISABLE_WATCHDOG -DDISABLE_USB
 APP_LDFLAGS=-lm
 
 APP_SRC= \

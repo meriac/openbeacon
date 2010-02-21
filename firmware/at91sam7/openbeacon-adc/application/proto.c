@@ -26,38 +26,18 @@
 #include <string.h>
 #include <board.h>
 #include <beacontypes.h>
-#include <USB-CDC.h>
-#include <sort.h>
+#include <dbgu.h>
 #include <led.h>
 #include "proto.h"
 
 /**********************************************************************/
 #define INT_LEVEL_ADC 4
-#define ADC_INTEGRATE1 100
-#define ADC_INTEGRATE2 100
+#define ADC_INTEGRATE1 20
 /**********************************************************************/
 
 // Global variables
 static unsigned short ADC_Buffer[2][ADC_INTEGRATE1];	// Buffer
 volatile unsigned int value = 0;
-
-static inline void
-DumpUIntToUSB (unsigned int data)
-{
-  int i = 0;
-  unsigned char buffer[10], *p = &buffer[sizeof (buffer)];
-
-  do
-    {
-      *--p = '0' + (unsigned char) (data % 10);
-      data /= 10;
-      i++;
-    }
-  while (data);
-
-  while (i--)
-    vUSBSendByte (*p++);
-}
 
 static void
 vnRFtaskRating (void *parameter)
@@ -70,10 +50,6 @@ vnRFtaskRating (void *parameter)
       vTaskDelay (250 / portTICK_RATE_MS);
       led_set_green (0);
       vTaskDelay (250 / portTICK_RATE_MS);
-
-      DumpUIntToUSB(value);
-      vUSBSendByte ('\n');
-      vUSBSendByte ('\r');
     }
 }
 
@@ -81,8 +57,9 @@ static void
 adc_isr_handler (void)
 {
   unsigned int count, val;
-  static unsigned int ADC_Buffer_Pos = 0, ADC_Integrate_Val = 0, ADC_Integrate_Count = 0;
+  static unsigned int ADC_Buffer_Pos = 0;
   unsigned short *p;
+  static char buffer[2];
 
   led_set_red (1);
 
@@ -96,15 +73,9 @@ adc_isr_handler (void)
   while (count--)
     val += (*p++) & 0x3FF;
 
-  if(ADC_Integrate_Count++<ADC_INTEGRATE2)
-    ADC_Integrate_Val+=val;
-  else
-  {
-    value = ADC_Integrate_Val;
-
-    ADC_Integrate_Val=0;
-    ADC_Integrate_Count=0;
-  }
+  buffer[0]=(val>>0) & 0xFF;
+  buffer[1]=(val>>8) & 0xFF;
+  AT91F_DBGU_Frame(buffer,sizeof(buffer));
 
   AT91C_BASE_AIC->AIC_EOICR = 0;
 
@@ -121,6 +92,8 @@ static void __attribute__ ((naked)) adc_isr (void)
 void
 vInitProtocolLayer (void)
 {
+  AT91F_DBGU_Init();
+
   /* Enable Peripherals */
   AT91F_PIO_CfgPeriph (ADC_CLOCK_PIO, 0, ADC_CLOCK_PIN);
 
