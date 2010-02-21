@@ -33,11 +33,12 @@
 
 /**********************************************************************/
 #define INT_LEVEL_ADC 4
-#define ADC_LEN 100
+#define ADC_INTEGRATE1 100
+#define ADC_INTEGRATE2 100
 /**********************************************************************/
 
 // Global variables
-static unsigned short ADC_Buffer[2][ADC_LEN];	// Buffer
+static unsigned short ADC_Buffer[2][ADC_INTEGRATE1];	// Buffer
 volatile unsigned int value = 0;
 
 static inline void
@@ -76,25 +77,34 @@ vnRFtaskRating (void *parameter)
     }
 }
 
-void
+static void
 adc_isr_handler (void)
 {
-  int count, val;
-  static unsigned int ADC_Buffer_Pos = 0;
+  unsigned int count, val;
+  static unsigned int ADC_Buffer_Pos = 0, ADC_Integrate_Val = 0, ADC_Integrate_Count = 0;
   unsigned short *p;
 
   led_set_red (1);
 
   // Setup DMA and clear ENDRX flag
   p = ADC_Buffer[ADC_Buffer_Pos];
-  AT91F_PDC_SetNextRx (AT91C_BASE_PDC_ADC, (unsigned char *) p, ADC_LEN);
+  AT91F_PDC_SetNextRx (AT91C_BASE_PDC_ADC, (unsigned char *) p, ADC_INTEGRATE1);
   ADC_Buffer_Pos = ADC_Buffer_Pos ? 0 : 1;
 
-  count = ADC_LEN;
-  val = 0;
+  count = ADC_INTEGRATE1;
+  val=0;
   while (count--)
     val += (*p++) & 0x3FF;
-  value = val;
+
+  if(ADC_Integrate_Count++<ADC_INTEGRATE2)
+    ADC_Integrate_Val+=val;
+  else
+  {
+    value = ADC_Integrate_Val;
+
+    ADC_Integrate_Val=0;
+    ADC_Integrate_Count=0;
+  }
 
   AT91C_BASE_AIC->AIC_EOICR = 0;
 
@@ -127,8 +137,8 @@ vInitProtocolLayer (void)
   AT91C_BASE_ADC->ADC_CHER = AT91C_ADC_CH4;
 
   // Setup DMA
-  AT91F_PDC_SetRx (AT91C_BASE_PDC_ADC, (unsigned char *) ADC_Buffer[0], ADC_LEN);
-  AT91F_PDC_SetNextRx (AT91C_BASE_PDC_ADC, (unsigned char *) ADC_Buffer[1], ADC_LEN);
+  AT91F_PDC_SetRx (AT91C_BASE_PDC_ADC, (unsigned char *) ADC_Buffer[0], ADC_INTEGRATE1);
+  AT91F_PDC_SetNextRx (AT91C_BASE_PDC_ADC, (unsigned char *) ADC_Buffer[1], ADC_INTEGRATE1);
   AT91F_PDC_EnableRx (AT91C_BASE_PDC_ADC);
 
   // Setup interrupts
