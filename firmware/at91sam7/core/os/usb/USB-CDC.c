@@ -51,6 +51,8 @@
 /* Demo board includes. */
 #include <board.h>
 
+#ifndef DISABLE_USB
+
 /* Scheduler includes. */
 #include <FreeRTOS.h>
 #include <task.h>
@@ -986,3 +988,5 @@ prvSendNextSegment (void)
 	}
     }
 }
+
+#endif/*DISABLE_USB*/

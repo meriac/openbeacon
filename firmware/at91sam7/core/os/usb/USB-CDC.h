@@ -35,6 +35,7 @@
 
 #ifndef USB_CDC_H
 #define USB_CDC_H
+#ifndef DISABLE_USB
 
 #include "usb.h"
 
@@ -86,4 +87,5 @@ portLONG vUSBRecvByte (portCHAR *cByte,portLONG size, portTickType xTicksToWait)
 int iUSBGetChosenConfiguration (void);
 void vDetachUSBInterface (void);
 
-#endif
+#endif/*DISABLE_USB*/
+#endif/*USB_CDC_H*/
