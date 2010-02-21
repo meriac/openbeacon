@@ -1,4 +1,4 @@
-TARGET=openbeacon-heartbeat
+TARGET=openbeacon-adc
 ARCH=AT91SAM7S
 CPU=$(ARCH)32
 DEBUG=-g
