@@ -32,12 +32,13 @@
 
 /**********************************************************************/
 #define INT_LEVEL_ADC 4
-#define ADC_INTEGRATE1 20
+#define ADC_INCREMENTS 1024
+#define ADC_DMA_COUNT 25
+#define FILTER_ORDER 3
 /**********************************************************************/
 
 // Global variables
-static unsigned short ADC_Buffer[2][ADC_INTEGRATE1];	// Buffer
-volatile unsigned int value = 0;
+static unsigned short ADC_Buffer[2][ADC_DMA_COUNT];	// Buffer
 
 static void
 vnRFtaskRating (void *parameter)
@@ -56,27 +57,53 @@ vnRFtaskRating (void *parameter)
 static void
 adc_isr_handler (void)
 {
-  unsigned int count, val;
+  int i;
+  unsigned int count;
+  unsigned short *p,*buffer;
+
+  // ADC dual buffer
   static unsigned int ADC_Buffer_Pos = 0;
-  unsigned short *p;
-  static char buffer[2];
+
+  // Filter state
+  static unsigned int filter_integrate[FILTER_ORDER],filter_integrate_last;
+  static unsigned int filter_comb[FILTER_ORDER], filter_comb_last[FILTER_ORDER];
+  unsigned int *fc,*fcl;
+
+  // RS232 buffer
+  static short int data;
 
   led_set_red (1);
 
+  p =  buffer = ADC_Buffer[ADC_Buffer_Pos];
+  ADC_Buffer_Pos = ADC_Buffer_Pos ? 0 : 1; // later XOR
+
+  // Filter Integrate
+  for(count=0;count<ADC_DMA_COUNT;count++)
+  {
+    filter_integrate[0]+=(*p++) & (ADC_INCREMENTS-1);
+    for(i=1;i<FILTER_ORDER;i++)
+	filter_integrate[i]+=filter_integrate[i-1];
+  }
+
+  // Filter Decimate Comb
+  filter_comb[0]=filter_integrate[FILTER_ORDER-1]-filter_integrate_last;
+  filter_integrate_last=filter_integrate[FILTER_ORDER-1];
+
+  fc=filter_comb;
+  fcl=filter_comb_last;
+  for(i=1;i<FILTER_ORDER;i++)
+  {
+    filter_comb[i]=*fc-*fcl;
+    *fcl++ = *fc++;
+  }
+
+  // Send out data via RS232
+  data=filter_comb[FILTER_ORDER-1]>>8;
+  /*((ADC_DMA_COUNT/2)*ADC_INCREMENTS);*/
+  AT91F_DBGU_Frame((char*)&data,sizeof(data));
+
   // Setup DMA and clear ENDRX flag
-  p = ADC_Buffer[ADC_Buffer_Pos];
-  AT91F_PDC_SetNextRx (AT91C_BASE_PDC_ADC, (unsigned char *) p, ADC_INTEGRATE1);
-  ADC_Buffer_Pos = ADC_Buffer_Pos ? 0 : 1;
-
-  count = ADC_INTEGRATE1;
-  val=0;
-  while (count--)
-    val += (*p++) & 0x3FF;
-
-  buffer[0]=(val>>0) & 0xFF;
-  buffer[1]=(val>>8) & 0xFF;
-  AT91F_DBGU_Frame(buffer,sizeof(buffer));
-
+  AT91F_PDC_SetNextRx (AT91C_BASE_PDC_ADC, (unsigned char*)buffer, ADC_DMA_COUNT);
   AT91C_BASE_AIC->AIC_EOICR = 0;
 
   led_set_red (0);
@@ -105,13 +132,12 @@ vInitProtocolLayer (void)
     AT91C_ADC_LOWRES_10_BIT	|
     AT91C_ADC_SLEEP_NORMAL_MODE |
     (4 << 8) 			| // PRESCAL
-    AT91C_ADC_STARTUP		| // STARTUP
     (5 << 24)			; // SHTIM;
-  AT91C_BASE_ADC->ADC_CHER = AT91C_ADC_CH4;
+  AT91C_BASE_ADC->ADC_CHER = AT91C_ADC_CH6;
 
   // Setup DMA
-  AT91F_PDC_SetRx (AT91C_BASE_PDC_ADC, (unsigned char *) ADC_Buffer[0], ADC_INTEGRATE1);
-  AT91F_PDC_SetNextRx (AT91C_BASE_PDC_ADC, (unsigned char *) ADC_Buffer[1], ADC_INTEGRATE1);
+  AT91F_PDC_SetRx (AT91C_BASE_PDC_ADC, (unsigned char *) ADC_Buffer[0], ADC_DMA_COUNT);
+  AT91F_PDC_SetNextRx (AT91C_BASE_PDC_ADC, (unsigned char *) ADC_Buffer[1], ADC_DMA_COUNT);
   AT91F_PDC_EnableRx (AT91C_BASE_PDC_ADC);
 
   // Setup interrupts

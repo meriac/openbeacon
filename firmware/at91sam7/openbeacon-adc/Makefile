@@ -1,6 +1,6 @@
 TARGET=openbeacon-adc
 ARCH=AT91SAM7S
-CPU=$(ARCH)32
+CPU=$(ARCH)256
 DEBUG=-g
 OPTIM=-O2
 

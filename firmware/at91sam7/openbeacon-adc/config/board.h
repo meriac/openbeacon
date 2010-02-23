@@ -73,7 +73,7 @@
 /* configure serial port         */
 /*-------------------------------*/
 
-#define AT91C_DBGU_BAUD 460800
+#define AT91C_DBGU_BAUD 230400
 
 /*-------------------------------*/
 /* configuration structure       */
