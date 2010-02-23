@@ -98,8 +98,7 @@ adc_isr_handler (void)
   }
 
   // Send out data via RS232
-  data=filter_comb[FILTER_ORDER-1]>>8;
-  /*((ADC_DMA_COUNT/2)*ADC_INCREMENTS);*/
+  data=(filter_comb[FILTER_ORDER-1]>>8)-0x5C00UL;
   AT91F_DBGU_Frame((char*)&data,sizeof(data));
 
   // Setup DMA and clear ENDRX flag
