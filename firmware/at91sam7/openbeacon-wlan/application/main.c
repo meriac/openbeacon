@@ -40,10 +40,8 @@
 #include <task.h>
 #include <crc32.h>
 
-#include "proto.h"
 #include "sdram.h"
 #include "uart.h"
-#include "cmd.h"
 
 /**********************************************************************/
 static inline void
@@ -199,8 +197,6 @@ void __attribute__((noreturn)) mainloop (void)
 #ifdef  SDRAM_TASK
 	xTaskCreate (sdram_test_task, (signed portCHAR *) "SDRAM_DEMO 0", 512, (void*)0, NEAR_IDLE_PRIORITY, NULL);
 #endif/*SDRAM_TASK*/
-	vCmdInit();
-	vInitProtocolLayer ();
 
 	vTaskStartScheduler ();
 

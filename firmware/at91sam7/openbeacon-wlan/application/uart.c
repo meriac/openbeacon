@@ -29,8 +29,6 @@
 #include <beacontypes.h>
 #include <USB-CDC.h>
 
-#include "cmd.h"
-
 #define UART_QUEUE_SIZE 1024
 
 static xQueueHandle uart_queue_rx;
@@ -87,9 +85,9 @@ void uart_set_baudrate(unsigned int baud)
 
     AT91C_BASE_US0->US_BRGR = CD | ((FP&0x7)<<16);
 
-    DumpStringToUSB("baud rate set to ");
+/*    DumpStringToUSB("baud rate set to ");
     DumpUIntToUSB(MCK/((16*CD)+(2*FP)));
-    DumpStringToUSB("\n\r");
+    DumpStringToUSB("\n\r");*/
 }
 
 void uart_tx(const void* data,unsigned int size)
@@ -107,7 +105,6 @@ static void
 uart_task (void *parameter)
 {
     (void) parameter;
-    u_int8_t data;
 
     vTaskDelay(11000/portTICK_RATE_MS);
 
@@ -127,8 +124,9 @@ uart_task (void *parameter)
 
     for(;;)
     {
-	if( xQueueReceive(uart_queue_rx, &data, ( portTickType ) 100 ) )
-	    vUSBSendByte(data);
+	vTaskDelay(1000/portTICK_RATE_MS);
+/*	if( xQueueReceive(uart_queue_rx, &data, ( portTickType ) 100 ) )
+	    vUSBSendByte(data);*/
     }
 }
 

@@ -9,10 +9,7 @@ APP_LDFLAGS=-lm
 
 APP_SRC= \
   $(CORE)openbeacon/crc32.c \
-  application/cmd.c \
   application/main.c \
-  application/proto.c \
-  application/xxtea.c \
   application/sdram.c \
   application/uart.c
 
