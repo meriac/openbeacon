@@ -11,7 +11,7 @@ APP_SRC= \
   $(CORE)openbeacon/crc32.c \
   application/main.c \
   application/sdram.c \
-  application/uart.c
+  application/wifi.c
 
 APP_SRC+=$(IMAGES_C)
 

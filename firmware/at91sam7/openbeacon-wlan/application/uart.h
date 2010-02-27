@@ -20,11 +20,11 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#ifndef __UART_H__
-#define __UART_H__
+#ifndef __WIFI_H_
+#define __WIFI_H__
 
-extern void uart_init (void);
-extern void uart_tx(const void* data,unsigned int size);
-extern void uart_set_baudrate(unsigned int baud);
+extern void wifi_init (void);
+extern void wifi_tx(const void* data,unsigned int size);
+extern void wifi_set_baudrate(unsigned int baud);
 
-#endif/*__UART_H__*/
+#endif/*__WIFI_H__*/

@@ -41,7 +41,7 @@
 #include <crc32.h>
 
 #include "sdram.h"
-#include "uart.h"
+#include "wifi.h"
 
 /**********************************************************************/
 static inline void
@@ -187,7 +187,7 @@ void __attribute__((noreturn)) mainloop (void)
 
 	led_init ();
 	sdram_init ();
-	uart_init ();
+	wifi_init ();
 
 	xTaskCreate (watchdog_restart_task, (signed portCHAR *) "WATCHDOG",
 			TASK_WATCHDOG_STACK, NULL, TASK_WATCHDOG_PRIORITY, NULL);

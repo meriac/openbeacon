@@ -29,11 +29,13 @@
 #include <beacontypes.h>
 #include <USB-CDC.h>
 
+#include "wuifi.h"
+
 #define UART_QUEUE_SIZE 1024
 
-static xQueueHandle uart_queue_rx;
+static xQueueHandle wifi_queue_rx;
 
-void uart_isr_handler(void)
+void wifi_isr_handler(void)
 {
     u_int8_t data;
     portBASE_TYPE woken = pdFALSE;
@@ -42,7 +44,7 @@ void uart_isr_handler(void)
     while(AT91C_BASE_US0->US_CSR & AT91C_US_RXRDY)
     {
 	data=(unsigned char)(AT91C_BASE_US0->US_RHR);
-	xQueueSendFromISR(uart_queue_rx, &data, &woken);
+	xQueueSendFromISR(wifi_queue_rx, &data, &woken);
     }
 
     // ack IRQ
@@ -55,14 +57,14 @@ void uart_isr_handler(void)
 }
 
 void __attribute__((naked))
-uart_isr(void)
+wifi_isr(void)
 {
     portSAVE_CONTEXT();
-    uart_isr_handler();
+    wifi_isr_handler();
     portRESTORE_CONTEXT();
 }
 
-void uart_set_baudrate(unsigned int baud)
+void wifi_set_baudrate(unsigned int baud)
 {
     unsigned int FP,CD;
 
@@ -90,7 +92,7 @@ void uart_set_baudrate(unsigned int baud)
     DumpStringToUSB("\n\r");*/
 }
 
-void uart_tx(const void* data,unsigned int size)
+void wifi_tx(const void* data,unsigned int size)
 {
     const unsigned char* c=(const unsigned char*)data;
 
@@ -101,8 +103,14 @@ void uart_tx(const void* data,unsigned int size)
     }
 }
 
+static
+wifi_reset_
+    AT91F_PIO_SetOutput(WLAN_PIO, WLAN_ADHOC);
+/*    AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_RESET|WLAN_WAKE);*/
+
+
 static void
-uart_task (void *parameter)
+wifi_task (void *parameter)
 {
     (void) parameter;
     u_int8_t data;
@@ -113,7 +121,7 @@ uart_task (void *parameter)
     AT91C_BASE_US0->US_CR = AT91C_US_RXEN|AT91C_US_TXEN;
 
     // enable IRQ
-    AT91F_AIC_ConfigureIt(AT91C_ID_US0, 4, AT91C_AIC_SRCTYPE_INT_HIGH_LEVEL, uart_isr );
+    AT91F_AIC_ConfigureIt(AT91C_ID_US0, 4, AT91C_AIC_SRCTYPE_INT_HIGH_LEVEL, wifi_isr );
     AT91C_BASE_US0->US_IER = AT91C_US_RXRDY;//|AT91C_US_ENDRX;//|AT91C_US_TXRDY|AT91C_US_ENDRX|AT91C_US_ENDTX;
     AT91F_AIC_EnableIt(AT91C_ID_US0);
 
@@ -125,13 +133,13 @@ uart_task (void *parameter)
 
     for(;;)
     {
-	if( xQueueReceive(uart_queue_rx, &data, ( portTickType ) 100 ) )
+	if( xQueueReceive(wifi_queue_rx, &data, ( portTickType ) 100 ) )
 	    vUSBSendByte(data);
     }
 }
 
 void
-uart_init (void)
+wifi_init (void)
 {
     // configure UART peripheral
     AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_US0);
@@ -140,12 +148,10 @@ uart_init (void)
     // configure IOs
     AT91F_PIO_CfgOutput(WLAN_PIO, WLAN_ADHOC|WLAN_RESET|WLAN_WAKE);
     AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_RESET|WLAN_ADHOC|WLAN_WAKE);
-    AT91F_PIO_SetOutput(WLAN_PIO, WLAN_ADHOC);
-/*    AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_RESET|WLAN_WAKE);*/
 
     // Standard Asynchronous Mode : 8 bits , 1 stop , no parity
     AT91C_BASE_US0->US_MR = AT91C_US_ASYNC_MODE;
-    uart_set_baudrate(WLAN_BAUDRATE);
+    wifi_set_baudrate(WLAN_BAUDRATE);
 
     // no IRQs
     AT91C_BASE_US0->US_IDR = 0xFFFF;
@@ -163,9 +169,9 @@ uart_init (void)
     AT91C_BASE_US0->US_IF = 0;
 
     // create UART queue with minimum buffer size
-    uart_queue_rx = xQueueCreate (UART_QUEUE_SIZE,
+    wifi_queue_rx = xQueueCreate (UART_QUEUE_SIZE,
 	(unsigned portCHAR) sizeof (signed portCHAR));
 
-    xTaskCreate (uart_task, (signed portCHAR *) "uart_task", TASK_NRF_STACK,
+    xTaskCreate (wifi_task, (signed portCHAR *) "wifi_task", TASK_NRF_STACK,
 	NULL, TASK_NRF_PRIORITY, NULL);
 }
