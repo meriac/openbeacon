@@ -119,7 +119,7 @@ wifi_reset_settings (int backtofactory)
 
     wifi_reset();
     wifi_set_baudrate(backtofactory ? WLAN_BAUDRATE_FACTORY:WLAN_BAUDRATE);
-    i=backtofactory ? 7:5;
+    i=backtofactory ? 10:5;
 
     while(i--)
     {
