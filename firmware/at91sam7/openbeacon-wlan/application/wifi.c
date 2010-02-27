@@ -37,7 +37,8 @@
 
 static xQueueHandle wifi_queue_rx;
 
-void wifi_isr_handler(void)
+void
+wifi_isr_handler(void)
 {
     u_int8_t data;
     portBASE_TYPE woken = pdFALSE;
@@ -66,7 +67,8 @@ wifi_isr(void)
     portRESTORE_CONTEXT();
 }
 
-void wifi_set_baudrate(unsigned int baud)
+static void
+wifi_set_baudrate(unsigned int baud)
 {
     unsigned int FP,CD;
 
@@ -110,24 +112,33 @@ wifi_reset (void)
     AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_WAKE);
 }
 
-static void
-wifi_reset_factory (void)
+void
+wifi_reset_settings (int backtofactory)
 {
     int i;
 
     wifi_reset();
+    wifi_set_baudrate(backtofactory ? WLAN_BAUDRATE_FACTORY:WLAN_BAUDRATE);
+    i=backtofactory ? 7:5;
 
-    wifi_set_baudrate(WLAN_BAUDRATE_FACTORY);
-
-    for(i=0;i<5;i++)
+    while(i--)
     {
-	vLedSetRed (i);
+	vLedSetRed (i&1);
 	vTaskDelay(1000/portTICK_RATE_MS);
+
 	if(i&1)
 	    AT91F_PIO_SetOutput(WLAN_PIO, WLAN_ADHOC);
 	else
 	    AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_ADHOC);
     }
+
+    // wait
+    vTaskDelay(1000/portTICK_RATE_MS);
+    // reset module
+    AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_RESET|WLAN_WAKE|WLAN_ADHOC);
+    vTaskDelay(100/portTICK_RATE_MS);
+    // remove reset line
+    AT91F_PIO_SetOutput(WLAN_PIO, WLAN_RESET|WLAN_WAKE);
 }
 
 static void
@@ -148,7 +159,7 @@ wifi_task (void *parameter)
     AT91C_BASE_US0->US_IER = AT91C_US_RXRDY;//|AT91C_US_ENDRX;//|AT91C_US_TXRDY|AT91C_US_ENDRX|AT91C_US_ENDTX;
     AT91F_AIC_EnableIt(AT91C_ID_US0);
 
-    wifi_reset_factory();
+    wifi_reset_settings(0);
 
     vLedSetRed (1);
 

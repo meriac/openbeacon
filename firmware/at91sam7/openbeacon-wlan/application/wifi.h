@@ -25,6 +25,6 @@
 
 extern void wifi_init (void);
 extern void wifi_tx(const void* data, int len);
-extern void wifi_set_baudrate(unsigned int baud);
+extern void wifi_reset_settings(int backtofactory);
 
 #endif/*__WIFI_H__*/
