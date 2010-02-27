@@ -109,26 +109,7 @@ wifi_reset (void)
     vTaskDelay(10/portTICK_RATE_MS);
     AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_WAKE);
 }
-/*
-void
-wifi_tx (const void *data, int len)
-{
-    const unsigned char* c=(const unsigned char*)data;
 
-    while(len-- >= 0)
-    {
-	AT91C_BASE_US0->US_THR=*c++;
-	vTaskDelay(10/portTICK_RATE_MS);
-    }
-}
-
-static void
-wifi_tx_text (const char *data)
-{
-    if(data)
-	wifi_tx(data,strlen(data));
-}
-*/
 static void
 wifi_reset_factory (void)
 {
@@ -140,16 +121,13 @@ wifi_reset_factory (void)
 
     for(i=0;i<5;i++)
     {
-	vLedSetRed (1);
+	vLedSetRed (i);
 	vTaskDelay(1000/portTICK_RATE_MS);
-	AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_ADHOC);
-
-	vLedSetRed (0);
-	vTaskDelay(1000/portTICK_RATE_MS);
-	AT91F_PIO_SetOutput(WLAN_PIO, WLAN_ADHOC);
+	if(i&1)
+	    AT91F_PIO_SetOutput(WLAN_PIO, WLAN_ADHOC);
+	else
+	    AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_ADHOC);
     }
-    
-    AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_ADHOC);
 }
 
 static void
