@@ -28,6 +28,7 @@
 #include <led.h>
 #include <beacontypes.h>
 #include <USB-CDC.h>
+#include <dbgu.h>
 
 #include "wifi.h"
 
@@ -93,17 +94,6 @@ void wifi_set_baudrate(unsigned int baud)
     DumpStringToUSB("\n\r");*/
 }
 
-void wifi_tx(const void* data,unsigned int size)
-{
-    const unsigned char* c=(const unsigned char*)data;
-
-    while(size--)
-    {
-	AT91C_BASE_US0->US_THR=*c++;
-	vTaskDelay(10/portTICK_RATE_MS);
-    }
-}
-
 static void
 wifi_reset (void)
 {
@@ -119,7 +109,26 @@ wifi_reset (void)
     vTaskDelay(10/portTICK_RATE_MS);
     AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_WAKE);
 }
+/*
+void
+wifi_tx (const void *data, int len)
+{
+    const unsigned char* c=(const unsigned char*)data;
 
+    while(len-- >= 0)
+    {
+	AT91C_BASE_US0->US_THR=*c++;
+	vTaskDelay(10/portTICK_RATE_MS);
+    }
+}
+
+static void
+wifi_tx_text (const char *data)
+{
+    if(data)
+	wifi_tx(data,strlen(data));
+}
+*/
 static void
 wifi_reset_factory (void)
 {
@@ -139,13 +148,15 @@ wifi_reset_factory (void)
 	vTaskDelay(1000/portTICK_RATE_MS);
 	AT91F_PIO_SetOutput(WLAN_PIO, WLAN_ADHOC);
     }
+    
+    AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_ADHOC);
 }
 
 static void
 wifi_task (void *parameter)
 {
     (void) parameter;
-    u_int8_t data;
+    char data;
 
     vLedSetGreen (1);
 
@@ -159,20 +170,19 @@ wifi_task (void *parameter)
     AT91C_BASE_US0->US_IER = AT91C_US_RXRDY;//|AT91C_US_ENDRX;//|AT91C_US_TXRDY|AT91C_US_ENDRX|AT91C_US_ENDTX;
     AT91F_AIC_EnableIt(AT91C_ID_US0);
 
-/*    // remove reset line
-    AT91F_PIO_SetOutput(WLAN_PIO, WLAN_RESET|WLAN_WAKE);
-    // tickle On button for WLAN module
-    vTaskDelay(1/portTICK_RATE_MS);
-    AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_WAKE);*/
-
     wifi_reset_factory();
 
     vLedSetRed (1);
 
     for(;;)
     {
-	if( xQueueReceive(wifi_queue_rx, &data, ( portTickType ) 100 ) )
+	if( xQueueReceive(wifi_queue_rx, &data, ( portTickType ) 0 ) )
 	    vUSBSendByte(data);
+	else
+	    if( vUSBRecvByte(&data, sizeof(data), ( portTickType ) 0 ) )
+		AT91C_BASE_US0->US_THR = data;
+	    else
+		vTaskDelay(10/portTICK_RATE_MS);
     }
 }
 

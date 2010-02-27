@@ -24,7 +24,7 @@
 #define __WIFI_H__
 
 extern void wifi_init (void);
-extern void wifi_tx(const void* data,unsigned int size);
+extern void wifi_tx(const void* data, int len);
 extern void wifi_set_baudrate(unsigned int baud);
 
 #endif/*__WIFI_H__*/
