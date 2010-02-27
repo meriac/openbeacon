@@ -29,9 +29,10 @@
 #include <beacontypes.h>
 #include <USB-CDC.h>
 
-#include "wuifi.h"
+#include "wifi.h"
 
 #define UART_QUEUE_SIZE 1024
+#define WLAN_BAUDRATE_FACTORY	9600
 
 static xQueueHandle wifi_queue_rx;
 
@@ -103,11 +104,42 @@ void wifi_tx(const void* data,unsigned int size)
     }
 }
 
-static
-wifi_reset_
+static void
+wifi_reset (void)
+{
+    // reset WIFI
     AT91F_PIO_SetOutput(WLAN_PIO, WLAN_ADHOC);
-/*    AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_RESET|WLAN_WAKE);*/
+    AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_RESET|WLAN_WAKE);
+    vTaskDelay(100/portTICK_RATE_MS);
 
+    // remove reset line
+    AT91F_PIO_SetOutput(WLAN_PIO, WLAN_RESET|WLAN_WAKE);
+
+    // tickle On button for WLAN module
+    vTaskDelay(10/portTICK_RATE_MS);
+    AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_WAKE);
+}
+
+static void
+wifi_reset_factory (void)
+{
+    int i;
+
+    wifi_reset();
+
+    wifi_set_baudrate(WLAN_BAUDRATE_FACTORY);
+
+    for(i=0;i<5;i++)
+    {
+	vLedSetRed (1);
+	vTaskDelay(1000/portTICK_RATE_MS);
+	AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_ADHOC);
+
+	vLedSetRed (0);
+	vTaskDelay(1000/portTICK_RATE_MS);
+	AT91F_PIO_SetOutput(WLAN_PIO, WLAN_ADHOC);
+    }
+}
 
 static void
 wifi_task (void *parameter)
@@ -115,7 +147,9 @@ wifi_task (void *parameter)
     (void) parameter;
     u_int8_t data;
 
-    vTaskDelay(11000/portTICK_RATE_MS);
+    vLedSetGreen (1);
+
+    vTaskDelay(15000/portTICK_RATE_MS);
 
     // enable UART0
     AT91C_BASE_US0->US_CR = AT91C_US_RXEN|AT91C_US_TXEN;
@@ -125,11 +159,15 @@ wifi_task (void *parameter)
     AT91C_BASE_US0->US_IER = AT91C_US_RXRDY;//|AT91C_US_ENDRX;//|AT91C_US_TXRDY|AT91C_US_ENDRX|AT91C_US_ENDTX;
     AT91F_AIC_EnableIt(AT91C_ID_US0);
 
-    // remove reset line
+/*    // remove reset line
     AT91F_PIO_SetOutput(WLAN_PIO, WLAN_RESET|WLAN_WAKE);
     // tickle On button for WLAN module
     vTaskDelay(1/portTICK_RATE_MS);
-    AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_WAKE);
+    AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_WAKE);*/
+
+    wifi_reset_factory();
+
+    vLedSetRed (1);
 
     for(;;)
     {
