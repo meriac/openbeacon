@@ -105,6 +105,7 @@ static void
 uart_task (void *parameter)
 {
     (void) parameter;
+    u_int8_t data;
 
     vTaskDelay(11000/portTICK_RATE_MS);
 
@@ -124,9 +125,8 @@ uart_task (void *parameter)
 
     for(;;)
     {
-	vTaskDelay(1000/portTICK_RATE_MS);
-/*	if( xQueueReceive(uart_queue_rx, &data, ( portTickType ) 100 ) )
-	    vUSBSendByte(data);*/
+	if( xQueueReceive(uart_queue_rx, &data, ( portTickType ) 100 ) )
+	    vUSBSendByte(data);
     }
 }
 
@@ -140,8 +140,8 @@ uart_init (void)
     // configure IOs
     AT91F_PIO_CfgOutput(WLAN_PIO, WLAN_ADHOC|WLAN_RESET|WLAN_WAKE);
     AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_RESET|WLAN_ADHOC|WLAN_WAKE);
-/*    AT91F_PIO_SetOutput(WLAN_PIO, WLAN_ADHOC);
-    AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_RESET|WLAN_WAKE);*/
+    AT91F_PIO_SetOutput(WLAN_PIO, WLAN_ADHOC);
+/*    AT91F_PIO_ClearOutput(WLAN_PIO, WLAN_RESET|WLAN_WAKE);*/
 
     // Standard Asynchronous Mode : 8 bits , 1 stop , no parity
     AT91C_BASE_US0->US_MR = AT91C_US_ASYNC_MODE;
