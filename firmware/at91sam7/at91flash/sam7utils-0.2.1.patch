@@ -1,0 +1,20 @@
+diff -Naur sam7utils-0.2.1.old/samba.c sam7utils-0.2.1/samba.c
+--- sam7utils-0.2.1.old/samba.c	2006-06-17 09:40:39.000000000 +0200
++++ sam7utils-0.2.1/samba.c	2009-08-16 15:01:43.000000000 +0200
+@@ -168,7 +168,7 @@
+   samba_chip_info.sramsiz = sramsizs[AT91_CHIPID_SRAMSIZ( chipid )];
+   samba_chip_info.arch = AT91_CHIPID_ARCH( chipid );
+   
+-  if( samba_chip_info.arch == AT91_ARCH_AT91SAM7Sxx ) {
++  if(( samba_chip_info.arch == AT91_ARCH_AT91SAM7Sxx)||(samba_chip_info.arch == AT91_ARCH_AT91SAM7SExx) ) {
+     switch( samba_chip_info.nvpsiz) {
+     case 32*K:
+       samba_chip_info.page_size = 128;
+@@ -186,6 +186,7 @@
+       break;
+ 
+     case 256*K:
++    case 512*K:
+       samba_chip_info.page_size = 256;
+       samba_chip_info.lock_bits = 16;
+       break;
