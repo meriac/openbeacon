@@ -2,3 +2,4 @@
 
 svn update
 svn2cl -i
+svn ci ChangeLog -m"updated ChangeLog"
