@@ -34,8 +34,15 @@ The supplied at91flash script depends on the sam7 tool:
 
 http://oss.tekno.us/sam7utils/
 
+Make sure to have libusb-devel and readline-devel installed before compiling
+sam7utils - be careful as it won't complain about missing libusb support,
+but compile without usb support instead.
+
+Before compiling please apply the patch at91flash/sam7utils-0.2.1.patch to
+sam7utils if you need support for AT91SAM7SE support in sam7utils.
+
 Just issue a "make clean flash" to flash the current project specific firmware
-image.
+image in the individual project subdirectory.
 
 For Microsoft(tm) Windows(tm) use the AT91-ISP.exe package for flashing:
 http://www.atmel.com/dyn/products/tools_card.asp?tool_id=3883 
