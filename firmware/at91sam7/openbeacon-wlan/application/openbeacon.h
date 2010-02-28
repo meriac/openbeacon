@@ -34,19 +34,19 @@
 
 #define XXTEA_BLOCK_COUNT 4
 
+#define RFBPROTO_READER_COMMAND 23
 #define RFBPROTO_BEACONTRACKER  24
 #define RFBPROTO_PROXTRACKER    42
 #define RFBPROTO_PROXREPORT     69
 
 #define PROX_MAX 4
+#define READER_CMD_MAXSIZE 10
 
 #define RFBFLAGS_ACK		0x01
 #define RFBFLAGS_SENSOR		0x02
 #define RFBFLAGS_INFECTED	0x04
-
-#define OID_PERSON			0x0400
-#define OID_HEALER			0x0200
-#define OID_PERSON_MIN      1100
+#define RFBFLAGS_REQUEST	0x08
+#define RFBFLAGS_RESPONSE	0x10
 
 #define PACKED  __attribute__((__packed__))
 
@@ -69,6 +69,7 @@ typedef union
 {
   TBeaconProx prox;
   TBeaconTracker tracker;
+  char reader_command[READER_CMD_MAXSIZE];
 } PACKED TBeaconPayload;
 
 typedef struct

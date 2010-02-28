@@ -1,6 +1,6 @@
 /***************************************************************
  *
- * OpenBeacon.org - OpenBeacon UART driver
+ * OpenBeacon.org - OpenBeacon WIFI driver
  *
  * Copyright 2007 Milosch Meriac <meriac@openbeacon.de>
  *
@@ -38,6 +38,7 @@
 
 #define UART_QUEUE_SIZE 1024
 #define WLAN_BAUDRATE_FACTORY	9600
+#define ANNOUNCE_INTERVAL_TICKS	(500 / portTICK_RATE_MS)
 
 #define ERROR_NO_NRF			(3UL)
 
@@ -208,51 +209,121 @@ shuffle_tx_byteorder (void)
 }
 
 static void
+wifi_reader_command (const char *cmd, int size)
+{
+  if (strncmp (cmd, "CNF.RESET", size))
+    wifi_reset_settings (0);
+  else if (strncmp (cmd, "CNF.ORIG", size))
+    wifi_reset_settings (1);
+  else if (strncmp (cmd, "DEV.RESET", size))
+    while (1);			// watchdog reset
+}
+
+static inline void
+wifi_tx (unsigned char power)
+{
+  /* update crc */
+  g_Beacon.pkt.crc = swapshort (env_crc16 (g_Beacon.byte,
+					   sizeof (g_Beacon) -
+					   sizeof (u_int16_t)));
+  /* encrypt data */
+  shuffle_tx_byteorder ();
+  xxtea_encode ();
+  shuffle_tx_byteorder ();
+
+  vLedSetGreen (1);
+
+  /* disable RX mode */
+  nRFCMD_CE (0);
+  vTaskDelay (2 / portTICK_RATE_MS);
+
+  /* switch to TX mode */
+  nRFAPI_SetRxMode (0);
+
+  /* set TX power */
+  nRFAPI_SetTxPower (power);
+
+  /* upload data to nRF24L01 */
+  nRFAPI_TX (g_Beacon.byte, sizeof (g_Beacon));
+
+  /* transmit data */
+  nRFCMD_CE (1);
+
+  /* wait until packet is transmitted */
+  vTaskDelay (2 / portTICK_RATE_MS);
+
+  /* switch to RX mode again */
+  nRFAPI_SetRxMode (1);
+
+  vLedSetGreen (0);
+}
+
+static void
 wifi_task_nrf (void *parameter)
 {
   (void) parameter;
   u_int16_t crc;
+  unsigned char power = 0;
+  portTickType Ticks = 0;
 
   if (nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0))
     {
       nRFAPI_SetPipeSizeRX (0, 16);
       nRFAPI_SetTxPower (3);
       nRFAPI_SetRxMode (1);
-
       nRFCMD_CE (1);
+
+      Ticks = xTaskGetTickCount ();
 
       while (1)
 	{
 	  if (nRFCMD_WaitRx (10))
 	    {
 	      vLedSetRed (1);
-
 	      do
 		{
 		  // read packet from nRF chip
 		  nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.byte,
 				     sizeof (g_Beacon));
-
 		  // adjust byte order and decode
 		  shuffle_tx_byteorder ();
 		  xxtea_decode ();
 		  shuffle_tx_byteorder ();
-
 		  // verify the crc checksum
 		  crc = env_crc16 (g_Beacon.byte,
 				   sizeof (g_Beacon) - sizeof (u_int16_t));
-
 		  if (swapshort (g_Beacon.pkt.crc) == crc)
-		    {
-		    }
+		    switch (g_Beacon.pkt.proto)
+		      {
+		      case RFBPROTO_READER_COMMAND:
+			if (g_Beacon.pkt.flags & RFBFLAGS_REQUEST)
+			  wifi_reader_command (g_Beacon.pkt.p.reader_command,
+					       strnlen (g_Beacon.pkt.p.
+							reader_command,
+							READER_CMD_MAXSIZE));
+			g_Beacon.pkt.flags =
+			  (g_Beacon.
+			   pkt.flags & ~RFBFLAGS_REQUEST) | RFBFLAGS_RESPONSE;
+			wifi_tx (3);
+			break;
+		      }
 
 		}
 	      while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
-
 	      vLedSetRed (0);
 	    }
 
 	  nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
+
+	  if ((xTaskGetTickCount () - Ticks) > ANNOUNCE_INTERVAL_TICKS)
+	    {
+	      Ticks = xTaskGetTickCount ();
+
+	      AT91F_WDTRestart (AT91C_BASE_WDTC);
+
+	      wifi_tx ((power++)&3);
+	    }
+
 	}
     }
 
@@ -264,24 +335,16 @@ wifi_task_uart (void *parameter)
 {
   (void) parameter;
   char data;
-
-  vLedSetGreen (1);
-
   vTaskDelay (15000 / portTICK_RATE_MS);
-
   // enable UART0
   AT91C_BASE_US0->US_CR = AT91C_US_RXEN | AT91C_US_TXEN;
-
   // enable IRQ
   AT91F_AIC_ConfigureIt (AT91C_ID_US0, 4, AT91C_AIC_SRCTYPE_INT_HIGH_LEVEL,
 			 wifi_isr);
   AT91C_BASE_US0->US_IER = AT91C_US_RXRDY;	//|AT91C_US_ENDRX;//|AT91C_US_TXRDY|AT91C_US_ENDRX|AT91C_US_ENDTX;
   AT91F_AIC_EnableIt (AT91C_ID_US0);
-
   wifi_reset_settings (1);
-
   vLedSetRed (1);
-
   for (;;)
     {
       if (xQueueReceive (wifi_queue_rx, &data, (portTickType) 0))
@@ -298,24 +361,19 @@ wifi_init (void)
 {
   // configure UART peripheral
   AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_US0);
-  AT91F_PIO_CfgPeriph (WLAN_PIO, (WLAN_RXD | WLAN_TXD | WLAN_RTS | WLAN_CTS),
-		       0);
-
+  AT91F_PIO_CfgPeriph (WLAN_PIO,
+		       (WLAN_RXD | WLAN_TXD | WLAN_RTS | WLAN_CTS), 0);
   // configure IOs
   AT91F_PIO_CfgOutput (WLAN_PIO, WLAN_ADHOC | WLAN_RESET | WLAN_WAKE);
   AT91F_PIO_ClearOutput (WLAN_PIO, WLAN_RESET | WLAN_ADHOC | WLAN_WAKE);
-
   // Standard Asynchronous Mode : 8 bits , 1 stop , no parity
   AT91C_BASE_US0->US_MR = AT91C_US_ASYNC_MODE;
   wifi_set_baudrate (WLAN_BAUDRATE);
-
   // no IRQs
   AT91C_BASE_US0->US_IDR = 0xFFFF;
-
   // reset and disable UART0
   AT91C_BASE_US0->US_CR =
     AT91C_US_RSTRX | AT91C_US_RSTTX | AT91C_US_RXDIS | AT91C_US_TXDIS;
-
   // receiver time-out (20 bit periods)
   AT91C_BASE_US0->US_RTOR = 20;
   // transmitter timeguard (disabled)
@@ -324,13 +382,13 @@ wifi_init (void)
   AT91C_BASE_US0->US_FIDI = 0;
   // IrDA Filter value (disabled)
   AT91C_BASE_US0->US_IF = 0;
-
   // create UART queue with minimum buffer size
   wifi_queue_rx = xQueueCreate (UART_QUEUE_SIZE,
 				(unsigned portCHAR) sizeof (signed portCHAR));
-
-  xTaskCreate (wifi_task_uart, (signed portCHAR *) "wifi_uart",
+  xTaskCreate (wifi_task_uart,
+	       (signed portCHAR *) "wifi_uart",
 	       TASK_UART_STACK, NULL, TASK_UART_PRIORITY, NULL);
-  xTaskCreate (wifi_task_nrf, (signed portCHAR *) "wifi_nrf", TASK_NRF_STACK,
-	       NULL, TASK_NRF_PRIORITY, NULL);
+  xTaskCreate (wifi_task_nrf,
+	       (signed portCHAR *) "wifi_nrf",
+	       TASK_NRF_STACK, NULL, TASK_NRF_PRIORITY, NULL);
 }

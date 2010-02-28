@@ -127,6 +127,7 @@
 /*-------------------------------*/
 
 #define CONFIG_TEA_ENABLEDECODE
+#define CONFIG_TEA_ENABLEENCODE
 
 /*-------------------------------*/
 /* task priorities               */
@@ -134,16 +135,13 @@
 
 #define NEAR_IDLE_PRIORITY	( tskIDLE_PRIORITY + 1 )
 
-#define TASK_WATCHDOG_PRIORITY	( NEAR_IDLE_PRIORITY + 1 )
-#define TASK_WATCHDOG_STACK		( 128 )
-
-#define TASK_USB_PRIORITY	( TASK_WATCHDOG_PRIORITY + 2 )
+#define TASK_USB_PRIORITY	( NEAR_IDLE_PRIORITY + 2 )
 #define TASK_USB_STACK		( 512 )
 
-#define TASK_UART_PRIORITY	( TASK_WATCHDOG_PRIORITY + 2 )
+#define TASK_UART_PRIORITY	( NEAR_IDLE_PRIORITY + 2 )
 #define TASK_UART_STACK		( 512 )
 
-#define TASK_NRF_PRIORITY	( TASK_WATCHDOG_PRIORITY + 3 )
+#define TASK_NRF_PRIORITY	( NEAR_IDLE_PRIORITY + 3 )
 #define TASK_NRF_STACK		( 512 )
 
 /*-------------------------------*/
