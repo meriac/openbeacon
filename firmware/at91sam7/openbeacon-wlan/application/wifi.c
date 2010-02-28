@@ -42,7 +42,8 @@
 #define ERROR_NO_NRF			(3UL)
 
 // set broadcast mac
-static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 1, 2, 3, 2, 1 };
+static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] =
+  { 1, 2, 3, 2, 1 };
 static xQueueHandle wifi_queue_rx;
 TBeaconEnvelope g_Beacon;
 
@@ -191,7 +192,7 @@ swaplong (unsigned long src)
                         g_Beacon.byte[b]=tmp;
 
 /**********************************************************************/
-void RAMFUNC
+static void
 shuffle_tx_byteorder (void)
 {
   unsigned char tmp;
@@ -212,6 +213,8 @@ wifi_task_nrf (void *parameter)
   (void) parameter;
   u_int16_t crc, oid;
 
+  wifi_stop_blinking (ERROR_NO_NRF);
+
   if (nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0))
     {
       nRFAPI_SetPipeSizeRX (0, 16);
@@ -227,27 +230,27 @@ wifi_task_nrf (void *parameter)
 	      vLedSetRed (1);
 
 	      do
-			{
-			  // read packet from nRF chip
-			  nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.byte,
-						 sizeof (g_Beacon));
+		{
+		  // read packet from nRF chip
+		  nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.byte,
+				     sizeof (g_Beacon));
 
-			  // adjust byte order and decode
-			  shuffle_tx_byteorder ();
-			  xxtea_decode ();
-			  shuffle_tx_byteorder ();
+		  // adjust byte order and decode
+		  shuffle_tx_byteorder ();
+		  xxtea_decode ();
+		  shuffle_tx_byteorder ();
 
-			  // verify the crc checksum
-			  crc = env_crc16 (g_Beacon.byte,
-					   sizeof (g_Beacon) - sizeof (u_int16_t));
+		  // verify the crc checksum
+		  crc = env_crc16 (g_Beacon.byte,
+				   sizeof (g_Beacon) - sizeof (u_int16_t));
 
-			  if ((swapshort (g_Beacon.pkt.crc) == crc) &&
-				  (oid = swapshort (g_Beacon.pkt.oid)))
-				{
-				}
+		  if ((swapshort (g_Beacon.pkt.crc) == crc) &&
+		      (oid = swapshort (g_Beacon.pkt.oid)))
+		    {
+		    }
 
-			}
-		   while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
+		}
+	      while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
 
 	      vLedSetRed (0);
 	    }
@@ -329,9 +332,10 @@ wifi_init (void)
   wifi_queue_rx = xQueueCreate (UART_QUEUE_SIZE,
 				(unsigned portCHAR) sizeof (signed portCHAR));
 
+(void)wifi_task_nrf;
   xTaskCreate (wifi_task_uart, (signed portCHAR *) "wifi_uart",
 	       TASK_UART_STACK, NULL, TASK_UART_PRIORITY, NULL);
-
+/*
   xTaskCreate (wifi_task_nrf, (signed portCHAR *) "wifi_nrf", TASK_NRF_STACK,
-	       NULL, TASK_NRF_PRIORITY, NULL);
+	       NULL, TASK_NRF_PRIORITY, NULL);*/
 }

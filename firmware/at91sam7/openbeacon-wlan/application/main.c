@@ -187,7 +187,7 @@ void __attribute__((noreturn)) mainloop (void)
 
 	led_init ();
 	sdram_init ();
-	wifi_init ();
+//	wifi_init ();
 
 	xTaskCreate (watchdog_restart_task, (signed portCHAR *) "WATCHDOG",
 			TASK_WATCHDOG_STACK, NULL, TASK_WATCHDOG_PRIORITY, NULL);

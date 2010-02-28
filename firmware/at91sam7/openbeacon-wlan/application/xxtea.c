@@ -34,30 +34,30 @@
 #include "xxtea.h"
 #include "wifi.h"
 
-const long tea_key[4] = { 0xab94ec75, 0x160869c5, 0xfbf908da, 0x60bedc73 };
+static const long tea_key[4] = { 0xab94ec75, 0x160869c5, 0xfbf908da, 0x60bedc73 };
 
-unsigned long z, y, sum, tmp, mx;
-unsigned char e;
+static unsigned long z, y, sum, tmp, mx;
+static unsigned char e;
 
 #define TEA_ROUNDS_COUNT (6+52/4)
 #define MX ((((z>>5)^(y<<2))+((y>>3)^(z<<4)))^((sum^y)+(tea_key[(p&3)^e]^z)))
 #define DELTA 0x9E3779B9L
 
-void RAMFUNC
+static void
 mx_update (unsigned char p)
 {
   mx = MX;
 }
 
 #ifdef  CONFIG_TEA_ENABLEENCODE
-static inline void RAMFUNC
+static inline void
 mx_encode (unsigned char p)
 {
   mx_update (p);
   z = tmp + mx;
 }
 
-void RAMFUNC
+void
 xxtea_encode (void)
 {
   int q;
@@ -95,14 +95,14 @@ xxtea_encode (void)
 #endif /*CONFIG_TEA_ENABLEENCODE */
 
 #ifdef  CONFIG_TEA_ENABLEDECODE
-static inline void RAMFUNC
+static inline void
 mx_decode (unsigned char p)
 {
   mx_update (p);
   y = tmp - mx;
 }
 
-void RAMFUNC
+void
 xxtea_decode (void)
 {
   y = g_Beacon.block[0];

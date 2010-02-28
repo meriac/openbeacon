@@ -8,6 +8,6 @@
 #define SDRAM_TR_TIME 0x250
 #define SDRAM_MODE (0x0 | (2L<<4))
 
-extern void sdram_init(void);
+extern void sdram_init (void);
 
-#endif /*SDRAM_H_*/
+#endif /*SDRAM_H_ */
