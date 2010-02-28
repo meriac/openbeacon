@@ -61,10 +61,10 @@ wifi_isr_handler (void)
     }
 
   // on TX character
-  while (AT91C_BASE_US0->US_CSR & AT91C_US_TXRDY)
+/*  while (AT91C_BASE_US0->US_CSR & AT91C_US_TXRDY)
     {
 
-    }
+    }*/
 
   // ack IRQ
   AT91C_BASE_US0->US_CR = AT91C_US_RSTSTA;
@@ -167,9 +167,9 @@ wifi_stop_blinking (unsigned long error_code)
 	  vTaskDelay (100 / portTICK_RATE_MS);
 	  vLedSetGreen (0);
 	  vLedSetRed (0);
-	  vTaskDelay (900 / portTICK_RATE_MS);
+	  vTaskDelay (500 / portTICK_RATE_MS);
 	}
-      vTaskDelay (2000 / portTICK_RATE_MS);
+      vTaskDelay (1000 / portTICK_RATE_MS);
     }
 }
 
@@ -332,10 +332,8 @@ wifi_init (void)
   wifi_queue_rx = xQueueCreate (UART_QUEUE_SIZE,
 				(unsigned portCHAR) sizeof (signed portCHAR));
 
-(void)wifi_task_nrf;
   xTaskCreate (wifi_task_uart, (signed portCHAR *) "wifi_uart",
 	       TASK_UART_STACK, NULL, TASK_UART_PRIORITY, NULL);
-/*
   xTaskCreate (wifi_task_nrf, (signed portCHAR *) "wifi_nrf", TASK_NRF_STACK,
-	       NULL, TASK_NRF_PRIORITY, NULL);*/
+	       NULL, TASK_NRF_PRIORITY, NULL);
 }
