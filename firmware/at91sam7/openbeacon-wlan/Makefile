@@ -10,10 +10,9 @@ APP_LDFLAGS=-lm
 APP_SRC= \
   $(CORE)openbeacon/crc32.c \
   application/main.c \
-  application/sdram.c
-
-#  application/wifi.c
-#  application/xxtea.c \
+  application/sdram.c \
+  application/wifi.c \
+  application/xxtea.c
 
 APP_SRC+=$(IMAGES_C)
 

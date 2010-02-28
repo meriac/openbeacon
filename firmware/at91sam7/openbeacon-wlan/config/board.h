@@ -165,6 +165,8 @@ typedef struct
 
 #define AT91C_DBGU_BAUD 115200
 
-#define TXTR_PLEXIGLASS
+#define LOWLEVEL_BOARD_INIT sdram_init()
+
+#include "sdram.h"
 
 #endif /*__BOARD_H__*/

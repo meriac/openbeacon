@@ -186,8 +186,7 @@ void __attribute__((noreturn)) mainloop (void)
 	AT91F_RSTSetMode(AT91C_BASE_RSTC, AT91F_RSTGetMode(AT91C_BASE_RSTC) | 0x11 );
 
 	led_init ();
-	sdram_init ();
-//	wifi_init ();
+	wifi_init ();
 
 	xTaskCreate (watchdog_restart_task, (signed portCHAR *) "WATCHDOG",
 			TASK_WATCHDOG_STACK, NULL, TASK_WATCHDOG_PRIORITY, NULL);

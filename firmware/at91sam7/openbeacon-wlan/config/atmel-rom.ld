@@ -36,7 +36,7 @@ SECTIONS
 		*(.fastrun)
 		*(.ramfunc)
 		__data_end__ = .;
-	} >ram AT>flash
+	} >sdram AT>flash
   /* .ARM.exidx is sorted, so has to go in its own output section.  */
   __exidx_start = .;
   .ARM.exidx :
@@ -50,7 +50,7 @@ SECTIONS
 		__bss_beg__ = .;
 		*(.bss)
 		*(.bss.*)
-	} >ram
+	} >sdram
 
 	/* Align here to ensure that the .bss section occupies space up to
 	_end.  Align after .bss to ensure correct alignment even if the
