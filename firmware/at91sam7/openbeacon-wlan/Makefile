@@ -8,7 +8,7 @@ APP_CFLAGS=-Iapplication -std=gnu99 -fgnu89-inline
 APP_LDFLAGS=-lm
 
 APP_SRC= \
-  $(CORE)openbeacon/crc32.c \
+  $(CORE)/openbeacon/rnd.c \
   application/main.c \
   application/sdram.c \
   application/wifi.c \

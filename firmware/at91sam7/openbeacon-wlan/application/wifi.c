@@ -29,6 +29,7 @@
 #include <beacontypes.h>
 #include <env.h>
 #include <USB-CDC.h>
+#include <rnd.h>
 #include <nRF24L01/nRF_HW.h>
 #include <nRF24L01/nRF_CMD.h>
 #include <nRF24L01/nRF_API.h>
@@ -152,6 +153,9 @@ wifi_reset_settings (int backtofactory)
   vTaskDelay (100 / portTICK_RATE_MS);
   // remove reset line
   AT91F_PIO_SetOutput (WLAN_PIO, WLAN_RESET | WLAN_WAKE);
+  // tickle On button for WLAN module
+  vTaskDelay (10 / portTICK_RATE_MS);
+  AT91F_PIO_ClearOutput (WLAN_PIO, WLAN_WAKE);
 }
 
 static void
@@ -215,6 +219,8 @@ wifi_reader_command (const char *cmd, int size)
     wifi_reset_settings (0);
   else if (strncmp (cmd, "CNF.ORIG", size))
     wifi_reset_settings (1);
+  else if (strncmp (cmd, "WIFI.RESET", size))
+    wifi_reset();
   else if (strncmp (cmd, "DEV.RESET", size))
     while (1);			// watchdog reset
 }
@@ -264,7 +270,7 @@ wifi_task_nrf (void *parameter)
   (void) parameter;
   u_int16_t crc;
   unsigned char power = 0;
-  portTickType Ticks = 0;
+  portTickType t, Ticks = 0;
 
   if (nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0))
     {
@@ -277,7 +283,7 @@ wifi_task_nrf (void *parameter)
 
       while (1)
 	{
-	  if (nRFCMD_WaitRx (10))
+	  if (nRFCMD_WaitRx (100))
 	    {
 	      vLedSetRed (1);
 	      do
@@ -296,15 +302,16 @@ wifi_task_nrf (void *parameter)
 		    switch (g_Beacon.pkt.proto)
 		      {
 		      case RFBPROTO_READER_COMMAND:
-			if (g_Beacon.pkt.flags & RFBFLAGS_REQUEST)
-			  wifi_reader_command (g_Beacon.pkt.p.reader_command,
-					       strnlen (g_Beacon.pkt.p.
-							reader_command,
-							READER_CMD_MAXSIZE));
-			g_Beacon.pkt.flags =
-			  (g_Beacon.
-			   pkt.flags & ~RFBFLAGS_REQUEST) | RFBFLAGS_RESPONSE;
-			wifi_tx (3);
+			if ((g_Beacon.pkt.flags & RFBFLAGS_ACK) == 0)
+			  {
+			    wifi_reader_command (g_Beacon.pkt.
+						 p.reader_command,
+						 strnlen (g_Beacon.pkt.
+							  p.reader_command,
+							  READER_CMD_MAXSIZE));
+			    g_Beacon.pkt.flags |= RFBFLAGS_ACK;
+			    wifi_tx (3);
+			  }
 			break;
 		      }
 
@@ -315,15 +322,15 @@ wifi_task_nrf (void *parameter)
 
 	  nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
 
-	  if ((xTaskGetTickCount () - Ticks) > ANNOUNCE_INTERVAL_TICKS)
+	  if ((t = xTaskGetTickCount ()) >= Ticks)
 	    {
-	      Ticks = xTaskGetTickCount ();
+	      Ticks = t + (ANNOUNCE_INTERVAL_TICKS / 2)
+		+ (RndNumber () % (ANNOUNCE_INTERVAL_TICKS / 2));
 
-	      AT91F_WDTRestart (AT91C_BASE_WDTC);
-
-	      wifi_tx ((power++)&3);
+	      wifi_tx ((power++) & 3);
 	    }
 
+	  AT91F_WDTRestart (AT91C_BASE_WDTC);
 	}
     }
 
@@ -335,7 +342,7 @@ wifi_task_uart (void *parameter)
 {
   (void) parameter;
   char data;
-  vTaskDelay (15000 / portTICK_RATE_MS);
+
   // enable UART0
   AT91C_BASE_US0->US_CR = AT91C_US_RXEN | AT91C_US_TXEN;
   // enable IRQ
@@ -343,8 +350,13 @@ wifi_task_uart (void *parameter)
 			 wifi_isr);
   AT91C_BASE_US0->US_IER = AT91C_US_RXRDY;	//|AT91C_US_ENDRX;//|AT91C_US_TXRDY|AT91C_US_ENDRX|AT91C_US_ENDTX;
   AT91F_AIC_EnableIt (AT91C_ID_US0);
-  wifi_reset_settings (1);
-  vLedSetRed (1);
+
+  // remove reset line
+  AT91F_PIO_SetOutput (WLAN_PIO, WLAN_RESET | WLAN_WAKE);
+  // tickle On button for WLAN module
+  vTaskDelay (100 / portTICK_RATE_MS);
+  AT91F_PIO_ClearOutput (WLAN_PIO, WLAN_WAKE);
+
   for (;;)
     {
       if (xQueueReceive (wifi_queue_rx, &data, (portTickType) 0))

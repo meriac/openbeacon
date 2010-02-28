@@ -45,8 +45,6 @@
 #define RFBFLAGS_ACK		0x01
 #define RFBFLAGS_SENSOR		0x02
 #define RFBFLAGS_INFECTED	0x04
-#define RFBFLAGS_REQUEST	0x08
-#define RFBFLAGS_RESPONSE	0x10
 
 #define PACKED  __attribute__((__packed__))
 
