@@ -18,6 +18,10 @@
 // Include the board file description
 #include <board.h>
 
+#ifndef LOWLEVEL_BOARD_INIT
+#define LOWLEVEL_BOARD_INIT {}
+#endif/*LOWLEVEL_BOARD_INIT*/
+
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_LowLevelInit
 //* \brief This function performs very low level HW initialization
@@ -36,7 +40,7 @@ void AT91F_LowLevelInit (void)
 #ifdef DISABLE_WATCHDOG
     //* Watchdog Disable
     AT91C_BASE_WDTC->WDTC_WDMR = AT91C_WDTC_WDDIS;
-#else    
+#else
     //* Watchdog Enable
     AT91C_BASE_WDTC->WDTC_WDMR =  AT91C_WDTC_WDDBGHLT | (0x80 << 16) | AT91C_WDTC_WDRSTEN | 0x80;
 #endif/*DISABLE_WATCHDOG*/
@@ -61,7 +65,7 @@ void AT91F_LowLevelInit (void)
 
     // Wait the startup time
     while (!(pPMC->PMC_SR & AT91C_PMC_LOCK));
-    
+
     // 4. Selection of Master Clock and Processor Clock
     // select the PLL clock divided by 2
     pPMC->PMC_MCKR = AT91C_PMC_PRES_CLK_2;
@@ -69,4 +73,6 @@ void AT91F_LowLevelInit (void)
 
     pPMC->PMC_MCKR |= AT91C_PMC_CSS_PLL_CLK;
     while (!(pPMC->PMC_SR & AT91C_PMC_MCKRDY));
+
+    LOWLEVEL_BOARD_INIT;
 }
