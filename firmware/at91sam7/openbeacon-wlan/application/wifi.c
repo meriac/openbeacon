@@ -44,6 +44,7 @@
 #define ERROR_NO_NRF			(3UL)
 
 // set broadcast mac
+static int do_reset=0;
 static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] =
   { 1, 2, 3, 2, 1 };
 static xQueueHandle wifi_queue_rx;
@@ -222,7 +223,7 @@ wifi_reader_command (const char *cmd, int size)
   else if (strncmp (cmd, "WIFI.RESET", size))
     wifi_reset();
   else if (strncmp (cmd, "DEV.RESET", size))
-    while (1);			// watchdog reset
+    do_reset=1;
 }
 
 static inline void
@@ -330,7 +331,8 @@ wifi_task_nrf (void *parameter)
 	      wifi_tx ((power++) & 3);
 	    }
 
-	  AT91F_WDTRestart (AT91C_BASE_WDTC);
+	  if(!do_reset)
+	    AT91F_WDTRestart (AT91C_BASE_WDTC);
 	}
     }
 
