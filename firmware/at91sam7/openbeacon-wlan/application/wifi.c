@@ -211,9 +211,7 @@ static void
 wifi_task_nrf (void *parameter)
 {
   (void) parameter;
-  u_int16_t crc, oid;
-
-  wifi_stop_blinking (ERROR_NO_NRF);
+  u_int16_t crc;
 
   if (nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0))
     {
@@ -244,8 +242,7 @@ wifi_task_nrf (void *parameter)
 		  crc = env_crc16 (g_Beacon.byte,
 				   sizeof (g_Beacon) - sizeof (u_int16_t));
 
-		  if ((swapshort (g_Beacon.pkt.crc) == crc) &&
-		      (oid = swapshort (g_Beacon.pkt.oid)))
+		  if (swapshort (g_Beacon.pkt.crc) == crc)
 		    {
 		    }
 
