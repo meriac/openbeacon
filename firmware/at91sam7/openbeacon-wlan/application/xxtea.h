@@ -1,10 +1,12 @@
 /***************************************************************
  *
- * OpenBeacon.org - OpenBeacon UART driver
+ * OpenBeacon.org - XXTEA encryption / decryption
+ *                  exported functions
  *
- * Copyright 2007 Milosch Meriac <meriac@openbeacon.de>
+ * Copyright 2006 Milosch Meriac <meriac@openbeacon.de>
  *
  ***************************************************************
+
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,14 +20,20 @@
     You should have received a copy of the GNU General Public License along
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
 */
 
-#ifndef __WIFI_H_
-#define __WIFI_H__
+#ifndef __XXTEA_H__
+#define __XXTEA_H__
 
-#include "openbeacon.h"
+#ifdef  CONFIG_TEA_ENABLEENCODE
+extern void
+xxtea_encode (void)
+  RAMFUNC;
+#endif /*CONFIG_ENABLEENCODE */
 
-extern void wifi_init (void);
-extern TBeaconEnvelope g_Beacon;
+#ifdef  CONFIG_TEA_ENABLEDECODE
+     extern void xxtea_decode (void) RAMFUNC;
+#endif /*CONFIG_ENABLEDECODE */
 
-#endif/*__WIFI_H__*/
+#endif/*__XXTEA_H__*/
