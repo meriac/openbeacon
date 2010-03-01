@@ -311,6 +311,11 @@ wifi_reader_command (TBeaconReaderCommand * cmd)
     case READER_CMD_RESET_FACTORY:
       wifi_reset_settings (1);
       break;
+    case READER_CMD_RESET_WIFI:
+      AT91F_PIO_ClearOutput (WLAN_PIO, WLAN_RESET);
+      vTaskDelay (500 / portTICK_RATE_MS);
+      AT91F_PIO_SetOutput (WLAN_PIO, WLAN_RESET);
+      break;
     default:
       res = READ_RES__UNKNOWN_CMD;
     }
