@@ -273,9 +273,6 @@ DumpStringToUSB (char *text)
       vUSBSendByte (data);
 }
 
-
-
-
 void
 vnRFtaskRxTx (void *parameter)
 {
@@ -312,9 +309,9 @@ vnRFtaskRxTx (void *parameter)
 		env_crc16 (g_Beacon.byte,
 			   sizeof (g_Beacon) - sizeof (u_int16_t));
 
-	      if ((swapshort (g_Beacon.pkt.crc) == crc) &&
-		  (oid = swapshort (g_Beacon.pkt.oid)))
+	      if (swapshort (g_Beacon.pkt.crc) == crc)
 		{
+		  oid = swapshort (g_Beacon.pkt.oid);
 		  if (g_Beacon.pkt.flags & RFBFLAGS_SENSOR)
 		    {
 		      DumpStringToUSB ("BUTTON: ");
@@ -324,6 +321,16 @@ vnRFtaskRxTx (void *parameter)
 
 		  switch (g_Beacon.pkt.proto)
 		    {
+		    case RFBPROTO_READER_ANNOUNCE:
+		      DumpStringToUSB ("READER_ANNOUNCE: ");
+		      DumpUIntToUSB (oid);
+		      DumpStringToUSB (",");
+		      DumpUIntToUSB (g_Beacon.pkt.p.reader_announce.strength);
+		      DumpStringToUSB (",");
+		      DumpUIntToUSB (swaplong(g_Beacon.pkt.p.reader_announce.uptime));
+		      DumpStringToUSB ("\n\r");
+		      strength = g_Beacon.pkt.p.reader_announce.strength;
+		      break;
 		    case RFBPROTO_BEACONTRACKER:
 		      strength = g_Beacon.pkt.p.tracker.strength & 0x3;
 		      break;
@@ -350,6 +357,9 @@ vnRFtaskRxTx (void *parameter)
 		      break;
 		    default:
 		      strength = 0xFF;
+		      DumpStringToUSB ("Uknown Protocol: ");
+		      DumpUIntToUSB (g_Beacon.pkt.proto);
+		      DumpStringToUSB ("\n\r");
 		    }
 
 		  if (strength < 0xFF)
