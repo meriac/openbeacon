@@ -37,7 +37,7 @@
 #include "wifi.h"
 #include "xxtea.h"
 
-#define TESTING_FACTORY_RESET
+//#define TESTING_FACTORY_RESET
 
 #define UART_QUEUE_SIZE 1024
 #define WIFI_FIFO_SIZE 256
@@ -49,12 +49,29 @@
 
 // set broadcast mac
 static unsigned int do_reset = 0;
-static unsigned int wifi_fifo_head = 0, wifi_fifo_tail = 0;
+static volatile unsigned int wifi_fifo_head = 0, wifi_fifo_tail = 0;
 static TBeaconEnvelope wifi_fifo[WIFI_FIFO_SIZE];
 static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] =
   { 1, 2, 3, 2, 1 };
 static xQueueHandle wifi_queue_rx;
 TBeaconEnvelope g_Beacon;
+
+static void
+wifi_uart_check_tx_fifo (void)
+{
+
+  if ((!AT91C_BASE_PDC_US0->PDC_TCR) && (wifi_fifo_tail != wifi_fifo_head))
+    {
+      // start DMA on USART0 - turn on red led LED to indicate
+      vLedSetRed (1);
+      AT91C_BASE_PDC_US0->PDC_TPR = (u_int32_t) &wifi_fifo[wifi_fifo_tail++];
+      AT91C_BASE_PDC_US0->PDC_TCR = sizeof (wifi_fifo[0]);
+      AT91C_BASE_PDC_US0->PDC_PTCR = AT91C_PDC_TXTEN;
+
+      if(wifi_fifo_tail>=WIFI_FIFO_SIZE)
+        wifi_fifo_tail=0;
+    }
+}
 
 void
 wifi_isr_handler (void)
@@ -68,12 +85,6 @@ wifi_isr_handler (void)
       data = (unsigned char) (AT91C_BASE_US0->US_RHR);
       xQueueSendFromISR (wifi_queue_rx, &data, &woken);
     }
-
-  // on TX character
-/*  while (AT91C_BASE_US0->US_CSR & AT91C_US_TXRDY)
-    {
-
-    }*/
 
   // ack IRQ
   AT91C_BASE_US0->US_CR = AT91C_US_RSTSTA;
@@ -164,7 +175,7 @@ wifi_reset_settings (int backtofactory)
   // tickle On button for WLAN module
   vTaskDelay (10 / portTICK_RATE_MS);
   AT91F_PIO_ClearOutput (WLAN_PIO, WLAN_WAKE);
-#endif/*TESTING_FACTORY_RESET*/
+#endif /*TESTING_FACTORY_RESET */
 }
 
 static void
@@ -289,33 +300,12 @@ wifi_reader_command (TBeaconReaderCommand * cmd)
 }
 
 static inline void
-wifi_uart_check_tx_fifo (void)
-{
-  int size = 0;
-  unsigned int pos = wifi_fifo_tail;  
-  
-  while(size < MAX_WIFI_PACKET_SIZE)
-  {
-    if(pos == wifi_fifo_head)
-    	break;
-
-    pos++;    
-    if(pos >= WIFI_FIFO_SIZE)
-    {
-      pos = 0;
-      break;
-    }
-    
-    size += sizeof(wifi_fifo[0]);
-  }
-}
-
-static inline void
 wifi_add_packet_to_fifo (void)
 {
   unsigned int pos;
 
   taskENTER_CRITICAL ();
+
   pos = wifi_fifo_head + 1;
   if (pos >= WIFI_FIFO_SIZE)
     pos = 0;
@@ -324,9 +314,9 @@ wifi_add_packet_to_fifo (void)
       wifi_fifo[wifi_fifo_head] = g_Beacon;
       wifi_fifo_head = pos;
     }
-  taskEXIT_CRITICAL ();
+  wifi_uart_check_tx_fifo ();
 
-  wifi_uart_check_tx_fifo();
+  taskEXIT_CRITICAL ();
 }
 
 static void
@@ -339,8 +329,8 @@ wifi_task_nrf (void *parameter)
 
 #ifdef  TESTING_FACTORY_RESET
   vTaskDelay (10000 / portTICK_RATE_MS);
-  wifi_reset_settings(1);
-#endif/*TESTING_FACTORY_RESET*/
+  wifi_reset_settings (0);
+#endif /*TESTING_FACTORY_RESET */
 
   if (nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0))
     {
@@ -355,7 +345,6 @@ wifi_task_nrf (void *parameter)
 	{
 	  if (nRFCMD_WaitRx (100))
 	    {
-	      vLedSetRed (1);
 	      do
 		{
 		  // read packet from nRF chip
@@ -394,8 +383,10 @@ wifi_task_nrf (void *parameter)
 
 	  nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
 
-	  // check for pending FIFO data	  
-	  wifi_uart_check_tx_fifo();
+	  // check for pending FIFO data
+	  taskENTER_CRITICAL ();
+	  wifi_uart_check_tx_fifo ();
+	  taskEXIT_CRITICAL ();
 
 	  if ((t = xTaskGetTickCount ()) >= Ticks)
 	    {
@@ -423,13 +414,19 @@ wifi_task_uart (void *parameter)
   (void) parameter;
   char data;
 
-  // enable UART0
+  // finally enable UART0
   AT91C_BASE_US0->US_CR = AT91C_US_RXEN | AT91C_US_TXEN;
   // enable IRQ
   AT91F_AIC_ConfigureIt (AT91C_ID_US0, 4, AT91C_AIC_SRCTYPE_INT_HIGH_LEVEL,
 			 wifi_isr);
-  AT91C_BASE_US0->US_IER = AT91C_US_RXRDY;	//|AT91C_US_ENDRX;//|AT91C_US_TXRDY|AT91C_US_ENDRX|AT91C_US_ENDTX;
+  AT91C_BASE_US0->US_IDR = AT91C_BASE_US0->US_IMR;
+  AT91C_BASE_US0->US_IER = AT91C_US_RXRDY;
   AT91F_AIC_EnableIt (AT91C_ID_US0);
+
+  // configure USART0 DMA
+  AT91C_BASE_PDC_US0->PDC_PTCR = AT91C_PDC_TXTDIS;
+  AT91C_BASE_PDC_US0->PDC_TPR = 0;
+  AT91C_BASE_PDC_US0->PDC_TCR = 0;
 
 #ifndef TESTING_FACTORY_RESET
   // remove reset line
@@ -437,7 +434,7 @@ wifi_task_uart (void *parameter)
   // tickle On button for WLAN module
   vTaskDelay (100 / portTICK_RATE_MS);
   AT91F_PIO_ClearOutput (WLAN_PIO, WLAN_WAKE);
-#endif/*TESTING_FACTORY_RESET*/
+#endif /*TESTING_FACTORY_RESET */
 
   for (;;)
     {
@@ -482,6 +479,7 @@ wifi_init (void)
   // create UART queue with minimum buffer size
   wifi_queue_rx = xQueueCreate (UART_QUEUE_SIZE,
 				(unsigned portCHAR) sizeof (signed portCHAR));
+
   xTaskCreate (wifi_task_uart,
 	       (signed portCHAR *) "wifi_uart",
 	       TASK_UART_STACK, NULL, TASK_UART_PRIORITY, NULL);
