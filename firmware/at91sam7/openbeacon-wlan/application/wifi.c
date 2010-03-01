@@ -44,7 +44,7 @@
 #define ERROR_NO_NRF			(3UL)
 
 // set broadcast mac
-static unsigned int sequence_number = 0, do_reset = 0;
+static unsigned int do_reset = 0;
 static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] =
   { 1, 2, 3, 2, 1 };
 static xQueueHandle wifi_queue_rx;
@@ -276,7 +276,7 @@ wifi_reader_command (TBeaconReaderCommand * cmd)
       res = READ_RES__UNKNOWN_CMD;
     }
 
-  cmd->seq = swaplong(sequence_number++);
+  cmd->uptime = swaplong(xTaskGetTickCount ());
   cmd->res = res;
 }
 
@@ -341,7 +341,14 @@ wifi_task_nrf (void *parameter)
 	      Ticks = t + (ANNOUNCE_INTERVAL_TICKS / 2)
 		+ (RndNumber () % (ANNOUNCE_INTERVAL_TICKS / 2));
 
-	      wifi_tx ((power++) & 3);
+	      bzero(&g_Beacon,sizeof(g_Beacon));
+
+	      g_Beacon.pkt.oid = swapshort(env.e.reader_id);
+	      g_Beacon.pkt.proto = RFBPROTO_READER_ANNOUNCE;
+	      g_Beacon.pkt.p.reader_announce.strength = (power++) & 3;
+	      g_Beacon.pkt.p.reader_announce.uptime = swaplong(xTaskGetTickCount ());
+	      g_Beacon.pkt.p.reader_announce.ip = 0; // fixme
+	      wifi_tx (g_Beacon.pkt.p.reader_announce.strength);
 	    }
 	}
     }

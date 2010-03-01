@@ -34,10 +34,11 @@
 
 #define XXTEA_BLOCK_COUNT 4
 
-#define RFBPROTO_READER_COMMAND 23
-#define RFBPROTO_BEACONTRACKER  24
-#define RFBPROTO_PROXTRACKER    42
-#define RFBPROTO_PROXREPORT     69
+#define RFBPROTO_READER_ANNOUNCE 22
+#define RFBPROTO_READER_COMMAND  23
+#define RFBPROTO_BEACONTRACKER   24
+#define RFBPROTO_PROXTRACKER     42
+#define RFBPROTO_PROXREPORT      69
 
 #define PROX_MAX 4
 
@@ -76,14 +77,21 @@ typedef struct
 typedef struct
 {
   u_int8_t opcode,res;
-  u_int32_t data,seq;
+  u_int32_t uptime,data;
 } PACKED TBeaconReaderCommand;
+
+typedef struct
+{
+  u_int8_t opcode,strength;
+  u_int32_t uptime,ip;
+} PACKED TBeaconReaderAnnounce;
 
 typedef union
 {
   TBeaconProx prox;
   TBeaconTracker tracker;
   TBeaconReaderCommand reader_command;
+  TBeaconReaderAnnounce reader_announce;
 } PACKED TBeaconPayload;
 
 typedef struct
