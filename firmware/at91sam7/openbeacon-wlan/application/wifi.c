@@ -45,7 +45,7 @@
 #define WLAN_BAUDRATE_FACTORY	9600
 #define ANNOUNCE_INTERVAL_TICKS	(500 / portTICK_RATE_MS)
 
-#define ERROR_NO_NRF			(3UL)
+#define ERROR_NO_NRF	(3UL)
 
 // set broadcast mac
 static unsigned int do_reset = 0;
@@ -63,7 +63,6 @@ wifi_uart_check_tx_fifo (void)
 
   if (AT91C_BASE_PDC_US0->PDC_TCR)
     return;
-
 
   count = 0;
   pos = wifi_fifo_tail;
@@ -90,6 +89,8 @@ wifi_uart_check_tx_fifo (void)
 
       wifi_fifo_tail = pos;
     }
+  else
+      AT91C_BASE_PDC_US0->PDC_PTCR = AT91C_PDC_TXTDIS;
 }
 
 void
