@@ -38,6 +38,7 @@
 #include "xxtea.h"
 
 #define UART_QUEUE_SIZE 1024
+#define WIFI_FIFO_SIZE 256
 #define WLAN_BAUDRATE_FACTORY	9600
 #define ANNOUNCE_INTERVAL_TICKS	(500 / portTICK_RATE_MS)
 
@@ -45,6 +46,8 @@
 
 // set broadcast mac
 static unsigned int do_reset = 0;
+static unsigned int wifi_fifo_head = 0, wifi_fifo_tail = 0;
+static TBeaconEnvelope wifi_fifo[WIFI_FIFO_SIZE];
 static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] =
   { 1, 2, 3, 2, 1 };
 static xQueueHandle wifi_queue_rx;
@@ -256,7 +259,7 @@ static void
 wifi_reader_command (TBeaconReaderCommand * cmd)
 {
   u_int8_t res = READ_RES__OK;
-  
+
   cmd->data = 0;
 
   switch (cmd->opcode)
@@ -276,8 +279,27 @@ wifi_reader_command (TBeaconReaderCommand * cmd)
       res = READ_RES__UNKNOWN_CMD;
     }
 
-  cmd->uptime = swaplong(xTaskGetTickCount ());
+  cmd->uptime = swaplong (xTaskGetTickCount ());
   cmd->res = res;
+}
+
+static inline void
+wifi_add_packet_to_fifo (void)
+{
+  unsigned int pos;
+
+  taskENTER_CRITICAL ();
+
+  pos = wifi_fifo_head + 1;
+  if (pos >= WIFI_FIFO_SIZE)
+    pos = 0;
+  if (pos != wifi_fifo_tail)
+    {
+      wifi_fifo[wifi_fifo_head] = g_Beacon;
+      wifi_fifo_head = pos;
+    }
+
+  taskEXIT_CRITICAL ();
 }
 
 static void
@@ -307,6 +329,9 @@ wifi_task_nrf (void *parameter)
 		  // read packet from nRF chip
 		  nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.byte,
 				     sizeof (g_Beacon));
+
+		  wifi_add_packet_to_fifo ();
+
 		  // adjust byte order and decode
 		  shuffle_tx_byteorder ();
 		  xxtea_decode ();
@@ -318,11 +343,12 @@ wifi_task_nrf (void *parameter)
 		    switch (g_Beacon.pkt.proto)
 		      {
 		      case RFBPROTO_READER_COMMAND:
-			if ( ((g_Beacon.pkt.flags & RFBFLAGS_ACK) == 0)
-			  &&(swapshort (g_Beacon.pkt.oid) == env.e.reader_id)
-			  )
+			if (((g_Beacon.pkt.flags & RFBFLAGS_ACK) == 0)
+			    && (swapshort (g_Beacon.pkt.oid) ==
+				env.e.reader_id))
 			  {
-			    wifi_reader_command (&g_Beacon.pkt.p.reader_command);
+			    wifi_reader_command (&g_Beacon.pkt.
+						 p.reader_command);
 			    g_Beacon.pkt.flags |= RFBFLAGS_ACK;
 			    wifi_tx (3);
 			  }
@@ -341,13 +367,13 @@ wifi_task_nrf (void *parameter)
 	      Ticks = t + (ANNOUNCE_INTERVAL_TICKS / 2)
 		+ (RndNumber () % (ANNOUNCE_INTERVAL_TICKS / 2));
 
-	      bzero(&g_Beacon,sizeof(g_Beacon));
-
-	      g_Beacon.pkt.oid = swapshort(env.e.reader_id);
+	      bzero (&g_Beacon, sizeof (g_Beacon));
+	      g_Beacon.pkt.oid = swapshort (env.e.reader_id);
 	      g_Beacon.pkt.proto = RFBPROTO_READER_ANNOUNCE;
 	      g_Beacon.pkt.p.reader_announce.strength = (power++) & 3;
-	      g_Beacon.pkt.p.reader_announce.uptime = swaplong(xTaskGetTickCount ());
-	      g_Beacon.pkt.p.reader_announce.ip = 0; // fixme
+	      g_Beacon.pkt.p.reader_announce.uptime =
+		swaplong (xTaskGetTickCount ());
+	      g_Beacon.pkt.p.reader_announce.ip = 0;	// fixme
 	      wifi_tx (g_Beacon.pkt.p.reader_announce.strength);
 	    }
 	}
