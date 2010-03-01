@@ -59,17 +59,36 @@ TBeaconEnvelope g_Beacon;
 static void
 wifi_uart_check_tx_fifo (void)
 {
+  unsigned int pos, count;
 
-  if ((!AT91C_BASE_PDC_US0->PDC_TCR) && (wifi_fifo_tail != wifi_fifo_head))
+  if (AT91C_BASE_PDC_US0->PDC_TCR)
+    return;
+
+
+  count = 0;
+  pos = wifi_fifo_tail;
+  while ((pos != wifi_fifo_head) &&
+	 (count < (MAX_WIFI_PACKET_SIZE / sizeof (wifi_fifo[0]))))
+    {
+      pos++;
+      count++;
+      if (pos >= WIFI_FIFO_SIZE)
+	{
+	  pos = 0;
+	  break;
+	}
+    }
+
+  if (count)
     {
       // start DMA on USART0 - turn on red led LED to indicate
       vLedSetRed (1);
-      AT91C_BASE_PDC_US0->PDC_TPR = (u_int32_t) &wifi_fifo[wifi_fifo_tail++];
-      AT91C_BASE_PDC_US0->PDC_TCR = sizeof (wifi_fifo[0]);
+
+      AT91C_BASE_PDC_US0->PDC_TPR = (u_int32_t) & wifi_fifo[wifi_fifo_tail];
+      AT91C_BASE_PDC_US0->PDC_TCR = sizeof (wifi_fifo[0]) * count;
       AT91C_BASE_PDC_US0->PDC_PTCR = AT91C_PDC_TXTEN;
 
-      if(wifi_fifo_tail>=WIFI_FIFO_SIZE)
-        wifi_fifo_tail=0;
+      wifi_fifo_tail = pos;
     }
 }
 
@@ -368,8 +387,8 @@ wifi_task_nrf (void *parameter)
 			    && (swapshort (g_Beacon.pkt.oid) ==
 				env.e.reader_id))
 			  {
-			    wifi_reader_command (&g_Beacon.pkt.
-						 p.reader_command);
+			    wifi_reader_command (&g_Beacon.pkt.p.
+						 reader_command);
 			    g_Beacon.pkt.flags |= RFBFLAGS_ACK;
 			    wifi_tx (3);
 			  }
