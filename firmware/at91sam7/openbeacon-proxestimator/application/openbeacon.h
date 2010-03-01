@@ -34,21 +34,31 @@
 
 #define XXTEA_BLOCK_COUNT 4
 
-#define RFBPROTO_BEACONTRACKER  24
-#define RFBPROTO_PROXTRACKER    42
-#define RFBPROTO_PROXREPORT     69
+#define RFBPROTO_READER_ANNOUNCE 22
+#define RFBPROTO_READER_COMMAND  23
+#define RFBPROTO_BEACONTRACKER   24
+#define RFBPROTO_PROXTRACKER     42
+#define RFBPROTO_PROXREPORT      69
 
 #define PROX_MAX 4
 
-#define RFBFLAGS_ACK		0x01
-#define RFBFLAGS_SENSOR		0x02
-#define RFBFLAGS_INFECTED	0x04
+#define RFBFLAGS_ACK			0x01
+#define RFBFLAGS_SENSOR			0x02
+#define RFBFLAGS_INFECTED		0x04
 
-#define OID_PERSON			0x0400
-#define OID_HEALER			0x0200
-#define OID_PERSON_MIN      1100
+/* RFBPROTO_READER_COMMAND related opcodes */
+#define READER_CMD_NOP			0x00
+#define READER_CMD_RESET		0x01
+#define READER_CMD_RESET_CONFIG		0x02
+#define READER_CMD_RESET_FACTORY	0x03
+#define READER_CMD_RESET_WIFI		0x04
+/* RFBPROTO_READER_COMMAND related results */
+#define READ_RES__OK			0x00
+#define READ_RES__DENIED		0x01
+#define READ_RES__UNKNOWN_CMD		0xFF
 
 #define PACKED  __attribute__((__packed__))
+
 
 typedef struct
 {
@@ -65,10 +75,24 @@ typedef struct
   u_int16_t seq;
 } PACKED TBeaconProx;
 
+typedef struct
+{
+  u_int8_t opcode,res;
+  u_int32_t uptime,data;
+} PACKED TBeaconReaderCommand;
+
+typedef struct
+{
+  u_int8_t opcode,strength;
+  u_int32_t uptime,ip;
+} PACKED TBeaconReaderAnnounce;
+
 typedef union
 {
   TBeaconProx prox;
   TBeaconTracker tracker;
+  TBeaconReaderCommand reader_command;
+  TBeaconReaderAnnounce reader_announce;
 } PACKED TBeaconPayload;
 
 typedef struct
