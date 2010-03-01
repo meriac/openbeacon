@@ -40,13 +40,23 @@
 #define RFBPROTO_PROXREPORT     69
 
 #define PROX_MAX 4
-#define READER_CMD_MAXSIZE 10
 
-#define RFBFLAGS_ACK		0x01
-#define RFBFLAGS_SENSOR		0x02
-#define RFBFLAGS_INFECTED	0x04
+#define RFBFLAGS_ACK			0x01
+#define RFBFLAGS_SENSOR			0x02
+#define RFBFLAGS_INFECTED		0x04
+
+/* RFBPROTO_READER_COMMAND related opcodes */
+#define READER_CMD_NOP			0x00
+#define READER_CMD_RESET		0x01
+#define READER_CMD_RESET_CONFIG		0x02
+#define READER_CMD_RESET_FACTORY	0x03
+/* RFBPROTO_READER_COMMAND related results */
+#define READ_RES__OK			0x00
+#define READ_RES__DENIED		0x01
+#define READ_RES__UNKNOWN_CMD		0xFF
 
 #define PACKED  __attribute__((__packed__))
+
 
 typedef struct
 {
@@ -63,11 +73,17 @@ typedef struct
   u_int16_t seq;
 } PACKED TBeaconProx;
 
+typedef struct
+{
+  u_int8_t opcode,res;
+  u_int32_t data,seq;
+} PACKED TBeaconReaderCommand;
+
 typedef union
 {
   TBeaconProx prox;
   TBeaconTracker tracker;
-  char reader_command[READER_CMD_MAXSIZE];
+  TBeaconReaderCommand reader_command;
 } PACKED TBeaconPayload;
 
 typedef struct

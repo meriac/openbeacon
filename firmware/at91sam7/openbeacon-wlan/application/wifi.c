@@ -44,7 +44,7 @@
 #define ERROR_NO_NRF			(3UL)
 
 // set broadcast mac
-static int do_reset=0;
+static int do_reset = 0;
 static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] =
   { 1, 2, 3, 2, 1 };
 static xQueueHandle wifi_queue_rx;
@@ -213,19 +213,6 @@ shuffle_tx_byteorder (void)
   SHUFFLE (1 + 12, 2 + 12);
 }
 
-static void
-wifi_reader_command (const char *cmd, int size)
-{
-  if (strncmp (cmd, "CNF.RESET", size))
-    wifi_reset_settings (0);
-  else if (strncmp (cmd, "CNF.ORIG", size))
-    wifi_reset_settings (1);
-  else if (strncmp (cmd, "WIFI.RESET", size))
-    wifi_reset();
-  else if (strncmp (cmd, "DEV.RESET", size))
-    do_reset=1;
-}
-
 static inline void
 wifi_tx (unsigned char power)
 {
@@ -266,6 +253,31 @@ wifi_tx (unsigned char power)
 }
 
 static void
+wifi_reader_command (TBeaconReaderCommand * cmd)
+{
+  u_int8_t res = READ_RES__OK;
+
+  switch (cmd->opcode)
+    {
+    case READER_CMD_NOP:
+      break;
+    case READER_CMD_RESET:
+      do_reset = 1;
+      break;
+    case READER_CMD_RESET_CONFIG:
+      wifi_reset_settings (0);
+      break;
+    case READER_CMD_RESET_FACTORY:
+      wifi_reset_settings (1);
+      break;
+    default:
+      res = READ_RES__UNKNOWN_CMD;
+    }
+
+  cmd->res = res;
+}
+
+static void
 wifi_task_nrf (void *parameter)
 {
   (void) parameter;
@@ -303,13 +315,11 @@ wifi_task_nrf (void *parameter)
 		    switch (g_Beacon.pkt.proto)
 		      {
 		      case RFBPROTO_READER_COMMAND:
-			if ((g_Beacon.pkt.flags & RFBFLAGS_ACK) == 0)
+			if ( ((g_Beacon.pkt.flags & RFBFLAGS_ACK) == 0)
+			  &&(swapshort (g_Beacon.pkt.oid) == env.e.reader_id)
+			  )
 			  {
-			    wifi_reader_command (g_Beacon.pkt.
-						 p.reader_command,
-						 strnlen (g_Beacon.pkt.
-							  p.reader_command,
-							  READER_CMD_MAXSIZE));
+			    wifi_reader_command (&g_Beacon.pkt.p.reader_command);
 			    g_Beacon.pkt.flags |= RFBFLAGS_ACK;
 			    wifi_tx (3);
 			  }
@@ -330,9 +340,6 @@ wifi_task_nrf (void *parameter)
 
 	      wifi_tx ((power++) & 3);
 	    }
-
-	  if(!do_reset)
-	    AT91F_WDTRestart (AT91C_BASE_WDTC);
 	}
     }
 
@@ -367,6 +374,9 @@ wifi_task_uart (void *parameter)
 	AT91C_BASE_US0->US_THR = data;
       else
 	vTaskDelay (10 / portTICK_RATE_MS);
+
+      if (!do_reset)
+	AT91F_WDTRestart (AT91C_BASE_WDTC);
     }
 }
 
