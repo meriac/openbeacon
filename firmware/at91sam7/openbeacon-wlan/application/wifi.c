@@ -44,7 +44,7 @@
 #define ERROR_NO_NRF			(3UL)
 
 // set broadcast mac
-static int do_reset = 0;
+static unsigned int sequence_number = 0, do_reset = 0;
 static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] =
   { 1, 2, 3, 2, 1 };
 static xQueueHandle wifi_queue_rx;
@@ -256,6 +256,8 @@ static void
 wifi_reader_command (TBeaconReaderCommand * cmd)
 {
   u_int8_t res = READ_RES__OK;
+  
+  cmd->data = 0;
 
   switch (cmd->opcode)
     {
@@ -274,6 +276,7 @@ wifi_reader_command (TBeaconReaderCommand * cmd)
       res = READ_RES__UNKNOWN_CMD;
     }
 
+  cmd->seq = swaplong(sequence_number++);
   cmd->res = res;
 }
 
