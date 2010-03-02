@@ -42,7 +42,7 @@ SECTIONS
   .ARM.exidx :
   {
     *(.ARM.exidx* .gnu.linkonce.armexidx.*)
-  } >ram AT>flash
+  } >sdram AT>flash
   __exidx_end = .;
   
 	.bss : 
