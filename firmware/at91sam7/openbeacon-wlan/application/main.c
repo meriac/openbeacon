@@ -183,7 +183,10 @@ void __attribute__ ((noreturn)) mainloop (void)
   /* If no previous environment exists - create a new, but don't store it */
   env_init ();
   if (!env_load ())
+  {
     bzero (&env, sizeof (env));
+    env.e.reader_id = 1;
+  }
 
   vRndInit (env.e.reader_id);
   led_init ();

@@ -20,6 +20,11 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 */
+
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <FreeRTOS.h>
 #include <semphr.h>
 #include <task.h>
@@ -90,7 +95,7 @@ wifi_uart_check_tx_fifo (void)
       wifi_fifo_tail = pos;
     }
   else
-      AT91C_BASE_PDC_US0->PDC_PTCR = AT91C_PDC_TXTDIS;
+    AT91C_BASE_PDC_US0->PDC_PTCR = AT91C_PDC_TXTDIS;
 }
 
 void
@@ -296,7 +301,7 @@ wifi_reader_command (TBeaconReaderCommand * cmd)
 {
   u_int8_t res = READ_RES__OK;
 
-  cmd->data = 0;
+  printf("wifi_reader_command: opcode=%i data=[0x%08X 0x%08X] ",cmd->opcode,(unsigned int)cmd->data[0],(unsigned int)cmd->data[1]);
 
   switch (cmd->opcode)
     {
@@ -316,12 +321,18 @@ wifi_reader_command (TBeaconReaderCommand * cmd)
       vTaskDelay (500 / portTICK_RATE_MS);
       AT91F_PIO_SetOutput (WLAN_PIO, WLAN_RESET);
       break;
+    case READER_CMD_SET_OID:
+      env.e.reader_id = (u_int16_t) cmd->data[0];
+      vTaskDelay (500 / portTICK_RATE_MS);
+      env_store ();
+      break;
     default:
       res = READ_RES__UNKNOWN_CMD;
     }
 
-  cmd->uptime = swaplong (xTaskGetTickCount ());
   cmd->res = res;
+
+  printf(" => res=%i\n\r",cmd->res);
 }
 
 static inline void
@@ -393,8 +404,8 @@ wifi_task_nrf (void *parameter)
 			    && (swapshort (g_Beacon.pkt.oid) ==
 				env.e.reader_id))
 			  {
-			    wifi_reader_command (&g_Beacon.pkt.p.
-						 reader_command);
+			    wifi_reader_command (&g_Beacon.pkt.
+						 p.reader_command);
 			    g_Beacon.pkt.flags |= RFBFLAGS_ACK;
 			    wifi_tx (3);
 			  }

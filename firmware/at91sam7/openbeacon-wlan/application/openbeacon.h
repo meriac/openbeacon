@@ -52,6 +52,7 @@
 #define READER_CMD_RESET_CONFIG		0x02
 #define READER_CMD_RESET_FACTORY	0x03
 #define READER_CMD_RESET_WIFI		0x04
+#define READER_CMD_SET_OID		0x05
 /* RFBPROTO_READER_COMMAND related results */
 #define READ_RES__OK			0x00
 #define READ_RES__DENIED		0x01
@@ -78,7 +79,7 @@ typedef struct
 typedef struct
 {
   u_int8_t opcode,res;
-  u_int32_t uptime,data;
+  u_int32_t data[2];
 } PACKED TBeaconReaderCommand;
 
 typedef struct
