@@ -56,6 +56,7 @@ static TBeaconEnvelope wifi_fifo[WIFI_FIFO_SIZE];
 static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] =
   { 1, 2, 3, 2, 1 };
 static xQueueHandle wifi_queue_rx;
+static int disable_beacon_fowarding_to_uart = 0;
 TBeaconEnvelope g_Beacon;
 
 static void
@@ -307,12 +308,16 @@ wifi_reader_command (TBeaconReaderCommand * cmd)
       while(1){};
       break;
     case READER_CMD_RESET_CONFIG:
+      disable_beacon_fowarding_to_uart=1;
       wifi_reset_settings (0);
       break;
     case READER_CMD_RESET_FACTORY:
+      disable_beacon_fowarding_to_uart=1;
       wifi_reset_settings (1);
       break;
     case READER_CMD_RESET_WIFI:
+      wifi_set_baudrate (WLAN_BAUDRATE);
+      disable_beacon_fowarding_to_uart=1;
       AT91F_PIO_ClearOutput (WLAN_PIO, WLAN_RESET);
       vTaskDelay (500 / portTICK_RATE_MS);
       AT91F_PIO_SetOutput (WLAN_PIO, WLAN_RESET);
@@ -378,7 +383,8 @@ wifi_task_nrf (void *parameter)
 		  nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.byte,
 				     sizeof (g_Beacon));
 
-		  wifi_add_packet_to_fifo ();
+		  if(!disable_beacon_fowarding_to_uart)
+		    wifi_add_packet_to_fifo ();
 
 		  // adjust byte order and decode
 		  shuffle_tx_byteorder ();
