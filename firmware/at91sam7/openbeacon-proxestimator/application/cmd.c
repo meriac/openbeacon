@@ -18,7 +18,7 @@
 xQueueHandle xCmdQueue;
 xTaskHandle xCmdTask;
 xTaskHandle xCmdRecvUsbTask;
-unsigned int last_reader_oid = 0;
+unsigned int last_reader_oid = 1;
 /**********************************************************************/
 
 char rs232_buffer[1024];
