@@ -60,7 +60,6 @@ prvSetupHardware (void)
 }
 
 /**********************************************************************/
-
 void
 vApplicationIdleHook (void)
 {
@@ -71,10 +70,12 @@ vApplicationIdleHook (void)
   /* Disable processor clock to set the core into Idle Mode. The clock will 
    * automatically be reenabled by any interrupt. */
   AT91C_BASE_PMC->PMC_SCDR = 1;
+
+  /* Restart watchdog, has been enabled in Cstartup_SAM7.c */
+  AT91F_WDTRestart(AT91C_BASE_WDTC);
 }
 
 /**********************************************************************/
-
 #ifdef  SDRAM_TASK
 static inline unsigned char
 HexChar (unsigned char nibble)
@@ -83,7 +84,6 @@ HexChar (unsigned char nibble)
 }
 
 /**********************************************************************/
-
 static inline void
 sdram_test_task (void *parameter)
 {
@@ -172,8 +172,8 @@ sdram_test_task (void *parameter)
     }
 }
 #endif /*SDRAM_TASK */
-/**********************************************************************/
 
+/**********************************************************************/
 void __attribute__ ((noreturn)) mainloop (void)
 {
   prvSetupHardware ();

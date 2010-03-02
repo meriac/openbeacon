@@ -160,6 +160,9 @@ prvExecCommand (u_int32_t cmd, portCHAR * args)
       DumpStringToUSB ("Resetting remote reader ");
       switch (i)
 	{
+	case READER_CMD_RESET:
+	  DumpStringToUSB ("CPU");
+	  break;
 	case READER_CMD_RESET_CONFIG:
 	  DumpStringToUSB ("config");
 	  break;
@@ -171,7 +174,7 @@ prvExecCommand (u_int32_t cmd, portCHAR * args)
 	  break;
 	default:
 	  i = 0;
-	  DumpStringToUSB ("CPU");
+	  DumpStringToUSB ("[NOP]");
 	  break;
 	}
       DumpStringToUSB ("\n\r");

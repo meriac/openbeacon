@@ -53,7 +53,6 @@
 #define ERROR_NO_NRF	(3UL)
 
 // set broadcast mac
-static unsigned int do_reset = 0;
 static volatile unsigned int wifi_fifo_head = 0, wifi_fifo_tail = 0;
 static TBeaconEnvelope wifi_fifo[WIFI_FIFO_SIZE];
 static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] =
@@ -308,7 +307,8 @@ wifi_reader_command (TBeaconReaderCommand * cmd)
     case READER_CMD_NOP:
       break;
     case READER_CMD_RESET:
-      do_reset = 1;
+      // dead loop to force watchdog reset
+      while(1){};
       break;
     case READER_CMD_RESET_CONFIG:
       wifi_reset_settings (0);
@@ -480,9 +480,6 @@ wifi_task_uart (void *parameter)
 	AT91C_BASE_US0->US_THR = data;
       else
 	vTaskDelay (10 / portTICK_RATE_MS);
-
-      if (!do_reset)
-	AT91F_WDTRestart (AT91C_BASE_WDTC);
     }
 }
 
