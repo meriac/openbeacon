@@ -59,7 +59,7 @@ static inline void prvSetupHardware (void)
     if(!env_load())
     {
 	env.e.mode=0;
-	env.e.reader_id=255;
+	env.e.reader_id=1;
 	env_store();
     }
 }
