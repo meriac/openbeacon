@@ -58,6 +58,7 @@ const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 1, 2, 3, 2, 1 };
 
 TBeaconCache g_BeaconCache[FIFO_DEPTH];
 int g_BeaconSortSize;
+u_int16_t last_reader_id;
 TBeaconSort g_BeaconSort[FIFO_DEPTH];
 TBeaconSort g_BeaconSortPrint[SORT_PRINT_DEPTH];
 unsigned int g_BeaconSortTmp[FIFO_DEPTH];
@@ -65,6 +66,7 @@ unsigned int g_BeaconFifoLifeTime;
 volatile u_int32_t g_BeaconCacheHead;
 TBeaconEnvelope g_Beacon;
 xSemaphoreHandle PtSemaphore;
+TBeaconReaderCommand reader_command;
 
 /**********************************************************************/
 #define SHUFFLE(a,b)    tmp=g_Beacon.byte[a];\
@@ -263,6 +265,55 @@ DumpUIntToUSB (unsigned int data)
     vUSBSendByte (*p++);
 }
 
+static inline void
+wifi_tx (unsigned char power)
+{
+  /* update crc */
+  g_Beacon.pkt.crc = swapshort (env_crc16 (g_Beacon.byte,
+					   sizeof (g_Beacon) -
+					   sizeof (u_int16_t)));
+  /* encrypt data */
+  shuffle_tx_byteorder ();
+  xxtea_encode ();
+  shuffle_tx_byteorder ();
+
+  vLedSetGreen (1);
+
+  /* disable RX mode */
+  nRFCMD_CE (0);
+  vTaskDelay (2 / portTICK_RATE_MS);
+
+  /* switch to TX mode */
+  nRFAPI_SetRxMode (0);
+
+  /* set TX power */
+  nRFAPI_SetTxPower (power);
+
+  /* upload data to nRF24L01 */
+  nRFAPI_TX (g_Beacon.byte, sizeof (g_Beacon));
+
+  /* transmit data */
+  nRFCMD_CE (1);
+
+  /* wait until packet is transmitted */
+  vTaskDelay (2 / portTICK_RATE_MS);
+
+  /* switch to RX mode again */
+  nRFAPI_SetRxMode (1);
+
+  vLedSetGreen (0);
+}
+
+void
+wifi_tx_reader_command (unsigned int reader_id, unsigned char opcode,
+			unsigned int data0, unsigned int data1)
+{
+  last_reader_id = reader_id;
+  reader_command.opcode = opcode;
+  reader_command.data[0] = data0;
+  reader_command.data[1] = data1;
+}
+
 static void
 DumpStringToUSB (char *text)
 {
@@ -321,21 +372,25 @@ vnRFtaskRxTx (void *parameter)
 
 		  switch (g_Beacon.pkt.proto)
 		    {
+
 		    case RFBPROTO_READER_ANNOUNCE:
 		      DumpStringToUSB ("READER_ANNOUNCE: ");
 		      DumpUIntToUSB (oid);
 		      DumpStringToUSB (",");
 		      DumpUIntToUSB (g_Beacon.pkt.p.reader_announce.strength);
 		      DumpStringToUSB (",");
-		      DumpUIntToUSB (swaplong(g_Beacon.pkt.p.reader_announce.uptime));
+		      DumpUIntToUSB (swaplong
+				     (g_Beacon.pkt.p.reader_announce.uptime));
 		      DumpStringToUSB ("\n\r");
+
 		      strength = g_Beacon.pkt.p.reader_announce.strength;
 		      break;
+
 		    case RFBPROTO_BEACONTRACKER:
 		      strength = g_Beacon.pkt.p.tracker.strength & 0x3;
 		      break;
-		    case RFBPROTO_PROXREPORT:
 
+		    case RFBPROTO_PROXREPORT:
 		      for (t = 0; t < PROX_MAX; t++)
 			{
 			  crc = (swapshort (g_Beacon.pkt.p.prox.oid_prox[t]));
@@ -355,6 +410,7 @@ vnRFtaskRxTx (void *parameter)
 
 		      strength = 3;
 		      break;
+
 		    default:
 		      strength = 0xFF;
 		      DumpStringToUSB ("Uknown Protocol: ");
@@ -383,6 +439,18 @@ vnRFtaskRxTx (void *parameter)
 	}
       nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
 
+      if (reader_command.opcode)
+	{
+	  vLedSetGreen (1);
+	  bzero (&g_Beacon, sizeof (g_Beacon));
+	  g_Beacon.pkt.oid = swapshort (last_reader_id);
+	  g_Beacon.pkt.proto = RFBPROTO_READER_COMMAND;
+	  g_Beacon.pkt.p.reader_command = reader_command;
+	  wifi_tx (3);
+	  reader_command.opcode = 0;
+	  vLedSetGreen (0);
+	}
+
       // update regularly
       if (((Ticks =
 	    xTaskGetTickCount ()) - LastUpdateTicks) > UPDATE_INTERVAL_MS)
@@ -401,7 +469,6 @@ vnRFtaskRating (void *parameter)
 
   for (;;)
     {
-      vLedSetGreen (1);
       DumpStringToUSB ("RX:");
 
       count = vnRFCopyRating (g_BeaconSortPrint, SORT_PRINT_DEPTH);
@@ -417,7 +484,6 @@ vnRFtaskRating (void *parameter)
 	}
 
       DumpStringToUSB ("\n\r");
-      vLedSetGreen (0);
 
       vTaskDelay (portTICK_RATE_MS * 950);
     }
