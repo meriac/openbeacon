@@ -42,8 +42,6 @@
 #include "wifi.h"
 #include "xxtea.h"
 
-//#define TESTING_FACTORY_RESET
-
 #define UART_QUEUE_SIZE 1024
 #define WIFI_FIFO_SIZE 256
 #define MAX_WIFI_PACKET_SIZE 1024
@@ -188,7 +186,6 @@ wifi_reset_settings (int backtofactory)
 	AT91F_PIO_ClearOutput (WLAN_PIO, WLAN_ADHOC);
     }
 
-#ifndef  TESTING_FACTORY_RESET
   // wait
   vTaskDelay (1000 / portTICK_RATE_MS);
   // reset module
@@ -199,7 +196,6 @@ wifi_reset_settings (int backtofactory)
   // tickle On button for WLAN module
   vTaskDelay (10 / portTICK_RATE_MS);
   AT91F_PIO_ClearOutput (WLAN_PIO, WLAN_WAKE);
-#endif /*TESTING_FACTORY_RESET */
 }
 
 static void
@@ -363,11 +359,6 @@ wifi_task_nrf (void *parameter)
   unsigned char power = 0;
   portTickType t, Ticks = 0;
 
-#ifdef  TESTING_FACTORY_RESET
-  vTaskDelay (10000 / portTICK_RATE_MS);
-  wifi_reset_settings (0);
-#endif /*TESTING_FACTORY_RESET */
-
   if (nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0))
     {
       nRFAPI_SetPipeSizeRX (0, 16);
@@ -464,13 +455,11 @@ wifi_task_uart (void *parameter)
   AT91C_BASE_PDC_US0->PDC_TPR = 0;
   AT91C_BASE_PDC_US0->PDC_TCR = 0;
 
-#ifndef TESTING_FACTORY_RESET
   // remove reset line
   AT91F_PIO_SetOutput (WLAN_PIO, WLAN_RESET | WLAN_WAKE);
   // tickle On button for WLAN module
   vTaskDelay (100 / portTICK_RATE_MS);
   AT91F_PIO_ClearOutput (WLAN_PIO, WLAN_WAKE);
-#endif /*TESTING_FACTORY_RESET */
 
   for (;;)
     {
