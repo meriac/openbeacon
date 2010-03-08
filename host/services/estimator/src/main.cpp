@@ -56,7 +56,7 @@ const long tea_key_th[4] = { 0xB4595344, 0xD3E119B6, 0xA814D0EC, 0xEFF5A24E };
 #define MX  ( (((z>>5)^(y<<2))+((y>>3)^(z<<4)))^((sum^y)+(tea_key[(p&3)^e]^z)) )
 #define DELTA 0x9e3779b9UL
 
-#define UDP_PORT 3300
+#define UDP_PORT 2342
 #define STRENGTH_LEVELS_COUNT 4
 #define TAGSIGHTINGFLAG_SHORT_SEQUENCE 0x01
 #define TAGSIGHTINGFLAG_BUTTON_PRESS 0x02
@@ -66,6 +66,12 @@ const long tea_key_th[4] = { 0xB4595344, 0xD3E119B6, 0xA814D0EC, 0xEFF5A24E };
 #define MIN_AGGREGATION_SECONDS 20
 #define MAX_AGGREGATION_SECONDS 32
 #define AGGREGATION_TIMEOUT(strength) ((uint32_t)(MIN_AGGREGATION_SECONDS+(((MAX_AGGREGATION_SECONDS-MIN_AGGREGATION_SECONDS)/(STRENGTH_LEVELS_COUNT-1))*(strength))))
+
+typedef struct
+{
+  TBeaconEnvelope env;
+  u_int32_t src_ip;
+} PACKED TBeaconEnvelopeForwarded;
 
 typedef struct
 {
@@ -414,54 +420,54 @@ main (void)
 
 	      if (crc16
 		  (pkt->byte,
-		   sizeof (pkt->beacon) - sizeof (pkt->beacon.crc)) !=
-		  ntohs (pkt->beacon.crc))
+		   sizeof (pkt->pkt) - sizeof (pkt->pkt.crc)) !=
+		  ntohs (pkt->pkt.crc))
 		printf ("CRC error from reader 0x%08X\n", reader_id);
 	      else
 		{
-		  switch (pkt->proto)
+		  switch (pkt->pkt.proto)
 		    {
 		    case RFBPROTO_BEACONTRACKER:
-		      if (pkt->beacon.version ==
-			  RFBPROTO_BEACONTRACKER_VERSION)
+/*		      if (pkt->pkt.v ==
+			  RFBPROTO_BEACONTRACKER_VERSION)*/
 			{
-			  tag_id = ntohl (pkt->beacon.oid);
-			  tag_sequence = ntohl (pkt->beacon.seq);
-			  tag_strength = pkt->beacon.strength / 0x55;
-			  tag_flags = (pkt->beacon.flags & RFBFLAGS_SENSOR) ?
+			  tag_id = ntohs (pkt->pkt.oid);
+			  tag_sequence = ntohl (pkt->pkt.p.tracker.seq);
+			  tag_strength = pkt->pkt.p.tracker.strength;
+			  tag_flags = (pkt->pkt.flags & RFBFLAGS_SENSOR) ?
 			    TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
 			}
-		      else
+/*		      else
 			{
 			  printf ("unknown beacon protocol [%i]\n",
-				  pkt->beacon.version);
+				  pkt->pkt.p.tracker.version);
 			  tag_strength = -1;
 			  tag_sequence = 0;
-			}
+			}*/
 		      break;
 
 		    case RFBPROTO_PROXTRACKER:
-		      tag_id = ntohs (pkt->socio.oid);
-		      tag_sequence = ntohl (pkt->socio.p.tracker.seq);
-		      tag_strength = pkt->socio.p.tracker.strength
+		      tag_id = ntohs (pkt->pkt.oid);
+		      tag_sequence = ntohl (pkt->pkt.p.tracker.seq);
+		      tag_strength = pkt->pkt.p.tracker.strength
 			& (STRENGTH_LEVELS_COUNT - 1);
-		      tag_flags = (pkt->socio.flags & RFBFLAGS_SENSOR) ?
+		      tag_flags = (pkt->pkt.flags & RFBFLAGS_SENSOR) ?
 			TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
 		      break;
 
 		    case RFBPROTO_PROXREPORT:
-		      tag_id = ntohs (pkt->socio.oid);
-		      tag_flags = (pkt->socio.flags & RFBFLAGS_SENSOR) ?
+		      tag_id = ntohs (pkt->pkt.oid);
+		      tag_flags = (pkt->pkt.flags & RFBFLAGS_SENSOR) ?
 			TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
 
-		      tag_sequence = ntohs (pkt->socio.p.prox.seq);
+		      tag_sequence = ntohs (pkt->pkt.p.prox.seq);
 		      tag_strength = (STRENGTH_LEVELS_COUNT - 1);
 		      tag_flags |= TAGSIGHTINGFLAG_SHORT_SEQUENCE;
 
 		      for (j = 0; j < PROX_MAX; j++)
 			{
 			  tag_sighting =
-			    (ntohs (pkt->socio.p.prox.oid_prox[j]));
+			    (ntohs (pkt->pkt.p.prox.oid_prox[j]));
 			  if (tag_sighting)
 			    {
 			      sprintf (sql_req,
@@ -487,7 +493,7 @@ main (void)
 		      break;
 
 		    default:
-//		      printf ("unknown packet protocol [%i]\n", pkt->proto);
+		      printf ("unknown packet protocol [%i]\n", pkt->pkt.proto);
 		      tag_strength = -1;
 		      tag_sequence = 0;
 		    }
@@ -596,11 +602,13 @@ main (void)
 			tag->button = TAGSIGHTING_BUTTON_TIME;
 
 		      printf
-			("id:%04u reader:%03u strength:%u button:%03u levels:",
-			 tag_id, reader_id & 0xFF, tag_strength, tag->button);
+			("id:%04u reader:%03u proto:%03u strength:%u button:%03u levels:",
+			 tag_id, reader_id & 0xFF, pkt->pkt.proto,  tag_strength, tag->button);
 		      for (j = 0; j < STRENGTH_LEVELS_COUNT; j++)
 			printf ("%03u,", item->strength[j]);
 		      printf ("\n");
+		      
+		      fflush(stdout);
 
 		      pthread_mutex_unlock (item_mutex);
 		    }

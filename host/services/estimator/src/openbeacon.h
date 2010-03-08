@@ -1,12 +1,18 @@
 /*
-    OpenBeacon.org - OnAir protocol specification and definition
-    Copyright 2006 Milosch Meriac <meriac@bitmanufaktur.de>
+    This file is part of the SocioPatterns firmware
+    Copyright (C) 2008-2009 Istituto per l'Interscambio Scientifico I.S.I.
+    You can contact us by email (isi@isi.it) or write to:
+    ISI Foundation, Viale S. Severo 65, 10133 Torino, Italy. 
 
-    Proximity protocol added by Ciro Cattuto <ciro.cattuto@gmail.com>
+    This program was written by Ciro Cattuto <ciro.cattuto@gmail.com>
+
+    This program is based on:
+    OpenBeacon.org - OnAir protocol specification and definition
+    Copyright 2006 Milosch Meriac <meriac@openbeacon.de>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; version 3.
+    the Free Software Foundation; version 2.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -28,23 +34,32 @@
 
 #define XXTEA_BLOCK_COUNT 4
 
-#define RFBPROTO_BEACONTRACKER  16
-#define RFBPROTO_PROXTRACKER    42
-#define RFBPROTO_PROXREPORT     69
-
-#define RFBPROTO_BEACONTRACKER_VERSION 23
+#define RFBPROTO_READER_ANNOUNCE 22
+#define RFBPROTO_READER_COMMAND  23
+#define RFBPROTO_BEACONTRACKER   24
+#define RFBPROTO_PROXTRACKER     42
+#define RFBPROTO_PROXREPORT      69
 
 #define PROX_MAX 4
 
-#define RFBFLAGS_ACK		0x01
-#define RFBFLAGS_SENSOR		0x02
-#define RFBFLAGS_INFECTED	0x04
+#define RFBFLAGS_ACK			0x01
+#define RFBFLAGS_SENSOR			0x02
+#define RFBFLAGS_INFECTED		0x04
 
-#define OID_PERSON			0x0400
-#define OID_HEALER			0x0200
-#define OID_PERSON_MIN      1100
+/* RFBPROTO_READER_COMMAND related opcodes */
+#define READER_CMD_NOP			0x00
+#define READER_CMD_RESET		0x01
+#define READER_CMD_RESET_CONFIG		0x02
+#define READER_CMD_RESET_FACTORY	0x03
+#define READER_CMD_RESET_WIFI		0x04
+#define READER_CMD_SET_OID		0x05
+/* RFBPROTO_READER_COMMAND related results */
+#define READ_RES__OK			0x00
+#define READ_RES__DENIED		0x01
+#define READ_RES__UNKNOWN_CMD		0xFF
 
 #define PACKED  __attribute__((__packed__))
+
 
 typedef struct
 {
@@ -53,19 +68,33 @@ typedef struct
   u_int16_t powerup_count;
   u_int8_t reserved;
   u_int32_t seq;
-} PACKED TSocioTracker;
+} PACKED TBeaconTracker;
 
 typedef struct
 {
   u_int16_t oid_prox[PROX_MAX];
   u_int16_t seq;
-} PACKED TSocioProx;
+} PACKED TBeaconProx;
+
+typedef struct
+{
+  u_int8_t opcode,res;
+  u_int32_t data[2];
+} PACKED TBeaconReaderCommand;
+
+typedef struct
+{
+  u_int8_t opcode,strength;
+  u_int32_t uptime,ip;
+} PACKED TBeaconReaderAnnounce;
 
 typedef union
 {
-  TSocioProx prox;
-  TSocioTracker tracker;
-} PACKED TSocioPayload;
+  TBeaconProx prox;
+  TBeaconTracker tracker;
+  TBeaconReaderCommand reader_command;
+  TBeaconReaderAnnounce reader_announce;
+} PACKED TBeaconPayload;
 
 typedef struct
 {
@@ -73,35 +102,16 @@ typedef struct
   u_int16_t oid;
   u_int8_t flags;
 
-  TSocioPayload p;
+  TBeaconPayload p;
 
   u_int16_t crc;
-} PACKED TSocioPatterns;
-
-typedef struct
-{
-  u_int8_t proto;
-  u_int8_t version, flags, strength;
-  u_int32_t seq;
-  u_int32_t oid;
-  u_int16_t reserved;
-  u_int16_t crc;
-} PACKED TBeaconTracker;
+} PACKED TBeaconWrapper;
 
 typedef union
 {
-  u_int8_t proto;
-  TSocioPatterns socio;
-  TBeaconTracker beacon;
+  TBeaconWrapper pkt;
   u_int32_t block[XXTEA_BLOCK_COUNT];
   u_int8_t byte[XXTEA_BLOCK_COUNT * 4];
 } PACKED TBeaconEnvelope;
-
-typedef struct
-{
-  TBeaconEnvelope env;
-  u_int32_t src_ip;
-} PACKED TBeaconEnvelopeForwarded;
-
 
 #endif/*__OPENBEACON_H__*/
