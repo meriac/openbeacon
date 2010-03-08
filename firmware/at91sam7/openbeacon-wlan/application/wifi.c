@@ -364,6 +364,9 @@ wifi_task_nrf (void *parameter)
   unsigned char power = 0;
   portTickType t, Ticks = 0;
 
+  // wait 10 seconds on boot for WIFI
+  vTaskDelay (10000 / portTICK_RATE_MS);
+
   if (nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0))
     {
       nRFAPI_SetPipeSizeRX (0, 16);
@@ -462,10 +465,15 @@ wifi_task_uart (void *parameter)
   AT91C_BASE_PDC_US0->PDC_TCR = 0;
 
   // remove reset line
-  AT91F_PIO_SetOutput (WLAN_PIO, WLAN_RESET | WLAN_WAKE);
+  vTaskDelay (1000 / portTICK_RATE_MS);
+  AT91F_PIO_SetOutput (WLAN_PIO, WLAN_RESET);
+  vTaskDelay (1000 / portTICK_RATE_MS);
+
   // tickle On button for WLAN module
-  vTaskDelay (100 / portTICK_RATE_MS);
+  AT91F_PIO_SetOutput (WLAN_PIO, WLAN_WAKE);
+  vTaskDelay (1000 / portTICK_RATE_MS);
   AT91F_PIO_ClearOutput (WLAN_PIO, WLAN_WAKE);
+  vTaskDelay (1000 / portTICK_RATE_MS);
 
   for (;;)
     {
@@ -486,8 +494,8 @@ wifi_init (void)
   AT91F_PIO_CfgPeriph (WLAN_PIO,
 		       (WLAN_RXD | WLAN_TXD | WLAN_RTS | WLAN_CTS), 0);
   // configure IOs
-  AT91F_PIO_CfgOutput (WLAN_PIO, WLAN_ADHOC | WLAN_RESET | WLAN_WAKE);
   AT91F_PIO_ClearOutput (WLAN_PIO, WLAN_RESET | WLAN_ADHOC | WLAN_WAKE);
+  AT91F_PIO_CfgOutput (WLAN_PIO, WLAN_ADHOC | WLAN_RESET | WLAN_WAKE);
   // Standard Asynchronous Mode : 8 bits , 1 stop , no parity
   AT91C_BASE_US0->US_MR = AT91C_US_ASYNC_MODE;
   wifi_set_baudrate (WLAN_BAUDRATE);
