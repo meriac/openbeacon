@@ -61,9 +61,9 @@ const long tea_key[4] = { 0xab94ec75, 0x160869c5, 0xfbf908da, 0x60bedc73 };
 #define TAGSIGHTINGFLAG_SHORT_SEQUENCE 0x01
 #define TAGSIGHTINGFLAG_BUTTON_PRESS 0x02
 #define TAGSIGHTING_BUTTON_TIME 5
-#define TAG_MASS 3.0
+#define TAG_MASS 1.0
 
-#define MIN_AGGREGATION_SECONDS 20
+#define MIN_AGGREGATION_SECONDS 16
 #define MAX_AGGREGATION_SECONDS 32
 #define AGGREGATION_TIMEOUT(strength) ((uint32_t)(MIN_AGGREGATION_SECONDS+(((MAX_AGGREGATION_SECONDS-MIN_AGGREGATION_SECONDS)/(STRENGTH_LEVELS_COUNT-1))*(strength))))
 
@@ -303,8 +303,8 @@ ThreadIterateForceCalculate (void *Context)
       power++;
     }
 
-  px /= STRENGTH_LEVELS_COUNT;
-  py /= STRENGTH_LEVELS_COUNT;
+/*  px /= STRENGTH_LEVELS_COUNT;
+  py /= STRENGTH_LEVELS_COUNT;*/
 
   F = px - tag->px;
   tag->vx += (F * delta_t) / TAG_MASS;
