@@ -60,7 +60,6 @@
 
 #define PACKED  __attribute__((__packed__))
 
-
 typedef struct
 {
   u_int8_t strength;

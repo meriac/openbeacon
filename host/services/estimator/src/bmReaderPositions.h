@@ -31,7 +31,7 @@ typedef struct
 #define IPv4(a,b,c,d) ( ((uint32_t)a)<<24 | ((uint32_t)b)<<16 | ((uint32_t)c)<<8 | ((uint32_t)d)<<0 )
 
 static const TReaderItem g_ReaderList[] = {
-  FH Wildau: group=2
+  // FH Wildau: group=10
   {IPv4 (10,110, 0, 214), 101, 1, 10, 685, 290},
   {IPv4 (10,110, 0, 213), 101, 1, 10, 685, 150},
   {IPv4 (10,110, 0, 212), 102, 1, 10, 225,  13},
@@ -56,13 +56,7 @@ static const TReaderItem g_ReaderList[] = {
   {IPv4 (10,110, 0, 225), 302, 3, 10, 620, 145},
   {IPv4 (10,110, 0, 223), 301, 3, 10, 750, 233},
   {IPv4 (10,110, 0, 222), 303, 3, 10,  20, 230},
-
-  // Jacques Reader: group=1
- /* {IPv4 (192, 168, 69,  10), 1, 0, 1, 41.65, 39.10},
-  {IPv4 (192, 168, 69,  11), 1, 0, 1, 11.65, 9.10},
-  {IPv4 (192, 168, 69,  13), 1, 0, 1, 41.65, 9.10},
-  {IPv4 (192, 168, 69,  14), 1, 0, 1, 11.65, 39.10}
-};*/
+};
 
 #define READER_COUNT (sizeof(g_ReaderList)/sizeof(g_ReaderList[0]))
 

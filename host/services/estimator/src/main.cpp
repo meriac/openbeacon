@@ -50,9 +50,9 @@ static int g_DoEstimation = 1;
 //
 // proximity tag TEA encryption key
 //
-const long tea_key_jr[4] = { 0xab94ec75, 0x160869c5, 0xfbf908da, 0x60bedc73 };
-const long tea_key_th[4] = { 0xB4595344, 0xD3E119B6, 0xA814D0EC, 0xEFF5A24E };
+const long tea_key[4] = { 0xab94ec75, 0x160869c5, 0xfbf908da, 0x60bedc73 };
 
+//const long tea_key[4] = { 0xB4595344, 0xD3E119B6, 0xA814D0EC, 0xEFF5A24E };
 #define MX  ( (((z>>5)^(y<<2))+((y>>3)^(z<<4)))^((sum^y)+(tea_key[(p&3)^e]^z)) )
 #define DELTA 0x9e3779b9UL
 
@@ -66,12 +66,6 @@ const long tea_key_th[4] = { 0xB4595344, 0xD3E119B6, 0xA814D0EC, 0xEFF5A24E };
 #define MIN_AGGREGATION_SECONDS 20
 #define MAX_AGGREGATION_SECONDS 32
 #define AGGREGATION_TIMEOUT(strength) ((uint32_t)(MIN_AGGREGATION_SECONDS+(((MAX_AGGREGATION_SECONDS-MIN_AGGREGATION_SECONDS)/(STRENGTH_LEVELS_COUNT-1))*(strength))))
-
-typedef struct
-{
-  TBeaconEnvelope env;
-  u_int32_t src_ip;
-} PACKED TBeaconEnvelopeForwarded;
 
 typedef struct
 {
@@ -353,8 +347,7 @@ main (void)
   pthread_t thread_handle;
   struct sockaddr_in si_me, si_other;
   TTagItem *tag;
-  TBeaconEnvelope *pkt;
-  uint8_t beacons[1500];
+  TBeaconEnvelope beacons[100], *pkt;
   int j, items, sock, tag_strength;
   uint32_t reader_id, tag_id, tag_flags, tag_sequence, delta_t, t, timestamp,
     tag_sighting;
@@ -362,7 +355,6 @@ main (void)
   TEstimatorItem *item;
   TAggregation *aggregation;
   char sql_req[4096];
-  const long *tea_key;
 
   mysql_library_init (0, NULL, NULL);
   g_db = db_connect (NULL);
@@ -392,27 +384,17 @@ main (void)
 				 (sockaddr *) & si_other, &slen)) == -1)
 	    diep (NULL, "recvfrom()");
 
-	  switch (items)
+	  items /= sizeof (TBeaconEnvelope);
+	  if (!items)
 	    {
-	    case sizeof (TBeaconEnvelopeForwarded):
-	      items = 1;
-	      pkt = &((TBeaconEnvelopeForwarded *) & beacons)->env;
-	      reader_id =
-		ntohl (((TBeaconEnvelopeForwarded *) & beacons)->src_ip);
-	      tea_key = tea_key_jr;
-	      break;
-	    case sizeof (TBeaconEnvelope):
-	      items = 1;
-	      pkt = (TBeaconEnvelope *) & beacons;
-	      reader_id = ntohl (si_other.sin_addr.s_addr);
-	      tea_key = tea_key_jr;
-	      break;
-	    default:
-	      printf ("broken packet size %i\n", items);
-	      pkt = NULL;
+	      printf ("Too small packet received\n");
+	      continue;
 	    }
 
-	  if (pkt)
+	  pkt = beacons;
+	  reader_id = ntohl (si_other.sin_addr.s_addr);
+
+	  while (items--)
 	    {
 	      shuffle_tx_byteorder (pkt->block, XXTEA_BLOCK_COUNT);
 	      xxtea_decode (pkt->block, XXTEA_BLOCK_COUNT, tea_key);
@@ -422,197 +404,194 @@ main (void)
 		  (pkt->byte,
 		   sizeof (pkt->pkt) - sizeof (pkt->pkt.crc)) !=
 		  ntohs (pkt->pkt.crc))
-		printf ("CRC error from reader 0x%08X\n", reader_id);
-	      else
 		{
-		  switch (pkt->pkt.proto)
+		  printf ("CRC error from reader 0x%08X\n", reader_id);
+		  continue;
+		}
+
+	      switch (pkt->pkt.proto)
+		{
+		case RFBPROTO_BEACONTRACKER:
+		  {
+		    tag_id = ntohs (pkt->pkt.oid);
+		    tag_sequence = ntohl (pkt->pkt.p.tracker.seq);
+		    tag_strength = pkt->pkt.p.tracker.strength;
+		    tag_flags = (pkt->pkt.flags & RFBFLAGS_SENSOR) ?
+		      TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
+		  }
+		  break;
+
+		case RFBPROTO_PROXTRACKER:
+		  tag_id = ntohs (pkt->pkt.oid);
+		  tag_sequence = ntohl (pkt->pkt.p.tracker.seq);
+		  tag_strength = pkt->pkt.p.tracker.strength
+		    & (STRENGTH_LEVELS_COUNT - 1);
+		  tag_flags = (pkt->pkt.flags & RFBFLAGS_SENSOR) ?
+		    TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
+		  break;
+
+		case RFBPROTO_PROXREPORT:
+		  tag_id = ntohs (pkt->pkt.oid);
+		  tag_flags = (pkt->pkt.flags & RFBFLAGS_SENSOR) ?
+		    TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
+
+		  tag_sequence = ntohs (pkt->pkt.p.prox.seq);
+		  tag_strength = (STRENGTH_LEVELS_COUNT - 1);
+		  tag_flags |= TAGSIGHTINGFLAG_SHORT_SEQUENCE;
+
+		  for (j = 0; j < PROX_MAX; j++)
 		    {
-		    case RFBPROTO_BEACONTRACKER:
-/*		      if (pkt->pkt.v ==
-			  RFBPROTO_BEACONTRACKER_VERSION)*/
+		      tag_sighting = (ntohs (pkt->pkt.p.prox.oid_prox[j]));
+		      if (tag_sighting)
 			{
-			  tag_id = ntohs (pkt->pkt.oid);
-			  tag_sequence = ntohl (pkt->pkt.p.tracker.seq);
-			  tag_strength = pkt->pkt.p.tracker.strength;
-			  tag_flags = (pkt->pkt.flags & RFBFLAGS_SENSOR) ?
-			    TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
-			}
-/*		      else
-			{
-			  printf ("unknown beacon protocol [%i]\n",
-				  pkt->pkt.p.tracker.version);
-			  tag_strength = -1;
-			  tag_sequence = 0;
-			}*/
-		      break;
+			  sprintf (sql_req,
+				   "INSERT INTO proximity ("
+				   "tag_id,reader_id,tag_flags,"
+				   "proximity_tag,proximity_count,proximity_strength"
+				   ") VALUES(%u,%u,%u,%u,%u,%u)"
+				   "ON DUPLICATE KEY UPDATE reader_id=%u, tag_flags=%u, proximity_tag=%u proximity_count=%u, proximity_strength=%u, time=NOW()\n",
+				   tag_id, reader_id,
+				   tag_flags,
+				   (tag_sighting >> 0) & 0x7FF,
+				   (tag_sighting >> 11) & 0x7,
+				   (tag_sighting >> 14) & 0x3,
+				   reader_id, tag_flags,
+				   (tag_sighting >> 0) & 0x7FF,
+				   (tag_sighting >> 11) & 0x7,
+				   (tag_sighting >> 14) & 0x3);
 
-		    case RFBPROTO_PROXTRACKER:
-		      tag_id = ntohs (pkt->pkt.oid);
-		      tag_sequence = ntohl (pkt->pkt.p.tracker.seq);
-		      tag_strength = pkt->pkt.p.tracker.strength
-			& (STRENGTH_LEVELS_COUNT - 1);
-		      tag_flags = (pkt->pkt.flags & RFBFLAGS_SENSOR) ?
-			TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
-		      break;
-
-		    case RFBPROTO_PROXREPORT:
-		      tag_id = ntohs (pkt->pkt.oid);
-		      tag_flags = (pkt->pkt.flags & RFBFLAGS_SENSOR) ?
-			TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
-
-		      tag_sequence = ntohs (pkt->pkt.p.prox.seq);
-		      tag_strength = (STRENGTH_LEVELS_COUNT - 1);
-		      tag_flags |= TAGSIGHTINGFLAG_SHORT_SEQUENCE;
-
-		      for (j = 0; j < PROX_MAX; j++)
-			{
-			  tag_sighting =
-			    (ntohs (pkt->pkt.p.prox.oid_prox[j]));
-			  if (tag_sighting)
-			    {
-			      sprintf (sql_req,
-				       "INSERT INTO proximity ("
-				       "tag_id,reader_id,tag_flags,"
-				       "proximity_tag,proximity_count,proximity_strength"
-				       ") VALUES(%u,%u,%u,%u,%u,%u)"
-				       "ON DUPLICATE KEY UPDATE reader_id=%u, tag_flags=%u, proximity_tag=%u proximity_count=%u, proximity_strength=%u, time=NOW()\n",
-				       tag_id, reader_id,
-				       tag_flags,
-				       (tag_sighting >> 0) & 0x7FF,
-				       (tag_sighting >> 11) & 0x7,
-				       (tag_sighting >> 14) & 0x3,
-				       reader_id, tag_flags,
-				       (tag_sighting >> 0) & 0x7FF,
-				       (tag_sighting >> 11) & 0x7,
-				       (tag_sighting >> 14) & 0x3);
-
-//			      printf (sql_req);
+//                            printf (sql_req);
 //                            db_do_query (g_db, sql_req);
-			    }
 			}
-		      break;
-
-		    default:
-		      printf ("unknown packet protocol [%i]\n", pkt->pkt.proto);
-		      tag_strength = -1;
-		      tag_sequence = 0;
 		    }
+		  break;
+		case RFBPROTO_READER_ANNOUNCE:
+		  tag_strength = -1;
+		  tag_sequence = 0;
+		  break;
+		default:
+		  printf ("unknown packet protocol [%i]\n", pkt->pkt.proto);
+		  tag_strength = -1;
+		  tag_sequence = 0;
+		}
 
-		  if ((tag_strength >= 0)
-		      && (item =
-			  (TEstimatorItem *)
-			  g_map_reader.Add ((((uint64_t) reader_id) << 32) |
-					    tag_id, &item_mutex)) != NULL)
+	      if ((tag_strength >= 0)
+		  && (item =
+		      (TEstimatorItem *)
+		      g_map_reader.Add ((((uint64_t) reader_id) << 32) |
+					tag_id, &item_mutex)) != NULL)
+		{
+		  timestamp = time (NULL);
+		  item->timestamp = timestamp;
+
+		  // initialize on first occurence
+		  if (!item->tag_id)
 		    {
-		      timestamp = time (NULL);
-		      item->timestamp = timestamp;
+		      item->tag_id = tag_id;
 
-		      // initialize on first occurence
-		      if (!item->tag_id)
-			{
-			  item->tag_id = tag_id;
-
-			  for (t = 0; t < READER_COUNT; t++)
-			    if (g_ReaderList[t].id == reader_id)
-			      {
-				item->reader = &g_ReaderList[t];
-				break;
-			      }
-			  if (t < READER_COUNT)
-			    item->reader_id = reader_id;
-			  else
-			    {
-			      printf ("unknown reader 0x%08X\n", reader_id);
-			      item->reader = NULL;
-			      item->reader_id = 0;
-			      reader_id = 0;
-			    }
-			}
-
-		      if ((tag =
-			   (TTagItem *) g_map_tag.Add (tag_id,
-						       &tag_mutex)) == NULL)
-			diep ("can't add tag");
+		      for (t = 0; t < READER_COUNT; t++)
+			if (g_ReaderList[t].id == reader_id)
+			  {
+			    item->reader = &g_ReaderList[t];
+			    break;
+			  }
+		      if (t < READER_COUNT)
+			item->reader_id = reader_id;
 		      else
 			{
-			  // on first occurence
-			  if (!tag->id)
-			    {
-			      printf ("new tag %u seen\n", tag_id);
-			      tag->id = tag_id;
-			      tag->last_calculated = microtime ();
-			    }
-			  tag->last_reader = item->reader;
-			  tag->last_seen = timestamp;
-			  // TODO: fix wrapping of 16 bit sequence numbers
-			  if (tag_flags & TAGSIGHTINGFLAG_SHORT_SEQUENCE)
-			    tag->sequence =
-			      (tag->sequence & ~0xFFFF) | tag_sequence;
+			  printf ("unknown reader 0x%08X\n", reader_id);
+			  item->reader = NULL;
+			  item->reader_id = 0;
+			  reader_id = 0;
+			}
+		    }
 
-			  item->tag = tag;
-			  pthread_mutex_unlock (tag_mutex);
+		  if ((tag =
+		       (TTagItem *) g_map_tag.Add (tag_id,
+						   &tag_mutex)) == NULL)
+		    diep ("can't add tag");
+		  else
+		    {
+		      // on first occurence
+		      if (!tag->id)
+			{
+			  printf ("new tag %u seen\n", tag_id);
+			  tag->id = tag_id;
+			  tag->last_calculated = microtime ();
+			}
+		      tag->last_reader = item->reader;
+		      tag->last_seen = timestamp;
+		      // TODO: fix wrapping of 16 bit sequence numbers
+		      if (tag_flags & TAGSIGHTINGFLAG_SHORT_SEQUENCE)
+			tag->sequence =
+			  (tag->sequence & ~0xFFFF) | tag_sequence;
+
+		      item->tag = tag;
+		      pthread_mutex_unlock (tag_mutex);
+		    }
+
+		  delta_t = timestamp - item->last_seen;
+		  if (delta_t >= MAX_AGGREGATION_SECONDS)
+		    {
+		      memset (&item->levels, 0, sizeof (item->levels));
+		      memset (&item->strength, 0, sizeof (item->strength));
+		      item->fifo_pos = 0;
+		      item->last_seen = timestamp;
+		    }
+		  else
+		    {
+		      if (delta_t)
+			{
+			  item->fifo_pos++;
+			  if (item->fifo_pos >= MAX_AGGREGATION_SECONDS)
+			    item->fifo_pos = 0;
 			}
 
-		      delta_t = timestamp - item->last_seen;
-		      if (delta_t >= MAX_AGGREGATION_SECONDS)
+		      aggregation = &item->levels[item->fifo_pos];
+
+		      // reset values to zero
+		      if (delta_t)
 			{
-			  memset (&item->levels, 0, sizeof (item->levels));
+			  memset (aggregation, 0, sizeof (*aggregation));
+			  aggregation->time = timestamp;
+			}
+		      aggregation->strength[tag_strength]++;
+
+		      if (delta_t)
+			{
 			  memset (&item->strength, 0,
 				  sizeof (item->strength));
-			  item->fifo_pos = 0;
-			  item->last_seen = timestamp;
-			}
-		      else
-			{
-			  if (delta_t)
+			  aggregation = item->levels;
+			  for (t = 0; t < MAX_AGGREGATION_SECONDS; t++)
 			    {
-			      item->fifo_pos++;
-			      if (item->fifo_pos >= MAX_AGGREGATION_SECONDS)
-				item->fifo_pos = 0;
-			    }
-
-			  aggregation = &item->levels[item->fifo_pos];
-
-			  // reset values to zero
-			  if (delta_t)
-			    {
-			      memset (aggregation, 0, sizeof (*aggregation));
-			      aggregation->time = timestamp;
-			    }
-			  aggregation->strength[tag_strength]++;
-
-			  if (delta_t)
-			    {
-			      memset (&item->strength, 0,
-				      sizeof (item->strength));
-			      aggregation = item->levels;
-			      for (t = 0; t < MAX_AGGREGATION_SECONDS; t++)
-				{
-				  for (j = 0; j < STRENGTH_LEVELS_COUNT; j++)
-				    if ((timestamp - aggregation->time) <=
-					AGGREGATION_TIMEOUT (j))
-				      item->strength[j] +=
-					aggregation->strength[j];
-				  aggregation++;
-				}
+			      for (j = 0; j < STRENGTH_LEVELS_COUNT; j++)
+				if ((timestamp - aggregation->time) <=
+				    AGGREGATION_TIMEOUT (j))
+				  item->strength[j] +=
+				    aggregation->strength[j];
+			      aggregation++;
 			    }
 			}
-
-		      if (tag_flags & TAGSIGHTINGFLAG_BUTTON_PRESS)
-			tag->button = TAGSIGHTING_BUTTON_TIME;
-
-		      printf
-			("id:%04u reader:%03u proto:%03u strength:%u button:%03u levels:",
-			 tag_id, reader_id & 0xFF, pkt->pkt.proto,  tag_strength, tag->button);
-		      for (j = 0; j < STRENGTH_LEVELS_COUNT; j++)
-			printf ("%03u,", item->strength[j]);
-		      printf ("\n");
-		      
-		      fflush(stdout);
-
-		      pthread_mutex_unlock (item_mutex);
 		    }
+
+		  if (tag_flags & TAGSIGHTINGFLAG_BUTTON_PRESS)
+		    tag->button = TAGSIGHTING_BUTTON_TIME;
+
+		  printf
+		    ("id:%04u reader:%03u proto:%03u strength:%u button:%03u levels:",
+		     tag_id, reader_id & 0xFF, pkt->pkt.proto,
+		     tag_strength, tag->button);
+		  for (j = 0; j < STRENGTH_LEVELS_COUNT; j++)
+		    printf ("%03u,", item->strength[j]);
+		  printf ("\n");
+
+		  fflush (stdout);
+
+		  pthread_mutex_unlock (item_mutex);
 		}
+
+	      // process next packet
+	      pkt++;
 	    }
 	}
     }
