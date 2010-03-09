@@ -1,0 +1,68 @@
+#!/usr/bin/expect -f
+
+set host [lindex $argv 0]
+set id [lindex $argv 1]
+
+spawn /usr/bin/nc -C $host 2000
+
+expect "*HELLO*"
+send "$$$\n"
+expect "CMD"
+
+send "set i l 2343\n"
+expect "AOK"
+
+send "set u b 921600\n"
+expect "AOK"
+
+send "set w s OpenBeacon.org\n"
+expect "AOK"
+
+send "set w p 2InFaDuWeTr3\n"
+expect "AOK"
+
+send "set w j 1\n"
+expect "AOK"
+
+send "set w h 1\n"
+expect "AOK"
+
+send "set i h 10.1.254.1\n"
+expect "AOK"
+
+send "set i p 3\n"
+expect "AOK"
+
+send "set i r 2342\n"
+expect "AOK"
+
+send "set i d 0\n"
+expect "AOK"
+
+send "set i a 10.1.254.$id\n"
+expect "AOK"
+
+send "set i g 10.1.0.1\n"
+expect "AOK"
+
+send "set i n 255.255.0.0\n"
+expect "AOK"
+
+send "set d a 10.1.0.1\n"
+expect "AOK"
+
+send "set opt deviceid OpenBeacon-$id\n"
+expect "AOK"
+
+send "save user\n"
+expect "Storing in user"
+
+send "save\n"
+expect "Storing in config"
+
+send "get mac\n"
+expect "Mac Addr="
+
+send "reboot\n"
+
+puts "\n"
