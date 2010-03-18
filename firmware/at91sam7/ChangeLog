@@ -1,3 +1,150 @@
+2010-03-18 13:17  meriac
+
+	* [r658] bootloader: deleted deprecated boot loader
+
+2010-03-18 13:14  meriac
+
+	* [r657] core/openbeacon/nRF24L01/nRF_API.c: NRF_RFOPTIONS override
+	  added
+
+2010-03-09 01:21  meriac
+
+	* [r653] openbeacon-wlan/expect,
+	  openbeacon-wlan/expect/default-settings: added expect script for
+	  configuration
+
+2010-03-08 23:11  meriac
+
+	* [r652] openbeacon-wlan/application/wifi.c: improved reset line
+	  handling
+
+2010-03-02 14:56  meriac
+
+	* [r650] openbeacon-wlan/application/wifi.c: reset baudrate after
+	  WIFI reset
+
+2010-03-02 11:13  meriac
+
+	* [r649] openbeacon-wlan/application/wifi.c: remove factory reset
+	  code - please use remote reset
+
+2010-03-02 11:09  meriac
+
+	* [r648] openbeacon-proxestimator/application/cmd.c,
+	  openbeacon-wlan/application/main.c,
+	  openbeacon-wlan/application/wifi.c,
+	  openbeacon-wlan/config/FreeRTOSConfig.h: fixed remote reset
+
+2010-03-02 10:09  meriac
+
+	* [r647] openbeacon-proxestimator/application/cmd.c: changed
+	  default reader id
+
+2010-03-02 10:04  meriac
+
+	* [r646] openbeacon-proxestimator/application/main.c: changed
+	  default reader id
+
+2010-03-02 10:00  meriac
+
+	* [r645] openbeacon-wlan/config/atmel-rom.ld: fixed linker file
+
+2010-03-02 09:39  meriac
+
+	* [r644] core/openbeacon/env.c: fixed flash + SDRAM combination
+
+2010-03-02 09:28  meriac
+
+	* [r643] openbeacon-proxestimator/application/cmd.c,
+	  openbeacon-proxestimator/application/openbeacon.h,
+	  openbeacon-proxestimator/application/proto.c,
+	  openbeacon-proxestimator/application/proto.h: added support for
+	  remotely configuring OpenBeacon WLAN
+
+2010-03-02 09:25  meriac
+
+	* [r642] openbeacon-wlan/application/main.c,
+	  openbeacon-wlan/application/openbeacon.h,
+	  openbeacon-wlan/application/wifi.c: added support for settin OID
+
+2010-03-01 07:08  meriac
+
+	* [r641] openbeacon-proxestimator/application/proto.c: added
+	  support for reader_announce protocol
+
+2010-03-01 06:45  meriac
+
+	* [r640] openbeacon-proxestimator/application/openbeacon.h: updated
+	  to latest openbeacon.h
+
+2010-03-01 06:43  meriac
+
+	* [r639] openbeacon-wlan/application/openbeacon.h,
+	  openbeacon-wlan/application/wifi.c: added WIFI reset
+
+2010-03-01 06:39  meriac
+
+	* [r638] openbeacon-wlan/config/board.h: cleanup
+
+2010-03-01 06:38  meriac
+
+	* [r637] openbeacon-wlan/application/wifi.c,
+	  openbeacon-wlan/config/board.h: fixed packet length
+
+2010-03-01 05:34  meriac
+
+	* [r636] openbeacon-wlan/application/wifi.c: support multipacket on
+	  WIFI
+
+2010-03-01 05:18  meriac
+
+	* [r635] openbeacon-wlan/application/wifi.c: UART tx workaround
+	  works
+
+2010-03-01 02:04  meriac
+
+	* [r634] openbeacon-wlan/application/wifi.c: added factory testing
+
+2010-03-01 01:14  meriac
+
+	* [r633] openbeacon-wlan/application/wifi.c: added fifo code for
+	  nRF rx path
+
+2010-03-01 00:27  meriac
+
+	* [r632] openbeacon-wlan/application/openbeacon.h,
+	  openbeacon-wlan/application/wifi.c: added announcement broadcast
+	  support
+
+2010-03-01 00:11  meriac
+
+	* [r631] openbeacon-wlan/application/wifi.c: added sequence number
+	  to repsonse packets
+
+2010-03-01 00:08  meriac
+
+	* [r630] openbeacon-wlan/application/openbeacon.h,
+	  openbeacon-wlan/application/wifi.c: switched text command
+	  interface to opcodes
+
+2010-02-28 23:36  meriac
+
+	* [r629] readme.txt: updated readme.txt with sam7utils specific
+	  infos
+
+2010-02-28 23:31  meriac
+
+	* [r628] at91flash/sam7utils-0.2.1.patch: added
+	  sam7utils-0.2.1.patch -> see http://oss.tekno.us/sam7utils/
+
+2010-02-28 23:14  meriac
+
+	* [r627] openbeacon-wlan/application/wifi.c: improved reset
+
+2010-02-28 23:08  meriac
+
+	* [r626] ChangeLog: updated ChangeLog
+
 2010-02-28 23:07  meriac
 
 	* [r625] update_changelog: update script
