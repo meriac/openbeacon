@@ -28,9 +28,12 @@
 #include <nRF_API.h>
 #include <nRF_HW.h>
 #include <nRF_CMD.h>
+#include <board.h>
 #include <beacontypes.h>
 
+#ifndef NRF_RFOPTIONS
 #define NRF_RFOPTIONS 0x09
+#endif/*NRF_RFOPTIONS*/
 
 // set broadcast MAC to 'BCAST'
 const unsigned char rfbroadcast_mac[NRF_MAX_MAC_SIZE]={'T','S','A','C','B'};
