@@ -69,8 +69,8 @@
 #define MX (z>>5^y<<2)+(y>>3^z<<4)^(sum^y)+(tea_key[p&3^e]^z)
 #define DELTA 0x9E3779B9L
 
-// dummy key
-const long tea_key[4]={0x00112233,0x44556677,0x8899AABB,0xCCDDEEFF};
+// 24C3 key
+const long tea_key[4]={0xB4595344,0xD3E119B6,0xA814D0EC,0xEFF5A24E};
 
 static int flagDecrypt=1;
 static int flagLog=1;
