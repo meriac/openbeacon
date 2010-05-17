@@ -51,8 +51,8 @@
 #define GROUP_TO_RUN_AS 1200
 #define UDP_LISTEN_PORT	2342
 #define TCP_LISTEN_PORT 8111
-#define LOG_DIRPATH "/var/lib/openbeacon"
-#define CONFIG_FILEPATH "/etc/openbeacon.conf"
+#define LOG_DIRPATH "."
+#define CONFIG_FILEPATH "openbeacon.conf"
 //#define MAX_LOG_FILE_SIZE 10000000
 #define MAX_READERS 200
 #define MAX_TAGS 1000
