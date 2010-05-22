@@ -1,3 +1,3 @@
 bin_PROGRAMS = lpc-flash
-estimator_SOURCES = lpc-flash.c
-estimator_CPPFLAGS = -Wall -Werror
+lpc_flash_SOURCES = lpc-flash.c
+lpc_flash_CPPFLAGS = -Wall -Werror
