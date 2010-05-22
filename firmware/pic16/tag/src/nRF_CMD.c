@@ -25,7 +25,6 @@
 #include <htc.h>
 #include "config.h"
 #include "timer.h"
-#include "delay.h"
 #include "nRF_HW.h"
 #include "nRF_CMD.h"
 
@@ -136,7 +135,7 @@ nRFCMD_Execute (void)
   nRFCMD_Macro (g_MacroStart);
   sleep_jiffies (TIMER1_JIFFIES_PER_MS);
   CONFIG_PIN_CE = 1;
-  usleep (12);
+  sleep_2ms ();
   CONFIG_PIN_CE = 0;
   nRFCMD_Stop ();
 }

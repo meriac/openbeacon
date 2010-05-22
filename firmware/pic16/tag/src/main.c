@@ -37,7 +37,7 @@ __CONFIG (0x03d4);
 __EEPROM_DATA (0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ,0x00);
 
 volatile const u_int32_t oid = 0xFFFFFFFF, seed = 0xFFFFFFFF;
-u_int32_t seq = 0;
+static u_int32_t seq = 0;
 static u_int16_t code_block;
 
 TMacroBeacon g_MacroBeacon = {
@@ -142,7 +142,7 @@ main (void)
 
   for (i = 0; i <= 40; i++)
     {
-      CONFIG_PIN_LED = i & 1;
+      CONFIG_PIN_LED = (i&1)?1:0;
       sleep_jiffies (100 * TIMER1_JIFFIES_PER_MS);
     }
 

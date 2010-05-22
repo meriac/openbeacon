@@ -374,14 +374,14 @@ vnRFtaskRxTx (void *parameter)
 		    {
 
 		    case RFBPROTO_READER_ANNOUNCE:
-		      DumpStringToUSB ("READER_ANNOUNCE: ");
+/*		      DumpStringToUSB ("READER_ANNOUNCE: ");
 		      DumpUIntToUSB (oid);
 		      DumpStringToUSB (",");
 		      DumpUIntToUSB (g_Beacon.pkt.p.reader_announce.strength);
 		      DumpStringToUSB (",");
 		      DumpUIntToUSB (swaplong
 				     (g_Beacon.pkt.p.reader_announce.uptime));
-		      DumpStringToUSB ("\n\r");
+		      DumpStringToUSB ("\n\r");*/
 
 		      strength = g_Beacon.pkt.p.reader_announce.strength;
 		      break;

@@ -46,7 +46,7 @@
 #define INTCON_PEIE	(1 << 6)
 #define INTCON_GIE	(1 << 7)
 
-static char timer1_wrapped;
+static volatile char timer1_wrapped;
 
 void
 timer1_init (void)
