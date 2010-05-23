@@ -143,12 +143,6 @@ int main(int argc, char **argv)
 	/* Needs to be converted to little endian when storing */
 	((uint32_t *) data)[7] = htolel(checksum);
 
-	/* If output is not stdout: seek to start of output */
-	if (output != 1 && lseek(output, 0, SEEK_SET) == -1) {
-		perror("Couldn't seek in output file");
-		return 3;
-	}
-
 	/* Now write out the whole file */
 	ssize_t len_written, output_size = 0;
 	while ((len_written =
@@ -164,6 +158,7 @@ int main(int argc, char **argv)
 
 	/* close & flush files */
 	close(input);
+	fsync(output);
 	close(output);
 
 	return 0;
