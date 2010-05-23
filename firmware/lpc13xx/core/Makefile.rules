@@ -4,7 +4,7 @@ LD=$(CROSS)ld
 OBJCOPY=$(CROSS)objcopy
 OBJDUMP=$(CROSS)objdump
 AR=$(CROSS)ar
-LDSCRIPT=config/$(CPU).ld
+LDSCRIPT=$(CORE)linker/$(CPU).ld
 
 CORE=../core/
 
