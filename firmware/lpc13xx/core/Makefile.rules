@@ -1,51 +1,19 @@
-#	FreeRTOS.org V4.2.1 - Copyright (C) 2003-2007 Richard Barry.
-#
-#	This file is part of the FreeRTOS.org distribution.
-#
-#	FreeRTOS.org is free software; you can redistribute it and/or modify
-#	it under the terms of the GNU General Public License as published by
-#	the Free Software Foundation; either version 2 of the License, or
-#	(at your option) any later version.
-#
-#	FreeRTOS.org is distributed in the hope that it will be useful,
-#	but WITHOUT ANY WARRANTY; without even the implied warranty of
-#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#	GNU General Public License for more details.
-#
-#	You should have received a copy of the GNU General Public License
-#	along with FreeRTOS.org; if not, write to the Free Software
-#	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#
-#	A special exception to the GPL can be applied should you wish to distribute
-#	a combined work that includes FreeRTOS.org, without being obliged to provide
-#	the source code for any proprietary components.  See the licensing section 
-#	of http://www.FreeRTOS.org for full details of how and when the exception
-#	can be applied.
-#
-#	***************************************************************************
-#	See http://www.FreeRTOS.org for documentation, latest information, license 
-#	and contact details.  Please ensure to read the configuration and relevant 
-#	port sections of the online documentation.
-#	***************************************************************************
-
 CROSS=arm-none-eabi-
 CC=$(CROSS)gcc
 LD=$(CROSS)ld
 OBJCOPY=$(CROSS)objcopy
 OBJDUMP=$(CROSS)objdump
 AR=$(CROSS)ar
-LDSCRIPT=config/atmel-rom.ld
-
+LDSCRIPT=config/$(CPU).ld
 
 CORE=../core/
 
 #
 # CFLAGS common to both the THUMB and ARM mode builds
 #
-
 CFLAGS= \
 -D __$(CPU)__ \
--D __$(ARCH)__ \
+-D __$(ARCH)XX__ \
 -Iconfig \
 -I$(CORE)cmsis/inc \
 -Wall  \
@@ -56,6 +24,7 @@ CFLAGS= \
 -Wno-strict-aliasing  \
 -D CORTEXM3_GCC  \
 -mcpu=cortex-m3 \
+-mthumb \
 -T$(LDSCRIPT) \
 $(DEBUG)  \
 $(OPTIM) \
@@ -68,9 +37,6 @@ CRT0=$(CORE)os/boot/boot.s
 
 LINKER_FLAGS=$(APP_LDFLAGS) -Xlinker --gc-sections -Xlinker -o$(TARGET).elf -Xlinker -M -Xlinker -Map=$(TARGET).map
 
-#
-# Source files that must be built to ARM mode.
-#
 ARM_SRC= \
   $(APP_SRC) \
   $(CORE)cmsis/src/core_cm3.c \
@@ -88,11 +54,11 @@ $(TARGET).bin : $(TARGET).elf
 $(TARGET).hex : $(TARGET).elf
 	$(OBJCOPY) $(TARGET).elf -O ihex $(TARGET).hex
 
-$(TARGET).elf : $(ARM_OBJ) $(CRT0) $(BOOTLOADER) $(APP_ADDITIONAL) Makefile config/FreeRTOSConfig.h
+$(TARGET).elf : $(ARM_OBJ) $(CRT0) $(BOOTLOADER) $(APP_ADDITIONAL) Makefile
 	$(CC) $(CFLAGS) $(ARM_OBJ) $(BOOTLOADER) $(APP_ADDITIONAL) -nostartfiles $(CRT0) $(LINKER_FLAGS)
 	$(OBJDUMP) -d $(TARGET).elf > $(TARGET).asm
 
-$(ARM_OBJ) : %.o : %.c $(LDSCRIPT) Makefile config/FreeRTOSConfig.h
+$(ARM_OBJ) : %.o : %.c $(LDSCRIPT) Makefile
 	$(CC) -c $(CFLAGS) $< -o $@
 
 flash : $(TARGET).bin

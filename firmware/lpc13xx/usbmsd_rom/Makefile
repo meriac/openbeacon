@@ -19,8 +19,7 @@ APP_SRC+=$(IMAGES_C)
 all: $(TARGET).bin
 
 app_clean:
-	find application -name '*.o' -exec rm \{\} \;
+	find src -name '*.o' -exec rm \{\} \;
 
 include ../core/Makefile.rules
 
-LDSCRIPT=config/atmel-rom.ld
