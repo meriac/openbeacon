@@ -54,4 +54,4 @@ extern void USB_Interface_Event(void);
 extern void USB_Feature_Event(void);
 
 
-#endif				/* __USBUSER_H__ */
+#endif/* __USBUSER_H__ */
