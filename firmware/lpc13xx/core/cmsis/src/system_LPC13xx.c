@@ -28,7 +28,7 @@
 // ********************************
 
 #include <stdint.h>
-#include "lpc13xx.h"
+#include "LPC13xx.h"
 
 /*
 //-------- <<< Use Configuration Wizard in Context Menu >>> ------------------
