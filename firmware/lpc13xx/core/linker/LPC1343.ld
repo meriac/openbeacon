@@ -6,4 +6,4 @@ MEMORY.
 
 __stack_end__ = 0x10000000 + 8K - 4;
 
-INCLUDE "config/LPC13xx.ld"
+INCLUDE "../core/linker/LPC13xx.ld"
