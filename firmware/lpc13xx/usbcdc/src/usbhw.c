@@ -294,6 +294,8 @@ void USB_Configure(uint32_t cfg)
 
 void USB_ConfigEP(USB_ENDPOINT_DESCRIPTOR * pEPD)
 {
+    (void) pEPD;
+
     return;
 }
 

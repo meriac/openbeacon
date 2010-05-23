@@ -175,6 +175,7 @@ uint32_t CDC_GetEncapsulatedResponse(void)
  *---------------------------------------------------------------------------*/
 uint32_t CDC_SetCommFeature(unsigned short wFeatureSelector)
 {
+    (void)wFeatureSelector;
 
     /* ... add code to handle request */
     return (TRUE);
@@ -189,6 +190,7 @@ uint32_t CDC_SetCommFeature(unsigned short wFeatureSelector)
  *---------------------------------------------------------------------------*/
 uint32_t CDC_GetCommFeature(unsigned short wFeatureSelector)
 {
+    (void)wFeatureSelector;
 
     /* ... add code to handle request */
     return (TRUE);
@@ -203,6 +205,7 @@ uint32_t CDC_GetCommFeature(unsigned short wFeatureSelector)
  *---------------------------------------------------------------------------*/
 uint32_t CDC_ClearCommFeature(unsigned short wFeatureSelector)
 {
+    (void)wFeatureSelector;
 
     /* ... add code to handle request */
     return (TRUE);
@@ -263,6 +266,7 @@ uint32_t CDC_GetLineCoding(void)
  *---------------------------------------------------------------------------*/
 uint32_t CDC_SetControlLineState(unsigned short wControlSignalBitmap)
 {
+    (void) wControlSignalBitmap;
 
     /* ... add code to handle request */
     return (TRUE);
@@ -279,6 +283,7 @@ uint32_t CDC_SetControlLineState(unsigned short wControlSignalBitmap)
  *---------------------------------------------------------------------------*/
 uint32_t CDC_SendBreak(unsigned short wDurationOfBreak)
 {
+    (void)wDurationOfBreak;
 
     /* ... add code to handle request */
     return (TRUE);
