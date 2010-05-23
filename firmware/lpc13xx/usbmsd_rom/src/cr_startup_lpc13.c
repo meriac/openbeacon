@@ -95,7 +95,7 @@ extern WEAK void main(void);
 // External declaration for the pointer to the stack top from the Linker Script
 //
 //*****************************************************************************
-extern void _vStackTop;
+extern void __stack_end__;
 
 //*****************************************************************************
 //
@@ -107,7 +107,7 @@ __attribute__ ((section(".isr_vector")))
 void (*const g_pfnVectors[]) (void) =
 {
     // Core Level - CM3
-    (void *) &_vStackTop,	// The initial stack pointer
+	(void *) &__stack_end__,// The initial stack pointer
 	Reset_Handler,		// The reset handler
 	NMI_Handler,		// The NMI handler
 	HardFault_Handler,	// The hard fault handler
@@ -194,11 +194,11 @@ void (*const g_pfnVectors[]) (void) =
 // for the "data" segment resides immediately following the "text" segment.
 //
 //*****************************************************************************
-extern unsigned long _etext;
-extern unsigned long _data;
-extern unsigned long _edata;
-extern unsigned long _bss;
-extern unsigned long _ebss;
+extern unsigned long __end_of_text__;
+extern unsigned long __data_beg__;
+extern unsigned long __data_end__;
+extern unsigned long __bss_beg__;
+extern unsigned long __bss_end__;
 
 //*****************************************************************************
 //
@@ -219,8 +219,8 @@ Reset_Handler(void)
     //
     // Copy the data segment initializers from flash to SRAM.
     //
-    pulSrc = &_etext;
-    for (pulDest = &_data; pulDest < &_edata;) {
+    pulSrc = &__end_of_text__;
+    for (pulDest = &__data_beg__; pulDest < &__data_end__;) {
 	*pulDest++ = *pulSrc++;
     }
 
@@ -228,7 +228,7 @@ Reset_Handler(void)
     // Zero fill the bss segment.  This is done with inline assembly since this
     // will clear the value of pulDest if it is not kept in a register.
     //
-    __asm("    ldr     r0, =_bss\n" "    ldr     r1, =_ebss\n"
+    __asm("    ldr     r0, =__bss_beg__\n" "    ldr     r1, =__bss_end__\n"
 	  "    mov     r2, #0\n" "    .thumb_func\n" "zero_loop:\n"
 	  "        cmp     r0, r1\n" "        it      lt\n"
 	  "        strlt   r2, [r0], #4\n" "        blt     zero_loop");
@@ -237,15 +237,7 @@ Reset_Handler(void)
     SystemInit();
 #endif
 
-    //
-    // Call the application's entry point.
-    // __main() is the entry point for redlib based applications (which calls main())
-    // main() is the entry point for newlib based applications
-    //
-    if (__main)
-	__main();
-    else
-	main();
+    main();
 
     //
     // main() shouldn't return, but if it does, we'll just enter an infinite loop 

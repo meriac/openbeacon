@@ -1,4 +1,4 @@
-ENTRY(start)
+ENTRY(ResetISR)
 
 SECTIONS
 {
@@ -41,6 +41,7 @@ SECTIONS
 		__bss_beg__ = .;
 		*(.bss)
 		*(.bss.*)
+		__bss_end__ = .;
 	} >ram
 
 	/* Align here to ensure that the .bss section occupies space up to
