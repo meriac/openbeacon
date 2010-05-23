@@ -12,7 +12,7 @@
 #ifndef __COMPILER_H__
 #define __COMPILER_H__
 
-#include "lpc13xx.h"		// Defines __ASM and __INLINE
+#include "LPC13xx.h"		// Defines __ASM and __INLINE
 
 #if !defined(__IAR__) && !defined(__KEIL__) && !defined(__CODERED__)
 

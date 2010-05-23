@@ -16,7 +16,7 @@
  *      Copyright (c) 2005-2009 Keil Software.
  *---------------------------------------------------------------------------*/
 
-#include <lpc13xx.h>
+#include <LPC13xx.h>
 
 #include "usb.h"
 #include "usbdesc.h"

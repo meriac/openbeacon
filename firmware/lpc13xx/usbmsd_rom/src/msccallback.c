@@ -15,7 +15,7 @@
  *
  *      Copyright (c) 2009 Keil - An ARM Company. All rights reserved.
  *---------------------------------------------------------------------------*/
-#include "lpc13xx.h"
+#include "LPC13xx.h"
 #include "type.h"
 #include "usb.h"
 #include "msccallback.h"
