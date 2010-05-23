@@ -1,14 +1,6 @@
-MEMORY 
-{
-	flash	: ORIGIN = 0x00100000, LENGTH = 256K - 1K /* save 1K for environment on top of flash */
-	ram	: ORIGIN = 0x00200000, LENGTH = 64K
-}
-
-__stack_end__ = 0x00200000 + 64K - 4;
-
 ENTRY(start)
 
-SECTIONS 
+SECTIONS
 {
 	. = 0;
 	startup : { *(.startup)} >flash
@@ -60,5 +52,3 @@ SECTIONS
 	PROVIDE (end = .);
 }
 	. = ALIGN(32 / 8);
-
-
