@@ -1194,41 +1194,41 @@ extern "C" {
 #elif (defined (__GNUC__)) /*------------------ GNU Compiler ---------------------*/
 /* GNU gcc specific functions */
 
-    static __INLINE void __enable_irq() {
+    static __INLINE void __enable_irq(void) {
 	__ASM volatile ("cpsie i");
-    } static __INLINE void __disable_irq() {
+    } static __INLINE void __disable_irq(void) {
 	__ASM volatile ("cpsid i");
     }
 
-    static __INLINE void __enable_fault_irq() {
+    static __INLINE void __enable_fault_irq(void) {
 	__ASM volatile ("cpsie f");
     }
-    static __INLINE void __disable_fault_irq() {
+    static __INLINE void __disable_fault_irq(void) {
 	__ASM volatile ("cpsid f");
     }
 
-    static __INLINE void __NOP() {
+    static __INLINE void __NOP(void) {
 	__ASM volatile ("nop");
     }
-    static __INLINE void __WFI() {
+    static __INLINE void __WFI(void) {
 	__ASM volatile ("wfi");
     }
-    static __INLINE void __WFE() {
+    static __INLINE void __WFE(void) {
 	__ASM volatile ("wfe");
     }
-    static __INLINE void __SEV() {
+    static __INLINE void __SEV(void) {
 	__ASM volatile ("sev");
     }
-    static __INLINE void __ISB() {
+    static __INLINE void __ISB(void) {
 	__ASM volatile ("isb");
     }
-    static __INLINE void __DSB() {
+    static __INLINE void __DSB(void) {
 	__ASM volatile ("dsb");
     }
-    static __INLINE void __DMB() {
+    static __INLINE void __DMB(void) {
 	__ASM volatile ("dmb");
     }
-    static __INLINE void __CLREX() {
+    static __INLINE void __CLREX(void) {
 	__ASM volatile ("clrex");
     }
 

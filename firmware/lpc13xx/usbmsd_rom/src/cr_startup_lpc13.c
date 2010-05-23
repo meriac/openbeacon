@@ -31,7 +31,7 @@
 // Code Red - if CMSIS is being used, then SystemInit() routine
 // will be called by startup code rather than in application's main()
 #ifdef __USE_CMSIS
-#include "system_LPC13xx.h"
+#include "system_lpc13xx.h"
 #endif
 
 //*****************************************************************************

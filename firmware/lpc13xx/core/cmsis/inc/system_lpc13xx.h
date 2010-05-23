@@ -1,5 +1,5 @@
 /**************************************************************************//**
- * @file     system_LPC13xx.h
+ * @file     system_lpc13xx.h
  * @brief    CMSIS Cortex-M3 Device Peripheral Access Layer Header File
  *           for the NXP LPC13xx Device Series
  * @version  V1.01

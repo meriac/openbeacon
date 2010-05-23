@@ -1,5 +1,5 @@
 /**************************************************************************//**
- * @file     LPC13xx.h
+ * @file     lpc13xx.h
  * @brief    CMSIS Cortex-M3 Core Peripheral Access Layer Header File for 
  *           NXP LPC13xx Device Series
  * @version  V1.01
@@ -116,7 +116,7 @@ typedef enum IRQn {
 
 
 #include "core_cm3.h"		/* Cortex-M3 processor and core peripherals           */
-#include "system_LPC13xx.h"	/* System Header                                      */
+#include "system_lpc13xx.h"	/* System Header                                      */
 
 
 /******************************************************************************/
