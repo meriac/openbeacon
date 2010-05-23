@@ -47,9 +47,7 @@ void MSC_MemoryRead(uint32_t offset, uint8_t dst[], uint32_t length)
 
 void MSC_MemoryWrite(uint32_t offset, uint8_t src[], uint32_t length)
 {
-    uint32_t n;
-
-    for (n = 0; n < length; n++) {
-	DiskImage[offset + n] = src[n];
-    }
+    (void) offset;
+    (void) src;
+    (void) length;
 }

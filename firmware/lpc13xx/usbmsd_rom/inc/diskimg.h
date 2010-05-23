@@ -18,4 +18,4 @@
 #define MSC_BlockSize   512
 #define MSC_MemorySize  (MSC_BlockCount*MSC_BlockSize)
 
-extern unsigned char DiskImage[MSC_MemorySize];	/* Disk Image */
+extern const unsigned char DiskImage[MSC_MemorySize];	/* Disk Image */
