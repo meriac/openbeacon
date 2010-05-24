@@ -10,6 +10,7 @@ APP_LDFLAGS=-lm
 APP_SRC= \
   src/uarttest.c \
   src/cr_startup_lpc13.c \
+  src/gpio.c \
   src/uart.c
 
 APP_SRC+=$(IMAGES_C)
