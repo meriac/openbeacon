@@ -62,39 +62,49 @@ How to use:
 #define OUTPUT_OFF              (1-OUTPUT_ON)
 
 #define OUTPUT0_PORT	PORT2
+#define OUTPUT0_CPORT	LPC_GPIO2
 #define OUTPUT0_BIT		0
 
 #define OUTPUT1_PORT	PORT2
+#define OUTPUT1_CPORT	LPC_GPIO2
 #define OUTPUT1_BIT		1
 
 #define OUTPUT2_PORT	PORT2
+#define OUTPUT2_CPORT	LPC_GPIO2
 #define OUTPUT2_BIT		2
 
 #define OUTPUT3_PORT	PORT2
+#define OUTPUT3_CPORT	LPC_GPIO2
 #define OUTPUT3_BIT		3
 
 #define OUTPUT4_PORT	PORT2
+#define OUTPUT4_CPORT	LPC_GPIO2
 #define OUTPUT4_BIT		4
 
 #define OUTPUT5_PORT	PORT2
+#define OUTPUT5_CPORT	LPC_GPIO2
 #define OUTPUT5_BIT		5
 
 #define OUTPUT6_PORT	PORT2
+#define OUTPUT6_CPORT	LPC_GPIO2
 #define OUTPUT6_BIT		6
 
 #define OUTPUT7_PORT	PORT2
+#define OUTPUT7_CPORT	LPC_GPIO2
 #define OUTPUT7_BIT		7
 
 #else
 #define OUTPUT_ON               1
 #define OUTPUT_OFF              (1-OUTPUT_ON)
 
-#define OUTPUT0_PORT	PORT0
-#define OUTPUT0_BIT		7
-
+#define OUTPUT0_PORT	PORT1
+#define OUTPUT0_CPORT	LPC_GPIO1
+#define OUTPUT0_BIT		9
+/*
 #define OUTPUT1_PORT	PORT1
+#define OUTPUT1_CPORT	LPC_GPIO1
 #define OUTPUT1_BIT		1
-
+*/
 #endif
 
 
@@ -126,7 +136,7 @@ How to use:
 #else
 #define INPUT_CLOSED            0
 #define INPUT_OPEN              (1-INPUT_CLOSED)
-
+/*
 #define INPUT0_PORT		PORT0
 #define INPUT0_CPORT	LPC_GPIO0
 #define INPUT0_BIT		2
@@ -158,7 +168,7 @@ How to use:
 #define INPUT7_PORT		PORT3
 #define INPUT7_CPORT	LPC_GPIO3
 #define INPUT7_BIT		3
-
+*/
 #endif
 
 /*********************************************************************************
