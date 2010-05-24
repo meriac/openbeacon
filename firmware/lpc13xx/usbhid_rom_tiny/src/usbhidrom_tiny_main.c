@@ -31,6 +31,7 @@
  *  Get HID Input Report -> InReport
  */
 
+__attribute__ ((section(".vectorcode")))
 void GetInReport(uint8_t src[], uint32_t length)
 {
     (void)length;
@@ -52,12 +53,7 @@ void SetOutReport(uint8_t dst[], uint32_t length)
     (void)length;
 
     // Sets one I/O line based on bit 0 of the out report
-    if (dst[0] & 1)
-	OUTPUT0_CPORT->MASKED_ACCESS[1 << OUTPUT0_BIT] =
-	    OUTPUT_ON << OUTPUT0_BIT;
-    else
-	OUTPUT0_CPORT->MASKED_ACCESS[1 << OUTPUT0_BIT] =
-	    ~(OUTPUT_ON << OUTPUT0_BIT);
+    OUTPUT0_CPORT->MASKED_ACCESS[1 << OUTPUT0_BIT] = (dst[0] & 1) ? OUTPUT_ON << OUTPUT0_BIT : ~(OUTPUT_ON << OUTPUT0_BIT);
 }
 
 #define USB_HID 3
