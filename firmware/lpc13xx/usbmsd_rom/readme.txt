@@ -33,3 +33,4 @@ for the project to successfully build.
 USB driver to use.
 
 For more details, read the comments in config.h
+and http://www.nxp.com/documents/application_note/AN10905.pdf
