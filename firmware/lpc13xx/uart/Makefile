@@ -2,7 +2,7 @@ TARGET=uart
 ARCH=LPC13
 CPU=$(ARCH)42
 DEBUG=-g
-OPTIM=-O2
+OPTIM=-Os -mword-relocations
 
 APP_CFLAGS=-Iinc -std=gnu99 -fgnu89-inline -D__USE_CMSIS
 APP_LDFLAGS=-lm
