@@ -119,7 +119,7 @@ void UARTInit(uint32_t baudrate)
     regVal = LPC_UART->LSR;
 
     /* Ensure a clean start, no data in either TX or RX FIFO. */
-// CodeRed - added parentheses around comparison in operand of &
+    // CodeRed - added parentheses around comparison in operand of &
     while ((LPC_UART->LSR & (LSR_THRE | LSR_TEMT)) !=
 	   (LSR_THRE | LSR_TEMT));
     while (LPC_UART->LSR & LSR_RDR) {
