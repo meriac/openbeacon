@@ -20,3 +20,4 @@ app_clean:
 
 include ../core/Makefile.rules
 
+LDSCRIPT=linker/$(CPU).ld

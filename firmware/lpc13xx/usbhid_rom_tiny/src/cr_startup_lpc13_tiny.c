@@ -103,11 +103,11 @@ extern void __stack_end__;
 // ensure that it ends up at physical address 0x0000.0000.
 //
 //*****************************************************************************
-__attribute__ ((section(".isr_vector")))
+__attribute__ ((section(".reset_vector")))
 void (*const g_pfnRVectors[]) (void) =
 {
     // Core Level - CM3
-    (void *) &__stack_end__,	// The initial stack pointer
+	(void *) &__stack_end__,// The initial stack pointer
 	Reset_Handler,		// The reset handler
 	NMI_Handler,		// The NMI handler
 	HardFault_Handler,	// The hard fault handler
@@ -120,7 +120,7 @@ void (*const g_pfnRVectors[]) (void) =
 __attribute__ ((section(".isr_vector")))
 void (*const g_pfnISRVectors[]) (void) =
 {				// Lost systick and wakeup...
-    I2C_IRQHandler,		// I2C0
+	I2C_IRQHandler,		// I2C0
 	TIMER16_0_IRQHandler,	// CT16B0 (16-bit Timer 0)
 	TIMER16_1_IRQHandler,	// CT16B1 (16-bit Timer 1)
 	TIMER32_0_IRQHandler,	// CT32B0 (32-bit Timer 0)
@@ -162,6 +162,7 @@ extern unsigned long __bss_end__;
 // application.
 //
 //*****************************************************************************
+__attribute__ ((section(".vectorcode")))
 void Reset_Handler(void)
 {
     unsigned long *pulSrc, *pulDest;
@@ -200,6 +201,7 @@ void Reset_Handler(void)
 //
 //*****************************************************************************
 
+__attribute__ ((section(".vectorcode")))
 static void IntDefaultHandler(void)
 {
     //
