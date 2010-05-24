@@ -88,7 +88,6 @@ void WAKEUP_IRQHandler(void) ALIAS(IntDefaultHandler);
 // main() is the entry point for newlib based applications
 //
 //*****************************************************************************
-extern WEAK void __main(void);
 extern WEAK void main(void);
 //*****************************************************************************
 //
