@@ -81,6 +81,7 @@ const USB_DEV_INFO DeviceInfo = {
 #define rom ((const ROM **) 0x1fff1ff8)
 const USBD *pUSBJumpTable;
 
+__attribute__ ((section(".vectorcode")))
 int main(void)
 {
     // Enable Timer32_1 and IOCON (for USB ROM driver)
@@ -103,6 +104,7 @@ int main(void)
 }
 
 // USB Interrupt vector- calls into ROM
+__attribute__ ((section(".vectorcode")))
 void USB_IRQHandler(void)
 {
     pUSBJumpTable->isr();
