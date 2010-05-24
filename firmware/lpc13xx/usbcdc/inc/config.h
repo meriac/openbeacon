@@ -32,8 +32,8 @@ How to use:
 #define USB_PROD_ID   0x0003	// Product ID
 #define USB_DEVICE    0x0100	// Device ID
 
-#define LED_PORT 0		// Port for led
-#define LED_BIT 7		// Bit on port for led
+#define LED_PORT 1		// Port for led
+#define LED_BIT 9		// Bit on port for led
 
 
 /*********************************************************************************
