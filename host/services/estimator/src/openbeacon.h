@@ -1,29 +1,24 @@
+/***************************************************************
+ *
+ * OpenBeacon.org - OnAir protocol specification and definition
+ *
+ * Copyright 2006 Milosch Meriac <meriac@openbeacon.de>
+ *
+ ***************************************************************/
+
 /*
-    This file is part of the SocioPatterns firmware
-    Copyright (C) 2008-2009 Istituto per l'Interscambio Scientifico I.S.I.
-    You can contact us by email (isi@isi.it) or write to:
-    ISI Foundation, Viale S. Severo 65, 10133 Torino, Italy. 
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU Affero General Public License as
+ published by the Free Software Foundation; version 3.
 
-    This program was written by Ciro Cattuto <ciro.cattuto@gmail.com>
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
 
-    This program is based on:
-    OpenBeacon.org - OnAir protocol specification and definition
-    Copyright 2006 Milosch Meriac <meriac@openbeacon.de>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; version 2.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    This file was modified on: April 1st, 2009
+ You should have received a copy of the GNU Affero General Public License
+ along with this program; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
 #ifndef __OPENBEACON_H__
@@ -77,14 +72,14 @@ typedef struct
 
 typedef struct
 {
-  u_int8_t opcode,res;
+  u_int8_t opcode, res;
   u_int32_t data[2];
 } PACKED TBeaconReaderCommand;
 
 typedef struct
 {
-  u_int8_t opcode,strength;
-  u_int32_t uptime,ip;
+  u_int8_t opcode, strength;
+  u_int32_t uptime, ip;
 } PACKED TBeaconReaderAnnounce;
 
 typedef union
