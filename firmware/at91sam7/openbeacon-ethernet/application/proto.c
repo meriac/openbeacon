@@ -28,6 +28,7 @@
 #include <beacontypes.h>
 #include <crc32.h>
 #include "xxtea.h"
+#include "led.h"
 #include "proto.h"
 #include "nRF24L01/nRF_HW.h"
 #include "nRF24L01/nRF_CMD.h"
@@ -215,6 +216,10 @@ vnRFtaskRxTx (void *parameter)
 
   for (;;)
     {
+      /* reflect button on LED */
+      led_set_red ((AT91F_PIO_GetInput (EXT_BUTTON_PIO) & EXT_BUTTON_PIN) >
+		   0);
+
       /* check if TX strength changed */
       if (nrf_powerlevel_current != nrf_powerlevel_last)
 	{
@@ -310,6 +315,9 @@ PtInitProtocol (void)
   // turn off LEDs
   AT91F_PIO_CfgOutput (LED_BEACON_PIO, LED_BEACON_MASK);
   AT91F_PIO_SetOutput (LED_BEACON_PIO, LED_BEACON_MASK);
+
+  AT91F_PIO_CfgInputFilter (EXT_BUTTON_PIO, EXT_BUTTON_PIN);
+  AT91F_PIO_CfgInput (EXT_BUTTON_PIO, EXT_BUTTON_PIN);
 
   rf_rec = rf_sent_unicast = rf_sent_broadcast = 0;
   xTaskCreate (vnRFtaskRxTx, (signed portCHAR *) "nRF_RxTx", TASK_NRF_STACK,

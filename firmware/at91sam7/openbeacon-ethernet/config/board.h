@@ -71,8 +71,8 @@
 #define CE_PIN          	(1L<<20)
 #define CSN_PIN         	(1L<<29)
 
-#define LED_BEACON_GREEN	(1L<<6)
-#define LED_BEACON_RED		(1L<<7)
+#define LED_BEACON_GREEN	(1L<<9)
+#define LED_BEACON_RED		(1L<<8)
 
 #else
 
@@ -81,8 +81,8 @@
 #define CE_PIN          	(1L<<19)
 #define CSN_PIN         	(1L<<21)
 
-#define LED_BEACON_GREEN	(1L<<9)
-#define LED_BEACON_RED		(1L<<8)
+#define LED_BEACON_GREEN	(1L<<6)
+#define LED_BEACON_RED		(1L<<7)
 
 #endif
 
@@ -92,6 +92,12 @@
 
 #define LED_BEACON_PIO		AT91C_BASE_PIOA
 #define LED_BEACON_MASK		(LED_BEACON_GREEN|LED_BEACON_RED)
+
+/*-------------------------------*/
+/* External Button               */
+/*-------------------------------*/
+#define EXT_BUTTON_PIO		AT91C_BASE_PIOB
+#define EXT_BUTTON_PIN		(1L<<29)
 
 /*-------------------------------*/
 /* utils settings                */
