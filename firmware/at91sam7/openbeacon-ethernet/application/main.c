@@ -73,6 +73,7 @@ void __attribute__ ((noreturn)) mainloop (void)
 {
   prvSetupHardware ();
   vLedInit ();
+  led_set_red (1);
 
   /* If no previous environment exists - create a new, but don't store it */
   env_init ();

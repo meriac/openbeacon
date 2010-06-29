@@ -23,7 +23,11 @@
 #ifndef __PROTO_H__
 #define __PROTO_H__
 
+#include "openbeacon.h"
+
 #define NRF_POWERLEVEL_MAX 3
+
+extern TBeaconEnvelope g_Beacon;
 
 static inline unsigned short
 PtSwapShort (unsigned short src)

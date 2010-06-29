@@ -27,7 +27,6 @@
 #include <board.h>
 #include <beacontypes.h>
 #include <crc32.h>
-#include "led.h"
 #include "xxtea.h"
 #include "proto.h"
 #include "nRF24L01/nRF_HW.h"
@@ -40,6 +39,8 @@
 unsigned int rf_sent_broadcast, rf_sent_unicast, rf_rec;
 static unsigned char nrf_powerlevel_current, nrf_powerlevel_last;
 const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 1, 2, 3, 2, 1 };
+
+TBeaconEnvelope g_Beacon;
 
 void
 PtSetRfPowerLevel (unsigned char Level)
@@ -71,6 +72,29 @@ PtInitNRF (void)
 
   return 1;
 }
+
+/**********************************************************************/
+
+void
+led_set_rx (bool_t on)
+{
+  if (on)
+    AT91F_PIO_ClearOutput (LED_BEACON_PIO, LED_BEACON_GREEN);
+  else
+    AT91F_PIO_SetOutput (LED_BEACON_PIO, LED_BEACON_GREEN);
+}
+
+/**********************************************************************/
+
+static void
+led_set_tx (bool_t on)
+{
+  if (on)
+    AT91F_PIO_ClearOutput (LED_BEACON_PIO, LED_BEACON_RED);
+  else
+    AT91F_PIO_SetOutput (LED_BEACON_PIO, LED_BEACON_RED);
+}
+
 
 #if 0
 
@@ -133,14 +157,61 @@ PtInternalTransmit (BRFPacket * pkg)
   vLedSetRed (0);
 }
 #endif
+
+/**********************************************************************/
+#define SHUFFLE(a,b)    tmp=g_Beacon.byte[a];\
+                        g_Beacon.byte[a]=g_Beacon.byte[b];\
+                        g_Beacon.byte[b]=tmp;
+
+/**********************************************************************/
+static void
+shuffle_tx_byteorder (void)
+{
+  unsigned char tmp;
+
+  SHUFFLE (0 + 0, 3 + 0);
+  SHUFFLE (1 + 0, 2 + 0);
+  SHUFFLE (0 + 4, 3 + 4);
+  SHUFFLE (1 + 4, 2 + 4);
+  SHUFFLE (0 + 8, 3 + 8);
+  SHUFFLE (1 + 8, 2 + 8);
+  SHUFFLE (0 + 12, 3 + 12);
+  SHUFFLE (1 + 12, 2 + 12);
+}
+
+static inline unsigned short
+swapshort (unsigned short src)
+{
+  return (src >> 8) | (src << 8);
+}
+
+static inline unsigned long
+swaplong (unsigned long src)
+{
+  return (src >> 24) | (src << 24) | ((src >> 8) & 0x0000FF00) | ((src << 8) &
+								  0x00FF0000);
+}
+
 static void
 vnRFtaskRxTx (void *parameter)
 {
   u_int8_t status;
-  static u_int8_t rfpkg[16];
+  u_int16_t crc, oid;
+  u_int8_t strength, t;
 
   if (!PtInitNRF ())
-    return;
+    while (1)
+      {
+	vTaskDelay (1000 / portTICK_RATE_MS);
+	led_set_tx (1);
+	led_set_rx (0);
+
+	vTaskDelay (1000 / portTICK_RATE_MS);
+	led_set_tx (0);
+	led_set_rx (1);
+      }
+
+  led_set_tx (1);
 
   for (;;)
     {
@@ -160,20 +231,71 @@ vnRFtaskRxTx (void *parameter)
       /* check for received packets */
       if ((status & FIFO_RX_FULL) || nRFCMD_WaitRx (100))
 	{
-	  vLedSetRed (1);
+	  led_set_rx (1);
 
 	  do
 	    {
-	      /* read packet from nRF chip */
-	      debug_printf ("RX packet\n");
-	      nRFCMD_RegReadBuf (RD_RX_PLOAD, (unsigned char *) &rfpkg,
-				 sizeof (rfpkg));
-	     /*TODO*/}
+	      // read packet from nRF chip
+	      nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.byte,
+				 sizeof (g_Beacon));
+
+	      // adjust byte order and decode
+	      shuffle_tx_byteorder ();
+	      xxtea_decode ();
+	      shuffle_tx_byteorder ();
+
+	      // verify the crc checksum
+	      crc =
+		env_crc16 (g_Beacon.byte,
+			   sizeof (g_Beacon) - sizeof (u_int16_t));
+
+	      if (swapshort (g_Beacon.pkt.crc) == crc)
+		{
+		  oid = swapshort (g_Beacon.pkt.oid);
+		  if (g_Beacon.pkt.flags & RFBFLAGS_SENSOR)
+		    debug_printf ("BUTTON: %u\n\r", oid);
+
+		  switch (g_Beacon.pkt.proto)
+		    {
+		    case RFBPROTO_BEACONTRACKER:
+		      debug_printf ("RX: %u,0x%08X,%u,0x%02X}\n\r",
+				    swapshort (g_Beacon.pkt.oid),
+				    swaplong (g_Beacon.pkt.p.tracker.seq),
+				    g_Beacon.pkt.p.tracker.strength,
+				    g_Beacon.pkt.flags);
+		      strength = g_Beacon.pkt.p.tracker.strength;
+		      break;
+
+		    case RFBPROTO_PROXREPORT:
+		      for (t = 0; t < PROX_MAX; t++)
+			{
+			  crc = (swapshort (g_Beacon.pkt.p.prox.oid_prox[t]));
+			  if (crc)
+			    debug_printf ("PX: %u={%u,%u,%u}\n\r",
+					  oid,
+					  (crc >> 0) & 0x7FF,
+					  ((crc >> 14) & 0x3) * 0x55,
+					  (crc >> 11) & 0x7);
+			  else
+			    debug_printf ("RX: %u,          ,3,0x%02X}\n\r",
+					  swapshort (g_Beacon.pkt.oid),
+					  g_Beacon.pkt.flags);
+			}
+		      strength = 3;
+		      break;
+
+		    default:
+		      strength = 0xFF;
+		      debug_printf ("Uknown Protocol: %u\n\r",
+				    g_Beacon.pkt.proto);
+		    }
+		}
+	    }
 	  while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
 
 	  /* wait in case a packet is currently received */
-	  vTaskDelay (10 / portTICK_RATE_MS);
-	  vLedSetRed (0);
+	  vTaskDelay (25 / portTICK_RATE_MS);
+	  led_set_rx (0);
 	}
 
       /* did I already mention this paranoid world thing? */
@@ -185,6 +307,10 @@ vnRFtaskRxTx (void *parameter)
 void
 PtInitProtocol (void)
 {
+  // turn off LEDs
+  AT91F_PIO_CfgOutput (LED_BEACON_PIO, LED_BEACON_MASK);
+  AT91F_PIO_SetOutput (LED_BEACON_PIO, LED_BEACON_MASK);
+
   rf_rec = rf_sent_unicast = rf_sent_broadcast = 0;
   xTaskCreate (vnRFtaskRxTx, (signed portCHAR *) "nRF_RxTx", TASK_NRF_STACK,
 	       NULL, TASK_NRF_PRIORITY, NULL);

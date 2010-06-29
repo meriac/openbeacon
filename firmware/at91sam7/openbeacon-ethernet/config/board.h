@@ -53,10 +53,10 @@
 /* LED declaration               */
 /*-------------------------------*/
 
-#define LED_PIO         AT91C_BASE_PIOB
-#define LED_GREEN       (1L<<27)
-#define LED_RED         (1L<<28)
-#define LED_MASK        (LED_GREEN|LED_RED)
+#define LED_PIO         	AT91C_BASE_PIOB
+#define LED_GREEN       	(1L<<27)
+#define LED_RED         	(1L<<28)
+#define LED_MASK        	(LED_GREEN|LED_RED)
 
 /*-------------------------------*/
 /* nRF declaration               */
@@ -65,19 +65,33 @@
 #define DEFAULT_CHANNEL 81
 
 #if 0
-#define CSN_ID          3
-#define IRQ_PIN         (1L<<30)
-#define CE_PIN          (1L<<20)
-#define CSN_PIN         (1L<<29)
+
+#define CSN_ID          	3
+#define IRQ_PIN         	(1L<<30)
+#define CE_PIN          	(1L<<20)
+#define CSN_PIN         	(1L<<29)
+
+#define LED_BEACON_GREEN	(1L<<6)
+#define LED_BEACON_RED		(1L<<7)
+
 #else
-#define CSN_ID          0
-#define IRQ_PIN         (1L<<14)
-#define CE_PIN          (1L<<19)
-#define CSN_PIN         (1L<<21)
+
+#define CSN_ID          	0
+#define IRQ_PIN         	(1L<<14)
+#define CE_PIN          	(1L<<19)
+#define CSN_PIN         	(1L<<21)
+
+#define LED_BEACON_GREEN	(1L<<9)
+#define LED_BEACON_RED		(1L<<8)
+
 #endif
-#define SCK_PIN         (1L<<22)
-#define MOSI_PIN        (1L<<23)
-#define MISO_PIN        (1L<<24)
+
+#define SCK_PIN         	(1L<<22)
+#define MOSI_PIN        	(1L<<23)
+#define MISO_PIN        	(1L<<24)
+
+#define LED_BEACON_PIO		AT91C_BASE_PIOA
+#define LED_BEACON_MASK		(LED_BEACON_GREEN|LED_BEACON_RED)
 
 /*-------------------------------*/
 /* utils settings                */
