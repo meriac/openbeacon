@@ -39,6 +39,7 @@
 #include <network.h>
 
 #include "led.h"
+#include "cmd.h"
 #include "proto.h"
 #include "env.h"
 #include "debug_printf.h"
@@ -91,6 +92,8 @@ void __attribute__ ((noreturn)) mainloop (void)
 	       NULL, TASK_USB_PRIORITY, NULL);
 
   PtInitProtocol ();
+  PtCmdInit ();
+
   vTaskStartScheduler ();
 
   while (1);

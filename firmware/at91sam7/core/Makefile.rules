@@ -93,7 +93,8 @@ ARM_SRC= \
   $(CORE)os/core/portISR.c \
   $(CORE)os/core/MemMang/heap_3.c \
   $(CORE)os/usb/USB-CDC.c \
-  $(CORE)os/usb/USBIsr.c
+  $(CORE)os/usb/USBIsr.c \
+  $(CORE)os/usb/debug_printf.c
 
 #
 # Define all object files.

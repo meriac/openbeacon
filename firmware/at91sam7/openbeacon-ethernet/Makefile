@@ -34,17 +34,17 @@ NETWORK_SRC= \
   network/src/netif/ethernetif.c
 
 APP_SRC= \
-  application/debug_printf.c \
   application/main.c \
   application/network.c \
   application/proto.c \
   application/xxtea.c \
+  application/cmd.c \
   $(CORE)/openbeacon/crc32.c \
   $(CORE)/openbeacon/rnd.c \
   $(NETWORK_SRC)
-  
+
 all: $(TARGET).bin
-  
+
 app_clean:
 	find application network -name '*.o' -exec rm \{\} \;
 
