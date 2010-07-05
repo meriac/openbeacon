@@ -18,6 +18,8 @@
 #include <stdio.h>
 #include <USB-CDC.h>
 
+#ifndef DISABLE_USB
+
 unsigned long
 simple_strtoul (const char *cp, char **endp, unsigned int base)
 {
@@ -426,3 +428,4 @@ void hex_dump (const unsigned char *buf, unsigned int addr, unsigned int len)
         }
 }
 
+#endif/*DISABLE_USB*/
