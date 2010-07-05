@@ -34,7 +34,6 @@ NETWORK_SRC= \
   network/src/netif/ethernetif.c
 
 APP_SRC= \
-  application/debug_printf.c \
   application/main.c \
   application/network.c \
   application/proto.c \
