@@ -33,36 +33,37 @@
 
 
 void
-vCmdProcess (const char* cmdline)
+vCmdProcess (const char *cmdline)
 {
-    debug_printf("CMD: %s\n\r",cmdline);
+  debug_printf ("CMD: %s\n\r", cmdline);
 }
 
 void
 vCmdTask (void *pvParameters)
 {
-    (void) pvParameters;
-    portCHAR cByte;
-    portBASE_TYPE len=0;
-    static char next_command[MAX_CMD_LINE_LENGTH];
+  (void) pvParameters;
+  portCHAR cByte;
+  portBASE_TYPE len = 0;
+  static char next_command[MAX_CMD_LINE_LENGTH];
 
-    for(;;)
+  for (;;)
     {
-	if(vUSBRecvByte(&cByte, 1, 100))
-	{
-	    vUSBSendByte(cByte);
-
-	    switch(cByte)
-	    {
-		case '\n':
-		case '\r':
-		    next_command[len] = 0;
-		    vCmdProcess(next_command);
-		    break;
-		default:
-		    next_command[len] = cByte;
-	    }
-	}
+      if (vUSBRecvByte (&cByte, 1, 100))
+	switch (cByte)
+	  {
+	  case '\n':
+	  case '\r':
+	    if (len)
+	      {
+		next_command[len] = 0;
+		len = 0;
+		vCmdProcess (next_command);
+	      }
+	    break;
+	  default:
+	    vUSBSendByte (cByte);
+	    next_command[len++] = cByte;
+	  }
     }
 }
 
