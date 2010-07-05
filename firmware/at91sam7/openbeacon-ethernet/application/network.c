@@ -74,9 +74,15 @@ vNetworkThread (void *pvParameters)
   IP4_ADDR (&xNetMask, 0, 0, 0, 0);
   IP4_ADDR (&xGateway, 0, 0, 0, 0);
 #else
-  IP4_ADDR (&xIpAddr, 10, 254, env.e.mac_h, env.e.mac_l);
+#ifdef  PRODUCTION
+  IP4_ADDR (&xIpAddr,  192, 168,  15,  90);
+  IP4_ADDR (&xNetMask, 255, 255, 255,   0);
+  IP4_ADDR (&xGateway, 192, 168,  15, 100);
+#else /*PRODUCTION*/
+  IP4_ADDR (&xIpAddr,   10, 254, env.e.mac_h, env.e.mac_l);
   IP4_ADDR (&xNetMask, 255, 255, 0, 0);
-  IP4_ADDR (&xGateway, 10, 254, 0, 1);
+  IP4_ADDR (&xGateway,  10, 254, 0, 1);
+#endif/*PRODUCTION*/
 #endif
 
   netif_add (&EMAC_if, &xIpAddr, &xNetMask, &xGateway, NULL, ethernetif_init,
