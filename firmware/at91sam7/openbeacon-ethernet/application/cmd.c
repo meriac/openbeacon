@@ -49,21 +49,23 @@ vCmdTask (void *pvParameters)
   for (;;)
     {
       if (vUSBRecvByte (&cByte, 1, 100))
-	switch (cByte)
-	  {
-	  case '\n':
-	  case '\r':
-	    if (len)
-	      {
-		next_command[len] = 0;
-		len = 0;
-		vCmdProcess (next_command);
-	      }
-	    break;
-	  default:
-	    vUSBSendByte (cByte);
-	    next_command[len++] = cByte;
-	  }
+	{
+	  vUSBSendByte (cByte);
+	  switch (cByte)
+	    {
+	    case '\n':
+	    case '\r':
+	      if (len)
+		{
+		  next_command[len] = 0;
+		  len = 0;
+		  vCmdProcess (next_command);
+		}
+	      break;
+	    default:
+	      next_command[len++] = cByte;
+	    }
+	}
     }
 }
 
