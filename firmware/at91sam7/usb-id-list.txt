@@ -8,3 +8,4 @@
 16C0:08B0,"OpenBeacon Network",openbeacon-network
 16C0:08B1,"txtr.mini",openbeacon-openpicc2
 16C0:08B2,"OpenBeacon Reflasher",bootloader
+16C0:08B3,"OpenBeacon Ethernet PoE II",openbeacon-ethernet
