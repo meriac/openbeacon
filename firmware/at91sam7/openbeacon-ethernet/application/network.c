@@ -56,23 +56,64 @@ extern err_t ethernetif_init (struct netif *netif);
 /*------------------------------------------------------------*/
 struct netif EMAC_if;
 /*------------------------------------------------------------*/
-static struct ip_addr xIpAddr, xNetMask, xGateway;
+static struct ip_addr xIpAddr, xNetMask, xGateway, xServer;
 /*------------------------------------------------------------*/
 
-static const char*
+static inline const char *
 vNetworkNTOA (struct ip_addr ip)
 {
   struct in_addr ina;
-  ina.s_addr=ip.addr;
-  return inet_ntoa(ina);
+  ina.s_addr = ip.addr;
+  return inet_ntoa (ina);
+}
+
+static inline const char *
+vNetworkConfigName (int i)
+{
+  switch (i)
+    {
+    case IP_AUTOCONFIG_STATIC_IP:
+      return "static IP";
+      break;
+    case IP_AUTOCONFIG_READER_ID:
+      return "IP by reader ID";
+      break;
+    case IP_AUTOCONFIG_DHCP:
+      return "DHCP IP";
+      break;
+    default:
+      return "Unknown IP";
+    }
+}
+
+void
+vNetworkDumpHex (const char *data, unsigned int length)
+{
+  unsigned char c;
+
+  while (length--)
+    {
+      c = (unsigned char)(*data++);
+      debug_printf ("%X%X%s", (c >> 4) & 0xF, c & 0xF,length ? ":":"\n\r");
+    }
 }
 
 void
 vNetworkDumpConfig (void)
 {
-  debug_printf("\n\rNetwork Configuration:\n\r\tIP=%s\n\r",vNetworkNTOA(xIpAddr));
-  debug_printf("\tNetmask=%s\n\r",vNetworkNTOA(xNetMask));
-  debug_printf("\tGateway=%s\n\r\n\r",vNetworkNTOA(xGateway));
+  debug_printf ("\n\rNetwork Configuration:\n\r"
+		"\t%s configuration [%i]\n\r"
+		"\tMAC=",
+		vNetworkConfigName (env.e.ip_autoconfig),
+		env.e.ip_autoconfig);
+  
+  vNetworkDumpHex (cMACAddress, sizeof (cMACAddress));
+
+  debug_printf ("\tIP      = %s\n\r", vNetworkNTOA (xIpAddr));
+  debug_printf ("\tNetmask = %s\n\r", vNetworkNTOA (xNetMask));
+  debug_printf ("\tGateway = %s\n\r", vNetworkNTOA (xGateway));
+  debug_printf ("\tServer  = %s\n\r", vNetworkNTOA (xServer));
+  debug_printf ("\n\r");
 }
 
 static void
@@ -83,19 +124,19 @@ vNetworkThread (void *pvParameters)
   /* Initialize lwIP and its interface layer. */
   lwip_init ();
 
-  /* Follow settings. */
+  /* Execute IP config settings */
   switch (env.e.ip_autoconfig)
     {
     case IP_AUTOCONFIG_STATIC_IP:
-      xIpAddr  = env.e.ip_host;
+      xIpAddr = env.e.ip_host;
       xNetMask = env.e.ip_netmask;
       xGateway = env.e.ip_gateway;
+      xServer = env.e.ip_server;
       break;
     case IP_AUTOCONFIG_READER_ID:
-      xIpAddr.addr = htonl(
-      	ntohl(env.e.ip_host.addr & env.e.ip_netmask.addr) +
-	env.e.reader_id
-	);
+      xIpAddr.addr =
+	htonl (ntohl (env.e.ip_host.addr & env.e.ip_netmask.addr) +
+	       env.e.reader_id);
       xNetMask = env.e.ip_netmask;
       xGateway = env.e.ip_gateway;
       break;
@@ -164,10 +205,10 @@ vNetworkInit (void)
   if (!env_load ())
     {
       bzero (&env, sizeof (env));
-      env.e.reader_id=DEFAULT_READER_ID;
-      IP4_ADDR (&env.e.ip_host   , 10,254,  0,  DEFAULT_READER_ID);
-      IP4_ADDR (&env.e.ip_netmask,255,255,  0,  0);
-      IP4_ADDR (&env.e.ip_gateway, 10,254,  0,  1);
+      env.e.reader_id = DEFAULT_READER_ID;
+      IP4_ADDR (&env.e.ip_host, 10, 254, 0, DEFAULT_READER_ID);
+      IP4_ADDR (&env.e.ip_netmask, 255, 255, 0, 0);
+      IP4_ADDR (&env.e.ip_gateway, 10, 254, 0, 1);
     }
 
   vRndInit (env.e.reader_id);
@@ -184,4 +225,3 @@ vNetworkInit (void)
   xTaskCreate (vNetworkThread, (signed portCHAR *) "NET",
 	       TASK_NET_STACK, NULL, TASK_NET_PRIORITY, &networkTaskHandle);
 }
-

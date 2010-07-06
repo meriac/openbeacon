@@ -130,7 +130,7 @@
 /* configuration structure       */
 /*-------------------------------*/
 
-#define TENVIRONMENT_MAGIC 0x2EA5F60C
+#define TENVIRONMENT_MAGIC 0x2EA5F611
 
 #define MAC_OID 0x0050C2UL
 #define MAC_IAB 0xAB1000UL
@@ -146,7 +146,7 @@ typedef struct
   unsigned int magic, size, crc16;
   unsigned int reader_id,ip_autoconfig;
   struct ip_addr ip_host,ip_netmask,ip_server,ip_gateway;
-} TEnvironment;
+} TEnvironment __attribute__ ((aligned (4)));
 
 /*----------------------------------*/
 /* define debug baud rate if needed */

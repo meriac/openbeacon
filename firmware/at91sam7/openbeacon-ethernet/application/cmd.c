@@ -32,115 +32,130 @@
 #include "network.h"
 #include "debug_printf.h"
 
-static int led_setting=0;
+static int led_setting = 0;
 
 static inline void
 vCmdHelp (void)
 {
   debug_printf ("OpenBeacon.org PoE Ethernet II command line help\n\r"
 		"(C) 2010 Milosch Meriac <meriac@bitmanufaktur.de>\n\r"
+		"\t'a' - set reader address ('t10.254.0.100' for 10.254.0.100)\n\r"
 		"\t'b' - boot again\n\r"
 		"\t'c' - show configuration\n\r"
 		"\t'd' - dump chip registers\n\r"
 		"\t'h' - show help\n\r"
-		"\t'i' - set reader id ('i=123')\n\r"
-		"\t'l' - red LED ('l=[enable=0, disable=1]')\n\r"
-		"\t'n' - network config ('a=[static_ip=0, reader_id=1, dhcp=2]')\n\r"
+		"\t'i' - set reader id ('i123')\n\r"
+		"\t'l' - red LED ('l[enable=0, disable=1]')\n\r"
+		"\t'n' - network config ('a[static_ip=0, reader_id=1, dhcp=2]')\n\r"
+		"\t'm' - netmask config ('m255.255.0.0')\n\r"
 		"\t'r' - set router ip\n\r"
 		"\t's' - store configuration\n\r"
-		"\t't' - set target server ip ('ip=1.2.3.4')\n\r"
-		"\t'u' - set reader address/netmask ('t=10.254.0.100/16' for 10.254.0.100, netmask 255.255.0.0)\n\r"
-		"\n\r"
-		"\n\r");
+		"\t't' - set target server ip ('t1.2.3.4')\n\r"
+		"\t'u' - reset reader to firmware update mode\n\r"
+		"\n\r\n\r");
 }
 
 static int
-atoiEx(const char * nptr)
+atoiEx (const char *nptr)
 {
-	int sign=1, i=0, curval=0;
+  int sign = 1, i = 0, curval = 0;
 
-	while(nptr[i] == ' ' && nptr[i] != 0)
-	    i++;
-	    
-	if(nptr[i] != 0)
+  while (nptr[i] == ' ' && nptr[i] != 0)
+    i++;
+
+  if (nptr[i] != 0)
+    {
+      if (nptr[i] == '-')
 	{
-	    if(nptr[i] == '-')
-	    {
-		sign *= -1;
-		i++;
-	    }
-	    else
-		if(nptr[i] == '+')
-		    i++;
-	    
-	    while(nptr[i] != 0 && nptr[i] >= '0' && nptr[i] <= '9')
-		curval = curval * 10 + (nptr[i++] - '0');
+	  sign *= -1;
+	  i++;
 	}
-	
-	return sign * curval;
+      else if (nptr[i] == '+')
+	i++;
+
+      while (nptr[i] != 0 && nptr[i] >= '0' && nptr[i] <= '9')
+	curval = curval * 10 + (nptr[i++] - '0');
+    }
+
+  return sign * curval;
 }
 
 static inline void
 vCmdProcess (const char *cmdline)
 {
-  unsigned char cmd,assign;
+  unsigned char cmd, assign;
   unsigned int t;
 
   cmd = (unsigned char) (*cmdline++);
   if ((cmd >= 'a') && (cmd <= 'z'))
     cmd -= ('a' - 'A');
- 
-  switch(*cmdline)
-  {
-    case '=' :
-    case ' ' :
-        assign=1;
-        cmdline++;
-    	break;
-    case  0  :
-    	assign=0;
-    	break;
-    default  :
-        assign=1;
-  } 
+
+  switch (*cmdline)
+    {
+    case '=':
+    case ' ':
+      assign = 1;
+      cmdline++;
+      break;
+    case 0:
+      assign = 0;
+      break;
+    default:
+      assign = 1;
+    }
 
   switch (cmd)
     {
-/*    case 'B':
-	vCmdReboot();
-	break;
-    case 'D':
+    case 'B':
+      debug_printf ("rebooting...\n\r");
+      vTaskDelay (1000 / portTICK_RATE_MS);
+      while (1);
+      break;
+/*    case 'D':
     	res=vCmdDumpRegister();
     	break;*/
     case 'C':
-    	vNetworkDumpConfig();
-    	break;
+      vNetworkDumpConfig ();
+      hex_dump ((unsigned char *) &env, 0, sizeof (env));
+      break;
     case 'I':
-    	if(assign)
-    	{
-	   t=atoiEx(cmdline);
-	   if(t>0 && t<MAC_IAB_MASK)
-	   	env.e.reader_id=t;
-	   else
-	   	debug_printf("error: reader_id needs to be between 1 and %u (used '%s')\n\r",MAC_IAB_MASK);
+      if (assign)
+	{
+	  t = atoiEx (cmdline);
+	  if (t > 0 && t < MAC_IAB_MASK)
+	    env.e.reader_id = t;
+	  else
+	    debug_printf
+	      ("error: reader_id needs to be between 1 and %u (used '%s')\n\r",
+	       MAC_IAB_MASK, cmdline);
 	}
-	debug_printf("reader_id=%i\n\r",env.e.reader_id);
-    	break;
+      debug_printf ("reader_id=%i\n\r", env.e.reader_id);
+      break;
     case 'L':
-    	if(assign)
-    	   led_setting=atoiEx(cmdline)>0;
-	debug_printf("red_led=%i\n\r",led_setting);
-    	break;
+      if (assign)
+	led_setting = atoiEx (cmdline) > 0;
+      debug_printf ("red_led=%i\n\r", led_setting);
+      break;
     case 'N':
-    	if(assign)
-	  env.e.ip_autoconfig=atoiEx(cmdline);
-	debug_printf("ip_autoconfig=%i\n\r",env.e.ip_autoconfig);
-	break;	  
+      if (assign)
+	env.e.ip_autoconfig = atoiEx (cmdline);
+      debug_printf ("ip_autoconfig=%i\n\r", env.e.ip_autoconfig);
+      break;
     case 'R':
+      break;
     case 'S':
+      debug_printf ("storing configuration & reboot...\n\r");
+      vTaskDelay (1000 / portTICK_RATE_MS);
+      env_store ();
+      while (1);
+      break;
     case 'T':
+      break;
     case 'U':
-    	break;
+      debug_printf ("resetting reader to firmware update mode...\n\r");
+      vTaskDelay (1000 / portTICK_RATE_MS);
+      env_reboot_to_update ();
+      break;
     case 'H':
     case '?':
       vCmdHelp ();
