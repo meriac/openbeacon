@@ -38,8 +38,7 @@
 #include "network.h"
 #include "rnd.h"
 
-unsigned int rf_sent_broadcast, rf_sent_unicast, rf_rec;
-
+static unsigned int rf_rec, rf_decrypt, rf_crc_ok, rf_crc_err, rf_pkt_per_sec, rf_rec_old;
 static int pt_debug_level = 0;
 static unsigned char nrf_powerlevel_current, nrf_powerlevel_last;
 static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] =
@@ -106,69 +105,6 @@ led_set_tx (bool_t on)
     AT91F_PIO_SetOutput (LED_BEACON_PIO, LED_BEACON_RED);
 }
 
-
-#if 0
-
-static void
-shuffle_tx_byteorder (unsigned long *v, int len)
-{
-  while (len--)
-    {
-      *v = PtSwapLong (*v);
-      v++;
-    }
-}
-
-static void
-PtInternalTransmit (BRFPacket * pkg)
-{
-  /* turn on redLED for TX indication */
-  vLedSetRed (1);
-
-  /* disable receive mode */
-  nRFCMD_CE (0);
-
-  /* wait in case a packet is currently received */
-  vTaskDelay (3 / portTICK_RATE_MS);
-
-  /* set TX mode */
-  nRFAPI_SetRxMode (0);
-
-  if (pkg->mac == 0xffff)
-    rf_sent_broadcast++;
-  else
-    rf_sent_unicast++;
-
-  pkg->sequence = xTaskGetTickCount ();
-
-  /* update crc */
-  pkg->crc =
-    PtSwapLong (crc32
-		((unsigned char *) pkg, sizeof (*pkg) - sizeof (pkg->crc)));
-
-  /* encrypt the data */
-  shuffle_tx_byteorder ((unsigned long *) pkg, sizeof (*pkg) / sizeof (long));
-  xxtea_encode ((long *) pkg, sizeof (*pkg) / sizeof (long));
-  shuffle_tx_byteorder ((unsigned long *) pkg, sizeof (*pkg) / sizeof (long));
-
-  /* upload data to nRF24L01 */
-  //hex_dump((unsigned char *) pkg, 0, sizeof(*pkg));
-  nRFAPI_TX ((unsigned char *) pkg, sizeof (*pkg));
-
-  /* transmit data */
-  nRFCMD_CE (1);
-
-  /* wait till packet is transmitted */
-  vTaskDelay (3 / portTICK_RATE_MS);
-
-  /* switch to RX mode again */
-  nRFAPI_SetRxMode (1);
-
-  /* turn off red TX indication LED */
-  vLedSetRed (0);
-}
-#endif
-
 /**********************************************************************/
 #define SHUFFLE(a,b)    tmp=g_Beacon.byte[a];\
                         g_Beacon.byte[a]=g_Beacon.byte[b];\
@@ -209,6 +145,9 @@ vnRFtaskRxTx (void *parameter)
   u_int8_t status;
   u_int16_t crc, oid;
   u_int8_t strength, t;
+  unsigned int delta_t_ms;
+  portTickType time,time_old;
+
 
   if (!PtInitNRF ())
     while (1)
@@ -224,8 +163,20 @@ vnRFtaskRxTx (void *parameter)
 
   led_set_tx (1);
 
+  time_old = xTaskGetTickCount();
+  
   for (;;)
     {
+      /* gather statistics */
+      time = xTaskGetTickCount();      
+      delta_t_ms = (time - time_old)*portTICK_RATE_MS;
+      if(delta_t_ms>1000)
+      {        
+      	time_old = time;
+        rf_pkt_per_sec = (rf_rec-rf_rec_old)*1000/delta_t_ms;
+        rf_rec_old=rf_rec;
+      }
+    
       /* check if TX strength changed */
       if (nrf_powerlevel_current != nrf_powerlevel_last)
 	{
@@ -246,10 +197,16 @@ vnRFtaskRxTx (void *parameter)
 
 	  do
 	    {
+#ifndef DISABLE_WATCHDOG
+	      /* Restart watchdog, has been enabled in Cstartup_SAM7.c */
+	      AT91F_WDTRestart (AT91C_BASE_WDTC);
+#endif /*DISABLE_WATCHDOG */
+
 	      // read packet from nRF chip
 	      nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.byte,
 				 sizeof (g_Beacon));
 
+	      rf_rec++;
 	      vNetworkSendBeaconToServer ();
 
 	      if (pt_debug_level)
@@ -259,13 +216,19 @@ vnRFtaskRxTx (void *parameter)
 		  xxtea_decode ();
 		  shuffle_tx_byteorder ();
 
+		  rf_decrypt++;
+
 		  // verify the crc checksum
 		  crc =
 		    env_crc16 (g_Beacon.byte,
 			       sizeof (g_Beacon) - sizeof (u_int16_t));
 
-		  if (swapshort (g_Beacon.pkt.crc) == crc)
+		  if (swapshort (g_Beacon.pkt.crc) != crc)
+		    rf_crc_err++;
+		  else
 		    {
+		      rf_crc_ok++;
+
 		      oid = swapshort (g_Beacon.pkt.oid);
 		      if (g_Beacon.pkt.flags & RFBFLAGS_SENSOR)
 			debug_printf ("BUTTON: %u\n\r", oid);
@@ -312,7 +275,6 @@ vnRFtaskRxTx (void *parameter)
 	  while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
 
 	  /* wait in case a packet is currently received */
-	  vTaskDelay (25 / portTICK_RATE_MS);
 	  led_set_rx (0);
 	}
 
@@ -323,13 +285,30 @@ vnRFtaskRxTx (void *parameter)
 }
 
 void
+PtStatusRxTx (void)
+{
+  debug_printf ("\nOpenBeacon Interface Status:\n");
+  debug_printf ("\treceived    = %u\n", rf_rec);
+  debug_printf ("\treceive rate= %u packets/second\n", rf_pkt_per_sec);
+
+  if (pt_debug_level)
+    {
+      debug_printf ("\tdecrypted   = %u\n", rf_decrypt);
+      debug_printf ("\tpkt crc ok  = %u\n", rf_crc_ok);
+      debug_printf ("\tpkt crc err = %u\n", rf_crc_err);
+    }
+  debug_printf ("\n");
+}
+
+
+void
 PtInitProtocol (void)
 {
   // turn off LEDs
   AT91F_PIO_CfgOutput (LED_BEACON_PIO, LED_BEACON_MASK);
   AT91F_PIO_SetOutput (LED_BEACON_PIO, LED_BEACON_MASK);
 
-  rf_rec = rf_sent_unicast = rf_sent_broadcast = 0;
+  rf_rec = rf_rec_old = rf_decrypt = rf_crc_ok = rf_crc_err = rf_pkt_per_sec = 0;
   xTaskCreate (vnRFtaskRxTx, (signed portCHAR *) "nRF_RxTx",
 	       TASK_NRF_STACK, NULL, TASK_NRF_PRIORITY, NULL);
 }
