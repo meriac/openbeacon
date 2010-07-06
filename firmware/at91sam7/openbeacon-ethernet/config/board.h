@@ -132,10 +132,14 @@
 
 #define TENVIRONMENT_MAGIC 0x2EA5F614
 
+/*-------------------------------*/
+/*  Bitmanufaktur GmbH MAC IAB   */
+/*    registered at ieee.org     */
+/*-------------------------------*/
 #define MAC_OID 0x0050C2UL
 #define MAC_IAB 0xAB1000UL
 #define MAC_IAB_MASK 0xFFFUL
-
+/*-------------------------------*/
 #define IP_AUTOCONFIG_STATIC_IP 0
 #define IP_AUTOCONFIG_READER_ID 1
 #define IP_AUTOCONFIG_DHCP 2
