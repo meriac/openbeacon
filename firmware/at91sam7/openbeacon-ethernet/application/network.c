@@ -167,8 +167,8 @@ vNetworkDumpConfig (void)
   debug_printf ("\tIP          = %s\n", vNetworkNTOA (env.e.ip_host));
   debug_printf ("\tNetmask     = %s\n", vNetworkNTOA (env.e.ip_netmask));
   debug_printf ("\tGateway     = %s\n", vNetworkNTOA (env.e.ip_gateway));
-  debug_printf ("\tServer      = %s\n", vNetworkNTOA (env.e.ip_server));
-  debug_printf ("\tServer Port = %u [UDP Protocol]\n", env.e.ip_server_port);
+  debug_printf ("\tServer      = %s:%u [UDP]\n",
+		vNetworkNTOA (env.e.ip_server), env.e.ip_server_port);
   debug_printf ("\n");
 }
 

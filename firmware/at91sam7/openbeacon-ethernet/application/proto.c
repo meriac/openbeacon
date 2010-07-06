@@ -38,7 +38,8 @@
 #include "network.h"
 #include "rnd.h"
 
-static unsigned int rf_rec, rf_decrypt, rf_crc_ok, rf_crc_err, rf_pkt_per_sec, rf_rec_old;
+static unsigned int rf_rec, rf_decrypt, rf_crc_ok;
+static unsigned int rf_crc_err, rf_pkt_per_sec, rf_rec_old;
 static int pt_debug_level = 0;
 static unsigned char nrf_powerlevel_current, nrf_powerlevel_last;
 static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] =
@@ -146,7 +147,7 @@ vnRFtaskRxTx (void *parameter)
   u_int16_t crc, oid;
   u_int8_t strength, t;
   unsigned int delta_t_ms;
-  portTickType time,time_old;
+  portTickType time, time_old;
 
 
   if (!PtInitNRF ())
@@ -163,20 +164,20 @@ vnRFtaskRxTx (void *parameter)
 
   led_set_tx (1);
 
-  time_old = xTaskGetTickCount();
-  
+  time_old = xTaskGetTickCount ();
+
   for (;;)
     {
       /* gather statistics */
-      time = xTaskGetTickCount();      
-      delta_t_ms = (time - time_old)*portTICK_RATE_MS;
-      if(delta_t_ms>1000)
-      {        
-      	time_old = time;
-        rf_pkt_per_sec = (rf_rec-rf_rec_old)*1000/delta_t_ms;
-        rf_rec_old=rf_rec;
-      }
-    
+      time = xTaskGetTickCount ();
+      delta_t_ms = (time - time_old) * portTICK_RATE_MS;
+      if (delta_t_ms > 1000)
+	{
+	  time_old = time;
+	  rf_pkt_per_sec = (rf_rec - rf_rec_old) * 1000 / delta_t_ms;
+	  rf_rec_old = rf_rec;
+	}
+
       /* check if TX strength changed */
       if (nrf_powerlevel_current != nrf_powerlevel_last)
 	{
@@ -207,6 +208,7 @@ vnRFtaskRxTx (void *parameter)
 				 sizeof (g_Beacon));
 
 	      rf_rec++;
+
 	      vNetworkSendBeaconToServer ();
 
 	      if (pt_debug_level)
@@ -308,7 +310,9 @@ PtInitProtocol (void)
   AT91F_PIO_CfgOutput (LED_BEACON_PIO, LED_BEACON_MASK);
   AT91F_PIO_SetOutput (LED_BEACON_PIO, LED_BEACON_MASK);
 
-  rf_rec = rf_rec_old = rf_decrypt = rf_crc_ok = rf_crc_err = rf_pkt_per_sec = 0;
-  xTaskCreate (vnRFtaskRxTx, (signed portCHAR *) "nRF_RxTx",
-	       TASK_NRF_STACK, NULL, TASK_NRF_PRIORITY, NULL);
+  rf_rec = rf_rec_old = rf_decrypt = 0;
+  rf_crc_ok = rf_crc_err = rf_pkt_per_sec = 0;
+
+  xTaskCreate (vnRFtaskRxTx, (signed portCHAR *) "nRF_RxTx", TASK_NRF_STACK,
+	       NULL, TASK_NRF_PRIORITY, NULL);
 }

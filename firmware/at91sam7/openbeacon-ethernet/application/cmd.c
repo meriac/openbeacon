@@ -49,12 +49,29 @@ vCmdHelp (void)
 		"\t'l' - red LED ('l[enable=0, disable=1]')\n"
 		"\t'm' - netmask config ('m255.255.0.0')\n"
 		"\t'n' - network config ('a[static_ip=0, reader_id=1, dhcp=2]')\n"
+		"\t'p' - set target server UDP port ('p2342')\n"
 		"\t'r' - restore original network settings\n"
 		"\t's' - store configuration\n"
 		"\t't' - set target server ip ('t1.2.3.4')\n"
 		"\t'u' - reset reader to firmware update mode\n"
 		"\t'x' - show system statistics\n" "\n\n");
 
+}
+
+static inline void
+vCmdDumpStatistics (void)
+{
+  unsigned int h, m, s;
+
+  s = (xTaskGetTickCount () * portTICK_RATE_MS) / 1000;
+  h = s / 3600;
+  s %= 3600;
+  m = s / 60;
+  s %= 60;
+
+  debug_printf ("\nSystem Statistics:\n");
+  debug_printf ("\tuptime      = %03uh:%02um:%02us\n", h, m, s);
+  debug_printf ("\n");
 }
 
 static int
@@ -182,6 +199,12 @@ vCmdProcess (const char *cmdline)
       debug_printf ("ip_autoconfig=%i\n", env.e.ip_autoconfig);
       break;
 
+    case 'P':
+      if (assign)
+	env.e.ip_server_port = atoiEx (cmdline);
+      debug_printf ("server UDP port=%i\n", env.e.ip_server_port);
+      break;
+
     case 'R':
       /* backup reader id */
       t = env.e.reader_id;
@@ -220,11 +243,12 @@ vCmdProcess (const char *cmdline)
       break;
 
     case 'X':
+      vCmdDumpStatistics ();
       PtStatusRxTx ();
       break;
 
     default:
-      debug_printf ("Uknown CMD:'%c'\n", cmd);
+      debug_printf ("Unkown CMD:'%c'\n", cmd);
     }
 }
 
@@ -283,7 +307,7 @@ vCmdTask (void *pvParameters)
 	    }
 	}
       else
-	t = 0;	
+	t = 0;
     }
 }
 
