@@ -155,7 +155,6 @@ vNetworkDumpConfig (void)
   debug_printf ("\tNetmask     = %s\n", vNetworkNTOA (EMAC_if.netmask));
   debug_printf ("\tGateway     = %s\n", vNetworkNTOA (EMAC_if.gw));
 
-
   debug_printf ("\nStored Network Configuration:\n"
 		"\t%s configuration [%i]\n",
 		vNetworkConfigName (env.e.ip_autoconfig),

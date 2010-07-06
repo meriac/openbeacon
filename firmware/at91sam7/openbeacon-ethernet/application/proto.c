@@ -250,7 +250,7 @@ vnRFtaskRxTx (void *parameter)
 	      nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.byte,
 				 sizeof (g_Beacon));
 
-	      vNetworkSendBeaconToServer();
+	      vNetworkSendBeaconToServer ();
 
 	      if (pt_debug_level)
 		{
