@@ -143,11 +143,14 @@
 #define IP_AUTOCONFIG_STATIC_IP 0
 #define IP_AUTOCONFIG_READER_ID 1
 #define IP_AUTOCONFIG_DHCP 2
+/*-------------------------------*/
+#define SERVER_LOCAL_UDP PORT 4223
+/*-------------------------------*/
 
 typedef struct
 {
   unsigned int magic, size, crc16;
-  unsigned int reader_id,ip_autoconfig;
+  unsigned int reader_id,ip_autoconfig,ip_server_port;
   struct ip_addr ip_host,ip_netmask,ip_server,ip_gateway;
 } TEnvironment __attribute__ ((aligned (4)));
 

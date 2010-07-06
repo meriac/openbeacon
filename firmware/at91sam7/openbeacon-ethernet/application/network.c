@@ -55,6 +55,8 @@
 extern err_t ethernetif_init (struct netif *netif);
 /*------------------------------------------------------------*/
 static struct netif EMAC_if;
+static struct udp_pcb *vNetworkSocket=NULL;
+static struct pbuf *vNetworkSocketBuf=NULL;
 /*------------------------------------------------------------*/
 
 static inline const char *
@@ -119,6 +121,14 @@ vNetworkConfigName (int i)
 }
 
 void
+vNetworkSendBeaconToServer (void)
+{
+  vNetworkSocketBuf->payload = &g_Beacon;
+  udp_send (vNetworkSocket, vNetworkSocketBuf);
+}
+
+
+void
 vNetworkDumpHex (const char *data, unsigned int length)
 {
   unsigned char c;
@@ -135,9 +145,9 @@ vNetworkDumpConfig (void)
 {
   debug_printf ("\nActive Network Configuration:\n");
 
-  debug_printf ("\tIP      = %s\n", vNetworkNTOA (EMAC_if.ip_addr));
-  debug_printf ("\tNetmask = %s\n", vNetworkNTOA (EMAC_if.netmask));
-  debug_printf ("\tGateway = %s\n", vNetworkNTOA (EMAC_if.gw));
+  debug_printf ("\tIP          = %s\n", vNetworkNTOA (EMAC_if.ip_addr));
+  debug_printf ("\tNetmask     = %s\n", vNetworkNTOA (EMAC_if.netmask));
+  debug_printf ("\tGateway     = %s\n", vNetworkNTOA (EMAC_if.gw));
 
 
   debug_printf ("\nStored Network Configuration:\n"
@@ -145,14 +155,15 @@ vNetworkDumpConfig (void)
 		vNetworkConfigName (env.e.ip_autoconfig),
 		env.e.ip_autoconfig);
 
-  debug_printf ("\tMAC     = ");
+  debug_printf ("\tMAC         = ");
   vNetworkDumpHex (cMACAddress, sizeof (cMACAddress));
   debug_printf ("\n");
 
-  debug_printf ("\tIP      = %s\n", vNetworkNTOA (env.e.ip_host));
-  debug_printf ("\tNetmask = %s\n", vNetworkNTOA (env.e.ip_netmask));
-  debug_printf ("\tGateway = %s\n", vNetworkNTOA (env.e.ip_gateway));
-  debug_printf ("\tServer  = %s\n", vNetworkNTOA (env.e.ip_server));
+  debug_printf ("\tIP          = %s\n", vNetworkNTOA (env.e.ip_host));
+  debug_printf ("\tNetmask     = %s\n", vNetworkNTOA (env.e.ip_netmask));
+  debug_printf ("\tGateway     = %s\n", vNetworkNTOA (env.e.ip_gateway));
+  debug_printf ("\tServer      = %s\n", vNetworkNTOA (env.e.ip_server));
+  debug_printf ("\tServer Port = %u [UDP Protocol]\n", env.e.ip_server_port);
   debug_printf ("\n");
 }
 
@@ -211,8 +222,12 @@ vNetworkThread (void *pvParameters)
   /* bring it up */
   netif_set_up (&EMAC_if);
 
-  debug_printf ("FreeRTOS based WMCU firmware version %s starting.\n",
+  debug_printf ("OpenBeacon firmware version %s starting.\n",
 		VERSION);
+ 
+  /* setup server response UDP packet */
+  vNetworkSocket = udp_new ();
+  vNetworkSocketBuf = pbuf_alloc (PBUF_TRANSPORT, sizeof(g_Beacon), PBUF_REF);
 
   while (pdTRUE)
     {
@@ -245,6 +260,7 @@ vNetworkResetDefaultSettings (void)
   bzero (&env, sizeof (env));
   env.e.reader_id = 0;
   env.e.ip_autoconfig = IP_AUTOCONFIG_READER_ID;
+  env.e.ip_server_port = 2342;
   IP4_ADDR (&env.e.ip_host, 10, 254, 0, 0);
   IP4_ADDR (&env.e.ip_netmask, 255, 255, 0, 0);
   IP4_ADDR (&env.e.ip_gateway, 10, 254, 0, 1);
@@ -273,7 +289,7 @@ vNetworkInit (void)
   cMACAddress[3] = (mac_l >> 16) & 0xFF;
   cMACAddress[4] = (mac_l >> 8) & 0xFF;
   cMACAddress[5] = (mac_l >> 0) & 0xFF;
-
+   
   /* Create the lwIP task.  This uses the lwIP RTOS abstraction layer. */
   xTaskCreate (vNetworkThread, (signed portCHAR *) "NET",
 	       TASK_NET_STACK, NULL, TASK_NET_PRIORITY, &networkTaskHandle);

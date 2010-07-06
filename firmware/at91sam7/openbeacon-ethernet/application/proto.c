@@ -35,6 +35,7 @@
 #include "nRF24L01/nRF_API.h"
 #include "debug_printf.h"
 #include "env.h"
+#include "network.h"
 #include "rnd.h"
 
 unsigned int rf_sent_broadcast, rf_sent_unicast, rf_rec;
@@ -248,6 +249,8 @@ vnRFtaskRxTx (void *parameter)
 	      // read packet from nRF chip
 	      nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.byte,
 				 sizeof (g_Beacon));
+
+	      vNetworkSendBeaconToServer();
 
 	      if (pt_debug_level)
 		{
