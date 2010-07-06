@@ -82,7 +82,6 @@ skip_atoi (const char **s)
 #define PLUS	4		/* show plus */
 #define SPACE	8		/* space if plus */
 #define LEFT	16		/* left justified */
-#define SPECIAL	32		/* 0x */
 #define LARGE	64		/* use 'ABCDEF' instead of 'abcdef' */
 
 #define do_div(n,base) ({ \
@@ -92,8 +91,8 @@ skip_atoi (const char **s)
 	__res; \
 })
 
-static char *
-number (char *str, long num, unsigned int base, int size, int precision,
+static void
+number (long num, unsigned int base, int size, int precision,
 	int type)
 {
   char c, sign;
@@ -107,7 +106,7 @@ number (char *str, long num, unsigned int base, int size, int precision,
   if (type & LEFT)
     type &= ~ZEROPAD;
   if (base < 2 || base > 36)
-    return 0;
+    return;
   c = (type & ZEROPAD) ? '0' : ' ';
   sign = 0;
   if (type & SIGN)
@@ -129,13 +128,6 @@ number (char *str, long num, unsigned int base, int size, int precision,
 	  size--;
 	}
     }
-  if (type & SPECIAL)
-    {
-      if (base == 16)
-	size -= 2;
-      else if (base == 8)
-	size--;
-    }
   i = 0;
   if (num == 0)
     tmp[i++] = '0';
@@ -147,38 +139,26 @@ number (char *str, long num, unsigned int base, int size, int precision,
   size -= precision;
   if (!(type & (ZEROPAD + LEFT)))
     while (size-- > 0)
-      *str++ = ' ';
+      vUSBSendByte(' ');
   if (sign)
-    *str++ = sign;
-  if (type & SPECIAL)
-    {
-      if (base == 8)
-	*str++ = '0';
-      else if (base == 16)
-	{
-	  *str++ = '0';
-	  *str++ = digits[33];
-	}
-    }
+    vUSBSendByte(sign);
   if (!(type & LEFT))
     while (size-- > 0)
-      *str++ = c;
+      vUSBSendByte(c);
   while (i < precision--)
-    *str++ = '0';
+    vUSBSendByte('0');
   while (i-- > 0)
-    *str++ = tmp[i];
+    vUSBSendByte(tmp[i]);
   while (size-- > 0)
-    *str++ = ' ';
-  return str;
+    vUSBSendByte(' ');
 }
 
-int
-vsprintf (char *buf, const char *fmt, va_list args)
+static void
+tiny_vsprintf (const char *fmt, va_list args)
 {
   int len;
   unsigned long num;
   int i, base;
-  char *str;
   const char *s;
 
   int flags;			/* flags to number() */
@@ -188,11 +168,11 @@ vsprintf (char *buf, const char *fmt, va_list args)
 				   number of chars for from string */
   int qualifier;		/* 'h', 'l', or 'q' for integer fields */
 
-  for (str = buf; *fmt; ++fmt)
+  for (; *fmt; ++fmt)
     {
       if (*fmt != '%')
 	{
-	  *str++ = *fmt;
+	  vUSBSendByte(*fmt);
 	  continue;
 	}
 
@@ -210,9 +190,6 @@ vsprintf (char *buf, const char *fmt, va_list args)
 	  goto repeat;
 	case ' ':
 	  flags |= SPACE;
-	  goto repeat;
-	case '#':
-	  flags |= SPECIAL;
 	  goto repeat;
 	case '0':
 	  flags |= ZEROPAD;
@@ -274,10 +251,10 @@ vsprintf (char *buf, const char *fmt, va_list args)
 	case 'c':
 	  if (!(flags & LEFT))
 	    while (--field_width > 0)
-	      *str++ = ' ';
-	  *str++ = (unsigned char) va_arg (args, int);
+	      vUSBSendByte(' ');
+	  vUSBSendByte((unsigned char) va_arg (args, int));
 	  while (--field_width > 0)
-	    *str++ = ' ';
+	    vUSBSendByte(' ');
 	  continue;
 
 	case 's':
@@ -289,40 +266,15 @@ vsprintf (char *buf, const char *fmt, va_list args)
 
 	  if (!(flags & LEFT))
 	    while (len < field_width--)
-	      *str++ = ' ';
+	      vUSBSendByte(' ');
 	  for (i = 0; i < len; ++i)
-	    *str++ = *s++;
+	    vUSBSendByte(*s++);
 	  while (len < field_width--)
-	    *str++ = ' ';
-	  continue;
-
-	case 'p':
-	  if (field_width == -1)
-	    {
-	      field_width = 2 * sizeof (void *);
-	      flags |= ZEROPAD;
-	    }
-	  str = number (str,
-			(unsigned long) va_arg (args, void *), 16,
-			field_width, precision, flags);
-	  continue;
-
-
-	case 'n':
-	  if (qualifier == 'l')
-	    {
-	      long *ip = va_arg (args, long *);
-	      *ip = (str - buf);
-	    }
-	  else
-	    {
-	      int *ip = va_arg (args, int *);
-	      *ip = (str - buf);
-	    }
+	    vUSBSendByte(' ');
 	  continue;
 
 	case '%':
-	  *str++ = '%';
+	  vUSBSendByte('%');
 	  continue;
 
 	  /* integer number formats - set up the flags and "break" */
@@ -343,9 +295,9 @@ vsprintf (char *buf, const char *fmt, va_list args)
 	  break;
 
 	default:
-	  *str++ = '%';
+	  vUSBSendByte('%');
 	  if (*fmt)
-	    *str++ = *fmt;
+	    vUSBSendByte(*fmt);
 	  else
 	    --fmt;
 	  continue;
@@ -369,32 +321,18 @@ vsprintf (char *buf, const char *fmt, va_list args)
 	num = va_arg (args, int);
       else
 	num = va_arg (args, unsigned int);
-      str = number (str, num, base, field_width, precision, flags);
+      number (num, base, field_width, precision, flags);
     }
-  *str = '\0';
-  return str - buf;
 }
 
-int
+void
 debug_printf (const char *fmt, ...)
 {
-  static char buf[128];
-  char *p,c;
   va_list args;
-  int i;
 
   va_start (args, fmt);
-  i = vsprintf (buf, fmt, args);
+  tiny_vsprintf (fmt, args);
   va_end (args);
-
-  p = buf;
-  while((c=*p++)!='\0') {
-    vUSBSendByte (c);
-    if (c == '\n')
-      vUSBSendByte('\r');
-  }
-
-  return i;
 }
 
 void hex_dump (const unsigned char *buf, unsigned int addr, unsigned int len)
@@ -424,7 +362,7 @@ void hex_dump (const unsigned char *buf, unsigned int addr, unsigned int len)
                         } else
                                 debug_printf(" ");
                 }
-                debug_printf("|\n");
+                debug_printf("|\n\r");
         }
 }
 
