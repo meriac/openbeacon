@@ -73,15 +73,17 @@ env_flash_to (const void *addr)
 
   unsigned short page;
 
-  src = env.data;
-  dst = (unsigned int *) addr;
-  for (i = 0; i < (sizeof (env.data) / sizeof (env.data[0])); i++)
-    *dst++ = *src++;
-
   page = page_from_ramaddr (addr) & 0x3ff;
 
   if (is_page_locked (page))
     unlock_page (page);
+  else
+    flash_cmd_wait ();
+
+  src = env.data;
+  dst = (unsigned int *) addr;
+  for (i = 0; i < (sizeof (env.data) / sizeof (env.data[0])); i++)
+    *dst++ = *src++;
 
   AT91F_MC_EFC_PerformCmd (AT91C_BASE_MC, AT91C_MC_FCMD_START_PROG |
 			   AT91C_MC_CORRECT_KEY | (page << 8));
