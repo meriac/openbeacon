@@ -70,9 +70,9 @@ vNetworkNTOA (struct ip_addr ip)
 void
 vNetworkDumpConfig (void)
 {
-  debug_printf("ip=%s ",vNetworkNTOA(xIpAddr));
-  debug_printf("netmask=%s ",vNetworkNTOA(xNetMask));
-  debug_printf("gateway=%s\n\r",vNetworkNTOA(xGateway));
+  debug_printf("\n\rNetwork Configuration:\n\r\tIP=%s\n\r",vNetworkNTOA(xIpAddr));
+  debug_printf("\tNetmask=%s\n\r",vNetworkNTOA(xNetMask));
+  debug_printf("\tGateway=%s\n\r\n\r",vNetworkNTOA(xGateway));
 }
 
 static void
