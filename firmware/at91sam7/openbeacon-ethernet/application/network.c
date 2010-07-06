@@ -35,7 +35,9 @@
 #include <task.h>
 #include <semphr.h>
 #include <led.h>
+#include <rnd.h>
 
+#include "env.h"
 #include "network.h"
 #include "SAM7_EMAC.h"
 #include "proto.h"
@@ -48,55 +50,77 @@
 #include "lwip/stats.h"
 #include "lwip/dhcp.h"
 #include "netif/loopif.h"
-#include "env.h"
-
-#define USE_DHCP 0
 
 /*------------------------------------------------------------*/
 extern err_t ethernetif_init (struct netif *netif);
 /*------------------------------------------------------------*/
 struct netif EMAC_if;
-
 /*------------------------------------------------------------*/
+static struct ip_addr xIpAddr, xNetMask, xGateway;
+/*------------------------------------------------------------*/
+
+static const char*
+vNetworkNTOA (struct ip_addr ip)
+{
+  struct in_addr ina;
+  ina.s_addr=ip.addr;
+  return inet_ntoa(ina);
+}
+
 void
+vNetworkDumpConfig (void)
+{
+  debug_printf("ip=%s ",vNetworkNTOA(xIpAddr));
+  debug_printf("netmask=%s ",vNetworkNTOA(xNetMask));
+  debug_printf("gateway=%s\n\r",vNetworkNTOA(xGateway));
+}
+
+static void
 vNetworkThread (void *pvParameters)
 {
   (void) pvParameters;
-  static struct ip_addr xIpAddr, xNetMask, xGateway;
 
   /* Initialize lwIP and its interface layer. */
   lwip_init ();
 
+  /* Follow settings. */
+  switch (env.e.ip_autoconfig)
+    {
+    case IP_AUTOCONFIG_STATIC_IP:
+      xIpAddr  = env.e.ip_host;
+      xNetMask = env.e.ip_netmask;
+      xGateway = env.e.ip_gateway;
+      break;
+    case IP_AUTOCONFIG_READER_ID:
+      xIpAddr.addr = htonl(
+      	ntohl(env.e.ip_host.addr & env.e.ip_netmask.addr) +
+	env.e.reader_id
+	);
+      xNetMask = env.e.ip_netmask;
+      xGateway = env.e.ip_gateway;
+      break;
+    default:
+      //case IP_AUTOCONFIG_DHCP:
+      IP4_ADDR (&xIpAddr, 0, 0, 0, 0);
+      IP4_ADDR (&xNetMask, 0, 0, 0, 0);
+      IP4_ADDR (&xGateway, 0, 0, 0, 0);
+      break;
+    }
+
   /* Create and configure the EMAC interface. */
-
-#if USE_DHCP
-  IP4_ADDR (&xIpAddr, 0, 0, 0, 0);
-  IP4_ADDR (&xNetMask, 0, 0, 0, 0);
-  IP4_ADDR (&xGateway, 0, 0, 0, 0);
-#else
-#ifdef  PRODUCTION
-  IP4_ADDR (&xIpAddr,  192, 168,  15,  90);
-  IP4_ADDR (&xNetMask, 255, 255, 255,   0);
-  IP4_ADDR (&xGateway, 192, 168,  15, 100);
-#else /*PRODUCTION*/
-  IP4_ADDR (&xIpAddr,   10, 254, env.e.mac_h, env.e.mac_l);
-  IP4_ADDR (&xNetMask, 255, 255, 0, 0);
-  IP4_ADDR (&xGateway,  10, 254, 0, 1);
-#endif/*PRODUCTION*/
-#endif
-
-  netif_add (&EMAC_if, &xIpAddr, &xNetMask, &xGateway, NULL, ethernetif_init,
-	     ip_input);
+  netif_add (&EMAC_if, &xIpAddr, &xNetMask, &xGateway, NULL,
+	     ethernetif_init, ip_input);
 
   /* make it the default interface */
   netif_set_default (&EMAC_if);
 
-#if USE_DHCP
-  /* dhcp kick-off */
-  dhcp_start (&EMAC_if);
-  dhcp_fine_tmr ();
-  dhcp_coarse_tmr ();
-#endif
+  if (env.e.ip_autoconfig == IP_AUTOCONFIG_DHCP)
+    {
+      /* dhcp kick-off */
+      dhcp_start (&EMAC_if);
+      dhcp_fine_tmr ();
+      dhcp_coarse_tmr ();
+    }
 
   /* bring it up */
   netif_set_up (&EMAC_if);
@@ -104,21 +128,22 @@ vNetworkThread (void *pvParameters)
   debug_printf ("FreeRTOS based WMCU firmware version %s starting.\n",
 		VERSION);
 
-
   while (pdTRUE)
     {
-#if USE_DHCP
       int cnt = 0;
 
-      vTaskDelay (DHCP_FINE_TIMER_MSECS / portTICK_RATE_MS);
-      dhcp_fine_tmr ();
-      cnt += DHCP_FINE_TIMER_MSECS;
-      if (cnt >= DHCP_COARSE_TIMER_SECS * 1000)
+      if (env.e.ip_autoconfig == IP_AUTOCONFIG_DHCP)
 	{
-	  dhcp_coarse_tmr ();
-	  cnt = 0;
+	  vTaskDelay (DHCP_FINE_TIMER_MSECS / portTICK_RATE_MS);
+	  dhcp_fine_tmr ();
+	  cnt += DHCP_FINE_TIMER_MSECS;
+	  if (cnt >= DHCP_COARSE_TIMER_SECS * 1000)
+	    {
+	      dhcp_coarse_tmr ();
+	      cnt = 0;
+	    }
 	}
-#endif
+
       vTaskDelay (50 / portTICK_RATE_MS);
       vLedSetGreen (0);
       vTaskDelay (50 / portTICK_RATE_MS);
@@ -132,10 +157,31 @@ static xTaskHandle networkTaskHandle = NULL;
 void
 vNetworkInit (void)
 {
-  cMACAddress[4] = env.e.mac_h;
-  cMACAddress[5] = env.e.mac_l;
+  unsigned int mac_l;
+
+  /* If no previous environment exists - create a new, but don't store it */
+  env_init ();
+  if (!env_load ())
+    {
+      bzero (&env, sizeof (env));
+      env.e.reader_id=DEFAULT_READER_ID;
+      IP4_ADDR (&env.e.ip_host   , 10,254,  0,  DEFAULT_READER_ID);
+      IP4_ADDR (&env.e.ip_netmask,255,255,  0,  0);
+      IP4_ADDR (&env.e.ip_gateway, 10,254,  0,  1);
+    }
+
+  vRndInit (env.e.reader_id);
+
+  mac_l = (MAC_IAB | (env.e.reader_id & MAC_IAB_MASK));
+  cMACAddress[0] = (MAC_OID >> 16) & 0xFF;
+  cMACAddress[1] = (MAC_OID >> 8) & 0xFF;
+  cMACAddress[2] = (MAC_OID >> 0) & 0xFF;
+  cMACAddress[3] = (mac_l >> 16) & 0xFF;
+  cMACAddress[4] = (mac_l >> 8) & 0xFF;
+  cMACAddress[5] = (mac_l >> 0) & 0xFF;
 
   /* Create the lwIP task.  This uses the lwIP RTOS abstraction layer. */
   xTaskCreate (vNetworkThread, (signed portCHAR *) "NET",
 	       TASK_NET_STACK, NULL, TASK_NET_PRIORITY, &networkTaskHandle);
 }
+

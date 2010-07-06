@@ -29,7 +29,6 @@
 #define __NETWORK_H__
 
 extern void vNetworkInit (void);
-extern void vNetworkThread (void *pvParameters);
-extern struct netif EMAC_if;
+extern void vNetworkDumpConfig (void);
 
 #endif/*__NETWORK_H__*/

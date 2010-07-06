@@ -35,13 +35,13 @@
 #include <dbgu.h>
 #include <beacontypes.h>
 #include <proto.h>
-#include <rnd.h>
 #include <network.h>
 
+#include "lwip/ip.h"
+#include "lwip/ip_addr.h"
 #include "led.h"
 #include "cmd.h"
 #include "proto.h"
-#include "env.h"
 #include "debug_printf.h"
 
 /**********************************************************************/
@@ -76,16 +76,6 @@ void __attribute__ ((noreturn)) mainloop (void)
   vLedInit ();
   led_set_red (1);
 
-  /* If no previous environment exists - create a new, but don't store it */
-  env_init ();
-  if (!env_load ())
-    {
-      bzero (&env, sizeof (env));
-      env.e.mac_h = 0;
-      env.e.mac_l = 100;
-    }
-
-  vRndInit ((((u_int32_t) env.e.mac_h) << 8) | env.e.mac_l);
   vNetworkInit ();
 
   xTaskCreate (vUSBCDCTask, (signed portCHAR *) "USB", TASK_USB_STACK,

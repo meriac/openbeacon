@@ -19,6 +19,7 @@ NETWORK_SRC= \
   network/src/core/dhcp.c \
   network/src/core/init.c \
   network/src/core/ipv4/icmp.c \
+  network/src/core/ipv4/inet.c \
   network/src/core/ipv4/inet_chksum.c \
   network/src/core/ipv4/ip_addr.c \
   network/src/core/ipv4/ip.c \
@@ -47,5 +48,6 @@ all: $(TARGET).bin
 
 app_clean:
 	find application network -name '*.o' -exec rm \{\} \;
+	find application network -name '*~' -exec rm \{\} \;
 
 include ../core/Makefile.rules

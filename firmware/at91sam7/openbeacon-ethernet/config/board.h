@@ -1,4 +1,4 @@
-/***************************************************************
+ /***************************************************************
  *
  * OpenBeacon.org - board specific configuration
  *
@@ -27,6 +27,7 @@
 
 #include <lib_AT91SAM7X.h>
 #include <beacontypes.h>
+#include <lwip/ip.h>
 
 #define VERSION		"1.0"
 #define VERSION_INT	0x00010000
@@ -129,14 +130,22 @@
 /* configuration structure       */
 /*-------------------------------*/
 
-#define TENVIRONMENT_MAGIC 0xBF2C0776
+#define TENVIRONMENT_MAGIC 0x2EA5F60C
+
+#define MAC_OID 0x0050C2UL
+#define MAC_IAB 0xAB1000UL
+#define MAC_IAB_MASK 0xFFFUL
+#define DEFAULT_READER_ID 100
+
+#define IP_AUTOCONFIG_STATIC_IP 0
+#define IP_AUTOCONFIG_READER_ID 1
+#define IP_AUTOCONFIG_DHCP 2
 
 typedef struct
 {
   unsigned int magic, size, crc16;
-  unsigned int mac;
-  unsigned char mac_h, mac_l;
-  signed int mcu_id;
+  unsigned int reader_id,ip_autoconfig;
+  struct ip_addr ip_host,ip_netmask,ip_server,ip_gateway;
 } TEnvironment;
 
 /*----------------------------------*/
