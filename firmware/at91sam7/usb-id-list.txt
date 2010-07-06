@@ -4,8 +4,8 @@
 16C0:08AC,"OpenBeacon Sniffer",openbeacon-sniffer
 16C0:08AD,"OpenBeacon Estimator",openbeacon-estimator
 16C0:08AE,"OpenBouncer",openbouncer
-16C0:08AF,"OpenBeacon Blinkenlights",openbeacon-blinkenlights
-16C0:08B0,"OpenBeacon Network",openbeacon-network
+16C0:08AF,"OpenBeacon Blinkenlights",openbeacon-blinkenlights-dimmer
+16C0:08B0,"OpenBeacon Network",openbeacon-blinkenlights-wmcu
 16C0:08B1,"txtr.mini",openbeacon-openpicc2
 16C0:08B2,"OpenBeacon Reflasher",bootloader
 16C0:08B3,"OpenBeacon Ethernet PoE II",openbeacon-ethernet
