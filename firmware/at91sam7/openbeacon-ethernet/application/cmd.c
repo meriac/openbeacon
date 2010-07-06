@@ -43,13 +43,13 @@ vCmdHelp (void)
 		"\t'b' - boot again\n"
 		"\t'c' - show configuration\n"
 		"\t'd' - dump chip registers\n"
+		"\t'g' - set gateway ip\n"
 		"\t'h' - show help\n"
 		"\t'i' - set reader id ('i123')\n"
 		"\t'l' - red LED ('l[enable=0, disable=1]')\n"
 		"\t'm' - netmask config ('m255.255.0.0')\n"
 		"\t'n' - network config ('a[static_ip=0, reader_id=1, dhcp=2]')\n"
-		"\t'o' - restore original network settings\n"
-		"\t'r' - set router ip\n"
+		"\t'r' - restore original network settings\n"
 		"\t's' - store configuration\n"
 		"\t't' - set target server ip ('t1.2.3.4')\n"
 		"\t'u' - reset reader to firmware update mode\n"
@@ -107,6 +107,9 @@ vCmdProcess (const char *cmdline)
 
   switch (cmd)
     {
+    case 'A':
+      vNetworkSetIP(&env.e.ip_host,assign?cmdline:NULL,"reader");
+      break;
     case 'B':
       debug_printf ("rebooting...\n");
       vTaskDelay (1000 / portTICK_RATE_MS);
@@ -120,6 +123,9 @@ vCmdProcess (const char *cmdline)
       debug_printf ("System configuration:\n"
 		    "\tReader ID:%i\n" "\n", env.e.reader_id);
 
+      break;
+    case 'G':
+      vNetworkSetIP(&env.e.ip_gateway,assign?cmdline:NULL,"gateway");
       break;
     case 'I':
       if (assign)
@@ -144,24 +150,26 @@ vCmdProcess (const char *cmdline)
 	led_setting = atoiEx (cmdline) > 0;
       debug_printf ("red_led=%i\n", led_setting);
       break;
+    case 'M':
+      vNetworkSetIP(&env.e.ip_netmask,assign?cmdline:NULL,"netmask");
+      break;
     case 'N':
       if (assign)
 	env.e.ip_autoconfig = atoiEx (cmdline);
       debug_printf ("ip_autoconfig=%i\n", env.e.ip_autoconfig);
       break;
-    case 'O':
+    case 'R':
       /* backup reader id */
       t = env.e.reader_id;
       vNetworkResetDefaultSettings ();
       /* restore reader id */
       env.e.reader_id = t;
 
-      debug_printf ("restoring original settings...\n");
+      debug_printf ("restoring original settings & reboot...\n");
       vNetworkDumpConfig ();
       vTaskDelay (1000 / portTICK_RATE_MS);
       env_store ();
-      break;
-    case 'R':
+      while (1);
       break;
     case 'S':
       debug_printf ("storing configuration & reboot...\n");
@@ -170,6 +178,7 @@ vCmdProcess (const char *cmdline)
       while (1);
       break;
     case 'T':
+      vNetworkSetIP(&env.e.ip_server,assign?cmdline:NULL,"server");
       break;
     case 'U':
       debug_printf ("resetting reader to firmware update mode...\n");

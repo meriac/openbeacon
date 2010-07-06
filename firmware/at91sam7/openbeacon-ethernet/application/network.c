@@ -54,7 +54,7 @@
 /*------------------------------------------------------------*/
 extern err_t ethernetif_init (struct netif *netif);
 /*------------------------------------------------------------*/
-struct netif EMAC_if;
+static struct netif EMAC_if;
 /*------------------------------------------------------------*/
 
 static inline const char *
@@ -63,6 +63,40 @@ vNetworkNTOA (struct ip_addr ip)
   struct in_addr ina;
   ina.s_addr = ip.addr;
   return inet_ntoa (ina);
+}
+
+int
+vNetworkSetIP (struct ip_addr *ip, const char *ip_string,
+	       const char *ip_class)
+{
+  int res=0;
+  struct in_addr ina;
+
+  if(!ip)
+    return 0;
+  
+  if(!ip_class)
+    ip_class="unknown";
+
+  if (ip_string)
+    {
+      if (inet_aton (ip_string, &ina))
+	{
+	  ip->addr = ina.s_addr;
+	  debug_printf ("%s IP set to %s\n", ip_class, inet_ntoa (ina));
+	  res=1;
+	}
+      else
+	debug_printf ("error: '%s' is not a valid %s IP\n", ip_string,
+		      ip_class);
+    }
+  else
+    {
+      ina.s_addr = ip->addr;
+      debug_printf ("%s IP is currently set to %s\n", ip_class, inet_ntoa (ina));
+    }
+
+  return res;
 }
 
 static inline const char *
@@ -99,7 +133,14 @@ vNetworkDumpHex (const char *data, unsigned int length)
 void
 vNetworkDumpConfig (void)
 {
-  debug_printf ("\nNetwork Configuration:\n"
+  debug_printf ("\nActive Network Configuration:\n");
+
+  debug_printf ("\tIP      = %s\n", vNetworkNTOA (EMAC_if.ip_addr));
+  debug_printf ("\tNetmask = %s\n", vNetworkNTOA (EMAC_if.netmask));
+  debug_printf ("\tGateway = %s\n", vNetworkNTOA (EMAC_if.gw));
+  
+  
+  debug_printf ("\nStored Network Configuration:\n"
 		"\t%s configuration [%i]\n",
 		vNetworkConfigName (env.e.ip_autoconfig),
 		env.e.ip_autoconfig);
@@ -107,7 +148,7 @@ vNetworkDumpConfig (void)
   debug_printf ("\tMAC     = ");
   vNetworkDumpHex (cMACAddress, sizeof (cMACAddress));
   debug_printf ("\n");
-
+  
   debug_printf ("\tIP      = %s\n", vNetworkNTOA (env.e.ip_host));
   debug_printf ("\tNetmask = %s\n", vNetworkNTOA (env.e.ip_netmask));
   debug_printf ("\tGateway = %s\n", vNetworkNTOA (env.e.ip_gateway));
