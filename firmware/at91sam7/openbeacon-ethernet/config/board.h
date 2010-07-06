@@ -65,7 +65,7 @@
 
 #define DEFAULT_CHANNEL 81
 
-#if 0
+#if 1
 
 #define CSN_ID          	3
 #define IRQ_PIN         	(1L<<30)
