@@ -23,7 +23,7 @@
 #ifndef __PROTO_H__
 #define __PROTO_H__
 
-#include "../../openbeacon-blinkenlights/application/openbeacon.h"
+#include "../../openbeacon-blinkenlights-dimmer/application/openbeacon.h"
 
 #define NRF_POWERLEVEL_MAX 3
 
