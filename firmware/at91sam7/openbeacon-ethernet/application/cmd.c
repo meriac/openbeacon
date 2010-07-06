@@ -46,8 +46,9 @@ vCmdHelp (void)
 		"\t'h' - show help\n\r"
 		"\t'i' - set reader id ('i123')\n\r"
 		"\t'l' - red LED ('l[enable=0, disable=1]')\n\r"
-		"\t'n' - network config ('a[static_ip=0, reader_id=1, dhcp=2]')\n\r"
 		"\t'm' - netmask config ('m255.255.0.0')\n\r"
+		"\t'n' - network config ('a[static_ip=0, reader_id=1, dhcp=2]')\n\r"
+		"\t'o' - restore original network settings\n\r"
 		"\t'r' - set router ip\n\r"
 		"\t's' - store configuration\n\r"
 		"\t't' - set target server ip ('t1.2.3.4')\n\r"
@@ -116,18 +117,25 @@ vCmdProcess (const char *cmdline)
     	break;*/
     case 'C':
       vNetworkDumpConfig ();
-      hex_dump ((unsigned char *) &env, 0, sizeof (env));
+      debug_printf ("System configuration:\n\r"
+		    "\tReader ID:%i\n\r" "\n\r", env.e.reader_id);
+
       break;
     case 'I':
       if (assign)
 	{
-	  t = atoiEx (cmdline);
-	  if (t > 0 && t < MAC_IAB_MASK)
-	    env.e.reader_id = t;
+	  if (env.e.reader_id)
+	    debug_printf ("ERROR: reader id already set!\n\r");
 	  else
-	    debug_printf
-	      ("error: reader_id needs to be between 1 and %u (used '%s')\n\r",
-	       MAC_IAB_MASK, cmdline);
+	    {
+	      t = atoiEx (cmdline);
+	      if (t > 0 && t < MAC_IAB_MASK)
+		env.e.reader_id = t;
+	      else
+		debug_printf
+		  ("error: reader_id needs to be between 1 and %u (used '%s')\n\r",
+		   MAC_IAB_MASK, cmdline);
+	    }
 	}
       debug_printf ("reader_id=%i\n\r", env.e.reader_id);
       break;
@@ -140,6 +148,18 @@ vCmdProcess (const char *cmdline)
       if (assign)
 	env.e.ip_autoconfig = atoiEx (cmdline);
       debug_printf ("ip_autoconfig=%i\n\r", env.e.ip_autoconfig);
+      break;
+    case 'O':
+      /* backup reader id */
+      t = env.e.reader_id;
+      vNetworkResetDefaultSettings ();
+      /* restore reader id */
+      env.e.reader_id = t;
+
+      debug_printf ("restoring original settings...\n\r");
+      vNetworkDumpConfig ();
+      vTaskDelay (1000 / portTICK_RATE_MS);
+      env_store ();
       break;
     case 'R':
       break;

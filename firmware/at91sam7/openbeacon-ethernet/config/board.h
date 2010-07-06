@@ -130,12 +130,11 @@
 /* configuration structure       */
 /*-------------------------------*/
 
-#define TENVIRONMENT_MAGIC 0x2EA5F611
+#define TENVIRONMENT_MAGIC 0x2EA5F614
 
 #define MAC_OID 0x0050C2UL
 #define MAC_IAB 0xAB1000UL
 #define MAC_IAB_MASK 0xFFFUL
-#define DEFAULT_READER_ID 100
 
 #define IP_AUTOCONFIG_STATIC_IP 0
 #define IP_AUTOCONFIG_READER_ID 1
