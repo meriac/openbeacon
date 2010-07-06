@@ -52,7 +52,9 @@ vCmdHelp (void)
 		"\t'r' - restore original network settings\n"
 		"\t's' - store configuration\n"
 		"\t't' - set target server ip ('t1.2.3.4')\n"
-		"\t'u' - reset reader to firmware update mode\n" "\n\n");
+		"\t'u' - reset reader to firmware update mode\n"
+		"\t'x' - show system statistics\n" "\n\n");
+
 }
 
 static int
@@ -217,8 +219,12 @@ vCmdProcess (const char *cmdline)
       vCmdHelp ();
       break;
 
+    case 'X':
+      PtStatusRxTx ();
+      break;
+
     default:
-      debug_printf ("Uknown CMD:'%s'\n", cmdline);
+      debug_printf ("Uknown CMD:'%c'\n", cmd);
     }
 }
 
@@ -277,7 +283,7 @@ vCmdTask (void *pvParameters)
 	    }
 	}
       else
-	t = 0;
+	t = 0;	
     }
 }
 
