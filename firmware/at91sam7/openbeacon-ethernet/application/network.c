@@ -93,7 +93,7 @@ vNetworkSetIP (struct ip_addr *ip, const char *ip_string,
   else
     {
       ina.s_addr = ip->addr;
-      debug_printf ("%s IP is currently set to %s\n", ip_class, inet_ntoa (ina));
+      debug_printf ("%s IP is set to %s\n", ip_class, inet_ntoa (ina));
     }
 
   return res;
@@ -138,8 +138,8 @@ vNetworkDumpConfig (void)
   debug_printf ("\tIP      = %s\n", vNetworkNTOA (EMAC_if.ip_addr));
   debug_printf ("\tNetmask = %s\n", vNetworkNTOA (EMAC_if.netmask));
   debug_printf ("\tGateway = %s\n", vNetworkNTOA (EMAC_if.gw));
-  
-  
+
+
   debug_printf ("\nStored Network Configuration:\n"
 		"\t%s configuration [%i]\n",
 		vNetworkConfigName (env.e.ip_autoconfig),
@@ -148,7 +148,7 @@ vNetworkDumpConfig (void)
   debug_printf ("\tMAC     = ");
   vNetworkDumpHex (cMACAddress, sizeof (cMACAddress));
   debug_printf ("\n");
-  
+
   debug_printf ("\tIP      = %s\n", vNetworkNTOA (env.e.ip_host));
   debug_printf ("\tNetmask = %s\n", vNetworkNTOA (env.e.ip_netmask));
   debug_printf ("\tGateway = %s\n", vNetworkNTOA (env.e.ip_gateway));
@@ -244,7 +244,7 @@ vNetworkResetDefaultSettings (void)
 {
   bzero (&env, sizeof (env));
   env.e.reader_id = 0;
-  env.e.ip_autoconfig = IP_AUTOCONFIG_DHCP;
+  env.e.ip_autoconfig = IP_AUTOCONFIG_READER_ID;
   IP4_ADDR (&env.e.ip_host, 10, 254, 0, 0);
   IP4_ADDR (&env.e.ip_netmask, 255, 255, 0, 0);
   IP4_ADDR (&env.e.ip_gateway, 10, 254, 0, 1);

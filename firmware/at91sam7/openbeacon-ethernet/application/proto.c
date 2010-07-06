@@ -38,10 +38,19 @@
 #include "rnd.h"
 
 unsigned int rf_sent_broadcast, rf_sent_unicast, rf_rec;
+
+static int pt_debug_level = 0;
 static unsigned char nrf_powerlevel_current, nrf_powerlevel_last;
-const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 1, 2, 3, 2, 1 };
+static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] =
+  { 1, 2, 3, 2, 1 };
 
 TBeaconEnvelope g_Beacon;
+
+void
+PtSetDebugLevel (int Level)
+{
+  pt_debug_level = Level;
+}
 
 void
 PtSetRfPowerLevel (unsigned char Level)
@@ -216,10 +225,6 @@ vnRFtaskRxTx (void *parameter)
 
   for (;;)
     {
-      /* reflect button on LED */
-      led_set_red ((AT91F_PIO_GetInput (EXT_BUTTON_PIO) & EXT_BUTTON_PIN) >
-		   0);
-
       /* check if TX strength changed */
       if (nrf_powerlevel_current != nrf_powerlevel_last)
 	{
@@ -244,55 +249,60 @@ vnRFtaskRxTx (void *parameter)
 	      nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.byte,
 				 sizeof (g_Beacon));
 
-	      // adjust byte order and decode
-	      shuffle_tx_byteorder ();
-	      xxtea_decode ();
-	      shuffle_tx_byteorder ();
-
-	      // verify the crc checksum
-	      crc =
-		env_crc16 (g_Beacon.byte,
-			   sizeof (g_Beacon) - sizeof (u_int16_t));
-
-	      if (swapshort (g_Beacon.pkt.crc) == crc)
+	      if (pt_debug_level)
 		{
-		  oid = swapshort (g_Beacon.pkt.oid);
-		  if (g_Beacon.pkt.flags & RFBFLAGS_SENSOR)
-		    debug_printf ("BUTTON: %u\n\r", oid);
+		  // adjust byte order and decode
+		  shuffle_tx_byteorder ();
+		  xxtea_decode ();
+		  shuffle_tx_byteorder ();
 
-		  switch (g_Beacon.pkt.proto)
+		  // verify the crc checksum
+		  crc =
+		    env_crc16 (g_Beacon.byte,
+			       sizeof (g_Beacon) - sizeof (u_int16_t));
+
+		  if (swapshort (g_Beacon.pkt.crc) == crc)
 		    {
-		    case RFBPROTO_BEACONTRACKER:
-		      debug_printf ("RX: %u,0x%08X,%u,0x%02X}\n\r",
-				    swapshort (g_Beacon.pkt.oid),
-				    swaplong (g_Beacon.pkt.p.tracker.seq),
-				    g_Beacon.pkt.p.tracker.strength,
-				    g_Beacon.pkt.flags);
-		      strength = g_Beacon.pkt.p.tracker.strength;
-		      break;
+		      oid = swapshort (g_Beacon.pkt.oid);
+		      if (g_Beacon.pkt.flags & RFBFLAGS_SENSOR)
+			debug_printf ("BUTTON: %u\n\r", oid);
 
-		    case RFBPROTO_PROXREPORT:
-		      for (t = 0; t < PROX_MAX; t++)
+		      switch (g_Beacon.pkt.proto)
 			{
-			  crc = (swapshort (g_Beacon.pkt.p.prox.oid_prox[t]));
-			  if (crc)
-			    debug_printf ("PX: %u={%u,%u,%u}\n\r",
-					  oid,
-					  (crc >> 0) & 0x7FF,
-					  ((crc >> 14) & 0x3) * 0x55,
-					  (crc >> 11) & 0x7);
-			  else
-			    debug_printf ("RX: %u,          ,3,0x%02X}\n\r",
-					  swapshort (g_Beacon.pkt.oid),
-					  g_Beacon.pkt.flags);
-			}
-		      strength = 3;
-		      break;
+			case RFBPROTO_BEACONTRACKER:
+			  debug_printf ("RX: %u,0x%08X,%u,0x%02X\n\r",
+					swapshort (g_Beacon.pkt.oid),
+					swaplong (g_Beacon.pkt.p.tracker.seq),
+					g_Beacon.pkt.p.tracker.strength,
+					g_Beacon.pkt.flags);
+			  strength = g_Beacon.pkt.p.tracker.strength;
+			  break;
 
-		    default:
-		      strength = 0xFF;
-		      debug_printf ("Uknown Protocol: %u\n\r",
-				    g_Beacon.pkt.proto);
+			case RFBPROTO_PROXREPORT:
+			  for (t = 0; t < PROX_MAX; t++)
+			    {
+			      crc =
+				(swapshort (g_Beacon.pkt.p.prox.oid_prox[t]));
+			      if (crc)
+				debug_printf ("PX: %u={%u,%u,%u}\n\r",
+					      oid,
+					      (crc >> 0) & 0x7FF,
+					      ((crc >> 14) & 0x3) * 0x55,
+					      (crc >> 11) & 0x7);
+			      else
+				debug_printf
+				  ("RX: %u,          ,3,0x%02X\n\r",
+				   swapshort (g_Beacon.pkt.oid),
+				   g_Beacon.pkt.flags);
+			    }
+			  strength = 3;
+			  break;
+
+			default:
+			  strength = 0xFF;
+			  debug_printf ("Uknown Protocol: %u\n\r",
+					g_Beacon.pkt.proto);
+			}
 		    }
 		}
 	    }
@@ -316,10 +326,7 @@ PtInitProtocol (void)
   AT91F_PIO_CfgOutput (LED_BEACON_PIO, LED_BEACON_MASK);
   AT91F_PIO_SetOutput (LED_BEACON_PIO, LED_BEACON_MASK);
 
-  AT91F_PIO_CfgInputFilter (EXT_BUTTON_PIO, EXT_BUTTON_PIN);
-  AT91F_PIO_CfgInput (EXT_BUTTON_PIO, EXT_BUTTON_PIN);
-
   rf_rec = rf_sent_unicast = rf_sent_broadcast = 0;
-  xTaskCreate (vnRFtaskRxTx, (signed portCHAR *) "nRF_RxTx", TASK_NRF_STACK,
-	       NULL, TASK_NRF_PRIORITY, NULL);
+  xTaskCreate (vnRFtaskRxTx, (signed portCHAR *) "nRF_RxTx",
+	       TASK_NRF_STACK, NULL, TASK_NRF_PRIORITY, NULL);
 }

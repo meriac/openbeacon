@@ -74,15 +74,13 @@ void __attribute__ ((noreturn)) mainloop (void)
 {
   prvSetupHardware ();
   vLedInit ();
-  led_set_red (1);
 
+  PtCmdInit ();
   vNetworkInit ();
+  PtInitProtocol ();
 
   xTaskCreate (vUSBCDCTask, (signed portCHAR *) "USB", TASK_USB_STACK,
 	       NULL, TASK_USB_PRIORITY, NULL);
-
-  PtInitProtocol ();
-  PtCmdInit ();
 
   vTaskStartScheduler ();
 

@@ -26,13 +26,13 @@
 #include <task.h>
 #include <string.h>
 #include <board.h>
+#include <led.h>
 #include <crc32.h>
 #include "env.h"
 #include "cmd.h"
+#include "proto.h"
 #include "network.h"
 #include "debug_printf.h"
-
-static int led_setting = 0;
 
 static inline void
 vCmdHelp (void)
@@ -42,7 +42,7 @@ vCmdHelp (void)
 		"\t'a' - set reader address ('t10.254.0.100' for 10.254.0.100)\n"
 		"\t'b' - boot again\n"
 		"\t'c' - show configuration\n"
-		"\t'd' - dump chip registers\n"
+		"\t'd' - enable debug output ('d[disable=0,enable=1]')\n"
 		"\t'g' - set gateway ip\n"
 		"\t'h' - show help\n"
 		"\t'i' - set reader id ('i123')\n"
@@ -52,8 +52,7 @@ vCmdHelp (void)
 		"\t'r' - restore original network settings\n"
 		"\t's' - store configuration\n"
 		"\t't' - set target server ip ('t1.2.3.4')\n"
-		"\t'u' - reset reader to firmware update mode\n"
-		"\n\n");
+		"\t'u' - reset reader to firmware update mode\n" "\n\n");
 }
 
 static int
@@ -108,25 +107,39 @@ vCmdProcess (const char *cmdline)
   switch (cmd)
     {
     case 'A':
-      vNetworkSetIP(&env.e.ip_host,assign?cmdline:NULL,"reader");
+      vNetworkSetIP (&env.e.ip_host, assign ? cmdline : NULL, "reader");
       break;
+
     case 'B':
       debug_printf ("rebooting...\n");
       vTaskDelay (1000 / portTICK_RATE_MS);
+      /*force watchdog reset */
       while (1);
       break;
-/*    case 'D':
-    	res=vCmdDumpRegister();
-    	break;*/
+
+    case 'D':
+      if (assign)
+	{
+	  t = atoiEx (cmdline);
+	  debug_printf ("setting debug level to %u\n", t);
+	  PtSetDebugLevel (t);
+	}
+      else
+	debug_printf
+	  ("usage: 'd' - set debug level ('d[disable=0, lowest=1]')\n");
+      break;
+
     case 'C':
       vNetworkDumpConfig ();
       debug_printf ("System configuration:\n"
 		    "\tReader ID:%i\n" "\n", env.e.reader_id);
 
       break;
+
     case 'G':
-      vNetworkSetIP(&env.e.ip_gateway,assign?cmdline:NULL,"gateway");
+      vNetworkSetIP (&env.e.ip_gateway, assign ? cmdline : NULL, "gateway");
       break;
+
     case 'I':
       if (assign)
 	{
@@ -145,50 +158,65 @@ vCmdProcess (const char *cmdline)
 	}
       debug_printf ("reader_id=%i\n", env.e.reader_id);
       break;
+
     case 'L':
       if (assign)
-	led_setting = atoiEx (cmdline) > 0;
-      debug_printf ("red_led=%i\n", led_setting);
+	{
+	  t = atoiEx (cmdline) > 0;
+	  debug_printf ("red_led=%i\n", t);
+	  led_set_red (t);
+	}
+      else
+	debug_printf ("usage: 'l' - red LED ('l[enable=0, disable=1]')\n");
       break;
+
     case 'M':
-      vNetworkSetIP(&env.e.ip_netmask,assign?cmdline:NULL,"netmask");
+      vNetworkSetIP (&env.e.ip_netmask, assign ? cmdline : NULL, "netmask");
       break;
+
     case 'N':
       if (assign)
 	env.e.ip_autoconfig = atoiEx (cmdline);
       debug_printf ("ip_autoconfig=%i\n", env.e.ip_autoconfig);
       break;
+
     case 'R':
       /* backup reader id */
       t = env.e.reader_id;
       vNetworkResetDefaultSettings ();
       /* restore reader id */
       env.e.reader_id = t;
-
       debug_printf ("restoring original settings & reboot...\n");
       vNetworkDumpConfig ();
       vTaskDelay (1000 / portTICK_RATE_MS);
       env_store ();
+      /*force watchdog reset */
       while (1);
       break;
+
     case 'S':
       debug_printf ("storing configuration & reboot...\n");
       vTaskDelay (1000 / portTICK_RATE_MS);
       env_store ();
+      /*force watchdog reset */
       while (1);
       break;
+
     case 'T':
-      vNetworkSetIP(&env.e.ip_server,assign?cmdline:NULL,"server");
+      vNetworkSetIP (&env.e.ip_server, assign ? cmdline : NULL, "server");
       break;
+
     case 'U':
       debug_printf ("resetting reader to firmware update mode...\n");
       vTaskDelay (1000 / portTICK_RATE_MS);
       env_reboot_to_update ();
       break;
+
     case 'H':
     case '?':
       vCmdHelp ();
       break;
+
     default:
       debug_printf ("Uknown CMD:'%s'\n", cmdline);
     }
@@ -198,6 +226,7 @@ static void
 vCmdTask (void *pvParameters)
 {
   (void) pvParameters;
+  unsigned int t = 0;
   portCHAR cByte;
   portBASE_TYPE len = 0;
   static char next_command[MAX_CMD_LINE_LENGTH];
@@ -222,12 +251,46 @@ vCmdTask (void *pvParameters)
 	      next_command[len++] = cByte;
 	    }
 	}
+      else if (AT91F_PIO_GetInput (EXT_BUTTON_PIO) & EXT_BUTTON_PIN)
+	{
+	  if (t < 30)
+	    t++;
+	  else
+	    {
+	      for (t = 0; t < 10; t++)
+		{
+		  vTaskDelay (500 / portTICK_RATE_MS);
+		  led_set_red (0);
+		  vTaskDelay (500 / portTICK_RATE_MS);
+		  led_set_red (1);
+
+		}
+
+	      /* backup reader id */
+	      t = env.e.reader_id;
+	      vNetworkResetDefaultSettings ();
+	      /* restore reader id */
+	      env.e.reader_id = t;
+
+	      /*force watchdog reset */
+	      while (1);
+	    }
+	}
+      else
+	t = 0;
     }
 }
 
 void
 PtCmdInit (void)
 {
+  /* enable firmware defaults button */
+  AT91F_PIO_CfgInputFilter (EXT_BUTTON_PIO, EXT_BUTTON_PIN);
+  AT91F_PIO_CfgInput (EXT_BUTTON_PIO, EXT_BUTTON_PIN);
+
+  /* enable power LED */
+  led_set_red (1);
+
   xTaskCreate (vCmdTask, (signed portCHAR *) "CMD", TASK_CMD_STACK, NULL,
 	       TASK_CMD_PRIORITY, NULL);
 }

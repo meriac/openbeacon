@@ -43,6 +43,7 @@ PtSwapLong (unsigned long src)
 }
 
 extern void PtInitProtocol (void);
+extern void PtSetDebugLevel (int Level);
 extern int PtSetFifoLifetimeSeconds (int Seconds);
 extern int PtGetFifoLifetimeSeconds (void);
 extern void PtDumpUIntToUSB (unsigned int data);
