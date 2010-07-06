@@ -32,7 +32,7 @@ extern void vNetworkInit (void);
 extern void vNetworkSendBeaconToServer (void);
 extern void vNetworkDumpConfig (void);
 extern void vNetworkResetDefaultSettings (void);
-extern  int vNetworkSetIP (struct ip_addr *ip, const char *ip_string,
-			   const char *ip_class);
+extern int vNetworkSetIP (struct ip_addr *ip, const char *ip_string,
+			  const char *ip_class);
 
 #endif/*__NETWORK_H__*/

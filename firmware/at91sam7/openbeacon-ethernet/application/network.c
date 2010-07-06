@@ -49,14 +49,15 @@
 #include "lwip/memp.h"
 #include "lwip/stats.h"
 #include "lwip/dhcp.h"
+#include "lwip/udp.h"
 #include "netif/loopif.h"
 
 /*------------------------------------------------------------*/
 extern err_t ethernetif_init (struct netif *netif);
 /*------------------------------------------------------------*/
 static struct netif EMAC_if;
-static struct udp_pcb *vNetworkSocket=NULL;
-static struct pbuf *vNetworkSocketBuf=NULL;
+static struct udp_pcb *vNetworkSocket = NULL;
+static struct pbuf *vNetworkSocketBuf = NULL;
 /*------------------------------------------------------------*/
 
 static inline const char *
@@ -71,14 +72,14 @@ int
 vNetworkSetIP (struct ip_addr *ip, const char *ip_string,
 	       const char *ip_class)
 {
-  int res=0;
+  int res = 0;
   struct in_addr ina;
 
-  if(!ip)
+  if (!ip)
     return 0;
-  
-  if(!ip_class)
-    ip_class="unknown";
+
+  if (!ip_class)
+    ip_class = "unknown";
 
   if (ip_string)
     {
@@ -86,7 +87,7 @@ vNetworkSetIP (struct ip_addr *ip, const char *ip_string,
 	{
 	  ip->addr = ina.s_addr;
 	  debug_printf ("%s IP set to %s\n", ip_class, inet_ntoa (ina));
-	  res=1;
+	  res = 1;
 	}
       else
 	debug_printf ("error: '%s' is not a valid %s IP\n", ip_string,
@@ -123,10 +124,15 @@ vNetworkConfigName (int i)
 void
 vNetworkSendBeaconToServer (void)
 {
-  vNetworkSocketBuf->payload = &g_Beacon;
-  udp_send (vNetworkSocket, vNetworkSocketBuf);
+  if (env.e.reader_id && env.e.ip_server.addr && env.e.ip_server_port
+      && vNetworkSocketBuf && vNetworkSocket)
+    {
+      vNetworkSocketBuf->payload = &g_Beacon;
+      udp_sendto (vNetworkSocket,
+		  vNetworkSocketBuf,
+		  &env.e.ip_server, (u16_t) env.e.ip_server_port);
+    }
 }
-
 
 void
 vNetworkDumpHex (const char *data, unsigned int length)
@@ -222,12 +228,12 @@ vNetworkThread (void *pvParameters)
   /* bring it up */
   netif_set_up (&EMAC_if);
 
-  debug_printf ("OpenBeacon firmware version %s starting.\n",
-		VERSION);
- 
+  debug_printf ("OpenBeacon firmware version %s starting.\n", VERSION);
+
   /* setup server response UDP packet */
   vNetworkSocket = udp_new ();
-  vNetworkSocketBuf = pbuf_alloc (PBUF_TRANSPORT, sizeof(g_Beacon), PBUF_REF);
+  vNetworkSocketBuf =
+    pbuf_alloc (PBUF_TRANSPORT, sizeof (g_Beacon), PBUF_REF);
 
   while (pdTRUE)
     {
@@ -264,7 +270,7 @@ vNetworkResetDefaultSettings (void)
   IP4_ADDR (&env.e.ip_host, 10, 254, 0, 0);
   IP4_ADDR (&env.e.ip_netmask, 255, 255, 0, 0);
   IP4_ADDR (&env.e.ip_gateway, 10, 254, 0, 1);
-  IP4_ADDR (&env.e.ip_server, 213, 160, 89, 40);
+  IP4_ADDR (&env.e.ip_server, 10, 254, 0, 1);
 }
 
 /*------------------------------------------------------------*/
@@ -289,7 +295,7 @@ vNetworkInit (void)
   cMACAddress[3] = (mac_l >> 16) & 0xFF;
   cMACAddress[4] = (mac_l >> 8) & 0xFF;
   cMACAddress[5] = (mac_l >> 0) & 0xFF;
-   
+
   /* Create the lwIP task.  This uses the lwIP RTOS abstraction layer. */
   xTaskCreate (vNetworkThread, (signed portCHAR *) "NET",
 	       TASK_NET_STACK, NULL, TASK_NET_PRIORITY, &networkTaskHandle);

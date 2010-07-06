@@ -130,7 +130,7 @@
 /* configuration structure       */
 /*-------------------------------*/
 
-#define TENVIRONMENT_MAGIC 0x2EA5F614
+#define TENVIRONMENT_MAGIC 0x2EA5F616
 
 /*-------------------------------*/
 /*  Bitmanufaktur GmbH MAC IAB   */
