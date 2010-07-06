@@ -37,23 +37,23 @@ static int led_setting = 0;
 static inline void
 vCmdHelp (void)
 {
-  debug_printf ("OpenBeacon.org PoE Ethernet II command line help\n\r"
-		"(C) 2010 Milosch Meriac <meriac@bitmanufaktur.de>\n\r"
-		"\t'a' - set reader address ('t10.254.0.100' for 10.254.0.100)\n\r"
-		"\t'b' - boot again\n\r"
-		"\t'c' - show configuration\n\r"
-		"\t'd' - dump chip registers\n\r"
-		"\t'h' - show help\n\r"
-		"\t'i' - set reader id ('i123')\n\r"
-		"\t'l' - red LED ('l[enable=0, disable=1]')\n\r"
-		"\t'm' - netmask config ('m255.255.0.0')\n\r"
-		"\t'n' - network config ('a[static_ip=0, reader_id=1, dhcp=2]')\n\r"
-		"\t'o' - restore original network settings\n\r"
-		"\t'r' - set router ip\n\r"
-		"\t's' - store configuration\n\r"
-		"\t't' - set target server ip ('t1.2.3.4')\n\r"
-		"\t'u' - reset reader to firmware update mode\n\r"
-		"\n\r\n\r");
+  debug_printf ("\n\nOpenBeacon.org PoE Ethernet II command line help\n"
+		"(C) 2010 Milosch Meriac <meriac@bitmanufaktur.de>\n"
+		"\t'a' - set reader address ('t10.254.0.100' for 10.254.0.100)\n"
+		"\t'b' - boot again\n"
+		"\t'c' - show configuration\n"
+		"\t'd' - dump chip registers\n"
+		"\t'h' - show help\n"
+		"\t'i' - set reader id ('i123')\n"
+		"\t'l' - red LED ('l[enable=0, disable=1]')\n"
+		"\t'm' - netmask config ('m255.255.0.0')\n"
+		"\t'n' - network config ('a[static_ip=0, reader_id=1, dhcp=2]')\n"
+		"\t'o' - restore original network settings\n"
+		"\t'r' - set router ip\n"
+		"\t's' - store configuration\n"
+		"\t't' - set target server ip ('t1.2.3.4')\n"
+		"\t'u' - reset reader to firmware update mode\n"
+		"\n\n");
 }
 
 static int
@@ -108,7 +108,7 @@ vCmdProcess (const char *cmdline)
   switch (cmd)
     {
     case 'B':
-      debug_printf ("rebooting...\n\r");
+      debug_printf ("rebooting...\n");
       vTaskDelay (1000 / portTICK_RATE_MS);
       while (1);
       break;
@@ -117,15 +117,15 @@ vCmdProcess (const char *cmdline)
     	break;*/
     case 'C':
       vNetworkDumpConfig ();
-      debug_printf ("System configuration:\n\r"
-		    "\tReader ID:%i\n\r" "\n\r", env.e.reader_id);
+      debug_printf ("System configuration:\n"
+		    "\tReader ID:%i\n" "\n", env.e.reader_id);
 
       break;
     case 'I':
       if (assign)
 	{
 	  if (env.e.reader_id)
-	    debug_printf ("ERROR: reader id already set!\n\r");
+	    debug_printf ("ERROR: reader id already set!\n");
 	  else
 	    {
 	      t = atoiEx (cmdline);
@@ -133,21 +133,21 @@ vCmdProcess (const char *cmdline)
 		env.e.reader_id = t;
 	      else
 		debug_printf
-		  ("error: reader_id needs to be between 1 and %u (used '%s')\n\r",
+		  ("error: reader_id needs to be between 1 and %u (used '%s')\n",
 		   MAC_IAB_MASK, cmdline);
 	    }
 	}
-      debug_printf ("reader_id=%i\n\r", env.e.reader_id);
+      debug_printf ("reader_id=%i\n", env.e.reader_id);
       break;
     case 'L':
       if (assign)
 	led_setting = atoiEx (cmdline) > 0;
-      debug_printf ("red_led=%i\n\r", led_setting);
+      debug_printf ("red_led=%i\n", led_setting);
       break;
     case 'N':
       if (assign)
 	env.e.ip_autoconfig = atoiEx (cmdline);
-      debug_printf ("ip_autoconfig=%i\n\r", env.e.ip_autoconfig);
+      debug_printf ("ip_autoconfig=%i\n", env.e.ip_autoconfig);
       break;
     case 'O':
       /* backup reader id */
@@ -156,7 +156,7 @@ vCmdProcess (const char *cmdline)
       /* restore reader id */
       env.e.reader_id = t;
 
-      debug_printf ("restoring original settings...\n\r");
+      debug_printf ("restoring original settings...\n");
       vNetworkDumpConfig ();
       vTaskDelay (1000 / portTICK_RATE_MS);
       env_store ();
@@ -164,7 +164,7 @@ vCmdProcess (const char *cmdline)
     case 'R':
       break;
     case 'S':
-      debug_printf ("storing configuration & reboot...\n\r");
+      debug_printf ("storing configuration & reboot...\n");
       vTaskDelay (1000 / portTICK_RATE_MS);
       env_store ();
       while (1);
@@ -172,7 +172,7 @@ vCmdProcess (const char *cmdline)
     case 'T':
       break;
     case 'U':
-      debug_printf ("resetting reader to firmware update mode...\n\r");
+      debug_printf ("resetting reader to firmware update mode...\n");
       vTaskDelay (1000 / portTICK_RATE_MS);
       env_reboot_to_update ();
       break;
@@ -181,7 +181,7 @@ vCmdProcess (const char *cmdline)
       vCmdHelp ();
       break;
     default:
-      debug_printf ("Uknown CMD:'%s'\n\r", cmdline);
+      debug_printf ("Uknown CMD:'%s'\n", cmdline);
     }
 }
 

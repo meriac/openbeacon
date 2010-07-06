@@ -173,6 +173,8 @@ tiny_vsprintf (const char *fmt, va_list args)
       if (*fmt != '%')
 	{
 	  vUSBSendByte(*fmt);
+	  if(*fmt=='\n')
+	    vUSBSendByte('\r');
 	  continue;
 	}
 

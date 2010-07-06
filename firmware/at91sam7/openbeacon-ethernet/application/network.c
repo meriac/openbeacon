@@ -56,8 +56,6 @@ extern err_t ethernetif_init (struct netif *netif);
 /*------------------------------------------------------------*/
 struct netif EMAC_if;
 /*------------------------------------------------------------*/
-static struct ip_addr xIpAddr, xNetMask, xGateway, xServer;
-/*------------------------------------------------------------*/
 
 static inline const char *
 vNetworkNTOA (struct ip_addr ip)
@@ -94,32 +92,34 @@ vNetworkDumpHex (const char *data, unsigned int length)
   while (length--)
     {
       c = (unsigned char) (*data++);
-      debug_printf ("%X%X%s", (c >> 4) & 0xF, c & 0xF, length ? ":" : "\n\r");
+      debug_printf ("%X%X%s", (c >> 4) & 0xF, c & 0xF, length ? ":" : "");
     }
 }
 
 void
 vNetworkDumpConfig (void)
 {
-  debug_printf ("\n\rNetwork Configuration:\n\r"
-		"\t%s configuration [%i]\n\r",
+  debug_printf ("\nNetwork Configuration:\n"
+		"\t%s configuration [%i]\n",
 		vNetworkConfigName (env.e.ip_autoconfig),
 		env.e.ip_autoconfig);
 
   debug_printf ("\tMAC     = ");
   vNetworkDumpHex (cMACAddress, sizeof (cMACAddress));
+  debug_printf ("\n");
 
-  debug_printf ("\tIP      = %s\n\r", vNetworkNTOA (xIpAddr));
-  debug_printf ("\tNetmask = %s\n\r", vNetworkNTOA (xNetMask));
-  debug_printf ("\tGateway = %s\n\r", vNetworkNTOA (xGateway));
-  debug_printf ("\tServer  = %s\n\r", vNetworkNTOA (xServer));
-  debug_printf ("\n\r");
+  debug_printf ("\tIP      = %s\n", vNetworkNTOA (env.e.ip_host));
+  debug_printf ("\tNetmask = %s\n", vNetworkNTOA (env.e.ip_netmask));
+  debug_printf ("\tGateway = %s\n", vNetworkNTOA (env.e.ip_gateway));
+  debug_printf ("\tServer  = %s\n", vNetworkNTOA (env.e.ip_server));
+  debug_printf ("\n");
 }
 
 static void
 vNetworkThread (void *pvParameters)
 {
   (void) pvParameters;
+  struct ip_addr xIpAddr, xNetMask, xGateway, xServer;
 
   /* Initialize lwIP and its interface layer. */
   lwip_init ();
@@ -133,6 +133,7 @@ vNetworkThread (void *pvParameters)
       xGateway = env.e.ip_gateway;
       xServer = env.e.ip_server;
       break;
+
     case IP_AUTOCONFIG_READER_ID:
       xIpAddr.addr =
 	htonl (ntohl (env.e.ip_host.addr & env.e.ip_netmask.addr) +
@@ -141,6 +142,7 @@ vNetworkThread (void *pvParameters)
       xGateway = env.e.ip_gateway;
       xServer = env.e.ip_server;
       break;
+
     default:
       //case IP_AUTOCONFIG_DHCP:
       IP4_ADDR (&xIpAddr, 0, 0, 0, 0);

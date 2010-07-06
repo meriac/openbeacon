@@ -124,7 +124,7 @@
 #define TASK_NRF_STACK		( 128 )
 
 #define TASK_NET_PRIORITY	( tskIDLE_PRIORITY + 4 )
-#define TASK_NET_STACK		( 1024 )
+#define TASK_NET_STACK		( 2048 )
 
 /*-------------------------------*/
 /* configuration structure       */

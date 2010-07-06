@@ -47,7 +47,7 @@ APP_SRC= \
 all: $(TARGET).bin
 
 app_clean:
-	find application network -name '*.o' -exec rm \{\} \;
-	find application network -name '*~' -exec rm \{\} \;
+	find application network config -name '*.o' -exec rm \{\} \;
+	find application network config -name '*~'  -exec rm \{\} \;
 
 include ../core/Makefile.rules
