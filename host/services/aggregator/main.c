@@ -640,7 +640,7 @@ int main(int count, char *strings[])
 	
 				if(pr!=NULL) {
 					int n;
-					printf("0x%08X %d 0x%08X 0x%02X %d\n", pr->m_address, ntohl(tbeacon->oid), ntohl(tbeacon->seq), tbeacon->flags, tbeacon->strength);
+					printf("RX:%s %d 0x%08X 0x%02X %d\n", inet_ntoa(htonl(pr->m_address)), ntohl(tbeacon->oid), ntohl(tbeacon->seq), tbeacon->flags, tbeacon->strength);
 				
 					structSighting * ps=&pt->m_ringbufferSighting[pt->m_nValidFifo & (SIGHTING_FIFO_SIZE-1)];
 					ps->m_timestamp=timeCurrent;
