@@ -24,7 +24,6 @@ CFLAGS= \
 -Wno-strict-aliasing  \
 -D CORTEXM3_GCC  \
 -mcpu=cortex-m3 \
--mthumb \
 -msoft-float \
 -mthumb \
 -fno-common \
