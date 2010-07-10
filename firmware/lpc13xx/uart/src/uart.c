@@ -137,6 +137,13 @@ void UARTInit(uint32_t baudrate)
     return;
 }
 
+
+void UARTSendChar(uint8_t data)
+{
+	while (!(LPC_UART->LSR & LSR_THRE));
+	LPC_UART->THR = data;
+}
+
 /*****************************************************************************
 ** Function name:		UARTSend
 **

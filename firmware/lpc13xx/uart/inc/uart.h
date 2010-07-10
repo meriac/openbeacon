@@ -45,9 +45,10 @@
 #define RS485_DCTRL		(0x1<<4)
 #define RS485_OINV		(0x1<<5)
 
-void UARTInit(uint32_t Baudrate);
-void UART_IRQHandler(void);
-void UARTSend(uint8_t * BufferPtr, uint32_t Length);
+extern void UARTInit(uint32_t Baudrate);
+extern void UART_IRQHandler(void);
+extern void UARTSendChar(uint8_t data);
+extern void UARTSend(uint8_t * BufferPtr, uint32_t Length);
 
 #endif/* end __UART_H */
 /*****************************************************************************

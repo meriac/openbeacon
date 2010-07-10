@@ -8,10 +8,12 @@
  *   2008.08.20  ver 1.00    Preliminary version, first Release
  *
 ******************************************************************************/
-#include "LPC13xx.h"
-#include "config.h"
-#include "gpio.h"
-#include "uart.h"
+
+#include <LPC13xx.h>
+#include <config.h>
+#include <gpio.h>
+#include <uart.h>
+#include <debug_printf.h>
 
 extern volatile uint32_t UARTCount;
 extern volatile uint8_t UARTBuffer[BUFSIZE];
@@ -39,6 +41,8 @@ int main(void)
 	    UARTSend((uint8_t *) UARTBuffer, UARTCount);
 	    UARTCount = 0;
 	    LPC_UART->IER = IER_THRE | IER_RLS | IER_RBR;	/* Re-enable RBR */
+
+	    debug_printf("Hello World!\n");
 
 	    GPIOSetValue(LED_PORT, LED_BIT, LED_ON);
 	    for(i=0;i<10000;i++);
