@@ -18,7 +18,7 @@
 (3) TX(Master) Only:	LOOPBACK_MODE=0, SSP_SLAVE=0, TX_RX_ONLY=1, USE_CS=1;
 (4) RX(Slave) Only:		LOOPBACK_MODE=0, SSP_SLAVE=1, TX_RX_ONLY=0, USE_CS=1 */
 
-#define LOOPBACK_MODE	0	/* 1 is loopback, 0 is normal operation. */
+#define LOOPBACK_MODE		0	/* 1 is loopback, 0 is normal operation. */
 #define SSP_SLAVE		0	/* 1 is SLAVE mode, 0 is master mode */
 #define TX_RX_ONLY		0	/* 1 is TX or RX only depending on SSP_SLAVE
 					   flag, 0 is either loopback mode or communicate

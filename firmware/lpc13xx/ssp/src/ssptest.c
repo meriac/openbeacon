@@ -11,74 +11,16 @@
 #include "LPC13xx.h"		/* LPC13xx definitions */
 #include "gpio.h"
 #include "ssp.h"
-#if SSP_DEBUG
 #include "uart.h"
-#endif
+#include "debug_printf.h"
 
 uint8_t src_addr[SSP_BUFSIZE];
 uint8_t dest_addr[SSP_BUFSIZE];
 
-/*****************************************************************************
-** Function name:		LoopbackTest
-**
-** Descriptions:		Loopback test
-**				
-** parameters:			None
-** Returned value:		None
-** 
-*****************************************************************************/
-void
-LoopbackTest (void)
-{
-  uint32_t i;
-
-#if !USE_CS
-  /* Set SSEL pin to output low. */
-  GPIOSetValue (PORT0, 2, 0);
-#endif
-  i = 0;
-  while (i <= SSP_BUFSIZE)
-    {
-      /* to check the RXIM and TXIM interrupt, I send a block data at one time 
-         based on the FIFOSIZE(8). */
-      SSPSend ((uint8_t *) & src_addr[i], FIFOSIZE);
-      /* If RX interrupt is enabled, below receive routine can be
-         also handled inside the ISR. */
-      SSPReceive ((uint8_t *) & dest_addr[i], FIFOSIZE);
-      i += FIFOSIZE;
-    }
-#if !USE_CS
-  /* Set SSEL pin to output high. */
-  GPIOSetValue (PORT0, 2, 1);
-#endif
-
-  /* verifying write and read data buffer. */
-  for (i = 0; i < SSP_BUFSIZE; i++)
-    {
-      if (src_addr[i] != dest_addr[i])
-	{
-	  while (1);		/* Verification failed */
-	}
-    }
-  return;
-}
-
-/*****************************************************************************
-** Function name:		SEEPROMTest
-**
-** Descriptions:		Serial EEPROM(Atmel 25xxx) test
-**				
-** parameters:			None
-** Returned value:		None
-** 
-*****************************************************************************/
 void
 SEEPROMTest (void)
 {
   uint32_t i, timeout;
-#if SSP_DEBUG
-  uint8_t temp[2];
-#endif
 
   LPC_IOCON->PIO0_2 &= ~0x07;	/* SSP SSEL is a GPIO pin */
   GPIOSetValue (PORT0, 2, 1);
@@ -156,36 +98,9 @@ SEEPROMTest (void)
     {
       if (src_addr[i] != dest_addr[i])
 	{
-#if SSP_DEBUG
-	  temp[0] = (dest_addr[i] & 0xF0) >> 4;
-	  if ((temp[0] >= 0) && (temp[0] <= 9))
-	    {
-	      temp[0] += 0x30;
-	    }
-	  else
-	    {
-	      temp[0] -= 0x0A;
-	      temp[0] += 0x41;
-	    }
-	  temp[1] = dest_addr[i] & 0x0F;
-	  if ((temp[1] >= 0) && (temp[1] <= 9))
-	    {
-	      temp[1] += 0x30;
-	    }
-	  else
-	    {
-	      temp[1] -= 0x0A;
-	      temp[1] += 0x41;
-	    }
-	  UARTSend ((uint8_t *) & temp[0], 2);
-	  UARTSend ("\r\n", 2);
-#endif
 	  while (1);		/* Verification failed */
 	}
     }
-#if SSP_DEBUG
-  UARTSend ("PASS\r\n", 6);
-#endif
   return;
 }
 
@@ -195,53 +110,22 @@ SEEPROMTest (void)
 int
 main (void)
 {
-  uint32_t i;
-
   SystemInit ();
 
-#if SSP_DEBUG
   UARTInit (115200);
-#endif
 
   SSPInit ();			/* initialize SSP port, share pins with SPI0
 				   on port0(p0.15-18). */
-  for (i = 0; i < SSP_BUFSIZE; i++)
-    {
-      src_addr[i] = (uint8_t) i;
-      dest_addr[i] = 0;
-    }
 
-#if TX_RX_ONLY
-  /* For the inter-board communication, one board is set as
-     master transmit, the other is set to slave receive. */
-#if SSP_SLAVE
-  /* Slave receive */
-  SSPReceive ((uint8_t *) dest_addr, SSP_BUFSIZE);
-  for (i = 0; i < SSP_BUFSIZE; i++)
-    {
-      if (src_addr[i] != dest_addr[i])
-	{
-	  while (1);		/* Verification failure, fatal error */
-	}
-    }
-#else
-  /* Master transmit */
-  SSPSend ((uint8_t *) src_addr, SSP_BUFSIZE);
-#endif
-#else
   /* TX_RX_ONLY=0, it's either an internal loopback test
      within SSP peripheral or communicate with a serial EEPROM. */
-#if LOOPBACK_MODE
-  LoopbackTest ();
-#else
   SEEPROMTest ();
   /* If JTAG TCK is used as SSP clock, change the setting before
      serial EEPROM test, restore after the test. */
-#ifdef __JTAG_DISABLED
-  LPC_IOCON->JTAG_TCK_PIO0_10 &= ~0x07;	/* Restore JTAG_TCK */
-#endif
-#endif /* endif NOT LOOPBACK_MODE */
-#endif /* endif NOT TX_RX_ONLY */
+  while(1)
+  {
+    debug_printf("Hello World!\n\r");
+  }
   return 0;
 }
 
