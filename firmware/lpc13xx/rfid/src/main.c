@@ -14,6 +14,7 @@
 #include <gpio.h>
 #include <uart.h>
 #include <debug_printf.h>
+#include "rfid.h"
 
 extern volatile uint32_t UARTCount;
 extern volatile uint8_t UARTBuffer[BUFSIZE];
@@ -34,6 +35,9 @@ int main(void)
 
     /* Set LED port pin to output */
     GPIOSetDir(LED_PORT, LED_BIT, 1);
+
+    /* Init RFID */
+    rfid_init();
 
     while (1) {			/* Loop forever */
 	if (UARTCount != 0) {
