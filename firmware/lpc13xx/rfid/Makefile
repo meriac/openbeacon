@@ -8,7 +8,7 @@ APP_CFLAGS=-Iinc -std=gnu99 -fgnu89-inline -D__USE_CMSIS
 APP_LDFLAGS=-lm
 
 APP_SRC= \
-  src/uarttest.c \
+  src/main.c \
   src/cr_startup_lpc13.c \
   src/debug_printf.c \
   src/gpio.c \
