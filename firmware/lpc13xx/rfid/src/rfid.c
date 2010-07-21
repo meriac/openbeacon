@@ -120,7 +120,8 @@ rfid_write (const void *data, int len)
 {
   int i;
   static const unsigned char preamble[] = { 0x01, 0x00, 0x00, 0xFF };
-  static const unsigned char ack[PN532_ACK_NACK_SIZE] = { 0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00 };
+  static const unsigned char ack[PN532_ACK_NACK_SIZE] =
+    { 0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00 };
   unsigned char response[PN532_ACK_NACK_SIZE];
   const unsigned char *p = preamble;
   unsigned char tfi = 0xD4, c;
@@ -128,15 +129,13 @@ rfid_write (const void *data, int len)
   /* enable chip select */
   rfid_cs (0);
 
-  debug_printf ("SPI send tx:");
-
   p = preamble;			/* Praeamble */
   for (i = 0; i < (int) sizeof (preamble); i++)
     rfid_tx (*p++);
   rfid_tx (len + 1);		/* LEN */
   rfid_tx (0x100 - (len + 1));	/* LCS */
   rfid_tx (tfi);		/* TFI */
-				/* PDn */
+  /* PDn */
   p = (const unsigned char *) data;
   while (len--)
     {
@@ -149,20 +148,18 @@ rfid_write (const void *data, int len)
 
   /* release chip select */
   rfid_cs (1);
-  debug_printf (" -> DONE\n");
 
   /* eat ack */
-  debug_printf("SPI read ack\n");
-  rfid_read(response,sizeof(response));
+  rfid_read (response, sizeof (response));
 
-  return memcmp(response,ack,PN532_ACK_NACK_SIZE)==0;
+  return memcmp (response, ack, PN532_ACK_NACK_SIZE) == 0;
 }
 
 void
 rfid_init (void)
 {
-  volatile int i;
-  unsigned char data;
+  int i;
+  unsigned char data[13];
 
   debug_printf ("Hello RFID!\n");
 
@@ -197,15 +194,18 @@ rfid_init (void)
 
   while (1)
     {
-      for (i = 0; i < 10000; i++);
-      debug_printf ("Status: 0x%02X\n", rfid_status ());
-
-      for (i = 0; i < 10000; i++);
-      data = 0x02;
-      if(rfid_write (&data, sizeof (data)))
-        debug_printf("->ACK\n");
+      /* read firmware revision */
+      debug_printf ("\nreading firmware version...\n");
+      data[0] = 0x02;
+      if (rfid_write (&data, 1))
+	{
+	  debug_printf ("getting result\n");
+	  rfid_read (data, sizeof (data));
+	  for (i = 0; i < (int)sizeof (data); i++)
+	    debug_printf (" %02X", data[i]);
+	  debug_printf ("\n");
+	}
+      else
+	debug_printf ("->NACK!\n");
     }
-
-  data = 0x02;
-  rfid_write (&data, sizeof (data));
 }
