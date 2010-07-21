@@ -1,6 +1,6 @@
 /***************************************************************
  *
- * OpenBeacon.org - main file for PN532 demo softare
+ * OpenBeacon.org - main file for OpenPCD2 basic demo
  *
  * Copyright 2010 Milosch Meriac <meriac@openbeacon.de>
  *
