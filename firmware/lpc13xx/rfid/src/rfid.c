@@ -134,10 +134,7 @@ rfid_write (const void *data, int len)
 
   /* wait till PN532 response is ready */
   while ((rfid_status()&1)==0)
-  {
     for (i = 0; i < 100000; i++);
-    debug_printf("waiting for status\n");
-  }
 
   // eat ack
   rfid_cs (0);
