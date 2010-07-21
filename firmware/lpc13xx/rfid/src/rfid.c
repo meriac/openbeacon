@@ -1,8 +1,12 @@
 #include <LPC13xx.h>
+#include <string.h>
 #include <config.h>
 #include <gpio.h>
 #include <uart.h>
 #include <debug_printf.h>
+
+
+#define PN532_ACK_NACK_SIZE 6
 
 #define RESET_PORT 0
 #define RESET_PIN 0
@@ -50,10 +54,10 @@ static unsigned char
 rfid_tx (unsigned char data)
 {
   while ((LPC_SSP->SR & 0x02) == 0);
-  LPC_SSP->DR = BIT_REVERSE(data);
+  LPC_SSP->DR = BIT_REVERSE (data);
   while ((LPC_SSP->SR & 0x04) == 0);
-  data = BIT_REVERSE(LPC_SSP->DR);
-  return data ;
+  data = BIT_REVERSE (LPC_SSP->DR);
+  return data;
 }
 
 static void
@@ -80,32 +84,51 @@ rfid_status (void)
   return res;
 }
 
-/*
-static void rfid_read(unsigned char* data,unsigned char size)
+static void
+rfid_wait_response (void)
 {
-    rfid_tx(0x03);
-    while(size--)
-	*data++ = rfid_tx(0x00);
+  /* wait till PN532 response is ready */
+  while ((rfid_status () & 1) == 0);
 }
-*/
+
+static void
+rfid_read (unsigned char *data, unsigned char size)
+{
+  /* wait for PN532 response */
+  rfid_wait_response ();
+
+  /* enable chip select */
+  rfid_cs (0);
+
+  /* read from FIFO command */
+  rfid_tx (0x03);
+  while (size--)
+    *data++ = rfid_tx (0x00);
+
+  /* release chip select */
+  rfid_cs (1);
+}
+
 static void
 rfid_reset (unsigned char reset)
 {
   GPIOSetValue (RESET_PORT, RESET_PIN, reset);
 }
 
-static void
+static unsigned char
 rfid_write (const void *data, int len)
 {
   int i;
   static const unsigned char preamble[] = { 0x01, 0x00, 0x00, 0xFF };
+  static const unsigned char ack[PN532_ACK_NACK_SIZE] = { 0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00 };
+  unsigned char response[PN532_ACK_NACK_SIZE];
   const unsigned char *p = preamble;
   unsigned char tfi = 0xD4, c;
 
   /* enable chip select */
   rfid_cs (0);
 
-  debug_printf("SPI send tx:");
+  debug_printf ("SPI send tx:");
 
   p = preamble;			/* Praeamble */
   for (i = 0; i < (int) sizeof (preamble); i++)
@@ -113,7 +136,7 @@ rfid_write (const void *data, int len)
   rfid_tx (len + 1);		/* LEN */
   rfid_tx (0x100 - (len + 1));	/* LCS */
   rfid_tx (tfi);		/* TFI */
-
+				/* PDn */
   p = (const unsigned char *) data;
   while (len--)
     {
@@ -124,28 +147,15 @@ rfid_write (const void *data, int len)
   rfid_tx (0x100 - tfi);	/* DCS */
   rfid_tx (0x00);		/* Postamble */
 
-  /* wait till TX done */
-  while ((LPC_SSP->SR & 0x01) == 0);
-
   /* release chip select */
   rfid_cs (1);
+  debug_printf (" -> DONE\n");
 
-  debug_printf(" -> DONE\nSPI send rx:\n");
+  /* eat ack */
+  debug_printf("SPI read ack\n");
+  rfid_read(response,sizeof(response));
 
-  /* wait till PN532 response is ready */
-  while ((rfid_status()&1)==0)
-    for (i = 0; i < 100000; i++);
-
-  // eat ack
-  rfid_cs (0);
-  rfid_tx (0x03);
-  for (i = 0; i < 6; i++)
-    debug_printf(" r0x%02X",rfid_tx (0x00));
-  /* wait till TX done */
-  while ((LPC_SSP->SR & 0x01) == 0);
-  rfid_cs (1);
-
-  debug_printf(" -> DONE\n");
+  return memcmp(response,ack,PN532_ACK_NACK_SIZE)==0;
 }
 
 void
@@ -192,7 +202,8 @@ rfid_init (void)
 
       for (i = 0; i < 10000; i++);
       data = 0x02;
-      rfid_write (&data, sizeof (data));
+      if(rfid_write (&data, sizeof (data)))
+        debug_printf("->ACK\n");
     }
 
   data = 0x02;
