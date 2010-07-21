@@ -182,6 +182,9 @@ rfid_write (const void *data, int len)
   const unsigned char *p = preamble;
   unsigned char tfi = 0xD4, c;
 
+  if (!data)
+    len = 0xFF;
+
   /* enable chip select */
   rfid_cs (0);
 
@@ -209,11 +212,52 @@ rfid_write (const void *data, int len)
   return rfid_read (NULL, 0) == 0;
 }
 
+static void
+rfid_hexdump (const void *buffer, int size)
+{
+  int i;
+  const unsigned char *p = (unsigned char *) buffer;
+
+  for (i = 0; i < size; i++)
+    {
+      if (i)
+	{
+	  if ((i & 3) == 0)
+	    debug_printf (" ");
+	  if ((i & 7) == 0)
+	    debug_printf (" ");
+	}
+      debug_printf (" %02X", *p++);
+    }
+  debug_printf (" [size=%02i]\n", size);
+}
+
+static int
+rfid_execute (void *data, unsigned int isize, unsigned int osize)
+{
+  int res;
+  if (rfid_write (data, isize))
+    {
+      debug_printf ("getting result\n");
+      res = rfid_read (data, osize);
+      if (res > 0)
+	rfid_hexdump (data, res);
+      else
+	debug_printf ("error: res=%i\n", res);
+    }
+  else
+    {
+      debug_printf ("->NACK!\n");
+      res = -1;
+    }
+  return res;
+}
+
 void
 rfid_init (void)
 {
-  int i, res;
-  unsigned char data[13];
+  int i;
+  unsigned char data[80];
 
   debug_printf ("Hello RFID!\n");
 
@@ -246,24 +290,32 @@ rfid_init (void)
   for (i = 0; i < 10000; i++);
   rfid_reset (1);
 
+  /* fake USB connect */
+  GPIOSetDir (0, 6, 1);
+
   while (1)
     {
       /* read firmware revision */
       debug_printf ("\nreading firmware version...\n");
-      data[0] = 0x02;
-      if (rfid_write (&data, 1))
-	{
-	  debug_printf ("getting result\n");
-	  res = rfid_read (data, sizeof (data));
-	  debug_printf ("res=%i ", res);
-	  if (res > 0)
-	    {
-	      for (i = 0; i < res; i++)
-		debug_printf (" %02X", data[i]);
-	    }
-	  debug_printf ("\n");
-	}
-      else
-	debug_printf ("->NACK!\n");
+      data[0] = 0x02;		/* cmd: GetFirmWareVersion  */
+      rfid_execute (&data, 1, sizeof (data));
+
+      /* detect cards in field */
+      debug_printf ("\nchecking for cards...\n");
+      data[0] = 0x4A;		/* cmd: InListPassiveTarget */
+      data[1] = 0x02;		/* MaxTg - maximum cards    */
+      data[2] = 0x00;		/* BrTy - 106 kbps type A   */
+
+      /* fake blinking with USB-connect */
+      GPIOSetValue (0, 6, 1);
+      rfid_execute (&data, 3, sizeof (data));
+      GPIOSetValue (0, 6, 0);
+
+      /* turning field off */
+      debug_printf ("\nturning field off again...\n");
+      data[0] = 0x32;		/* cmd: RFConfiguration     */
+      data[1] = 0x01;		/* CfgItem = 0x01           */
+      data[2] = 0x00;		/* RF Field = off           */
+      rfid_execute (&data, 3, sizeof (data));
     }
 }

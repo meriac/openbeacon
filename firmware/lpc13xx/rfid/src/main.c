@@ -8,15 +8,16 @@
 extern volatile uint32_t UARTCount;
 extern volatile uint8_t UARTBuffer[BUFSIZE];
 
-int main(void)
+int
+main (void)
 {
-    /* UART setup */
-    UARTInit(115200);
+  /* UART setup */
+  UARTInit (115200);
 
-    /* GPIO setup */
-    GPIOInit();
-    GPIOSetDir(LED_PORT, LED_BIT, 1);
+  /* GPIO setup */
+  GPIOInit ();
+  GPIOSetDir (LED_PORT, LED_BIT, 1);
 
-    /* Init RFID */
-    rfid_init();
+  /* Init RFID */
+  rfid_init ();
 }
