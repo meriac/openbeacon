@@ -22,5 +22,8 @@
 */
 #ifndef __RFID_H__
 #define __RFID_H__
+
 extern void rfid_init(void);
+extern int rfid_execute (void *data, unsigned int isize, unsigned int osize);
+
 #endif/*__RFID_H__*/

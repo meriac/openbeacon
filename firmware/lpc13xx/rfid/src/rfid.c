@@ -250,7 +250,7 @@ rfid_hexdump (const void *buffer, int size)
   debug_printf (" [size=%02i]\n", size);
 }
 
-static int
+int
 rfid_execute (void *data, unsigned int isize, unsigned int osize)
 {
   int res;
@@ -274,10 +274,7 @@ rfid_execute (void *data, unsigned int isize, unsigned int osize)
 void
 rfid_init (void)
 {
-  int i;
-  unsigned char data[80];
-
-  debug_printf ("Hello RFID!\n");
+  volatile int i;
 
   /* reset SSP peripheral */
   LPC_SYSCON->PRESETCTRL = 0x01;
@@ -307,33 +304,4 @@ rfid_init (void)
   GPIOSetDir (RESET_PORT, RESET_PIN, 1);
   for (i = 0; i < 10000; i++);
   rfid_reset (1);
-
-  /* fake USB connect */
-  GPIOSetDir (0, 6, 1);
-
-  while (1)
-    {
-      /* read firmware revision */
-      debug_printf ("\nreading firmware version...\n");
-      data[0] = 0x02;		/* cmd: GetFirmWareVersion  */
-      rfid_execute (&data, 1, sizeof (data));
-
-      /* detect cards in field */
-      debug_printf ("\nchecking for cards...\n");
-      data[0] = 0x4A;		/* cmd: InListPassiveTarget */
-      data[1] = 0x02;		/* MaxTg - maximum cards    */
-      data[2] = 0x00;		/* BrTy - 106 kbps type A   */
-
-      /* fake blinking with USB-connect */
-      GPIOSetValue (0, 6, 1);
-      rfid_execute (&data, 3, sizeof (data));
-      GPIOSetValue (0, 6, 0);
-
-      /* turning field off */
-      debug_printf ("\nturning field off again...\n");
-      data[0] = 0x32;		/* cmd: RFConfiguration     */
-      data[1] = 0x01;		/* CfgItem = 0x01           */
-      data[2] = 0x00;		/* RF Field = off           */
-      rfid_execute (&data, 3, sizeof (data));
-    }
 }
