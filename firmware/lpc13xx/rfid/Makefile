@@ -9,11 +9,7 @@ APP_LDFLAGS=-lm
 
 APP_SRC= \
   src/main.c \
-  src/rfid.c \
-  src/cr_startup_lpc13.c \
-  src/debug_printf.c \
-  src/gpio.c \
-  src/uart.c
+  src/rfid.c
 
 APP_SRC+=$(IMAGES_C)
 

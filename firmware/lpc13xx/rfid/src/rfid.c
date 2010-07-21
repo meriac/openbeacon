@@ -1,9 +1,27 @@
-#include <LPC13xx.h>
-#include <string.h>
-#include <config.h>
-#include <gpio.h>
-#include <uart.h>
-#include <debug_printf.h>
+/***************************************************************
+ *
+ * OpenBeacon.org - PN532 routines for LPC13xx based OpenPCD2
+ *
+ * Copyright 2010 Milosch Meriac <meriac@openbeacon.de>
+ *
+ ***************************************************************
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; version 2.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+*/
+#include <openbeacon.h>
+#include "rfid.h"
 
 #define PN532_FIFO_SIZE 64
 #define PN532_ACK_NACK_SIZE 6

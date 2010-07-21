@@ -1,6 +1,6 @@
 /***************************************************************
  *
- * OpenBeacon.org - config file
+ * OpenBeacon.org - PN532 routines for LPC13xx based OpenPCD2
  *
  * Copyright 2010 Milosch Meriac <meriac@openbeacon.de>
  *
@@ -20,13 +20,7 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 */
-
-#ifndef __CONFIG_H__
-#define __CONFIG_H__
-
-#define LED_PORT 1	/* Port for led                      */
-#define LED_BIT 9	/* Bit on port for led               */
-#define LED_ON 1	/* Level to set port to turn on led  */
-#define LED_OFF 0	/* Level to set port to turn off led */
-
-#endif/*__CONFIG_H__*/
+#ifndef __RFID_H__
+#define __RFID_H__
+extern void rfid_init(void);
+#endif/*__RFID_H__*/
