@@ -9,6 +9,7 @@
 #define CS_PORT 0
 #define CS_PIN 2
 
+/* TODO: replace with bit reverse and shift (bitr/shr) */
 #define BIT_REVERSE(x) g_bit_reverse[(unsigned char)x]
 static const unsigned char g_bit_reverse[] = {
   0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0,
@@ -51,7 +52,8 @@ rfid_tx (unsigned char data)
   while ((LPC_SSP->SR & 0x02) == 0);
   LPC_SSP->DR = BIT_REVERSE(data);
   while ((LPC_SSP->SR & 0x04) == 0);
-  return (unsigned char) BIT_REVERSE(LPC_SSP->DR);
+  data = BIT_REVERSE(LPC_SSP->DR);
+  return data ;
 }
 
 static void
@@ -103,6 +105,8 @@ rfid_write (const void *data, int len)
   /* enable chip select */
   rfid_cs (0);
 
+  debug_printf("SPI send tx:");
+
   p = preamble;			/* Praeamble */
   for (i = 0; i < (int) sizeof (preamble); i++)
     rfid_tx (*p++);
@@ -126,13 +130,25 @@ rfid_write (const void *data, int len)
   /* release chip select */
   rfid_cs (1);
 
-  // wait till PN532 response is ready
-  while (rfid_status () != 1);
+  debug_printf(" -> DONE\nSPI send rx:\n");
+
+  /* wait till PN532 response is ready */
+  while ((rfid_status()&1)==0)
+  {
+    for (i = 0; i < 100000; i++);
+    debug_printf("waiting for status\n");
+  }
 
   // eat ack
+  rfid_cs (0);
   rfid_tx (0x03);
   for (i = 0; i < 6; i++)
-    rfid_tx (0x00);
+    debug_printf(" r0x%02X",rfid_tx (0x00));
+  /* wait till TX done */
+  while ((LPC_SSP->SR & 0x01) == 0);
+  rfid_cs (1);
+
+  debug_printf(" -> DONE\n");
 }
 
 void
@@ -176,10 +192,12 @@ rfid_init (void)
     {
       for (i = 0; i < 10000; i++);
       debug_printf ("Status: 0x%02X\n", rfid_status ());
+
+      for (i = 0; i < 10000; i++);
+      data = 0x02;
+      rfid_write (&data, sizeof (data));
     }
 
   data = 0x02;
   rfid_write (&data, sizeof (data));
-
 }
-
