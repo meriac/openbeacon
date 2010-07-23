@@ -24,6 +24,7 @@
 #define __RFID_H__
 
 extern void rfid_init(void);
-extern int rfid_execute (void *data, unsigned int isize, unsigned int osize);
+extern int rfid_read (void *data, unsigned char size);
+extern int rfid_write (const void *data, int len);
 
 #endif/*__RFID_H__*/

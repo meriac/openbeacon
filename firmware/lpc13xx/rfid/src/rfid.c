@@ -79,21 +79,14 @@ rfid_status (void)
   return res;
 }
 
-static void
-rfid_wait_response (void)
-{
-  /* wait till PN532 response is ready */
-  while ((rfid_status () & 1) == 0);
-}
-
-static int
+int
 rfid_read (void *data, unsigned char size)
 {
   int res;
   unsigned char *p, c, pkt_size, crc, prev, t;
 
-  /* wait for PN532 response */
-  rfid_wait_response ();
+  /* wait till PN532 response is ready */
+  while ((rfid_status () & 1) == 0);
 
   /* enable chip select */
   rfid_cs (0);
@@ -192,7 +185,7 @@ rfid_read (void *data, unsigned char size)
   return res;
 }
 
-static unsigned char
+int
 rfid_write (const void *data, int len)
 {
   int i;
@@ -227,48 +220,7 @@ rfid_write (const void *data, int len)
   rfid_cs (1);
 
   /* check for ack */
-  return rfid_read (NULL, 0) == 0;
-}
-
-static void
-rfid_hexdump (const void *buffer, int size)
-{
-  int i;
-  const unsigned char *p = (unsigned char *) buffer;
-
-  for (i = 0; i < size; i++)
-    {
-      if (i)
-	{
-	  if ((i & 3) == 0)
-	    debug_printf (" ");
-	  if ((i & 7) == 0)
-	    debug_printf (" ");
-	}
-      debug_printf (" %02X", *p++);
-    }
-  debug_printf (" [size=%02i]\n", size);
-}
-
-int
-rfid_execute (void *data, unsigned int isize, unsigned int osize)
-{
-  int res;
-  if (rfid_write (data, isize))
-    {
-      debug_printf ("getting result\n");
-      res = rfid_read (data, osize);
-      if (res > 0)
-	rfid_hexdump (data, res);
-      else
-	debug_printf ("error: res=%i\n", res);
-    }
-  else
-    {
-      debug_printf ("->NACK!\n");
-      res = -1;
-    }
-  return res;
+  return rfid_read (NULL, 0);
 }
 
 void

@@ -23,6 +23,42 @@
 #include <openbeacon.h>
 #include "rfid.h"
 
+static void
+rfid_hexdump (const void *buffer, int size)
+{
+  int i;
+  const unsigned char *p = (unsigned char *) buffer;
+
+  for (i = 0; i < size; i++)
+    {
+      if (i && ((i & 3) == 0))
+	debug_printf (" ");
+      debug_printf (" %02X", *p++);
+    }
+  debug_printf (" [size=%02i]\n", size);
+}
+
+static int
+rfid_execute (void *data, unsigned int isize, unsigned int osize)
+{
+  int res;
+  if (rfid_write (data, isize))
+    {
+      debug_printf ("getting result\n");
+      res = rfid_read (data, osize);
+      if (res > 0)
+	rfid_hexdump (data, res);
+      else
+	debug_printf ("error: res=%i\n", res);
+    }
+  else
+    {
+      debug_printf ("->NACK!\n");
+      res = -1;
+    }
+  return res;
+}
+
 int
 main (void)
 {
@@ -34,7 +70,7 @@ main (void)
   /* GPIO setup */
   GPIOInit ();
   GPIOSetDir (LED_PORT, LED_BIT, 1);
-  GPIOSetDir (0, 6, 1); /* fake USB connect */
+  GPIOSetDir (0, 6, 1);		/* fake USB connect */
 
   /* Init RFID */
   rfid_init ();
