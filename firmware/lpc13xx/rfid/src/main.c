@@ -21,6 +21,7 @@
 
 */
 #include <openbeacon.h>
+#include "hid.h"
 #include "rfid.h"
 
 static void
@@ -74,6 +75,9 @@ main (void)
 
   /* Init RFID */
   rfid_init ();
+
+  /* Init USB HID interface */
+  hid_init ();
 
   /* Hello World */
   debug_printf ("Hello RFID!\n");

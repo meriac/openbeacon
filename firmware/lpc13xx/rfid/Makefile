@@ -9,6 +9,7 @@ APP_LDFLAGS=-lm
 
 APP_SRC= \
   src/main.c \
+  src/hid.c \
   src/rfid.c
 
 APP_SRC+=$(IMAGES_C)
