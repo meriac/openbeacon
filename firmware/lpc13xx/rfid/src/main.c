@@ -24,6 +24,20 @@
 #include "hid.h"
 #include "rfid.h"
 
+void
+GetInReport (uint8_t src[], uint32_t length)
+{
+  (void) src;
+  (void) length;
+}
+
+void
+SetOutReport (uint8_t dst[], uint32_t length)
+{
+  (void) dst;
+  (void) length;
+}
+
 static void
 rfid_hexdump (const void *buffer, int size)
 {
@@ -65,19 +79,14 @@ main (void)
 {
   unsigned char data[80];
 
+  /* Init USB HID interface */
+  hid_init ();
+
   /* UART setup */
   UARTInit (115200);
 
-  /* GPIO setup */
-  GPIOInit ();
-  GPIOSetDir (LED_PORT, LED_BIT, 1);
-  GPIOSetDir (0, 6, 1);		/* fake USB connect */
-
   /* Init RFID */
   rfid_init ();
-
-  /* Init USB HID interface */
-  hid_init ();
 
   /* Hello World */
   debug_printf ("Hello RFID!\n");
@@ -95,11 +104,7 @@ main (void)
       data[0] = 0x4A;		/* cmd: InListPassiveTarget */
       data[1] = 0x02;		/* MaxTg - maximum cards    */
       data[2] = 0x00;		/* BrTy - 106 kbps type A   */
-
-      /* fake blinking with USB-connect */
-      GPIOSetValue (0, 6, 1);
       rfid_execute (&data, 3, sizeof (data));
-      GPIOSetValue (0, 6, 0);
 
       /* turning field off */
       debug_printf ("\nturning field off again...\n");

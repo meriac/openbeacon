@@ -254,6 +254,6 @@ rfid_init (void)
   /* Initialize RESET line */
   rfid_reset (0);
   GPIOSetDir (RESET_PORT, RESET_PIN, 1);
-  for (i = 0; i < 10000; i++);
+  for (i = 0; i < 100000; i++);
   rfid_reset (1);
 }

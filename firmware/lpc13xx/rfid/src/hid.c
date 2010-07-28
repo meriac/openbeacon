@@ -36,20 +36,6 @@ USB_IRQHandler (void)
   (*rom)->pUSBD->isr ();
 }
 
-void
-GetInReport (uint8_t src[], uint32_t length)
-{
-  (void) src;
-  (void) length;
-}
-
-void
-SetOutReport (uint8_t dst[], uint32_t length)
-{
-  (void) dst;
-  (void) length;
-}
-
 /* USB String Descriptor (optional) */
 const uint8_t USB_StringDescriptor[] = {
   /* Index 0x00: LANGID Codes */
@@ -90,8 +76,8 @@ hid_init (void)
   HidDevInfo.idProduct = USB_PROD_ID;
   HidDevInfo.bcdDevice = USB_DEVICE;
   HidDevInfo.StrDescPtr = (uint32_t) & USB_StringDescriptor[0];
-  HidDevInfo.InReportCount = 1;
-  HidDevInfo.OutReportCount = 1;
+  HidDevInfo.InReportCount = USB_HID_IN_REPORT_SIZE;
+  HidDevInfo.OutReportCount = USB_HID_OUT_REPORT_SIZE;
   HidDevInfo.SampleInterval = 0x20;
   HidDevInfo.InReport = GetInReport;
   HidDevInfo.OutReport = SetOutReport;
@@ -114,4 +100,7 @@ hid_init (void)
 
   /* ... and USB Connect */
   (*rom)->pUSBD->connect (1);
+
+  /* fixing NXP stupidity - they break system clock */
+  SystemCoreClockUpdate();
 }
