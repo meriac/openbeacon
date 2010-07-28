@@ -29,4 +29,8 @@
 #define LED_ON 1	/* Level to set port to turn on led  */
 #define LED_OFF 0	/* Level to set port to turn off led */
 
+#define USB_VENDOR_ID 0x16C0
+#define USB_PROD_ID 0x08B4
+#define USB_DEVICE 1
+
 #endif/*__CONFIG_H__*/

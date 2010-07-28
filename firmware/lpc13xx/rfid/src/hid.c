@@ -28,13 +28,55 @@
 #define     EN_IOCON        (1<<16)
 #define     EN_USBREG       (1<<14)
 
-const static ROM **rom = (ROM **) 0x1fff1ff8;
+static ROM **rom = (ROM **) 0x1fff1ff8;
 
 void
 USB_IRQHandler (void)
 {
   (*rom)->pUSBD->isr ();
 }
+
+void
+GetInReport (uint8_t src[], uint32_t length)
+{
+  (void) src;
+  (void) length;
+}
+
+void
+SetOutReport (uint8_t dst[], uint32_t length)
+{
+  (void) dst;
+  (void) length;
+}
+
+/* USB String Descriptor (optional) */
+const uint8_t USB_StringDescriptor[] = {
+  /* Index 0x00: LANGID Codes */
+  0x04,				/* bLength */
+  USB_STRING_DESCRIPTOR_TYPE,	/* bDescriptorType */
+  WBVAL (0x0409),		/* US English - wLANGID */
+  /* Index 0x04: Manufacturer */
+  0x1C,				/* bLength */
+  USB_STRING_DESCRIPTOR_TYPE,	/* bDescriptorType */
+  'B', 0, 'i', 0, 't', 0, 'm', 0, 'a', 0, 'n', 0, 'u', 0, 'f', 0,
+  'a', 0, 'k', 0, 't', 0, 'u', 0, 'r', 0,
+  /* Index 0x20: Product */
+  0x28,				/* bLength */
+  USB_STRING_DESCRIPTOR_TYPE,	/* bDescriptorType */
+  'O', 0, 'p', 0, 'e', 0, 'n', 0, 'P', 0, 'C', 0, 'D', 0, ' ', 0,
+  'I', 0, 'I', 0, ' ', 0, 'b', 0, 'a', 0, 's', 0, 'i', 0, 'c', 0,
+  ' ', 0, ' ', 0, ' ', 0,
+  /* Index 0x48: Serial Number */
+  0x1A,				/* bLength */
+  USB_STRING_DESCRIPTOR_TYPE,	/* bDescriptorType */
+  '0', 0, '0', 0, '0', 0, '0', 0, '0', 0, '0', 0, '0', 0, '0', 0,
+  '0', 0, '0', 0, '0', 0, '0', 0,
+  /* Index 0x62: Interface 0, Alternate Setting 0 */
+  0x0E,				/* bLength */
+  USB_STRING_DESCRIPTOR_TYPE,	/* bDescriptorType */
+  'H', 0, 'I', 0, 'D', 0, ' ', 0, ' ', 0, ' ', 0,
+};
 
 void
 hid_init (void)
@@ -71,5 +113,5 @@ hid_init (void)
   (*rom)->pUSBD->init (&DeviceInfo);
 
   /* ... and USB Connect */
-  (*rom)->pUSBD->connect (TRUE);
+  (*rom)->pUSBD->connect (1);
 }
