@@ -30,12 +30,13 @@ static void delay_ms(unsigned int msec)
 
 int main(void)
 {
-	unsigned char buf[64];
+	unsigned char buf[64],prev;
 	rawhid_t *hid;
 	int num, count;
 
 	printf("Waiting for device:");
 	fflush(stdout);
+	prev=0;
 	while (1) {
 		hid = rawhid_open_only1(0x16c0, 0x08b4, 0,0);
 		if (hid == NULL) {
@@ -49,6 +50,8 @@ int main(void)
 			num = rawhid_read(hid, buf, sizeof(buf), 200);
 			if (num < 0) break;
 			if (num == 0) continue;
+			if(prev==buf[0]) continue;
+			prev=buf[0];
 			printf("RX:");
 			for (count=0; count<num; count++) {
 			    printf(" 0x%02X",buf[count]);
