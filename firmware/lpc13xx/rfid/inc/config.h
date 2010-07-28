@@ -33,7 +33,7 @@
 #define USB_PROD_ID 0x08B4
 #define USB_DEVICE 1
 
-#define USB_HID_IN_REPORT_SIZE 1
-#define USB_HID_OUT_REPORT_SIZE 1
+#define USB_HID_IN_REPORT_SIZE 9
+#define USB_HID_OUT_REPORT_SIZE 0
 
 #endif/*__CONFIG_H__*/
