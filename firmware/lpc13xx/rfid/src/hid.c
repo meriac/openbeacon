@@ -91,6 +91,8 @@ hid_init (void)
 
   /* Use pll and pin init function in rom */
   (*rom)->pUSBD->init_clk_pins ();
+  /* fixing NXP stupidity - they break system clock */
+  SystemCoreClockUpdate ();
 
   /* insert delay between init_clk_pins() and usb init */
   for (i = 0; i < 75; i++);
@@ -101,6 +103,4 @@ hid_init (void)
   /* ... and USB Connect */
   (*rom)->pUSBD->connect (1);
 
-  /* fixing NXP stupidity - they break system clock */
-  SystemCoreClockUpdate();
 }

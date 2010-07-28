@@ -125,7 +125,7 @@ rfid_read (void *data, unsigned char size)
 	      /* eat Postamble */
 	      rfid_rx ();
 	      /* -1 for NACK, 0 for ACK */
-	      res = pkt_size ? -1 : 0;
+	      res = pkt_size ? 0 : -1;
 	    }
 	}
       else
