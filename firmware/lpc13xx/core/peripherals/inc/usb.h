@@ -19,15 +19,15 @@
 #ifndef __USB_H__
 #define __USB_H__
 
-typedef PACKED_PRE union
+typedef union
 {
   uint16_t W;
-  PACKED_PRE struct
+  struct
   {
     uint8_t L;
     uint8_t H;
-  } PACKED_POST WB;
-} PACKED_POST WORD_BYTE;
+  } __attribute__((packed)) WB;
+} __attribute__((packed)) WORD_BYTE;
 
 /* bmRequestType.Dir */
 #define REQUEST_HOST_TO_DEVICE     0
@@ -46,16 +46,16 @@ typedef PACKED_PRE union
 #define REQUEST_TO_OTHER           3
 
 /* bmRequestType Definition */
-typedef PACKED_PRE union _REQUEST_TYPE
+typedef union _REQUEST_TYPE
 {
-  PACKED_PRE struct _BM
+  struct _BM
   {
     uint8_t Recipient:5;
     uint8_t Type:2;
     uint8_t Dir:1;
-  } PACKED_POST BM;
+  } __attribute__((packed)) BM;
   uint8_t B;
-} PACKED_POST REQUEST_TYPE;
+} __attribute__((packed)) REQUEST_TYPE;
 
 /* USB Standard Request Codes */
 #define USB_REQUEST_GET_STATUS                 0
@@ -80,14 +80,14 @@ typedef PACKED_PRE union _REQUEST_TYPE
 #define USB_FEATURE_REMOTE_WAKEUP              1
 
 /* USB Default Control Pipe Setup Packet */
-typedef PACKED_PRE struct _USB_SETUP_PACKET
+typedef struct _USB_SETUP_PACKET
 {
   REQUEST_TYPE bmRequestType;
   uint8_t bRequest;
   WORD_BYTE wValue;
   WORD_BYTE wIndex;
   uint16_t wLength;
-} PACKED_POST USB_SETUP_PACKET;
+} __attribute__((packed)) USB_SETUP_PACKET;
 
 
 /* USB Descriptor Types */
@@ -149,7 +149,7 @@ typedef PACKED_PRE struct _USB_SETUP_PACKET
 #define USB_ENDPOINT_USAGE_RESERVED            0x30
 
 /* USB Standard Device Descriptor */
-typedef PACKED_PRE struct _USB_DEVICE_DESCRIPTOR
+typedef struct _USB_DEVICE_DESCRIPTOR
 {
   uint8_t bLength;
   uint8_t bDescriptorType;
@@ -165,10 +165,10 @@ typedef PACKED_PRE struct _USB_DEVICE_DESCRIPTOR
   uint8_t iProduct;
   uint8_t iSerialNumber;
   uint8_t bNumConfigurations;
-} PACKED_POST USB_DEVICE_DESCRIPTOR;
+} __attribute__((packed)) USB_DEVICE_DESCRIPTOR;
 
 /* USB 2.0 Device Qualifier Descriptor */
-typedef PACKED_PRE struct _USB_DEVICE_QUALIFIER_DESCRIPTOR
+typedef struct _USB_DEVICE_QUALIFIER_DESCRIPTOR
 {
   uint8_t bLength;
   uint8_t bDescriptorType;
@@ -179,10 +179,10 @@ typedef PACKED_PRE struct _USB_DEVICE_QUALIFIER_DESCRIPTOR
   uint8_t bMaxPacketSize0;
   uint8_t bNumConfigurations;
   uint8_t bReserved;
-} PACKED_POST USB_DEVICE_QUALIFIER_DESCRIPTOR;
+} __attribute__((packed)) USB_DEVICE_QUALIFIER_DESCRIPTOR;
 
 /* USB Standard Configuration Descriptor */
-typedef PACKED_PRE struct _USB_CONFIGURATION_DESCRIPTOR
+typedef struct _USB_CONFIGURATION_DESCRIPTOR
 {
   uint8_t bLength;
   uint8_t bDescriptorType;
@@ -192,10 +192,10 @@ typedef PACKED_PRE struct _USB_CONFIGURATION_DESCRIPTOR
   uint8_t iConfiguration;
   uint8_t bmAttributes;
   uint8_t bMaxPower;
-} PACKED_POST USB_CONFIGURATION_DESCRIPTOR;
+} __attribute__((packed)) USB_CONFIGURATION_DESCRIPTOR;
 
 /* USB Standard Interface Descriptor */
-typedef PACKED_PRE struct _USB_INTERFACE_DESCRIPTOR
+typedef struct _USB_INTERFACE_DESCRIPTOR
 {
   uint8_t bLength;
   uint8_t bDescriptorType;
@@ -206,10 +206,10 @@ typedef PACKED_PRE struct _USB_INTERFACE_DESCRIPTOR
   uint8_t bInterfaceSubClass;
   uint8_t bInterfaceProtocol;
   uint8_t iInterface;
-} PACKED_POST USB_INTERFACE_DESCRIPTOR;
+} __attribute__((packed)) USB_INTERFACE_DESCRIPTOR;
 
 /* USB Standard Endpoint Descriptor */
-typedef PACKED_PRE struct _USB_ENDPOINT_DESCRIPTOR
+typedef struct _USB_ENDPOINT_DESCRIPTOR
 {
   uint8_t bLength;
   uint8_t bDescriptorType;
@@ -217,21 +217,21 @@ typedef PACKED_PRE struct _USB_ENDPOINT_DESCRIPTOR
   uint8_t bmAttributes;
   uint16_t wMaxPacketSize;
   uint8_t bInterval;
-} PACKED_POST USB_ENDPOINT_DESCRIPTOR;
+} __attribute__((packed)) USB_ENDPOINT_DESCRIPTOR;
 
 /* USB String Descriptor */
-typedef PACKED_PRE struct _USB_STRING_DESCRIPTOR
+typedef struct _USB_STRING_DESCRIPTOR
 {
   uint8_t bLength;
   uint8_t bDescriptorType;
   uint16_t bString /*[] */ ;
-} PACKED_POST USB_STRING_DESCRIPTOR;
+} __attribute__((packed)) USB_STRING_DESCRIPTOR;
 
 /* USB Common Descriptor */
-typedef PACKED_PRE struct _USB_COMMON_DESCRIPTOR
+typedef struct _USB_COMMON_DESCRIPTOR
 {
   uint8_t bLength;
   uint8_t bDescriptorType;
-} PACKED_POST USB_COMMON_DESCRIPTOR;
+} __attribute__((packed)) USB_COMMON_DESCRIPTOR;
 
 #endif /* __USB_H__ */

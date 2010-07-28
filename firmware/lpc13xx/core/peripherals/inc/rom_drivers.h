@@ -11,8 +11,6 @@
 #ifndef ROM_DRIVERS_H_
 #define ROM_DRIVERS_H_
 
-#include "type.h"
-
 typedef struct _USB_DEVICE_INFO
 {
   uint16_t DevType;
