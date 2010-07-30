@@ -1,4 +1,4 @@
-TARGET=openbeacon-htw
+TARGET=openbeacon-sniffer
 ARCH=AT91SAM7S
 CPU=$(ARCH)128
 DEBUG=-g
