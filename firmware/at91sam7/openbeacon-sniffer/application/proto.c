@@ -35,12 +35,15 @@
 #include "nRF24L01/nRF_API.h"
 
 const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 1, 2, 3, 2, 1 };
+
 TBeaconEnvelope g_Beacon;
 
+#define ANNOUNCEMENT_TX_POWER 3
+
 /**********************************************************************/
-#define SHUFFLE(a,b)    tmp=g_Beacon.datab[a];\
-                        g_Beacon.datab[a]=g_Beacon.datab[b];\
-                        g_Beacon.datab[b]=tmp;
+#define SHUFFLE(a,b)    tmp=g_Beacon.byte[a];\
+                        g_Beacon.byte[a]=g_Beacon.byte[b];\
+                        g_Beacon.byte[b]=tmp;
 
 /**********************************************************************/
 void
@@ -62,12 +65,11 @@ static inline s_int8_t
 PtInitNRF (void)
 {
   if (!nRFAPI_Init
-      (DEFAULT_CHANNEL, broadcast_mac, sizeof (broadcast_mac),
-       ENABLED_NRF_FEATURES))
+      (DEFAULT_CHANNEL, broadcast_mac, sizeof (broadcast_mac), 0))
     return 0;
 
   nRFAPI_SetPipeSizeRX (0, 16);
-  nRFAPI_SetTxPower (3);
+  nRFAPI_SetTxPower (ANNOUNCEMENT_TX_POWER);
   nRFAPI_SetRxMode (1);
   nRFCMD_CE (1);
 
@@ -136,7 +138,7 @@ DumpStringToUSB (char *text)
 void
 vnRFtaskRx (void *parameter)
 {
-  u_int16_t crc;
+  //u_int16_t crc;
   (void) parameter;
 
   if (!PtInitNRF ())
@@ -146,40 +148,40 @@ vnRFtaskRx (void *parameter)
     {
       if (nRFCMD_WaitRx (10))
 	{
+	  // turn on red LED
 	  vLedSetRed (1);
 
 	  do
 	    {
 	      // read packet from nRF chip
-	      nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.datab,
+	      nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.byte,
 				 sizeof (g_Beacon));
 
-	      // adjust byte order and decode
-	      shuffle_tx_byteorder ();
-	      xxtea_decode ();
-	      shuffle_tx_byteorder ();
 
-	      // verify the crc checksum
-	      crc =
-		crc16 (g_Beacon.datab,
-		       sizeof (g_Beacon) - sizeof (g_Beacon.pkt.crc));
-	      if ((swapshort (g_Beacon.pkt.crc) == crc))
+	      // turn off green LED
+	      vLedSetGreen (0);
+	      u_int8_t i = 0;	// counter variable
+
+	      // must be 4 Bytes, because this is gonna be the IP4-SourceAdress
+	      vUSBSendByte (0x00);
+	      vUSBSendByte (0xff);
+	      vUSBSendByte (0x00);
+	      vUSBSendByte (0xff);
+
+	      // dump out all received bytes
+	      for (i = 0; i < sizeof (g_Beacon); i++)
 		{
-		  DumpStringToUSB ("RX: ");
-		  DumpUIntToUSB (swaplong (g_Beacon.pkt.oid));
-		  DumpStringToUSB (",");
-		  DumpUIntToUSB (swaplong (g_Beacon.pkt.seq));
-		  DumpStringToUSB (",");
-		  DumpUIntToUSB (g_Beacon.pkt.strength);
-		  DumpStringToUSB (",");
-		  DumpUIntToUSB (g_Beacon.pkt.flags);
-		  DumpStringToUSB ("\n\r");
+		  vUSBSendByte (g_Beacon.byte[i]);
 		}
+
+	      // turn on green LED
+	      vLedSetGreen (1);
+
 	    }
 	  while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
 
+	  // turn off red LED
 	  vLedSetRed (0);
-	  nRFAPI_GetFifoStatus ();
 	}
       nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
     }

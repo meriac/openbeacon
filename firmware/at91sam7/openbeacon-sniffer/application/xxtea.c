@@ -65,7 +65,7 @@ xxtea_encode (void)
 {
   int q;
 
-  z = g_Beacon.data[3];
+  z = g_Beacon.byte[3];
   sum = 0;
 
   q = TEA_ROUNDS_COUNT;
@@ -74,25 +74,25 @@ xxtea_encode (void)
       sum += DELTA;
       e = sum >> 2 & 3;
 
-      y = g_Beacon.data[1];
-      tmp = g_Beacon.data[0];
+      y = g_Beacon.byte[1];
+      tmp = g_Beacon.byte[0];
       mx_encode (0);
-      g_Beacon.data[0] = z;
+      g_Beacon.byte[0] = z;
 
-      y = g_Beacon.data[2];
-      tmp = g_Beacon.data[1];
+      y = g_Beacon.byte[2];
+      tmp = g_Beacon.byte[1];
       mx_encode (1);
-      g_Beacon.data[1] = z;
+      g_Beacon.byte[1] = z;
 
-      y = g_Beacon.data[3];
-      tmp = g_Beacon.data[2];
+      y = g_Beacon.byte[3];
+      tmp = g_Beacon.byte[2];
       mx_encode (2);
-      g_Beacon.data[2] = z;
+      g_Beacon.byte[2] = z;
 
-      y = g_Beacon.data[0];
-      tmp = g_Beacon.data[3];
+      y = g_Beacon.byte[0];
+      tmp = g_Beacon.byte[3];
       mx_encode (3);
-      g_Beacon.data[3] = z;
+      g_Beacon.byte[3] = z;
     }
 }
 #endif /*CONFIG_TEA_ENABLEENCODE */
@@ -108,32 +108,32 @@ mx_decode (unsigned char p)
 void
 xxtea_decode (void)
 {
-  y = g_Beacon.data[0];
+  y = g_Beacon.byte[0];
   sum = DELTA * TEA_ROUNDS_COUNT;
 
   while (sum != 0)
     {
       e = sum >> 2 & 3;
 
-      z = g_Beacon.data[2];
-      tmp = g_Beacon.data[3];
+      z = g_Beacon.byte[2];
+      tmp = g_Beacon.byte[3];
       mx_decode (3);
-      g_Beacon.data[3] = y;
+      g_Beacon.byte[3] = y;
 
-      z = g_Beacon.data[1];
-      tmp = g_Beacon.data[2];
+      z = g_Beacon.byte[1];
+      tmp = g_Beacon.byte[2];
       mx_decode (2);
-      g_Beacon.data[2] = y;
+      g_Beacon.byte[2] = y;
 
-      z = g_Beacon.data[0];
-      tmp = g_Beacon.data[1];
+      z = g_Beacon.byte[0];
+      tmp = g_Beacon.byte[1];
       mx_decode (1);
-      g_Beacon.data[1] = y;
+      g_Beacon.byte[1] = y;
 
-      z = g_Beacon.data[3];
-      tmp = g_Beacon.data[0];
+      z = g_Beacon.byte[3];
+      tmp = g_Beacon.byte[0];
       mx_decode (0);
-      g_Beacon.data[0] = y;
+      g_Beacon.byte[0] = y;
 
       sum -= DELTA;
     }
