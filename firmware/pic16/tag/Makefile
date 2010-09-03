@@ -2,7 +2,6 @@ COMPILER_PATH=/usr/hitech/picc/9.80/bin/
 PK2=/usr/local/bin/pk2cmd
 CC=$(COMPILER_PATH)picc
 
-CONFIG=0x3d4
 CHIP=16F684
 PROGNAME=openbeacontag
 
@@ -34,7 +33,7 @@ clean:
 	rm -f $(CLEANS)
 
 flash: counted
-	$(PK2) -A4 -PPIC$(CHIP) -E -Fobj/$(PROGNAME).hex -M -YP
+	$(PK2) -A5 -PPIC$(CHIP) -F$(PROGNAME).hex -M -YP
 
 publish: counted
 	scp -P30303 $(PROGNAME).hex singularity.bitmanufaktur.net:/home/wwwrun/open.bitmanufaktur.com/web/www/people/milosch/pictag/

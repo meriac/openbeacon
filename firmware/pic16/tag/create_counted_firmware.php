@@ -39,7 +39,7 @@ define('SYMBOLS_SEG','STRING');
 //
 // Actual TEA encryption key of the tag
 //
-$tea_key = array(0x00112233,0x44556677,0x8899AABB,0xCCDDEEFF);
+$tea_key = array( 0x00112233, 0x44556677, 0x8899AABB, 0xCCDDEEFF );
 
 // Patches list: symbol, relative offset, data
 $patch_list = array(
