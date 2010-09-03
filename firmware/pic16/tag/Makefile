@@ -18,7 +18,7 @@ OBJ_OUT=$(patsubst %.c, obj/%.p1, $(SRCS))
 CLEANS=$(OBJ_OUT) $(OBJ_TMP) $(PROG_FILES)
 CLEANS+=obj/startup.as obj/startup.lst obj/startup.rlf obj/$(PROGNAME).hex $(PROGNAME).hex obj/$(PROGNAME).obj obj/$(PROGNAME).lst obj/$(PROGNAME).rlf obj/startup.obj funclist
 
-COMMON_FLAGS=-q --MODE=pro --outdir=obj --chip=$(CHIP) --codeoffset=0 --warn=0 --errors=1- --char=signed --double=24
+COMMON_FLAGS=-q --MODE=std --outdir=obj --chip=$(CHIP) --codeoffset=0 --warn=0 --errors=1- --char=signed --double=24
 CFLAGS=$(COMMON_FLAGS) --pass1
 LDFLAGS=$(COMMON_FLAGS) --summary=mem,file --asmlist --output=+intel --output=+mcof --runtime=+init --runtime=+osccal --runtime=+clear --runtime=+clib --runtime=+keep -m
 
