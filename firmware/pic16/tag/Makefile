@@ -1,6 +1,6 @@
-COMPILER_PATH=/usr/hitech/picc/pro/9.70
-PK2=/usr/local/bin/pk2
-CC=$(COMPILER_PATH)/bin/picc
+COMPILER_PATH=/usr/hitech/picc/9.80/bin/
+PK2=/usr/local/bin/pk2cmd
+CC=$(COMPILER_PATH)picc
 
 CONFIG=0x3d4
 CHIP=16F684
@@ -16,7 +16,7 @@ OBJ_TMP=$(foreach T, $(OBJ_EXTS), $(patsubst %.c, obj/%.$(T), $(SRCS)))
 OBJ_OUT=$(patsubst %.c, obj/%.p1, $(SRCS))
 
 CLEANS=$(OBJ_OUT) $(OBJ_TMP) $(PROG_FILES)
-CLEANS+=obj/startup.as obj/startup.lst obj/startup.rlf obj/$(PROGNAME).hex $(PROGNAME).hex 
+CLEANS+=obj/startup.as obj/startup.lst obj/startup.rlf obj/$(PROGNAME).hex $(PROGNAME).hex obj/$(PROGNAME).obj obj/$(PROGNAME).lst obj/$(PROGNAME).rlf obj/startup.obj funclist
 
 COMMON_FLAGS=-q --MODE=pro --outdir=obj --chip=$(CHIP) --codeoffset=0 --warn=0 --errors=1- --char=signed --double=24
 CFLAGS=$(COMMON_FLAGS) --pass1
@@ -33,21 +33,12 @@ $(PROGNAME).hex: $(OBJ_OUT)
 clean:
 	rm -f $(CLEANS)
 
-install: $(PROGNAME).hex
-	$(PK2) --device=$(CHIP) --write obj/$(PROGNAME).hex
+install: counted
+	$(PK2) -A4 -PPIC$(CHIP) -E -Fobj/$(PROGNAME).hex -M -YP
 
 publish: $(PROGNAME).hex
 	scp -P30303 obj/$(PROGNAME).hex bitmanufaktur.de:/home/wwwrun/wildcard.bitmanufaktur/www/thelasthope/$(PROGNAME).raw
 	scp -P30303 obj/$(PROGNAME).sym bitmanufaktur.de:/home/wwwrun/wildcard.bitmanufaktur/www/thelasthope/
 
-verify: $(PROGNAME).hex
-	sudo $(PK2) --verify obj/$(PROGNAME).hex
-
 counted: $(PROGNAME).hex
-	./create_counted_firmware.php
-
-on:
-	sudo $(PK2) --on
-
-off:
-	sudo $(PK2) --off
+	php ./create_counted_firmware.php

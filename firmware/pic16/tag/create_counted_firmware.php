@@ -34,7 +34,7 @@ define('INPUT_FILE','obj/openbeacontag.hex');
 define('OUTPUT_FILE','openbeacontag.hex');
 define('COUNT_FILE','firmware_counter');
 define('SYMBOLS_FILE','obj/openbeacontag.sym');
-define('SYMBOLS_SEG','CONST');
+define('SYMBOLS_SEG','STRING');
 
 //
 // Actual TEA encryption key of the tag
@@ -55,22 +55,22 @@ patch_hexread(INPUT_FILE);
 // apply patch first time
 patch_apply($patches,TRUE);
 // keep spinning while incrementing counter
-while(TRUE)
+// while(TRUE)
 {
-    echo "\nOpenBeacon tag ID set to '$patch_list[_oid]'\n";
+    echo "\n\nOpenBeacon tag ID set to '$patch_list[_oid]'\n\n";
     patch_hexwrite(OUTPUT_FILE);
-    
+
     // Increment tag ID
     $patch_list['_oid']++;
     file_put_contents(COUNT_FILE,$patch_list['_oid']);
-    
+
     // Lookup actual symbol offsets from symbols file ...
-    $patches=patch_lookup_patches(SYMBOLS_FILE,$patch_list);    
+    $patches=patch_lookup_patches(SYMBOLS_FILE,$patch_list);
     // ... and apply them
     patch_apply($patches,FALSE);
 
-    echo 'press [ENTER] to continue';
-    fgets(STDIN);
+    // echo 'press [ENTER] to continue';
+    // fgets(STDIN);
 }
 
 
@@ -97,7 +97,7 @@ function patch_lookup_patches($file,$patch_list)
 			if($symbol[3]!=SYMBOLS_SEG)
 				exit($name.' must be in '.SYMBOLS_SEG." segment - invalid segment $symbol[3] sepecified\n");
 		
-			$offset = hexdec($symbol[1])*2;		
+			$offset = hexdec($symbol[1])*2;
 			if($offset)	
 			{
 				$patch = $patch_list[$name];
@@ -108,7 +108,7 @@ function patch_lookup_patches($file,$patch_list)
 					$offset+=8;
 				}
 				else
-				$patches[$offset]=$patch;		
+				$patches[$offset]=$patch;
 			}
 			}
 		}
@@ -177,7 +177,7 @@ function patch_hexwrite($file)
 	{
 		foreach($hexfile as $rec)
 		{
-			$address=$rec['address'];    
+			$address=$rec['address'];
 			$line=sprintf('%02X%04X%02X',$rec['count'],$address,$rec['type']);
 		
 			for($i=0;$i<$rec['count'];$i++)
