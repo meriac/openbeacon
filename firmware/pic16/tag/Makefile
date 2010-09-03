@@ -33,7 +33,7 @@ $(PROGNAME).hex: $(OBJ_OUT)
 clean:
 	rm -f $(CLEANS)
 
-install: counted
+flash: counted
 	$(PK2) -A4 -PPIC$(CHIP) -E -Fobj/$(PROGNAME).hex -M -YP
 
 publish: counted
