@@ -28,9 +28,6 @@
 #define	CONFIG_DEBUG_LED
 #define CONFIG_DELAYUS
 
-#define CONFIG_TEA_ENABLEENCODE
-//#define CONFIG_TEA_ENABLEDECODE
-
 /***************************************************************
  *
  *  CPU peripherals settings

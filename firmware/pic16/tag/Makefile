@@ -5,7 +5,7 @@ CC=$(COMPILER_PATH)picc
 CHIP=16F684
 PROGNAME=openbeacontag
 
-SRCS=main.c timer.c nRF_CMD.c xxtea.c
+SRCS=main.c timer.c nRF_CMD.c
 
 PROG_EXTS=cof hxl map mum sym as sdb lst rlf obj
 PROG_FILES=$(patsubst %, obj/$(PROGNAME).%, $(PROG_EXTS))

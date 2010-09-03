@@ -2,7 +2,7 @@
  *
  * OpenBeacon.org - definition exported timer function
  *
- * Copyright 2006 Harald Welte <laforge@openbeacon.org>
+ * Copyright 2006 Milosch Meriac <meriac@openbeacon.de>
  *
 /***************************************************************
 
@@ -26,9 +26,9 @@
 #define _TIMER_H
 
 #define TIMER1_HZ	32768
-#define TIMER1_JIFFIES_PER_MS 33
+#define JIFFIES_PER_MS(x) ((x*TIMER1_HZ)/1000)
 
-void timer1_init (void);
+void timer_init (void);
 void sleep_2ms (void);
 void sleep_jiffies (unsigned short jiffies);
 

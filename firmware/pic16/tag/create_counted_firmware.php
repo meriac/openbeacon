@@ -45,7 +45,7 @@ $tea_key = array( 0x00112233, 0x44556677, 0x8899AABB, 0xCCDDEEFF );
 $patch_list = array(
 	'_oid' => (is_readable(COUNT_FILE))?intval(trim(file_get_contents(COUNT_FILE))):2000,
 	'_seed' => hexdec(substr(md5(microtime().implode('-',$tea_key).rand()),0,8)),
-	'_tea_key' => $tea_key,
+	'_xxtea_key' => $tea_key,
     );
 
 // Lookup actual symbol offsets from symbols file 

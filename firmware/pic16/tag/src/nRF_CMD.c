@@ -133,7 +133,7 @@ void
 nRFCMD_Execute (void)
 {
   nRFCMD_Macro (g_MacroStart);
-  sleep_jiffies (TIMER1_JIFFIES_PER_MS);
+  sleep_2ms ();
   CONFIG_PIN_CE = 1;
   sleep_2ms ();
   CONFIG_PIN_CE = 0;

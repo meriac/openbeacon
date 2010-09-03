@@ -3,7 +3,7 @@
  * OpenBeacon.org - accurate low power sleep function,
  *                  based on 32.768kHz watch crystal
  *
- * Copyright 2006 Harald Welte <laforge@openbeacon.org>
+ * Copyright 2006 Milosch Meriac <meriac@openbeacon.de>
  *
 /***************************************************************
 
@@ -49,7 +49,7 @@
 static volatile char timer1_wrapped;
 
 void
-timer1_init (void)
+timer_init (void)
 {
   /* Configure Timer 1 to use external 32768Hz crystal and 
    * no (1:1) prescaler*/
@@ -58,26 +58,15 @@ timer1_init (void)
 }
 
 void
-timer1_set (unsigned short tout)
+sleep_jiffies (unsigned short jiffies)
 {
-  tout = 0xffff - tout;
-
-  TMR1H = tout >> 8;
-  TMR1L = tout & 0xff;
-}
-
-void
-timer1_go (void)
-{
+  jiffies = 0xffff - jiffies;
+  TMR1H = jiffies >> 8;
+  TMR1L = (unsigned short) jiffies;
   TMR1ON = 1;
   TMR1IE = 1;
   PEIE = 1;
   GIE = 1;
-}
-
-void
-timer1_sleep (void)
-{
   timer1_wrapped = 0;
   while (timer1_wrapped == 0)
     {
@@ -88,17 +77,9 @@ timer1_sleep (void)
 }
 
 void
-sleep_jiffies (unsigned short jiffies)
-{
-  timer1_set (jiffies);
-  timer1_go ();
-  timer1_sleep ();
-}
-
-void
 sleep_2ms (void)
 {
-  sleep_jiffies (2 * TIMER1_JIFFIES_PER_MS);
+  sleep_jiffies (JIFFIES_PER_MS(2));
 }
 
 void interrupt
