@@ -36,9 +36,8 @@ clean:
 install: counted
 	$(PK2) -A4 -PPIC$(CHIP) -E -Fobj/$(PROGNAME).hex -M -YP
 
-publish: $(PROGNAME).hex
-	scp -P30303 obj/$(PROGNAME).hex bitmanufaktur.de:/home/wwwrun/wildcard.bitmanufaktur/www/thelasthope/$(PROGNAME).raw
-	scp -P30303 obj/$(PROGNAME).sym bitmanufaktur.de:/home/wwwrun/wildcard.bitmanufaktur/www/thelasthope/
+publish: counted
+	scp -P30303 $(PROGNAME).hex singularity.bitmanufaktur.net:/home/wwwrun/open.bitmanufaktur.com/web/www/people/milosch/pictag/
 
 counted: $(PROGNAME).hex
 	php ./create_counted_firmware.php
