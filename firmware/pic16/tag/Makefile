@@ -8,7 +8,7 @@ PROGNAME=openbeacontag
 
 SRCS=main.c timer.c nRF_CMD.c xxtea.c
 
-PROG_EXTS=cof hxl map mum sym as sdb
+PROG_EXTS=cof hxl map mum sym as sdb lst rlf obj
 PROG_FILES=$(patsubst %, obj/$(PROGNAME).%, $(PROG_EXTS))
 
 OBJ_EXTS=p1 rlf sdb lst pre as
@@ -16,7 +16,7 @@ OBJ_TMP=$(foreach T, $(OBJ_EXTS), $(patsubst %.c, obj/%.$(T), $(SRCS)))
 OBJ_OUT=$(patsubst %.c, obj/%.p1, $(SRCS))
 
 CLEANS=$(OBJ_OUT) $(OBJ_TMP) $(PROG_FILES)
-CLEANS+=obj/startup.as obj/startup.lst obj/startup.rlf obj/$(PROGNAME).hex $(PROGNAME).hex obj/$(PROGNAME).obj obj/$(PROGNAME).lst obj/$(PROGNAME).rlf obj/startup.obj funclist
+CLEANS+=obj/startup.as obj/startup.lst obj/startup.rlf obj/$(PROGNAME).hex $(PROGNAME).hex obj/startup.obj funclist
 
 COMMON_FLAGS=-q --MODE=std --outdir=obj --chip=$(CHIP) --codeoffset=0 --warn=0 --errors=1- --char=signed --double=24
 CFLAGS=$(COMMON_FLAGS) --pass1
