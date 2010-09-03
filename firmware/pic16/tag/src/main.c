@@ -137,6 +137,7 @@ main (void)
   ANSEL = CONFIG_CPU_ANSEL;
   CMCON0 = CONFIG_CPU_CMCON0;
   OSCCON = CONFIG_CPU_OSCCON;
+  CONFIG_PIN_COMPAT = 0;
 
   timer1_init ();
 
@@ -170,8 +171,8 @@ main (void)
 	g_MacroBeacon.env.pkt.hdr.size = sizeof (TBeaconTracker);
 	g_MacroBeacon.env.pkt.hdr.proto = RFBPROTO_BEACONTRACKER;
 	g_MacroBeacon.env.pkt.flags = CONFIG_PIN_SENSOR ? 0 : RFBFLAGS_SENSOR;
-	g_MacroBeacon.env.pkt.strength = 0x55 * (i & 0x3);
-	g_MacroBeacon.env.pkt.seq = htonl (seq++);
+	g_MacroBeacon.env.pkt.strength = i;
+	g_MacroBeacon.env.pkt.seq = htonl (seq);
 	g_MacroBeacon.env.pkt.oid = htonl (oid);
 	g_MacroBeacon.env.pkt.reserved = 0;
 	crc = crc16 (g_MacroBeacon.env.datab,
@@ -195,13 +196,13 @@ main (void)
 	// reset touch sensor pin
 	TRISA = CONFIG_CPU_TRISA & ~0x02;
 	CONFIG_PIN_SENSOR = 0;
-	sleep_jiffies (10 + (rand () % (400 * TIMER1_JIFFIES_PER_MS)));
+	sleep_jiffies (10 + (rand () % (180 * TIMER1_JIFFIES_PER_MS)));
 	CONFIG_PIN_SENSOR = 1;
 	TRISA = CONFIG_CPU_TRISA;
 
 	// send it away
 	nRFCMD_Macro ((unsigned char *) &g_MacroBeacon);
-	status = (i & 0x7) == 0;
+	status = (i & 0xF) == 0;
 
 	if (status)
 	  CONFIG_PIN_LED = 1;
@@ -209,7 +210,11 @@ main (void)
 	if (status)
 	  CONFIG_PIN_LED = 0;
 
-	i++;
+	if(++i>=4)
+	{
+	    i=0;
+	    seq++;
+	}
       }
 
   // rest in peace

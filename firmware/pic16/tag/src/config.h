@@ -52,6 +52,7 @@
  *
  ***************************************************************/
 
+#define CONFIG_PIN_COMPAT	RA0
 #define CONFIG_PIN_SENSOR	RA1
 #define CONFIG_PIN_IRQ		RA2
 
@@ -63,7 +64,7 @@
 #define CONFIG_PIN_LED		RC5
 
 #define CONFIG_CPU_XTAL_FREQ	8MHz
-#define CONFIG_CPU_TRISA	0x3F
+#define CONFIG_CPU_TRISA	0x3E
 #define CONFIG_CPU_TRISC	0x04
 #define CONFIG_CPU_ANSEL	0x00
 #define CONFIG_CPU_WPUA		0x02
