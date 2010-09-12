@@ -136,7 +136,7 @@ store_incremented_codeblock (void)
 static void
 xxtea_encode (void)
 {
-  u_int32_t z, y, sum, mx;
+  u_int32_t z, y, sum;
   u_int8_t p, q, e;
 
   /* prepare first XXTEA round */
