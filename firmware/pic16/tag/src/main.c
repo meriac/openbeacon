@@ -199,7 +199,7 @@ main (void)
   ((unsigned char *) &code_block)[1] = EEPROM_READ (1);
   store_incremented_codeblock ();
 
-  seq = crc ^ oid ^ seed;
+  seq = code_block ^ oid ^ seed;
   srand (crc16 ((unsigned char *) &seq, sizeof (seq)));
 
   // increment code blocks to make sure that seq is higher or equal after battery
