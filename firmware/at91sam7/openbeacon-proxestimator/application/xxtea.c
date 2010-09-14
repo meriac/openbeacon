@@ -34,14 +34,17 @@
 #include "xxtea.h"
 #include "proto.h"
 
-const long tea_key[4] = { 0xab94ec75, 0x160869c5, 0xfbf908da, 0x60bedc73 };
-
-unsigned long z, y, sum, tmp, mx;
-unsigned char e;
+/*
+ * Default TEA encryption key of the tag - MUST CHANGE !
+ */
+const long tea_key[4] = { 0x00112233, 0x44556677, 0x8899AABB, 0xCCDDEEFF };
 
 #define TEA_ROUNDS_COUNT (6+52/4)
 #define MX ((((z>>5)^(y<<2))+((y>>3)^(z<<4)))^((sum^y)+(tea_key[(p&3)^e]^z)))
 #define DELTA 0x9E3779B9L
+
+unsigned long z, y, sum, tmp, mx;
+unsigned char e;
 
 void RAMFUNC
 mx_update (unsigned char p)
