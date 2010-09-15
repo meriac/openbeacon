@@ -37,43 +37,35 @@ define('SYMBOLS_FILE','obj/openbeacontag.sym');
 define('SYMBOLS_SEG','STRING');
 
 //
-// Actual TEA encryption key of the tag
+// Default TEA encryption key of the tag - MUST CHANGE !
 //
 $tea_key = array( 0x00112233, 0x44556677, 0x8899AABB, 0xCCDDEEFF );
 
 // Patches list: symbol, relative offset, data
 $patch_list = array(
-	'_oid' => (is_readable(COUNT_FILE))?intval(trim(file_get_contents(COUNT_FILE))):2000,
+	'_oid' => (is_readable(COUNT_FILE))?intval(trim(file_get_contents(COUNT_FILE))):100,
 	'_seed' => hexdec(substr(md5(microtime().implode('-',$tea_key).rand()),0,8)),
 	'_xxtea_key' => $tea_key,
     );
-
 // Lookup actual symbol offsets from symbols file 
 $patches=patch_lookup_patches(SYMBOLS_FILE,$patch_list);
 // Read HEX file from file
 patch_hexread(INPUT_FILE);
 // apply patch first time
+
 patch_apply($patches,TRUE);
-// keep spinning while incrementing counter
-// while(TRUE)
-{
-    echo "\n\nOpenBeacon tag ID set to '$patch_list[_oid]'\n\n";
-    patch_hexwrite(OUTPUT_FILE);
 
-    // Increment tag ID
-    $patch_list['_oid']++;
-    file_put_contents(COUNT_FILE,$patch_list['_oid']);
+echo "\n\nOpenBeacon tag ID set to '$patch_list[_oid]'\n\n";
+patch_hexwrite(OUTPUT_FILE);
 
-    // Lookup actual symbol offsets from symbols file ...
-    $patches=patch_lookup_patches(SYMBOLS_FILE,$patch_list);
-    // ... and apply them
-    patch_apply($patches,FALSE);
+// Increment tag ID
+$patch_list['_oid']++;
+file_put_contents(COUNT_FILE,$patch_list['_oid']);
 
-    // echo 'press [ENTER] to continue';
-    // fgets(STDIN);
-}
-
-
+// Lookup actual symbol offsets from symbols file ...
+$patches=patch_lookup_patches(SYMBOLS_FILE,$patch_list);
+// ... and apply them
+patch_apply($patches,FALSE);
 
 //
 // Helper functions
@@ -89,18 +81,21 @@ function patch_lookup_patches($file,$patch_list)
 		foreach(file($file) as $symbol)
 		{
 			$symbol = explode(' ',trim($symbol));
-		
 			$name = $symbol[0];
-		
+
 			if($name && array_key_exists($name,$patch_list))
 			{
 			if($symbol[3]!=SYMBOLS_SEG)
 				exit($name.' must be in '.SYMBOLS_SEG." segment - invalid segment $symbol[3] sepecified\n");
 		
 			$offset = hexdec($symbol[1])*2;
-			if($offset)	
+			if($offset)
 			{
 				$patch = $patch_list[$name];
+
+				// remove found patches from list
+				unset($patch_list[$name]);
+
 				if(is_array($patch))
 				foreach($patch as $content)
 				{
@@ -112,6 +107,11 @@ function patch_lookup_patches($file,$patch_list)
 			}
 			}
 		}
+
+	// halt on missing map file symbols
+	if( count($patch_list) )
+		exit('Missing symbol(s) in map file: '.implode(',',array_keys($patch_list))."\n");
+
 	return $patches;
 }
 
