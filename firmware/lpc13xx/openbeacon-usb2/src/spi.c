@@ -25,6 +25,16 @@
 
 #define BIT_REVERSE(x) ((unsigned char)(__RBIT(x)>>24))
 
+void
+spi_init_pin (spi_cs chipselect)
+{
+  GPIOSetDir (
+	(uint8_t)(chipselect >> 24),
+	(uint8_t)(chipselect >> 16),
+	1
+  );
+}
+
 int
 spi_txrx (spi_cs chipselect, const void *tx, void *rx, uint32_t len)
 {
@@ -80,7 +90,6 @@ spi_init (void)
   // Enable SSP peripheral
   LPC_IOCON->PIO0_8 = 0x01 | (0x01 << 3);	/* MISO, Pulldown */
   LPC_IOCON->PIO0_9 = 0x01;	/* MOSI */
-
   LPC_IOCON->SCKLOC = 0x00;	/* route to PIO0_10 */
   LPC_IOCON->JTAG_TCK_PIO0_10 = 0x02;	/* SCK */
 

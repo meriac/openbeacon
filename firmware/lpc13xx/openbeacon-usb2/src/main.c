@@ -68,8 +68,13 @@ main (void)
   volatile int i;
   unsigned char counter;
 
-  /* Initialize GPIO (sets up clock) */
+  /* initialize  pins */
   pin_init ();
+  /* setup SPI chipselect pins */
+  spi_init_pin(SPI_CS_NRF);
+  spi_init_pin(SPI_CS_FLASH);
+  spi_init_pin(SPI_CS_ACC3D);
+
   /* Init USB HID interface */
   hid_init ();
   /* UART setup */
