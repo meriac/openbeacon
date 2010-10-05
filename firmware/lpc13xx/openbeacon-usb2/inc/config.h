@@ -29,11 +29,16 @@
 #define LED_ON 1	/* Level to set port to turn on led  */
 #define LED_OFF 0	/* Level to set port to turn off led */
 
-#define USB_VENDOR_ID 0x16C0
-#define USB_PROD_ID 0x08B4
+#define USB_VENDOR_ID 0x2366
+#define USB_PROD_ID 0x0002
 #define USB_DEVICE 1
 
 #define USB_HID_IN_REPORT_SIZE 9
 #define USB_HID_OUT_REPORT_SIZE 0
+
+/* SPI_CS(io_port, io_pin, frequency_in_MHz, mode) */
+#define SPI_CS_FLASH SPI_CS( 0, 2, 80.0, SPI_CS_MODE_NORMAL )
+#define SPI_CS_NRF   SPI_CS( 1,10,  8.0, SPI_CS_MODE_NORMAL )
+#define SPI_CS_ACC3D SPI_CS( 1, 8, 10.0, SPI_CS_MODE_NORMAL )
 
 #endif/*__CONFIG_H__*/

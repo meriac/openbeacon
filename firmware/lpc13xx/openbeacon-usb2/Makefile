@@ -1,4 +1,4 @@
-TARGET=rfid
+TARGET=openbeacon-usb2
 ARCH=LPC13
 CPU=$(ARCH)42
 DEBUG=-g
@@ -10,7 +10,7 @@ APP_LDFLAGS=-lm
 APP_SRC= \
   src/main.c \
   src/hid.c \
-  src/rfid.c
+  src/spi.c
 
 APP_SRC+=$(IMAGES_C)
 

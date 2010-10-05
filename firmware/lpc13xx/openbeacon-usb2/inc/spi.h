@@ -1,6 +1,6 @@
 /***************************************************************
  *
- * OpenBeacon.org - PN532 routines for LPC13xx based OpenPCD2
+ * OpenBeacon.org - SPI routines for LPC13xx
  *
  * Copyright 2010 Milosch Meriac <meriac@openbeacon.de>
  *
@@ -20,11 +20,17 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 */
-#ifndef __RFID_H__
-#define __RFID_H__
+#ifndef __SPI_H__
+#define __SPI_H__
 
-extern void rfid_init(void);
-extern int rfid_read (void *data, unsigned char size);
-extern int rfid_write (const void *data, int len);
+typedef uint32_t spi_cs;
 
-#endif/*__RFID_H__*/
+#define SPI_CS_MODE_NORMAL 0
+#define SPI_CS_MODE_INVERT_CS 1
+#define SPI_CS_MODE_BIT_REVERSED 2
+#define SPI_CS(port,pin,spi_clock,mode) ((spi_cs)( ((((uint32_t)port)&0xFF)<<24) | ((((uint32_t)pin)&0xFF)<<16) | ((((uint32_t)(spi_clock*2))&0xFF)<<8) | (((uint32_t)mode)&0xFF) ))
+
+extern void spi_init(void);
+extern int spi_txrx (spi_cs chipselect, const void *tx, void *rx, uint32_t len);
+
+#endif/*__SPI_H__*/
