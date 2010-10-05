@@ -21,6 +21,7 @@
 
 */
 #include <openbeacon.h>
+#include "pin.h"
 #include "hid.h"
 #include "spi.h"
 
@@ -64,20 +65,15 @@ rfid_hexdump (const void *buffer, int size)
 int
 main (void)
 {
+  volatile int i;
   unsigned char counter;
 
   /* Initialize GPIO (sets up clock) */
-  GPIOInit ();
-
-  /* Set LED port pin to output */
-  GPIOSetDir (LED_PORT, LED_BIT, 1);
-
+  pin_init ();
   /* Init USB HID interface */
   hid_init ();
-
   /* UART setup */
   UARTInit (115200);
-
   /* Init SPI */
   spi_init ();
 
@@ -88,11 +84,25 @@ main (void)
   counter = 0;
   while (1)
     {
+      /* blink LED0 */
+      pin_led ( GPIO_LED0 );
+      for (i = 0; i < 10000; i++);
+      pin_led ( GPIO_LEDS_OFF );
+
       /* read firmware revision */
       debug_printf ("\nreading firmware version (%u)...\n",counter++);
 
+      /* SPI test transmissions */
       spi_txrx( SPI_CS_NRF  , NULL, NULL, 16 );
       spi_txrx( SPI_CS_FLASH, NULL, NULL, 16 );
       spi_txrx( SPI_CS_ACC3D, NULL, NULL, 16 );
+
+      /* blink LED1 */
+      pin_led ( GPIO_LED1 );
+      for (i = 0; i < 10000; i++);
+      pin_led ( GPIO_LEDS_OFF );
+
+      /* read firmware revision */
+      debug_printf ("\nreading firmware version (%u)...\n",counter++);
     }
 }

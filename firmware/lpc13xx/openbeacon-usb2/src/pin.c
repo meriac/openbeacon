@@ -1,6 +1,6 @@
 /***************************************************************
  *
- * OpenBeacon.org - config file
+ * OpenBeacon.org - GPIO declaration
  *
  * Copyright 2010 Milosch Meriac <meriac@openbeacon.de>
  *
@@ -20,20 +20,34 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 */
+#include <openbeacon.h>
+#include "pin.h"
 
-#ifndef __CONFIG_H__
-#define __CONFIG_H__
+#define LED0_PORT 1 /* Port for led                      */
+#define LED0_BIT 2  /* Bit on port for led               */
+#define LED1_PORT 1 /* Port for led                      */
+#define LED1_BIT 1  /* Bit on port for led               */
 
-#define USB_VENDOR_ID 0x2366
-#define USB_PROD_ID 0x0002
-#define USB_DEVICE 1
+void
+pin_led(uint8_t led)
+{
+    GPIOSetValue( LED0_PORT, LED0_BIT,  led & GPIO_LED0    );
+    GPIOSetValue( LED1_PORT, LED1_BIT, (led & GPIO_LED1)>1 );
+}
 
-#define USB_HID_IN_REPORT_SIZE 9
-#define USB_HID_OUT_REPORT_SIZE 0
+void
+pin_init (void)
+{
+  /* Initialize GPIO (sets up clock) */
+  GPIOInit ();
 
-/* SPI_CS(io_port, io_pin, frequency_in_MHz, mode) */
-#define SPI_CS_FLASH SPI_CS( 0, 2, 80.0, SPI_CS_MODE_NORMAL )
-#define SPI_CS_NRF   SPI_CS( 1,10,  8.0, SPI_CS_MODE_NORMAL )
-#define SPI_CS_ACC3D SPI_CS( 1, 8, 10.0, SPI_CS_MODE_NORMAL )
+  /* Set LED0 port pin to output */
+  LPC_IOCON->JTAG_nTRST_PIO1_2=1;
+  GPIOSetValue( LED0_PORT, LED0_BIT, 0);
+  GPIOSetDir (LED0_PORT, LED0_BIT, 1);
 
-#endif/*__CONFIG_H__*/
+  /* Set LED1 port pin to output */
+  LPC_IOCON->JTAG_TDO_PIO1_1=1;
+  GPIOSetValue( LED1_PORT, LED1_BIT, 0);
+  GPIOSetDir (LED1_PORT, LED1_BIT, 1);
+}

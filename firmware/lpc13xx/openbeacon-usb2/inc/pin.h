@@ -1,6 +1,6 @@
 /***************************************************************
  *
- * OpenBeacon.org - config file
+ * OpenBeacon.org - GPIO declaration
  *
  * Copyright 2010 Milosch Meriac <meriac@openbeacon.de>
  *
@@ -21,19 +21,14 @@
 
 */
 
-#ifndef __CONFIG_H__
-#define __CONFIG_H__
+#ifndef  __PIN_H__
+#define  __PIN_H__
 
-#define USB_VENDOR_ID 0x2366
-#define USB_PROD_ID 0x0002
-#define USB_DEVICE 1
+#define GPIO_LEDS_OFF 0
+#define GPIO_LED0 1
+#define GPIO_LED1 2
 
-#define USB_HID_IN_REPORT_SIZE 9
-#define USB_HID_OUT_REPORT_SIZE 0
+extern void pin_init (void);
+extern void pin_led (uint8_t led);
 
-/* SPI_CS(io_port, io_pin, frequency_in_MHz, mode) */
-#define SPI_CS_FLASH SPI_CS( 0, 2, 80.0, SPI_CS_MODE_NORMAL )
-#define SPI_CS_NRF   SPI_CS( 1,10,  8.0, SPI_CS_MODE_NORMAL )
-#define SPI_CS_ACC3D SPI_CS( 1, 8, 10.0, SPI_CS_MODE_NORMAL )
-
-#endif/*__CONFIG_H__*/
+#endif /*__PIN_H__*/
