@@ -50,9 +50,9 @@ const uint8_t USB_StringDescriptor[] = {
   /* Index 0x20: Product */
   0x28,				/* bLength */
   USB_STRING_DESCRIPTOR_TYPE,	/* bDescriptorType */
-  'O', 0, 'p', 0, 'e', 0, 'n', 0, 'P', 0, 'C', 0, 'D', 0, ' ', 0,
-  'I', 0, 'I', 0, ' ', 0, 'b', 0, 'a', 0, 's', 0, 'i', 0, 'c', 0,
-  ' ', 0, ' ', 0, ' ', 0,
+  'O', 0, 'p', 0, 'e', 0, 'n', 0, 'B', 0, 'e', 0, 'a', 0, 'c', 0,
+  'o', 0, 'n', 0, ' ', 0, 'U', 0, 'S', 0, 'B', 0, ' ', 0, 'I', 0,
+  'I', 0, ' ', 0, ' ', 0,
   /* Index 0x48: Serial Number */
   0x1A,				/* bLength */
   USB_STRING_DESCRIPTOR_TYPE,	/* bDescriptorType */
