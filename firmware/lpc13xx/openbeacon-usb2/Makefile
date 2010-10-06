@@ -9,6 +9,7 @@ APP_LDFLAGS=-lm
 
 APP_SRC= \
   src/main.c \
+  src/bluetooth.c \
   src/hid.c \
   src/pin.c \
   src/spi.c

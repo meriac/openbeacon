@@ -1,6 +1,6 @@
 /***************************************************************
  *
- * OpenBeacon.org - GPIO declaration
+ * OpenBeacon.org - Bluetooth related functions
  *
  * Copyright 2010 Milosch Meriac <meriac@openbeacon.de>
  *
@@ -21,15 +21,9 @@
 
 */
 
-#ifndef  __PIN_H__
-#define  __PIN_H__
+#ifndef __BLUETOOTH_H__
+#define __BLUETOOTH_H__
 
-#define GPIO_LEDS_OFF 0
-#define GPIO_LED0 1
-#define GPIO_LED1 2
+extern void bt_init (void);
 
-extern void pin_init (void);
-extern void pin_led (uint8_t led);
-extern void pin_mode_pmu(uint8_t mode);
-
-#endif /*__PIN_H__*/
+#endif/*__BLUETOOTH_H__*/
