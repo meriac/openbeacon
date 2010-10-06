@@ -11,10 +11,9 @@
 #ifndef __UART_H
 #define __UART_H
 
-
-#define RS485_ENABLED		0
-#define TX_INTERRUPT		0	/* 0 if TX uses polling, 1 interrupt driven. */
-#define MODEM_TEST			0
+#define RS485_ENABLED	0
+#define TX_INTERRUPT	0	/* 0 if TX uses polling, 1 interrupt driven. */
+#define MODEM_TEST	0
 
 #define IER_RBR		0x01
 #define IER_THRE	0x02
@@ -45,7 +44,7 @@
 #define RS485_DCTRL		(0x1<<4)
 #define RS485_OINV		(0x1<<5)
 
-extern void UARTInit (uint32_t Baudrate);
+extern void UARTInit (uint32_t Baudrate,uint8_t rtscts);
 extern void UART_IRQHandler (void);
 extern void UARTSendChar (uint8_t data);
 extern void UARTSend (uint8_t * BufferPtr, uint32_t Length);

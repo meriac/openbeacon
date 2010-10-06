@@ -88,7 +88,7 @@ void UART_IRQHandler(void)
 ** Returned value:		None
 ** 
 *****************************************************************************/
-void UARTInit(uint32_t baudrate)
+void UARTInit(uint32_t baudrate, uint8_t rtscts)
 {
     uint32_t Fdiv;
     uint32_t regVal;
@@ -98,10 +98,15 @@ void UARTInit(uint32_t baudrate)
 
     NVIC_DisableIRQ(UART_IRQn);
 
-    LPC_IOCON->PIO1_6 &= ~0x07;	/*  UART I/O config */
-    LPC_IOCON->PIO1_6 |= 0x01;	/* UART RXD */
-    LPC_IOCON->PIO1_7 &= ~0x07;
-    LPC_IOCON->PIO1_7 |= 0x01;	/* UART TXD */
+    /* IO configuration */
+    if(rtscts)
+    {
+	LPC_IOCON->PIO0_7=0x01;	/* UART CTS */
+	LPC_IOCON->PIO1_5=0x01;	/* UART RTS */
+    }
+    LPC_IOCON->PIO1_6=0x01;	/* UART RXD */
+    LPC_IOCON->PIO1_7=0x01;	/* UART TXD */
+
     /* Enable UART clock */
     LPC_SYSCON->SYSAHBCLKCTRL |= (1 << 12);
     LPC_SYSCON->UARTCLKDIV = 0x1;	/* divided by 1 */
