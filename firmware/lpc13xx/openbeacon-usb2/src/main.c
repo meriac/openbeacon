@@ -63,10 +63,41 @@ rfid_hexdump (const void *buffer, int size)
   debug_printf (" [size=%02i]\n", size);
 }
 */
+
+void
+main_menue(uint8_t cmd)
+{
+    /* ignore non-printable characters */
+    if(cmd<=' ')
+	return;
+    /* map lower case to upper case */
+    if(cmd>'a' && cmd<'z')
+	cmd-=('a'-'A');
+
+    switch(cmd)
+    {
+	case '?':
+	case 'H':
+	    debug_printf(
+		"\n"
+		" *****************************************************\n"
+		" * OpenBeacon USB II - Bluetooth Console             *\n"
+		" * (C) 2010 Milosch Meriac <meriac@openbeacon.de>    *\n"
+		" *****************************************************\n"
+		" * H,?          - show this help screen              *\n"
+		" *****************************************************\n"
+		"\n"
+		);
+	    break;
+	default:
+	    debug_printf("Unknown command '%c' - please press 'H' for help \n",cmd);
+    }
+}
+
 int
 main (void)
 {
-  int t,debug;
+  int t,firstrun;
   volatile int i;
 
   /* Initialize GPIO (sets up clock) */
@@ -95,7 +126,7 @@ main (void)
   bt_init ();
 
   /* main loop */
-  debug = 0;
+  firstrun=1;
   while (1)
     {
       /* blink LED0 */
@@ -104,20 +135,27 @@ main (void)
       pin_led (GPIO_LEDS_OFF);
       for (i = 0; i < 100000; i++);
 
-      /* waith for debug output till first connect - FIXME */
       if(UARTCount)
       {
-        debug = 1;
-        UARTCount = 0;
-
-	/* blink LED1 */
+	/* blink LED1 upon Bluetooth command */
 	pin_led (GPIO_LED1);
-	for (i = 0; i < 100000; i++);
+
+	/* show help screen upon Bluetooth connect */
+	if(firstrun)
+	{
+	    main_menue('?');
+	    firstrun=0;
+	}
+	else
+	    /* execute menue command with last character received */
+	    main_menue(UARTBuffer[UARTCount-1]);
+
+	/* LED1 off again */
 	pin_led (GPIO_LEDS_OFF);
-	for (i = 0; i < 100000; i++);
+
+	/* clear UART buffer */
+        UARTCount = 0;
       }
-      if(debug)
-        debug_printf("Hello World!\n");
 
       /* SPI test transmissions */
       spi_txrx (SPI_CS_NRF, NULL, NULL, 16);
