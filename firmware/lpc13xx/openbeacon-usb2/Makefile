@@ -13,6 +13,7 @@ APP_SRC= \
   src/hid.c \
   src/pin.c \
   src/3d_acceleration.c \
+  src/storage.c \
   src/spi.c
 
 APP_SRC+=$(IMAGES_C)

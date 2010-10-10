@@ -77,6 +77,9 @@ acc_status (void)
 void
 acc_init (void)
 {
+  /* setup SPI chipselect pin */
+  spi_init_pin (SPI_CS_ACC3D);
+
   /* PIO, Inactive Pull, Digital Mode */
   LPC_IOCON->PIO1_11 = 1 << 7;
 

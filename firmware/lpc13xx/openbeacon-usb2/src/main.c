@@ -26,6 +26,7 @@
 #include "spi.h"
 #include "bluetooth.h"
 #include "3d_acceleration.h"
+#include "storage.h"
 
 static uint8_t hid_buffer[USB_HID_IN_REPORT_SIZE];
 
@@ -98,6 +99,7 @@ main_menue (uint8_t cmd)
 		    " *****************************************************\n");
       spi_status ();
       acc_status ();
+      storage_status ();
       debug_printf (" *****************************************************\n"
 		    "\n");
       break;
@@ -120,8 +122,6 @@ main (void)
   pin_init ();
   /* setup SPI chipselect pins */
   spi_init_pin (SPI_CS_NRF);
-  spi_init_pin (SPI_CS_FLASH);
-  spi_init_pin (SPI_CS_ACC3D);
 
   /* blink as a sign of boot to detect crashes */
   for (t = 0; t < 10; t++)
