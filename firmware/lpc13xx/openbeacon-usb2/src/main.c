@@ -25,6 +25,7 @@
 #include "hid.h"
 #include "spi.h"
 #include "bluetooth.h"
+#include "3d_acceleration.h"
 
 static uint8_t hid_buffer[USB_HID_IN_REPORT_SIZE];
 
@@ -100,6 +101,7 @@ main_menue(uint8_t cmd)
 		" *****************************************************\n"
 		);
 	    spi_status();
+	    acc_status();
 	    debug_printf(
 		" *****************************************************\n"
 		"\n"
@@ -139,12 +141,15 @@ main (void)
   hid_init ();
   /* Init SPI */
   spi_init ();
+  /* Init 3D acceleration sensor */
+  acc_init ();
   /* Init Bluetooth */
   bt_init ();
 
   /* main loop */
   t=0;
   firstrun=1;
+
   while (1)
     {
       /* blink LED0 on every 32th run - FIXME later with sleep */
@@ -177,10 +182,5 @@ main (void)
 	/* clear UART buffer */
         UARTCount = 0;
       }
-
-      /* SPI test transmissions */
-      spi_txrx (SPI_CS_NRF, NULL, NULL, 16);
-      spi_txrx (SPI_CS_FLASH, NULL, NULL, 16);
-      spi_txrx (SPI_CS_ACC3D, NULL, NULL, 16);
     }
 }
