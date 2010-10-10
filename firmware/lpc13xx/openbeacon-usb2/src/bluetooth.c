@@ -30,9 +30,22 @@
 #define CPU_ON_OFF_BLT_PORT 1
 #define CPU_ON_OFF_BLT_PIN 0
 
+static const char *bt_init_strings[] = {
+  "SEC=3,2,2,04,0000",
+  "SLN=17,OpenBeacon USB II",
+  "RLS=1101,13,Debug Console,01,000000",
+  "DIS=3",
+  "AAC=1",
+  "SCR"
+};
+
+#define BT_INIT_STRINGS_COUNT ((int)(sizeof(bt_init_strings)/sizeof(bt_init_strings[0])))
+
 void
 bt_init (void)
 {
+  int bt_init_pos;
+
   /* Init UART for Bluetooth module without RTS/CTS */
   UARTInit (115200, 0);
 
@@ -54,4 +67,19 @@ bt_init (void)
   LPC_IOCON->JTAG_TMS_PIO1_0=1;
   GPIOSetDir  ( CPU_ON_OFF_BLT_PORT, CPU_ON_OFF_BLT_PIN, 1);
   GPIOSetValue( CPU_ON_OFF_BLT_PORT, CPU_ON_OFF_BLT_PIN, 1);
+
+  /* iterate through all bt_init_strings */
+  bt_init_pos = 0;
+  while (bt_init_pos < BT_INIT_STRINGS_COUNT)
+    {
+      /* wait for CR */
+      while (UARTCount)
+	if (UARTBuffer[--UARTCount] == '\n')
+	  {
+	    /* emmpty buffers */
+	    UARTCount = 0;
+	    /* output next init string - don't wait after last */
+	    debug_printf ("AT+J%s\n", bt_init_strings[bt_init_pos++]);
+	  }
+    }
 }
