@@ -86,14 +86,24 @@ main_menue(uint8_t cmd)
 		" * OpenBeacon USB II - Bluetooth Console             *\n"
 		" * (C) 2010 Milosch Meriac <meriac@openbeacon.de>    *\n"
 		" *****************************************************\n"
-		" * H,?          - this help screen                   *\n"
-		" * S            - SPI status                         *\n"
+		" * H,?          - this help screen\n"
+		" * S            - SPI status\n"
 		" *****************************************************\n"
 		"\n"
 		);
 	    break;
 	case 'S':
+	    debug_printf(
+		"\n"
+		" *****************************************************\n"
+		" * OpenBeacon Status Information                     *\n"
+		" *****************************************************\n"
+		);
 	    spi_status();
+	    debug_printf(
+		" *****************************************************\n"
+		"\n"
+		);
 	    break;
 	default:
 	    debug_printf("Unknown command '%c' - please press 'H' for help \n",cmd);

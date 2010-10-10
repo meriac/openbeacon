@@ -84,7 +84,7 @@ spi_txrx (spi_cs chipselect, const void *tx, void *rx, uint32_t len)
 void
 spi_status (void)
 {
-    debug_printf("\nSPI Status: SPI_CLK:%uMHz\n",(SystemCoreClock/SPI_PRESCALE_CLOCK_CPSDVSR)/1000000);
+    debug_printf(" * SPI: CLK:%uMHz\n",(SystemCoreClock/SPI_PRESCALE_CLOCK_CPSDVSR)/1000000);
 }
 
 void
