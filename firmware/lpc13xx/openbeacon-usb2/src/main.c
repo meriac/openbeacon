@@ -102,8 +102,9 @@ main (void)
       pin_led (GPIO_LED0);
       for (i = 0; i < 100000; i++);
       pin_led (GPIO_LEDS_OFF);
-      for (i = 0; i < 1000000; i++);
+      for (i = 0; i < 100000; i++);
 
+      /* waith for debug output till first connect - FIXME */
       if(UARTCount)
       {
         debug = 1;
@@ -121,6 +122,6 @@ main (void)
       pin_led (GPIO_LED1);
       for (i = 0; i < 100000; i++);
       pin_led (GPIO_LEDS_OFF);
-      for (i = 0; i < 1000000; i++);
+      for (i = 0; i < 100000; i++);
     }
 }
