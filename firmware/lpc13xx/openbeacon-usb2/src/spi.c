@@ -25,6 +25,9 @@
 
 #define BIT_REVERSE(x) ((unsigned char)(__RBIT(x)>>24))
 
+/* Set default SPI clock to 8MHz - FIXME change to dynamic calculation per peripheral  */
+#define SPI_PRESCALE_CLOCK_CPSDVSR 6
+
 void
 spi_init_pin (spi_cs chipselect)
 {
@@ -81,7 +84,7 @@ spi_txrx (spi_cs chipselect, const void *tx, void *rx, uint32_t len)
 void
 spi_status (void)
 {
-    debug_printf("\nSPI Status: SYSCLK:%uHz\n",SystemCoreClock);
+    debug_printf("\nSPI Status: SPI_CLK:%uMHz\n",(SystemCoreClock/SPI_PRESCALE_CLOCK_CPSDVSR)/1000000);
 }
 
 void
@@ -99,13 +102,12 @@ spi_init (void)
   LPC_IOCON->SCKLOC = 0x00;	/* route to PIO0_10 */
   LPC_IOCON->JTAG_TCK_PIO0_10 = 0x02;	/* SCK */
 
-  /* Set SSP PCLK to 4.5MHz
-     DIV=1 */
+  /* Set SSP PCLK to 48MHz DIV=1 */
   LPC_SYSCON->SSPCLKDIV = 0x01;
   /* 8 bit, SPI, SCR=0 */
   LPC_SSP->CR0 = 0x0007;
   LPC_SSP->CR1 = 0x0002;
   /* SSP0 Clock Prescale Register
      CPSDVSR = 2 */
-  LPC_SSP->CPSR = 0x02;
+  LPC_SSP->CPSR = SPI_PRESCALE_CLOCK_CPSDVSR;
 }
