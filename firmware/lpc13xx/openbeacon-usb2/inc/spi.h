@@ -31,6 +31,7 @@ typedef uint32_t spi_cs;
 #define SPI_CS(port,pin,spi_clock,mode) ((spi_cs)( ((((uint32_t)port)&0xFF)<<24) | ((((uint32_t)pin)&0xFF)<<16) | ((((uint32_t)(spi_clock*2))&0xFF)<<8) | (((uint32_t)mode)&0xFF) ))
 
 extern void spi_init(void);
+extern void spi_status(void);
 extern void spi_init_pin (spi_cs chipselect);
 extern int spi_txrx (spi_cs chipselect, const void *tx, void *rx, uint32_t len);
 

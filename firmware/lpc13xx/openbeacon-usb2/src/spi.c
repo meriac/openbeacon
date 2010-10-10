@@ -79,6 +79,12 @@ spi_txrx (spi_cs chipselect, const void *tx, void *rx, uint32_t len)
 }
 
 void
+spi_status (void)
+{
+    debug_printf("\nSPI Status: SYSCLK:%uHz\n",SystemCoreClock);
+}
+
+void
 spi_init (void)
 {
   /* reset SSP peripheral */

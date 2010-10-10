@@ -70,6 +70,8 @@ main_menue(uint8_t cmd)
     /* ignore non-printable characters */
     if(cmd<=' ')
 	return;
+    /* show key pressed */
+    debug_printf("%c\n",cmd);
     /* map lower case to upper case */
     if(cmd>'a' && cmd<'z')
 	cmd-=('a'-'A');
@@ -84,14 +86,19 @@ main_menue(uint8_t cmd)
 		" * OpenBeacon USB II - Bluetooth Console             *\n"
 		" * (C) 2010 Milosch Meriac <meriac@openbeacon.de>    *\n"
 		" *****************************************************\n"
-		" * H,?          - show this help screen              *\n"
+		" * H,?          - this help screen                   *\n"
+		" * S            - SPI status                         *\n"
 		" *****************************************************\n"
 		"\n"
 		);
 	    break;
+	case 'S':
+	    spi_status();
+	    break;
 	default:
 	    debug_printf("Unknown command '%c' - please press 'H' for help \n",cmd);
     }
+    debug_printf("\n# ");
 }
 
 int
@@ -126,14 +133,18 @@ main (void)
   bt_init ();
 
   /* main loop */
+  t=0;
   firstrun=1;
   while (1)
     {
-      /* blink LED0 */
-      pin_led (GPIO_LED0);
-      for (i = 0; i < 100000; i++);
-      pin_led (GPIO_LEDS_OFF);
-      for (i = 0; i < 100000; i++);
+      /* blink LED0 on every 32th run - FIXME later with sleep */
+      if((t++ & 0x1F)==0)
+      {
+        pin_led (GPIO_LED0);
+        for (i = 0; i < 100000; i++);
+        pin_led (GPIO_LEDS_OFF);
+      }
+      for (i = 0; i < 200000; i++);
 
       if(UARTCount)
       {
@@ -143,12 +154,12 @@ main (void)
 	/* show help screen upon Bluetooth connect */
 	if(firstrun)
 	{
-	    main_menue('?');
+	    debug_printf("press 'H' for help...\n# ");
 	    firstrun=0;
 	}
 	else
 	    /* execute menue command with last character received */
-	    main_menue(UARTBuffer[UARTCount-1]);
+	main_menue(UARTBuffer[UARTCount-1]);
 
 	/* LED1 off again */
 	pin_led (GPIO_LEDS_OFF);
