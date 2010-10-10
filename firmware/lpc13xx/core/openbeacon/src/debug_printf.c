@@ -168,9 +168,9 @@ tiny_vsprintf (const char *fmt, va_list args)
     {
       if (*fmt != '%')
 	{
-	  UARTSendChar(*fmt);
 	  if(*fmt=='\n')
 	    UARTSendChar('\r');
+	  UARTSendChar(*fmt);
 	  continue;
 	}
 
