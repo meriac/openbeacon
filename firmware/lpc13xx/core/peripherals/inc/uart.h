@@ -49,6 +49,9 @@ extern void UART_IRQHandler (void);
 extern void UARTSendChar (uint8_t data);
 extern void UARTSend (uint8_t * BufferPtr, uint32_t Length);
 
+extern volatile uint32_t UARTCount;
+extern volatile uint8_t UARTBuffer[BUFSIZE];
+
 #endif /* end __UART_H */
 /*****************************************************************************
 **                            End Of File

@@ -90,20 +90,10 @@ main (void)
 
   /* Init USB HID interface */
   hid_init ();
-  /* UART setup */
-//  UARTInit (115200, 0);
   /* Init SPI */
   spi_init ();
   /* Init Bluetooth */
   bt_init ();
-  GPIOSetDir  ( 1, 5, 1);
-  GPIOSetValue( 1, 5, 0);
-
-  GPIOSetDir  ( 1, 6, 0);
-  GPIOSetDir  ( 1, 7, 0);
-
-  /* Hello World */
-//  debug_printf ("Hello RFID!\n");
 
   /* main loop */
   counter = 0;
@@ -113,9 +103,7 @@ main (void)
       pin_led (GPIO_LED0);
       for (i = 0; i < 100000; i++);
       pin_led (GPIO_LEDS_OFF);
-
-      /* read firmware revision */
-//      debug_printf ("\nreading firmware version (%u)...\n", counter++);
+      for (i = 0; i < 100000; i++);
 
       /* SPI test transmissions */
       spi_txrx (SPI_CS_NRF, NULL, NULL, 16);
@@ -126,8 +114,6 @@ main (void)
       pin_led (GPIO_LED1);
       for (i = 0; i < 100000; i++);
       pin_led (GPIO_LEDS_OFF);
-
-      /* make device discoverable */
-//      debug_printf ("\n\rAT+JDIS=3\n\r");
+      for (i = 0; i < 100000; i++);
     }
 }

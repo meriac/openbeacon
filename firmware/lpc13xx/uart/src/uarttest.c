@@ -12,9 +12,6 @@
 
 #include <openbeacon.h>
 
-extern volatile uint32_t UARTCount;
-extern volatile uint8_t UARTBuffer[BUFSIZE];
-
 int
 main (void)
 {
@@ -25,7 +22,7 @@ main (void)
    */
 
   /* NVIC is installed inside UARTInit file. */
-  UARTInit (115200);
+  UARTInit (115200, 0);
 
   /* Initialize GPIO (sets up clock) */
   GPIOInit ();

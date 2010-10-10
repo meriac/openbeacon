@@ -33,6 +33,13 @@
 void
 bt_init (void)
 {
+  /* Init UART for Bluetooth module without RTS/CTS */
+  UARTInit (115200, 0);
+
+  /* fake CTS for now */
+  GPIOSetDir  ( 1, 5, 1);
+  GPIOSetValue( 1, 5, 0);
+
   /* Set CPU_WAKEUP_BLT port pin to output */
   LPC_IOCON->ARM_SWDIO_PIO1_3=1;
   GPIOSetDir  ( CPU_WAKEUP_BLT_PORT, CPU_WAKEUP_BLT_PIN, 1);
