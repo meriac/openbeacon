@@ -66,9 +66,8 @@ rfid_hexdump (const void *buffer, int size)
 int
 main (void)
 {
-  int t;
+  int t,debug;
   volatile int i;
-  unsigned char counter;
 
   /* Initialize GPIO (sets up clock) */
   GPIOInit ();
@@ -96,14 +95,22 @@ main (void)
   bt_init ();
 
   /* main loop */
-  counter = 0;
+  debug = 0;
   while (1)
     {
       /* blink LED0 */
       pin_led (GPIO_LED0);
       for (i = 0; i < 100000; i++);
       pin_led (GPIO_LEDS_OFF);
-      for (i = 0; i < 100000; i++);
+      for (i = 0; i < 1000000; i++);
+
+      if(UARTCount)
+      {
+        debug = 1;
+        UARTCount = 0;
+      }
+      if(debug)
+        debug_printf("Hello World!\n");
 
       /* SPI test transmissions */
       spi_txrx (SPI_CS_NRF, NULL, NULL, 16);
@@ -114,6 +121,6 @@ main (void)
       pin_led (GPIO_LED1);
       for (i = 0; i < 100000; i++);
       pin_led (GPIO_LEDS_OFF);
-      for (i = 0; i < 100000; i++);
+      for (i = 0; i < 1000000; i++);
     }
 }

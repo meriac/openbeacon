@@ -70,7 +70,7 @@ bt_init (void)
 
   /* iterate through all bt_init_strings */
   bt_init_pos = 0;
-  while (bt_init_pos < BT_INIT_STRINGS_COUNT)
+  while (bt_init_pos <= BT_INIT_STRINGS_COUNT)
     {
       /* wait for CR */
       while (UARTCount)
@@ -78,8 +78,9 @@ bt_init (void)
 	  {
 	    /* emmpty buffers */
 	    UARTCount = 0;
-	    /* output next init string - don't wait after last */
-	    debug_printf ("AT+J%s\n", bt_init_strings[bt_init_pos++]);
+	    /* output next init string */
+	    if(bt_init_pos<BT_INIT_STRINGS_COUNT)
+		debug_printf ("AT+J%s\n", bt_init_strings[bt_init_pos++]);
 	  }
     }
 }
