@@ -109,6 +109,12 @@ main (void)
       {
         debug = 1;
         UARTCount = 0;
+
+	/* blink LED1 */
+	pin_led (GPIO_LED1);
+	for (i = 0; i < 100000; i++);
+	pin_led (GPIO_LEDS_OFF);
+	for (i = 0; i < 100000; i++);
       }
       if(debug)
         debug_printf("Hello World!\n");
@@ -117,11 +123,5 @@ main (void)
       spi_txrx (SPI_CS_NRF, NULL, NULL, 16);
       spi_txrx (SPI_CS_FLASH, NULL, NULL, 16);
       spi_txrx (SPI_CS_ACC3D, NULL, NULL, 16);
-
-      /* blink LED1 */
-      pin_led (GPIO_LED1);
-      for (i = 0; i < 100000; i++);
-      pin_led (GPIO_LEDS_OFF);
-      for (i = 0; i < 100000; i++);
     }
 }
