@@ -80,7 +80,8 @@ bt_init (void)
 	    UARTCount = 0;
 	    /* output next init string */
 	    if(bt_init_pos<BT_INIT_STRINGS_COUNT)
-		debug_printf ("AT+J%s\n", bt_init_strings[bt_init_pos++]);
+		debug_printf ("AT+J%s\n", bt_init_strings[bt_init_pos]);
+	    bt_init_pos++;
 	  }
     }
 }
