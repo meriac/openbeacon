@@ -27,6 +27,25 @@
 void
 storage_status (void)
 {
+    static const uint8_t cmd_jedec_read_id=0x9F;
+    uint8_t rx[3];
+    spi_txrx (SPI_CS_FLASH, &cmd_jedec_read_id, sizeof(cmd_jedec_read_id), rx, sizeof(rx));
+
+    /* Show FLASH ID */
+    debug_printf(" * FLASH: ID:%02X-%02X-%02X\n",rx[0],rx[1],rx[2]);
+}
+
+void
+storage_read (uint32_t pos,uint8_t length,uint8_t *data)
+{
+    uint8_t tx[4];
+
+    tx[0]=0x03; /* 25MHz Read */
+    tx[1]=(uint8_t)(pos>>16);
+    tx[2]=(uint8_t)(pos>> 8);
+    tx[3]=(uint8_t)(pos);
+
+    spi_txrx (SPI_CS_FLASH, tx, sizeof(tx), data, length);
 }
 
 void

@@ -138,6 +138,8 @@ main (void)
   spi_init ();
   /* Init 3D acceleration sensor */
   acc_init ();
+  /* Init Storage */
+  storage_init ();
   /* Init Bluetooth */
   bt_init ();
 
