@@ -9,7 +9,8 @@ APP_LDFLAGS=-lm
 
 APP_SRC= \
   src/main.c \
-  src/nRF24L01.c \
+  src/nRF_CMD.c \
+  src/nRF_API.c \
   src/bluetooth.c \
   src/hid.c \
   src/pin.c \

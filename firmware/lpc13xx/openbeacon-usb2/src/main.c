@@ -27,7 +27,11 @@
 #include "bluetooth.h"
 #include "3d_acceleration.h"
 #include "storage.h"
-#include "nRF24L01.h"
+#include "nRF_API.h"
+#include "nRF_CMD.h"
+
+// set nRF24L01 broadcast mac
+const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 1, 2, 3, 2, 1 };
 
 static uint8_t hid_buffer[USB_HID_IN_REPORT_SIZE];
 
@@ -90,8 +94,12 @@ main_menue (uint8_t cmd)
 		    " *****************************************************\n"
 		    " * H,?          - this help screen\n"
 		    " * S            - SPI status\n"
+		    " * R            - OpenBeacon nRF24L01 register dump\n"
 		    " *****************************************************\n"
 		    "\n");
+      break;
+    case 'R':
+    	nRFCMD_RegisterDump();
       break;
     case 'S':
       debug_printf ("\n"
@@ -101,6 +109,7 @@ main_menue (uint8_t cmd)
       spi_status ();
       acc_status ();
       storage_status ();
+//      nrf_status ();
       debug_printf (" *****************************************************\n"
 		    "\n");
       break;
@@ -135,10 +144,10 @@ main (void)
 
   /* Init USB HID interface */
   hid_init ();
-  /* Init OpenBeacon nRF24L01 interface */
-  nrf_init ();
   /* Init SPI */
   spi_init ();
+  /* Init OpenBeacon nRF24L01 interface */
+  nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0);
   /* Init 3D acceleration sensor */
   acc_init ();
   /* Init Storage */

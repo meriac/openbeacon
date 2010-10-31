@@ -36,4 +36,6 @@
 #define SPI_CS_NRF   SPI_CS( 1,10,  8.0, SPI_CS_MODE_NORMAL )
 #define SPI_CS_ACC3D SPI_CS( 1, 8, 10.0, SPI_CS_MODE_NORMAL )
 
+#define NRF_MAX_MAC_SIZE 5
+
 #endif/*__CONFIG_H__*/
