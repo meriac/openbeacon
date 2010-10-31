@@ -27,6 +27,7 @@
 #include "bluetooth.h"
 #include "3d_acceleration.h"
 #include "storage.h"
+#include "nRF24L01.h"
 
 static uint8_t hid_buffer[USB_HID_IN_REPORT_SIZE];
 
@@ -134,6 +135,8 @@ main (void)
 
   /* Init USB HID interface */
   hid_init ();
+  /* Init OpenBeacon nRF24L01 interface */
+  nrf_init ();
   /* Init SPI */
   spi_init ();
   /* Init 3D acceleration sensor */
