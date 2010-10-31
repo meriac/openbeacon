@@ -31,52 +31,53 @@
 void
 spi_init_pin (spi_cs chipselect)
 {
-  GPIOSetDir (
-	(uint8_t)(chipselect >> 24),
-	(uint8_t)(chipselect >> 16),
-	1
-  );
+  GPIOSetDir ((uint8_t) (chipselect >> 24), (uint8_t) (chipselect >> 16), 1);
 }
 
 int
-spi_txrx (spi_cs chipselect, const void *tx, void *rx, uint32_t len)
+spi_txrx (spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
+	  uint16_t rxlen)
 {
   uint8_t data;
 
   /* activate chip select */
-  GPIOSetValue ((uint8_t)(chipselect >> 24), (uint8_t)(chipselect >> 16), chipselect & SPI_CS_MODE_INVERT_CS);
+  GPIOSetValue ((uint8_t) (chipselect >> 24), (uint8_t) (chipselect >> 16),
+		chipselect & SPI_CS_MODE_INVERT_CS);
 
-  while(len--)
-  {
-    if(tx)
+  while (txlen || rxlen)
     {
-	data = *((uint8_t*)tx);
-	tx = ((uint8_t*)tx)+1;
-	if(chipselect & SPI_CS_MODE_BIT_REVERSED)
+      if (txlen)
+	{
+	  txlen--;
+	  data = *((uint8_t *) tx);
+	  tx = ((uint8_t *) tx) + 1;
+	  if (chipselect & SPI_CS_MODE_BIT_REVERSED)
 	    data = BIT_REVERSE (data);
-    }
-    else
+	}
+      else
 	data = 0;
 
-    /* wait till ready */
-    while ((LPC_SSP->SR & 0x02) == 0);
-    LPC_SSP->DR = data;
+      /* wait till ready */
+      while ((LPC_SSP->SR & 0x02) == 0);
+      LPC_SSP->DR = data;
 
-    /* wait till sent */
-    while ((LPC_SSP->SR & 0x04) == 0);
-    data = LPC_SSP->DR;
+      /* wait till sent */
+      while ((LPC_SSP->SR & 0x04) == 0);
+      data = LPC_SSP->DR;
 
-    if(rx)
-    {
-	if(chipselect & SPI_CS_MODE_BIT_REVERSED)
+      if (rxlen)
+	{
+	  rxlen--;
+	  if (chipselect & SPI_CS_MODE_BIT_REVERSED)
 	    data = BIT_REVERSE (data);
-	*((uint8_t*)rx) = data;
-	rx = ((uint8_t*)rx)+1;
+	  *((uint8_t *) rx) = data;
+	  rx = ((uint8_t *) rx) + 1;
+	}
     }
-  }
 
   /* de-activate chip select */
-  GPIOSetValue ((uint8_t)(chipselect >> 24), (uint8_t)(chipselect >> 16), (chipselect & SPI_CS_MODE_INVERT_CS) ^ SPI_CS_MODE_INVERT_CS );
+  GPIOSetValue ((uint8_t) (chipselect >> 24), (uint8_t) (chipselect >> 16),
+		(chipselect & SPI_CS_MODE_INVERT_CS) ^ SPI_CS_MODE_INVERT_CS);
 
   return 0;
 }
@@ -84,7 +85,8 @@ spi_txrx (spi_cs chipselect, const void *tx, void *rx, uint32_t len)
 void
 spi_status (void)
 {
-    debug_printf(" * SPI: CLK:%uMHz\n",(SystemCoreClock/SPI_PRESCALE_CLOCK_CPSDVSR)/1000000);
+  debug_printf (" * SPI: CLK:%uMHz\n",
+		(SystemCoreClock / SPI_PRESCALE_CLOCK_CPSDVSR) / 1000000);
 }
 
 void
@@ -98,9 +100,9 @@ spi_init (void)
 
   // Enable SSP peripheral
   LPC_IOCON->PIO0_8 = 0x01 | (0x01 << 3);	/* MISO, Pulldown */
-  LPC_IOCON->PIO0_9 = 0x01;			/* MOSI */
-  LPC_IOCON->SCKLOC = 0x00;			/* route to PIO0_10 */
-  LPC_IOCON->JTAG_TCK_PIO0_10 = 0x02;		/* SCK */
+  LPC_IOCON->PIO0_9 = 0x01;	/* MOSI */
+  LPC_IOCON->SCKLOC = 0x00;	/* route to PIO0_10 */
+  LPC_IOCON->JTAG_TCK_PIO0_10 = 0x02;	/* SCK */
 
   /* Set SSP PCLK to 48MHz DIV=1 */
   LPC_SYSCON->SSPCLKDIV = 0x01;

@@ -33,6 +33,6 @@ typedef uint32_t spi_cs;
 extern void spi_init(void);
 extern void spi_status(void);
 extern void spi_init_pin (spi_cs chipselect);
-extern int spi_txrx (spi_cs chipselect, const void *tx, void *rx, uint32_t len);
+extern int spi_txrx (spi_cs chipselect, const void *tx, uint16_t txlen, void *rx, uint16_t rxlen);
 
 #endif/*__SPI_H__*/

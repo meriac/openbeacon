@@ -38,7 +38,7 @@ acc_reg_write (uint8_t addr, uint8_t data)
   tx[1] = data;
 
   /* transmit packet */
-  spi_txrx (SPI_CS_ACC3D, tx, NULL, sizeof (tx));
+  spi_txrx (SPI_CS_ACC3D, tx, sizeof (tx), NULL, 0);
 }
 
 static uint8_t
@@ -50,7 +50,7 @@ acc_reg_read (uint8_t addr)
   tx[0] = addr << 1;
   tx[1] = 0;
   /* transmit packet */
-  spi_txrx (SPI_CS_ACC3D, tx, rx, sizeof (rx));
+  spi_txrx (SPI_CS_ACC3D, tx, sizeof (tx), rx, sizeof (rx));
 
   return rx[1];
 }
