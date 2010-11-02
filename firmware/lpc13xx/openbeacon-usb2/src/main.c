@@ -99,7 +99,7 @@ main_menue (uint8_t cmd)
 		    "\n");
       break;
     case 'R':
-    	nRFCMD_RegisterDump();
+      nRFCMD_RegisterDump();
       break;
     case 'S':
       debug_printf ("\n"
@@ -109,7 +109,7 @@ main_menue (uint8_t cmd)
       spi_status ();
       acc_status ();
       storage_status ();
-//      nrf_status ();
+      nRFCMD_Status ();
       debug_printf (" *****************************************************\n"
 		    "\n");
       break;

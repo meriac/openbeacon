@@ -40,5 +40,6 @@ extern void nRFCMD_ReadWriteBuffer (const uint8_t * tx_data, uint8_t * rx_data, 
 extern void nRFCMD_ExecMacro (const uint8_t * macro);
 extern void nRFCMD_RegisterDump (void);
 extern void nRFCMD_Init (void);
+extern void nRFCMD_Status (void);
 
 #endif /*NRF_CMD_H */
