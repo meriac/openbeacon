@@ -97,7 +97,7 @@ main (void)
   hid_init ();
 
   /* UART setup */
-  UARTInit (115200);
+  UARTInit (115200, 0);
 
   /* Init RFID */
   rfid_init ();
