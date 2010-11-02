@@ -144,38 +144,41 @@ nRFCMD_GetRegSize (uint8_t reg)
   return res;
 }
 
-void nRFCMD_ExecMacro (const uint8_t * macro)
+void
+nRFCMD_ExecMacro (const uint8_t * macro)
 {
   unsigned char size;
 
   while ((size = *macro++) != 0)
     {
-      nRFCMD_ReadWriteBuffer (macro , NULL, size - 1);
+      nRFCMD_ReadWriteBuffer (macro, NULL, size - 1);
       macro += size;
     }
 }
 
-void nRFCMD_RegisterDump (void)
+void
+nRFCMD_RegisterDump (void)
 {
   uint8_t t, size, reg, buf[32];
 
-  reg=0;
-  debug_printf("\nnRFCMD_RegisterDump:\n");
+  reg = 0;
+  debug_printf ("\nnRFCMD_RegisterDump:\n");
   while (((size = nRFCMD_GetRegSize (reg)) > 0) && (reg < 0xFF))
-  {
-  	nRFCMD_RegReadBuf(reg, buf, size);
+    {
+      nRFCMD_RegReadBuf (reg, buf, size);
 
-  	debug_printf("\treg[0x%02X]:",reg);
-    for(t=0;t<size;t++)
-    	debug_printf(" 0x%02X",buf[t]);
-    debug_printf("\n");
+      debug_printf ("\treg[0x%02X]:", reg);
+      for (t = 0; t < size; t++)
+	debug_printf (" 0x%02X", buf[t]);
+      debug_printf ("\n");
 
-    reg++;
-  }
-  debug_printf("\n");
+      reg++;
+    }
+  debug_printf ("\n");
 }
 
-void nRFCMD_Status (void)
+void
+nRFCMD_Status (void)
 {
 }
 

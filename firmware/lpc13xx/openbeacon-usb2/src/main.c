@@ -99,7 +99,7 @@ main_menue (uint8_t cmd)
 		    "\n");
       break;
     case 'R':
-      nRFCMD_RegisterDump();
+      nRFCMD_RegisterDump ();
       break;
     case 'S':
       debug_printf ("\n"

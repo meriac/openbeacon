@@ -30,9 +30,8 @@
 #include <nRF_HW.h>
 
 extern uint8_t nRFAPI_Init (uint8_t channel,
-				  const uint8_t *mac,
-				  uint8_t mac_size,
-				  uint8_t features);
+			    const uint8_t * mac,
+			    uint8_t mac_size, uint8_t features);
 extern void nRFAPI_SetTxPower (uint8_t power);
 extern void nRFAPI_TxRetries (uint8_t count);
 extern void nRFAPI_SetRxMode (uint8_t receive);
@@ -40,20 +39,19 @@ extern void nRFAPI_PipesEnable (uint8_t mask);
 extern void nRFAPI_PipesAck (uint8_t mask);
 extern uint8_t nRFAPI_GetSizeMac (void);
 extern uint8_t nRFAPI_SetSizeMac (uint8_t addr_size);
-extern void nRFAPI_GetTxMAC (uint8_t *addr, uint8_t addr_size);
-extern void nRFAPI_SetTxMAC (const uint8_t *addr,
-			     uint8_t addr_size);
-extern void nRFAPI_SetRxMAC (const uint8_t *addr,
+extern void nRFAPI_GetTxMAC (uint8_t * addr, uint8_t addr_size);
+extern void nRFAPI_SetTxMAC (const uint8_t * addr, uint8_t addr_size);
+extern void nRFAPI_SetRxMAC (const uint8_t * addr,
 			     uint8_t addr_size, uint8_t pipe);
 extern void nRFAPI_SetChannel (uint8_t channel);
 extern uint8_t nRFAPI_GetChannel (void);
 extern uint8_t nRFAPI_ClearIRQ (uint8_t status);
-extern void nRFAPI_TX (uint8_t *buf, uint8_t count);
+extern void nRFAPI_TX (uint8_t * buf, uint8_t count);
 extern uint8_t nRFAPI_GetStatus (void);
 extern uint8_t nRFAPI_GetPipeSizeRX (uint8_t pipe);
 extern void nRFAPI_SetPipeSizeRX (uint8_t pipe, uint8_t size);
 extern uint8_t nRFAPI_GetPipeCurrent (void);
-extern uint8_t nRFAPI_RX (uint8_t *buf, uint8_t count);
+extern uint8_t nRFAPI_RX (uint8_t * buf, uint8_t count);
 extern void nRFAPI_FlushRX (void);
 extern void nRFAPI_FlushTX (void);
 extern void nRFAPI_ReuseTX (void);

@@ -34,8 +34,7 @@
 #endif /*NRF_RFOPTIONS */
 
 // set broadcast MAC to 'BCAST'
-const uint8_t rfbroadcast_mac[NRF_MAX_MAC_SIZE] =
-  { 'T', 'S', 'A', 'C', 'B' };
+const uint8_t rfbroadcast_mac[NRF_MAX_MAC_SIZE] = { 'T', 'S', 'A', 'C', 'B' };
 
 uint8_t
 nRFAPI_DetectChip (void)
@@ -83,8 +82,7 @@ nRFAPI_SetRxMode (uint8_t receive)
 
 uint8_t
 nRFAPI_Init (uint8_t channel,
-	     const uint8_t *mac,
-	     uint8_t mac_size, uint8_t features)
+	     const uint8_t * mac, uint8_t mac_size, uint8_t features)
 {
   uint8_t i;
 
@@ -185,22 +183,21 @@ nRFAPI_SetSizeMac (uint8_t addr_size)
 }
 
 void
-nRFAPI_GetTxMAC (uint8_t *addr, uint8_t addr_size)
+nRFAPI_GetTxMAC (uint8_t * addr, uint8_t addr_size)
 {
   if (addr_size >= 3 && addr_size <= 5)
     nRFCMD_RegReadBuf (TX_ADDR, addr, addr_size);
 }
 
 void
-nRFAPI_SetTxMAC (const uint8_t *addr, uint8_t addr_size)
+nRFAPI_SetTxMAC (const uint8_t * addr, uint8_t addr_size)
 {
   if (addr_size >= 3 && addr_size <= 5)
     nRFCMD_RegWriteBuf (TX_ADDR | WRITE_REG, addr, addr_size);
 }
 
 void
-nRFAPI_SetRxMAC (const uint8_t *addr, uint8_t addr_size,
-		 uint8_t pipe)
+nRFAPI_SetRxMAC (const uint8_t * addr, uint8_t addr_size, uint8_t pipe)
 {
   if ((pipe <= 1 && addr_size >= 3 && addr_size <= 5)
       || (addr_size == 1 && pipe >= 2 && pipe <= 5))
@@ -227,7 +224,7 @@ nRFAPI_ClearIRQ (uint8_t status)
 }
 
 void
-nRFAPI_TX (uint8_t *buf, uint8_t count)
+nRFAPI_TX (uint8_t * buf, uint8_t count)
 {
   nRFCMD_RegWriteBuf (WR_TX_PLOAD, buf, count);
 }
@@ -261,7 +258,7 @@ nRFAPI_GetPipeCurrent (void)
 }
 
 uint8_t
-nRFAPI_RX (uint8_t *buf, uint8_t count)
+nRFAPI_RX (uint8_t * buf, uint8_t count)
 {
   uint8_t size, pipe;
 
