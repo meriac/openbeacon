@@ -6,6 +6,7 @@ OPTIM=-O2
 
 APP_CFLAGS= \
     -Iapplication \
+    -Iapplication/dosfs \
     -Inetwork/src/include \
     -Inetwork/src/include/ipv4 \
     -Inetwork/port \
@@ -40,6 +41,10 @@ APP_SRC= \
   application/proto.c \
   application/xxtea.c \
   application/cmd.c \
+  application/dosfs/dosfs.c \
+  application/dosfs/fat_helper.c \
+  application/dosfs/sdcard.c \
+  application/dosfs/spi.c \
   $(CORE)/openbeacon/crc32.c \
   $(CORE)/openbeacon/rnd.c \
   $(NETWORK_SRC)

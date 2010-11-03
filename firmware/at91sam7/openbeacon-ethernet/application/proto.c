@@ -149,7 +149,6 @@ vnRFtaskRxTx (void *parameter)
   unsigned int delta_t_ms;
   portTickType time, time_old;
 
-
   if (!PtInitNRF ())
     while (1)
       {

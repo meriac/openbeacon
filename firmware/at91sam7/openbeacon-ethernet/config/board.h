@@ -156,4 +156,19 @@ typedef struct
 
 #define AT91C_DBGU_BAUD 115200
 
+/*-------------------------------*/
+/* SD card declaration           */
+/*-------------------------------*/
+#define SDCARD_CS_PIO	AT91C_BASE_PIOA
+#define SDCARD_CS_PIN	(1L<<12)
+#define SDCARD_CS	0
+
+/*-------------------------------*/
+/* SPI declaration               */
+/*-------------------------------*/
+#define SD_SPI_PIO	AT91C_BASE_PIOA
+#define SD_SPI_MISO	(1L<<16)
+#define SD_SPI_MOSI	(1L<<17)
+#define SD_SPI_SCK	(1L<<18)
+
 #endif /*__BOARD_H__*/

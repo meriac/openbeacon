@@ -27,6 +27,7 @@
 /* Library includes. */
 #include <string.h>
 #include <stdio.h>
+#include <stdint.h>
 
 #include <FreeRTOS.h>
 #include <board.h>
@@ -43,6 +44,7 @@
 #include "cmd.h"
 #include "proto.h"
 #include "debug_printf.h"
+#include "sdcard.h"
 
 /**********************************************************************/
 static inline void
@@ -56,7 +58,8 @@ prvSetupHardware (void)
   /*  Enable the peripheral clock. */
   AT91C_BASE_PMC->PMC_PCER =
     (1 << AT91C_ID_PIOA) |
-    (1 << AT91C_ID_PIOB) | (1 << AT91C_ID_EMAC) | (1 << AT91C_ID_SPI1);
+    (1 << AT91C_ID_PIOB) | (1 << AT91C_ID_EMAC) |
+    (1 << AT91C_ID_SPI0) | (1 << AT91C_ID_SPI1);
 }
 
 /**********************************************************************/
