@@ -253,8 +253,8 @@ vnRFtaskRxTx (void *parameter)
 			      if (crc)
 				debug_printf ("PX: %u={%u,%u,%u}\n\r",
 					      oid,
-					      (crc >> 0) & 0x7FF,
-					      ((crc >> 14) & 0x3) * 0x55,
+					      (crc >> 0)  & 0x7FF,
+					      (crc >> 14) & 0x3,
 					      (crc >> 11) & 0x7);
 			      else
 				debug_printf

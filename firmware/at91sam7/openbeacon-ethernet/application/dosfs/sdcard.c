@@ -138,7 +138,7 @@ sdcard_claim (void)
 
   int res;
   while ((res = spi_start_bus_exclusive (&sdcard_spi)) == -EAGAIN)
-    vTaskDelay (1 / portTICK_RATE_MS);
+    vTaskDelay (10 / portTICK_RATE_MS);
 
   claim_count++;
 }
@@ -331,7 +331,7 @@ DFS_OpenCard (void)
     }
   CardType = ty;
   //  if(ty == 12)
-  spi_change_config (&sdcard_spi, SDCARD_SPI_CONFIG (SCBR));
+  //    spi_change_config (&sdcard_spi, SDCARD_SPI_CONFIG (SCBR));
   sdcard_release ();
 
   debug_printf ("SD Card type %i detected\n", ty);

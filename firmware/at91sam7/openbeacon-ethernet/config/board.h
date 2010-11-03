@@ -122,6 +122,10 @@
 
 #define TASK_USB_PRIORITY	( tskIDLE_PRIORITY + 4 )
 #define TASK_USB_STACK		( 512 )
+
+#define TASK_FILE_PRIORITY	( tskIDLE_PRIORITY + 5 )
+#define TASK_FILE_STACK		( 512 )
+
 /*-------------------------------*/
 /* configuration structure       */
 /*-------------------------------*/

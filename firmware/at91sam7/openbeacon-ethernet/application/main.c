@@ -37,6 +37,8 @@
 #include <beacontypes.h>
 #include <proto.h>
 #include <network.h>
+#include <queue.h>
+#include <dosfs.h>
 
 #include "lwip/ip.h"
 #include "lwip/ip_addr.h"
@@ -45,6 +47,10 @@
 #include "proto.h"
 #include "debug_printf.h"
 #include "sdcard.h"
+#include "fat_helper.h"
+
+/**********************************************************************/
+static xQueueHandle xLogfile;
 
 /**********************************************************************/
 static inline void
@@ -73,6 +79,40 @@ vApplicationIdleHook (void)
 }
 
 /**********************************************************************/
+void
+vDebugSendHook (char data)
+{
+    vUSBSendByte (data);
+    if(xLogfile)
+	xQueueSend (xLogfile, &data, 0);
+}
+
+/**********************************************************************/
+static void
+vFileTask (void *parameter)
+{
+    uint32_t pos;
+    static uint8_t sector[SECTOR_SIZE];
+
+    do {
+	debug_printf ("trying to open SDCARD...\n");
+	vTaskDelay (2000 / portTICK_RATE_MS);
+    } while(fat_init());
+    debug_printf ("\n...[SDCARD init done]\n\n");
+    vTaskDelay (500 / portTICK_RATE_MS);
+
+  pos=0;
+  for (;;)
+    if (xQueueReceive(xLogfile, &sector[pos], 100))
+    {
+	if(++pos==SECTOR_SIZE)
+	{
+	    pos=0;
+	}
+    }
+}
+
+/**********************************************************************/
 void __attribute__ ((noreturn)) mainloop (void)
 {
   prvSetupHardware ();
@@ -82,8 +122,13 @@ void __attribute__ ((noreturn)) mainloop (void)
   vNetworkInit ();
   PtInitProtocol ();
 
+  xLogfile = xQueueCreate (SECTOR_SIZE*4, sizeof (char));
+
   xTaskCreate (vUSBCDCTask, (signed portCHAR *) "USB", TASK_USB_STACK,
 	       NULL, TASK_USB_PRIORITY, NULL);
+
+  xTaskCreate (vFileTask, (signed portCHAR *) "FILE", TASK_FILE_STACK,
+	       NULL, TASK_FILE_PRIORITY, NULL);
 
   vTaskStartScheduler ();
 

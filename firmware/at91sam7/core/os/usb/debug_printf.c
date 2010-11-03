@@ -16,9 +16,6 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdio.h>
-#include <USB-CDC.h>
-
-#ifndef DISABLE_USB
 
 unsigned long
 simple_strtoul (const char *cp, char **endp, unsigned int base)
@@ -139,18 +136,18 @@ number (long num, unsigned int base, int size, int precision,
   size -= precision;
   if (!(type & (ZEROPAD + LEFT)))
     while (size-- > 0)
-      vUSBSendByte(' ');
+      vDebugSendHook(' ');
   if (sign)
-    vUSBSendByte(sign);
+    vDebugSendHook(sign);
   if (!(type & LEFT))
     while (size-- > 0)
-      vUSBSendByte(c);
+      vDebugSendHook(c);
   while (i < precision--)
-    vUSBSendByte('0');
+    vDebugSendHook('0');
   while (i-- > 0)
-    vUSBSendByte(tmp[i]);
+    vDebugSendHook(tmp[i]);
   while (size-- > 0)
-    vUSBSendByte(' ');
+    vDebugSendHook(' ');
 }
 
 static void
@@ -172,9 +169,9 @@ tiny_vsprintf (const char *fmt, va_list args)
     {
       if (*fmt != '%')
 	{
-	  vUSBSendByte(*fmt);
+	  vDebugSendHook(*fmt);
 	  if(*fmt=='\n')
-	    vUSBSendByte('\r');
+	    vDebugSendHook('\r');
 	  continue;
 	}
 
@@ -253,10 +250,10 @@ tiny_vsprintf (const char *fmt, va_list args)
 	case 'c':
 	  if (!(flags & LEFT))
 	    while (--field_width > 0)
-	      vUSBSendByte(' ');
-	  vUSBSendByte((unsigned char) va_arg (args, int));
+	      vDebugSendHook(' ');
+	  vDebugSendHook((unsigned char) va_arg (args, int));
 	  while (--field_width > 0)
-	    vUSBSendByte(' ');
+	    vDebugSendHook(' ');
 	  continue;
 
 	case 's':
@@ -268,15 +265,15 @@ tiny_vsprintf (const char *fmt, va_list args)
 
 	  if (!(flags & LEFT))
 	    while (len < field_width--)
-	      vUSBSendByte(' ');
+	      vDebugSendHook(' ');
 	  for (i = 0; i < len; ++i)
-	    vUSBSendByte(*s++);
+	    vDebugSendHook(*s++);
 	  while (len < field_width--)
-	    vUSBSendByte(' ');
+	    vDebugSendHook(' ');
 	  continue;
 
 	case '%':
-	  vUSBSendByte('%');
+	  vDebugSendHook('%');
 	  continue;
 
 	  /* integer number formats - set up the flags and "break" */
@@ -297,9 +294,9 @@ tiny_vsprintf (const char *fmt, va_list args)
 	  break;
 
 	default:
-	  vUSBSendByte('%');
+	  vDebugSendHook('%');
 	  if (*fmt)
-	    vUSBSendByte(*fmt);
+	    vDebugSendHook(*fmt);
 	  else
 	    --fmt;
 	  continue;
@@ -367,5 +364,3 @@ void hex_dump (const unsigned char *buf, unsigned int addr, unsigned int len)
                 debug_printf("|\n\r");
         }
 }
-
-#endif/*DISABLE_USB*/

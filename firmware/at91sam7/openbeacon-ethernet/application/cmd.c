@@ -33,7 +33,6 @@
 #include "proto.h"
 #include "network.h"
 #include "debug_printf.h"
-#include "fat_helper.h"
 
 static inline void
 vCmdHelp (void)
@@ -155,14 +154,6 @@ vCmdProcess (const char *cmdline)
 		    "\tReader ID:%i\n" "\n", env.e.reader_id);
       break;
 
-    case 'F':
-      debug_printf ("initializing SDCARD...\n");
-      vTaskDelay (500 / portTICK_RATE_MS);
-      fat_init();
-      debug_printf ("\n...[SDCARD init done]\n\n");
-      vTaskDelay (500 / portTICK_RATE_MS);
-      break;
-
     case 'G':
       vNetworkSetIP (&env.e.ip_gateway, assign ? cmdline : NULL, "gateway");
       break;
@@ -273,7 +264,7 @@ vCmdTask (void *pvParameters)
     {
       if (vUSBRecvByte (&cByte, 1, 100))
 	{
-	  vUSBSendByte (cByte);
+	  vDebugSendHook (cByte);
 	  switch (cByte)
 	    {
 	    case '\n':

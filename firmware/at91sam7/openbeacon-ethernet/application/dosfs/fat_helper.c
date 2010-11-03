@@ -20,6 +20,8 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 */
+#include <FreeRTOS.h>
+#include <task.h>
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
@@ -34,13 +36,10 @@ static uint8_t scratch[SECTOR_SIZE],sector[SECTOR_SIZE];
 int
 fat_init (void)
 {
-  uint32_t pstart, psize, written;
+  uint32_t pstart, psize;
   int res;
   uint8_t pactive, ptype;
   DIRINFO di;
-  FILEINFO fi;
-  DIRENT de;
-  uint8_t hello_world[]="Hello World!\n";
 
   DFS_Init ();
 
@@ -49,6 +48,9 @@ fat_init (void)
       debug_printf ("Can't open SDCARD [%i]\n", res);
       return -ENODEV;
     }
+
+  /* wait till card is ready */
+  vTaskDelay (500 / portTICK_RATE_MS);
 
   pstart = DFS_GetPtnStart (0, scratch, 0, &pactive, &ptype, &psize);
   if (pstart == 0xffffffff)
@@ -91,26 +93,13 @@ fat_init (void)
 	  (int) vi.rootentries, (int) vi.dataarea);
 
   di.scratch = sector;
-  if (DFS_OpenDir (&vi, (uint8_t *) "", &di))
-      debug_printf ("Error opening root directory\n");
-  else
+  if (DFS_OpenDir (&vi, (uint8_t*)"", &di))
   {
-    while (!DFS_GetNext (&vi, &di, &de))
-      {
-	if (de.name[0])
-	  {
-	    debug_printf ("file: '%-11.11s'\n", de.name);
-	  }
-      }
-    if( DFS_OpenFile(&vi, "hello.txt", DFS_WRITE, scratch, &fi) )
-      debug_printf ("Error opening logfile\n");
-    else
-	if(DFS_WriteFile(&fi, sector, hello_world, &written, strlen((char*)&hello_world)))
-	    debug_printf ("Error writing to logfile\n");
-	else
-	    debug_printf ("written %d bytes logfile\n",written);
+      debug_printf ("Error opening root directory\n");
+      return -ENOENT;
   }
-  return 0;
+  else
+      return 0;
 }
 
 int
