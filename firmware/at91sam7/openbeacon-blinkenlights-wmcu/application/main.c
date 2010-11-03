@@ -37,12 +37,12 @@
 #include <proto.h>
 #include <rnd.h>
 #include <network.h>
+#include <debug_printf.h>
 
 #include "led.h"
 #include "proto.h"
 #include "usbshell.h"
 #include "env.h"
-#include "debug_printf.h"
 
 /**********************************************************************/
 static inline void
@@ -69,6 +69,12 @@ vApplicationIdleHook (void)
   /* Restart watchdog, has been enabled in Cstartup_SAM7.c */
   AT91F_WDTRestart (AT91C_BASE_WDTC);
 #endif /*DISABLE_WATCHDOG */
+}
+/**********************************************************************/
+void
+vDebugSendHook (char data)
+{
+    vUSBSendByte (data);
 }
 
 /**********************************************************************/

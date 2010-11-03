@@ -45,7 +45,6 @@
 #include "led.h"
 #include "cmd.h"
 #include "proto.h"
-#include "debug_printf.h"
 #include "sdcard.h"
 #include "fat_helper.h"
 
