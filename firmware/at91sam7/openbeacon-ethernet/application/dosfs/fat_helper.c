@@ -34,11 +34,13 @@ static uint8_t scratch[SECTOR_SIZE],sector[SECTOR_SIZE];
 int
 fat_init (void)
 {
-  uint32_t pstart, psize;
+  uint32_t pstart, psize, written;
   int res;
   uint8_t pactive, ptype;
   DIRINFO di;
+  FILEINFO fi;
   DIRENT de;
+  uint8_t hello_world[]="Hello World!\n";
 
   DFS_Init ();
 
@@ -90,10 +92,9 @@ fat_init (void)
 
   di.scratch = sector;
   if (DFS_OpenDir (&vi, (uint8_t *) "", &di))
-    {
       debug_printf ("Error opening root directory\n");
-    }
   else
+  {
     while (!DFS_GetNext (&vi, &di, &de))
       {
 	if (de.name[0])
@@ -101,12 +102,19 @@ fat_init (void)
 	    debug_printf ("file: '%-11.11s'\n", de.name);
 	  }
       }
-
+    if( DFS_OpenFile(&vi, "hello.txt", DFS_WRITE, scratch, &fi) )
+      debug_printf ("Error opening logfile\n");
+    else
+	if(DFS_WriteFile(&fi, sector, hello_world, &written, strlen((char*)&hello_world)))
+	    debug_printf ("Error writing to logfile\n");
+	else
+	    debug_printf ("written %d bytes logfile\n",written);
+  }
   return 0;
 }
 
 int
-fat_helper_open (uint8_t * filename, FILEINFO * fi)
+fat_helper_open (const char* filename, FILEINFO * fi)
 {
   int res;
 
@@ -125,7 +133,7 @@ fat_helper_open (uint8_t * filename, FILEINFO * fi)
 }
 
 int
-fat_checkimage (uint8_t * filename, size_t * length)
+fat_checkimage (const char* filename, size_t * length)
 {
   FILEINFO fi;
   int res;

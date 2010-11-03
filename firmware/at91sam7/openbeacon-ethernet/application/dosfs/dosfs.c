@@ -843,7 +843,7 @@ DFS_GetFreeDirEnt (PVOLINFO volinfo, uint8_t * path, PDIRINFO di, PDIRENT de)
 	to access the file from this point on.
 */
 uint32_t
-DFS_OpenFile (PVOLINFO volinfo, uint8_t * path, uint8_t mode,
+DFS_OpenFile (PVOLINFO volinfo, const char* path, uint8_t mode,
 	      uint8_t * scratch, PFILEINFO fileinfo)
 {
   uint8_t tmppath[MAX_PATH];
@@ -1248,7 +1248,7 @@ DFS_Seek (PFILEINFO fileinfo, uint32_t offset, uint8_t * scratch)
 	scratch must point to a sector-sized buffer
 */
 uint32_t
-DFS_UnlinkFile (PVOLINFO volinfo, uint8_t * path, uint8_t * scratch)
+DFS_UnlinkFile (PVOLINFO volinfo, const char* path, uint8_t * scratch)
 {
   FILEINFO fi;
   uint32_t cache = 0;

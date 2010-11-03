@@ -29,6 +29,7 @@
 
 extern int DFS_Init (void);
 extern int DFS_OpenCard (void);
-extern uint32_t DFS_ReadSector (uint8_t unit, uint8_t * buffer, uint32_t sector, uint32_t count);
+extern uint32_t DFS_ReadSector  (uint8_t unit, uint8_t * buffer, uint32_t sector, uint32_t count);
+extern uint32_t DFS_WriteSector (uint8_t unit, uint8_t * buffer, uint32_t sector, uint32_t count);
 
 #endif /*SDCARD_H_ */

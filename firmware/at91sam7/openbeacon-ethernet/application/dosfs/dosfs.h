@@ -350,7 +350,7 @@ uint32_t DFS_GetNext (PVOLINFO volinfo, PDIRINFO dirinfo, PDIRENT dirent);
 	Returns various DFS_* error states. If the result is DFS_OK, fileinfo can be used
 	to access the file from this point on.
 */
-uint32_t DFS_OpenFile (PVOLINFO volinfo, uint8_t * path, uint8_t mode,
+uint32_t DFS_OpenFile (PVOLINFO volinfo,  const char* path, uint8_t mode,
 		       uint8_t * scratch, PFILEINFO fileinfo);
 
 /*
@@ -386,7 +386,7 @@ void DFS_Seek (PFILEINFO fileinfo, uint32_t offset, uint8_t * scratch);
 	Delete a file
 	scratch must point to a sector-sized buffer
 */
-uint32_t DFS_UnlinkFile (PVOLINFO volinfo, uint8_t * path, uint8_t * scratch);
+uint32_t DFS_UnlinkFile (PVOLINFO volinfo, const char* path, uint8_t * scratch);
 
 // If we are building a host-emulation version, include host support
 #ifdef HOSTVER

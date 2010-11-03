@@ -153,7 +153,6 @@ vCmdProcess (const char *cmdline)
       vNetworkDumpConfig ();
       debug_printf ("System configuration:\n"
 		    "\tReader ID:%i\n" "\n", env.e.reader_id);
-
       break;
 
     case 'F':
@@ -163,6 +162,7 @@ vCmdProcess (const char *cmdline)
       debug_printf ("\n...[SDCARD init done]\n\n");
       vTaskDelay (500 / portTICK_RATE_MS);
       break;
+
     case 'G':
       vNetworkSetIP (&env.e.ip_gateway, assign ? cmdline : NULL, "gateway");
       break;

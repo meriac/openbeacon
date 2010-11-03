@@ -26,7 +26,7 @@
 #include "dosfs.h"
 
 extern int fat_init (void);
-extern int fat_helper_open (uint8_t * filename, FILEINFO * fi);
-extern int fat_checkimage (uint8_t * filename, size_t * length);
+extern int fat_helper_open (const char* filename, FILEINFO * fi);
+extern int fat_checkimage (const char* filename, size_t * length);
 
 #endif

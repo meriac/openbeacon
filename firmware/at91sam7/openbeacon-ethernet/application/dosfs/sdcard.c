@@ -58,9 +58,16 @@
 #define CMD58	(0x40+58)	/* READ_OCR */
 
 /* Disk Status Bits (DSTATUS) */
-#define STA_NOINIT              0x01	/* Drive not initialized */
-#define STA_NODISK              0x02	/* No medium in the drive */
-#define STA_PROTECT             0x04	/* Write protected */
+#define STA_NOINIT		0x01	/* Drive not initialized */
+#define STA_NODISK		0x02	/* No medium in the drive */
+#define STA_PROTECT		0x04	/* Write protected */
+
+/* Card type flags (CardType) */
+#define CT_MMC			0x01		/* MMC ver 3 */
+#define CT_SD1			0x02		/* SD ver 1 */
+#define CT_SD2			0x04		/* SD ver 2 */
+#define CT_SDC			(CT_SD1|CT_SD2)	/* SD */
+#define CT_BLOCK		0x08		/* Block addressing */
 
 /* Results of Disk Functions */
 typedef enum
@@ -164,9 +171,9 @@ sdcard_transceive (uint8_t * buff,	/* Data buffer to store received data */
 {
   if (btr <= 512)
     {
-      /* For short transceive lengths, do a blocking transceive to get around the 
-       * multiple context switchs and interrupts associated with a standard background
-       * transceive.
+      /* For short transceive lengths, do a blocking transceive to get around
+       * the multiple context switchs and interrupts associated with a standard
+       * background transceive.
        */
       spi_transceive_blocking (&sdcard_spi, buff, btr);
     }
@@ -221,7 +228,7 @@ sdcard_send_cmd (uint8_t cmd,	/* Command byte */
   uint8_t data[7];
 
   if (cmd & 0x80)
-    {				/* ACMD<n> is the command sequense of CMD55-CMD<n> */
+    {				/* ACMD<n> is the command sequence of CMD55-CMD<n> */
       cmd &= 0x7F;
       res = sdcard_send_cmd (CMD55, 0);
       if (res > 1)
@@ -350,7 +357,7 @@ sdcard_disk_read (uint8_t * buff,	/* Pointer to the data buffer to store read da
   if (Stat & STA_NOINIT)
     return RES_NOTRDY;
 
-  if (!(CardType & 8))
+  if (!(CardType & CT_BLOCK))
     sector *= SECTOR_SIZE;	/* Convert to byte address if needed */
 
   sdcard_claim ();
@@ -392,6 +399,90 @@ DFS_ReadSector (uint8_t unit, uint8_t * buffer, uint32_t sector,
   (void) unit;
 
   if (sdcard_disk_read (buffer, sector, count) != RES_OK)
+    return 1;
+
+  return 0;
+}
+
+
+static int
+xmit_datablock (			/* 1:OK, 0:Failed */
+		 uint8_t * buff,	/* 512 byte data block to be transmitted */
+		 uint8_t token		/* Data/Stop token */
+  )
+{
+  uint8_t d[2];
+
+  if (!wait_ready ())
+    return 0;
+
+  /* Xmit a token */
+  spi_transceive_blocking (&sdcard_spi, &token, sizeof(token));
+  /* Is it data token? */
+  if (token != 0xFD)
+    {
+					/* Xmit the 512 byte data block to MMC */
+					/* Dummy CRC (FF,FF) */
+      spi_transceive_blocking (&sdcard_spi, buff, 512);
+      spi_transceive_blocking (&sdcard_spi, &d, sizeof (d));
+      if ((rcvr_spi() & 0x1F) != 0x05)	/* If not accepted, return with error */
+	return 0;
+    }
+  return 1;
+}
+
+static inline int
+sdcard_disk_write (uint8_t * buff,	/* Pointer to the data to be written */
+		   uint32_t sector,	/* Start sector number (LBA) */
+		   uint8_t count	/* Sector count (1..128) */
+  )
+{
+
+  if (Stat & STA_NOINIT)
+    return RES_NOTRDY;
+  if (!count)
+    return RES_PARERR;
+  if (!(CardType & CT_BLOCK))
+    sector *= SECTOR_SIZE;		/* Convert LBA to byte address if needed */
+
+  sdcard_claim ();
+
+  if (count == 1)
+    {				/* Single block write */
+      if ((sdcard_send_cmd (CMD24, sector) == 0)	/* WRITE_BLOCK */
+	  && xmit_datablock (buff, 0xFE))
+	count = 0;
+    }
+  else
+    {				/* Multiple block write */
+      if (CardType & CT_SDC)
+	sdcard_send_cmd (ACMD23, count);
+      if (sdcard_send_cmd (CMD25, sector) == 0)
+	{			/* WRITE_MULTIPLE_BLOCK */
+	  do
+	    {
+	      if (!xmit_datablock (buff, 0xFC))
+		break;
+	      buff += 512;
+	    }
+	  while (--count);
+	  if (!xmit_datablock (0, 0xFD))	/* STOP_TRAN token */
+	    count = 1;
+	}
+    }
+
+  sdcard_release ();
+
+  return count ? RES_ERROR : RES_OK;
+}
+
+uint32_t
+DFS_WriteSector (uint8_t unit, uint8_t * buffer, uint32_t sector,
+		 uint32_t count)
+{
+  (void) unit;
+
+  if (sdcard_disk_write (buffer, sector, count) != RES_OK)
     return 1;
 
   return 0;
