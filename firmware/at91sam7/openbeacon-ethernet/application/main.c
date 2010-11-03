@@ -50,6 +50,7 @@
 
 /**********************************************************************/
 static xQueueHandle xLogfile;
+static uint8_t sector[SECTOR_SIZE];
 
 /**********************************************************************/
 static inline void
@@ -91,8 +92,8 @@ static void
 vFileTask (void *parameter)
 {
   uint32_t pos;
+  uint8_t data;
   static FILEINFO fi;
-  static uint8_t sector[SECTOR_SIZE];
   static const char logfile[] = "logfile.txt";
 
   vTaskDelay (5000 / portTICK_RATE_MS);
@@ -114,9 +115,10 @@ vFileTask (void *parameter)
 
   pos = 0;
   for (;;)
-    if (xQueueReceive (xLogfile, &sector[pos], 100))
+    if (xQueueReceive (xLogfile, &data, 100))
       {
-	if (++pos == SECTOR_SIZE)
+	sector[pos++] = data;
+	if (pos == SECTOR_SIZE)
 	  {
 	    pos = 0;
 	    if (fat_file_append (&fi, &sector, sizeof (sector)) !=

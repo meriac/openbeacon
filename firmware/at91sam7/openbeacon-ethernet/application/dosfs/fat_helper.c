@@ -117,8 +117,6 @@ fat_file_append (FILEINFO * fi, void *block, uint32_t length)
 
   if (DFS_WriteFile (fi, sector, block, &written, length))
     debug_printf ("Error writing to file\n");
-  else
-    debug_printf ("written %d bytes logfile\n", written);
 
   return written;
 }
