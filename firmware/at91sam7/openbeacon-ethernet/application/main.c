@@ -81,34 +81,49 @@ vApplicationIdleHook (void)
 void
 vDebugSendHook (char data)
 {
-    vUSBSendByte (data);
-    if(xLogfile)
-	xQueueSend (xLogfile, &data, 0);
+  vUSBSendByte (data);
+  if (xLogfile)
+    xQueueSend (xLogfile, &data, 0);
 }
 
 /**********************************************************************/
 static void
 vFileTask (void *parameter)
 {
-    uint32_t pos;
-    static uint8_t sector[SECTOR_SIZE];
+  uint32_t pos;
+  static FILEINFO fi;
+  static uint8_t sector[SECTOR_SIZE];
+  static const char logfile[] = "logfile.txt";
 
-    do {
-	debug_printf ("trying to open SDCARD...\n");
-	vTaskDelay (2000 / portTICK_RATE_MS);
-    } while(fat_init());
-    debug_printf ("\n...[SDCARD init done]\n\n");
-    vTaskDelay (500 / portTICK_RATE_MS);
-
-  pos=0;
-  for (;;)
-    if (xQueueReceive(xLogfile, &sector[pos], 100))
+  vTaskDelay (5000 / portTICK_RATE_MS);
+  do
     {
-	if(++pos==SECTOR_SIZE)
-	{
-	    pos=0;
-	}
+      debug_printf ("trying to open SDCARD...\n");
+      vTaskDelay (2000 / portTICK_RATE_MS);
     }
+  while (fat_init ());
+  debug_printf ("\n...[SDCARD init done]\n\n");
+  vTaskDelay (500 / portTICK_RATE_MS);
+
+  if (fat_file_open (logfile, &fi))
+    for (;;)
+      {
+	vTaskDelay (5000 / portTICK_RATE_MS);
+	debug_printf ("\nFailed to open '%s' for writing!\n\n", logfile);
+      }
+
+  pos = 0;
+  for (;;)
+    if (xQueueReceive (xLogfile, &sector[pos], 100))
+      {
+	if (++pos == SECTOR_SIZE)
+	  {
+	    pos = 0;
+	    if (fat_file_append (&fi, &sector, sizeof (sector)) !=
+		sizeof (sector))
+	      debug_printf ("failed to flush to logfile");
+	  }
+      }
 }
 
 /**********************************************************************/
@@ -121,7 +136,7 @@ void __attribute__ ((noreturn)) mainloop (void)
   vNetworkInit ();
   PtInitProtocol ();
 
-  xLogfile = xQueueCreate (SECTOR_SIZE*4, sizeof (char));
+  xLogfile = xQueueCreate (SECTOR_SIZE * 4, sizeof (char));
 
   xTaskCreate (vUSBCDCTask, (signed portCHAR *) "USB", TASK_USB_STACK,
 	       NULL, TASK_USB_PRIORITY, NULL);

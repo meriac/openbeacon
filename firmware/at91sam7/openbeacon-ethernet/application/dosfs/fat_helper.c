@@ -3,6 +3,7 @@
  * OpenBeacon.org - FAT file system helper functions
  *
  * Copyright 2009 Henryk Ploetz <henryk@ploetzli.ch>
+ * Copyright 2010 Milosch Meriac <meriac@openbeacon.de>
  *
  ***************************************************************
 
@@ -30,7 +31,7 @@
 #include "debug_printf.h"
 
 static VOLINFO vi;
-static uint8_t scratch[SECTOR_SIZE],sector[SECTOR_SIZE];
+static uint8_t scratch[SECTOR_SIZE], sector[SECTOR_SIZE];
 
 /* Initialize a card, returns 0 on success. Uses global scratch buffer -> Not reentrant. */
 int
@@ -71,10 +72,10 @@ fat_init (void)
 
   debug_printf ("Volume label '%-11.11s'\n", vi.label);
 
-  debug_printf ("%d MB (%d clusters, %d sectors) in data area\nfilesystem IDd as ",
-	  (int) ((vi.numclusters * vi.secperclus /2)/1024),
-	  (int) vi.numclusters,
-	  (int) vi.numclusters * vi.secperclus);
+  debug_printf
+    ("%d MB (%d clusters, %d sectors) in data area\nfilesystem IDd as ",
+     (int) ((vi.numclusters * vi.secperclus / 2) / 1024),
+     (int) vi.numclusters, (int) vi.numclusters * vi.secperclus);
   if (vi.filesystem == FAT12)
     debug_printf ("FAT12.\n");
   else if (vi.filesystem == FAT16)
@@ -87,54 +88,37 @@ fat_init (void)
   debug_printf
     ("%d sector/s per cluster\n%d reserved sector/s\nvolume total %d sectors\n",
      (int) vi.secperclus, (int) vi.reservedsecs, (int) vi.numsecs);
-  debug_printf ("%d sectors per FAT\nfirst FAT at sector #%d\nroot dir at #%d.\n",
-	  (int) vi.secperfat, (int) vi.fat1, (int) vi.rootdir);
+  debug_printf
+    ("%d sectors per FAT\nfirst FAT at sector #%d\nroot dir at #%d.\n",
+     (int) vi.secperfat, (int) vi.fat1, (int) vi.rootdir);
   debug_printf ("%d root dir entries\ndata area commences at sector #%d.\n",
-	  (int) vi.rootentries, (int) vi.dataarea);
+		(int) vi.rootentries, (int) vi.dataarea);
 
   di.scratch = sector;
-  if (DFS_OpenDir (&vi, (uint8_t*)"", &di))
-  {
+  if (DFS_OpenDir (&vi, (uint8_t *) "", &di))
+    {
       debug_printf ("Error opening root directory\n");
       return -ENOENT;
-  }
+    }
   else
-      return 0;
+    return 0;
 }
 
-int
-fat_helper_open (const char* filename, FILEINFO * fi)
+uint32_t
+fat_file_open (const char *filename, FILEINFO * fi)
 {
-  int res;
-
-  if (!filename)
-    {
-      return -EINVAL;
-    }
-
-  if ((res = DFS_OpenFile (&vi, filename, DFS_READ, scratch, fi)) != DFS_OK)
-    {
-      debug_printf ("Can't open file: %s, reason: %d\n", filename, res);
-      return -res;
-    }
-
-  return res;
+  return DFS_OpenFile (&vi, filename, DFS_WRITE, scratch, fi);
 }
 
-int
-fat_checkimage (const char* filename, size_t * length)
+uint32_t
+fat_file_append (FILEINFO * fi, void *block, uint32_t length)
 {
-  FILEINFO fi;
-  int res;
+  uint32_t written;
 
-  /* *length will now contain the amount of data already read */
-  *length = 0;
+  if (DFS_WriteFile (fi, sector, block, &written, length))
+    debug_printf ("Error writing to file\n");
+  else
+    debug_printf ("written %d bytes logfile\n", written);
 
-  res = fat_helper_open (filename, &fi);
-
-  debug_printf ("Opening file: %s, length: %lu\n", filename, fi.filelen);
-
-  *length = fi.filelen;
-
-  return res;
+  return written;
 }

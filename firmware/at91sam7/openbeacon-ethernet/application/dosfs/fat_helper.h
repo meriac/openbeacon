@@ -3,6 +3,7 @@
  * OpenBeacon.org - FAT file system helper functions
  *
  * Copyright 2009 Henryk Ploetz <henryk@ploetzli.ch>
+ * Copyright 2010 Milosch Meriac <meriac@openbeacon.de>
  *
  ***************************************************************
 
@@ -26,7 +27,7 @@
 #include "dosfs.h"
 
 extern int fat_init (void);
-extern int fat_helper_open (const char* filename, FILEINFO * fi);
-extern int fat_checkimage (const char* filename, size_t * length);
+extern uint32_t fat_file_open (const char *filename, FILEINFO * fi);
+extern uint32_t fat_file_append (FILEINFO * fi, void *block, uint32_t length);
 
 #endif
