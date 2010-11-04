@@ -30,7 +30,12 @@
 #include <lwip/ip.h>
 
 #define VERSION		"1.1"
-#define VERSION_INT	0x00010000
+#define VERSION_INT	0x00010001
+
+/*---------------------------------*/
+/* SD-card-sector-size             */
+/*---------------------------------*/
+#define SECTOR_SIZE 512
 
 /*---------------------------------*/
 /* SAM7Board Memories Definition   */

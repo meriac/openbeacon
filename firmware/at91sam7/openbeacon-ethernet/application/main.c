@@ -38,7 +38,7 @@
 #include <proto.h>
 #include <network.h>
 #include <queue.h>
-#include <dosfs.h>
+#include <ff.h>
 
 #include "lwip/ip.h"
 #include "lwip/ip_addr.h"
@@ -46,12 +46,14 @@
 #include "env.h"
 #include "cmd.h"
 #include "proto.h"
-#include "sdcard.h"
-#include "fat_helper.h"
 
 /**********************************************************************/
+#define SECTOR_BUFFER_SIZE 1024
+/**********************************************************************/
 static xQueueHandle xLogfile;
-static uint8_t sector[SECTOR_SIZE];
+//static uint8_t sector[SECTOR_BUFFER_SIZE];
+static const char logfile[] = "LOGFILE.TXT";
+static FATFS fatfs;
 
 /**********************************************************************/
 static inline void
@@ -92,30 +94,52 @@ vDebugSendHook (char data)
 static void
 vFileTask (void *parameter)
 {
-  uint32_t pos;
-  uint8_t data;
-  static FILEINFO fi;
-  static const char logfile[] = "logfile.txt";
+//  uint32_t pos;
+//  uint8_t data;
+  static FIL fil;
+  UINT bw;
 
   vTaskDelay (5000 / portTICK_RATE_MS);
-  do
-    {
-      debug_printf ("trying to open SDCARD...\n");
-      vTaskDelay (2000 / portTICK_RATE_MS);
-    }
-  while (fat_init ());
+
+  /* init SD card hardware */
+  debug_printf ("initialing SDCARD...\n");
+  vTaskDelay (500 / portTICK_RATE_MS);
+
+  /* never fails - data init */
+  debug_printf ("mounting SDCARD...\n");
+  memset(&fatfs, 0, sizeof(fatfs));
+  f_mount(0, &fatfs);
+
   debug_printf ("\n...[SDCARD init done]\n\n");
   vTaskDelay (500 / portTICK_RATE_MS);
 
-  if (fat_file_open (logfile, &fi))
-    for (;;)
-      {
-	vTaskDelay (5000 / portTICK_RATE_MS);
-	debug_printf ("\nFailed to open '%s' for writing!\n\n", logfile);
-      }
+  debug_printf("\nCreate a new file (hello.txt).\n");
+  if(f_open(&fil, logfile, FA_WRITE | FA_CREATE_ALWAYS))
+    debug_printf("failed to create file\n");
+  else
+  {
+    debug_printf("\nWrite a text data. (Hello world!)\n");
+    if(f_write(&fil, "Hello world!\r\n", 14, &bw))
+	debug_printf("failed to write file\n");
+    else
+	debug_printf("%u bytes written.\n", bw);
+
+    printf("\nClose the file.\n");
+    if(f_close(&fil))
+	debug_printf("couldn't close file\n");
+    else
+	debug_printf("closed file\n");
+  };
+  
+  while(1)
+  {
+    debug_printf("DONE\n");
+    vTaskDelay (1000 / portTICK_RATE_MS);
+  }
 
   /* Enable Debug output as we were able to open the log file */
-  debug_printf ("Starting logging for reader ID %i:\n", env.e.reader_id);
+
+/*  debug_printf ("Starting logging for reader ID %i:\n", env.e.reader_id);
   PtSetDebugLevel(1);
 
   pos = 0;
@@ -123,14 +147,14 @@ vFileTask (void *parameter)
     if (xQueueReceive (xLogfile, &data, 100))
       {
 	sector[pos++] = data;
-	if (pos == SECTOR_SIZE)
+	if (pos == SECTOR_BUFFER_SIZE)
 	  {
 	    pos = 0;
 	    if (fat_file_append (&fi, &sector, sizeof (sector)) !=
 		sizeof (sector))
 	      debug_printf ("failed to flush to logfile");
 	  }
-      }
+      }*/
 }
 
 /**********************************************************************/
@@ -143,7 +167,7 @@ void __attribute__ ((noreturn)) mainloop (void)
   vNetworkInit ();
   PtInitProtocol ();
 
-  xLogfile = xQueueCreate (SECTOR_SIZE * 4, sizeof (char));
+  xLogfile = xQueueCreate ( SECTOR_BUFFER_SIZE*2 , sizeof (char));
 
   xTaskCreate (vUSBCDCTask, (signed portCHAR *) "USB", TASK_USB_STACK,
 	       NULL, TASK_USB_PRIORITY, NULL);
