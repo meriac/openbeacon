@@ -158,10 +158,9 @@ rcvr_mmc (BYTE * buff,		/* Pointer to read buffer */
 	  UINT bc		/* Number of bytes to receive */
   )
 {
-  spi_force_transmit_pin (&sdcard_spi, 1);
+  memset (buff, 0xFF, bc);
   spi_transceive (&sdcard_spi, buff, bc);
   spi_wait_for_completion (&sdcard_spi);
-  spi_release_transmit_pin (&sdcard_spi);
 }
 
 /*-----------------------------------------------------------------------*/
