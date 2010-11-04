@@ -136,6 +136,12 @@ vCmdProcess (const char *cmdline)
       while (1);
       break;
 
+    case 'C':
+      vNetworkDumpConfig ();
+      debug_printf ("System configuration:\n"
+		    "\tReader ID:%i\n" "\n", env.e.reader_id);
+      break;
+
     case 'D':
       if (assign)
 	{
@@ -146,12 +152,6 @@ vCmdProcess (const char *cmdline)
       else
 	debug_printf
 	  ("usage: 'd' - set debug level ('d[disable=0, lowest=1]')\n");
-      break;
-
-    case 'C':
-      vNetworkDumpConfig ();
-      debug_printf ("System configuration:\n"
-		    "\tReader ID:%i\n" "\n", env.e.reader_id);
       break;
 
     case 'G':
@@ -292,7 +292,6 @@ vCmdTask (void *pvParameters)
 		  led_set_red (0);
 		  vTaskDelay (500 / portTICK_RATE_MS);
 		  led_set_red (1);
-
 		}
 
 	      /* backup reader id */
