@@ -235,12 +235,12 @@ vnRFtaskRxTx (void *parameter)
 
 		      oid = swapshort (g_Beacon.pkt.oid);
 		      if (g_Beacon.pkt.flags & RFBFLAGS_SENSOR)
-			debug_printf ("@%010u BUTTON: %u\n", seconds_since_boot, oid);
+			debug_printf ("@%07u BUTTON: %u\n", seconds_since_boot, oid);
 
 		      switch (g_Beacon.pkt.proto)
 			{
 			case RFBPROTO_BEACONTRACKER:
-			  debug_printf ("@%010u RX: %u,0x%08X,%u,0x%02X\n",
+			  debug_printf ("@%07u RX: %u,0x%08X,%u,0x%02X\n",
 					seconds_since_boot,
 					swapshort (g_Beacon.pkt.oid),
 					swaplong (g_Beacon.pkt.p.tracker.seq),
@@ -255,7 +255,7 @@ vnRFtaskRxTx (void *parameter)
 			      crc =
 				(swapshort (g_Beacon.pkt.p.prox.oid_prox[t]));
 			      if (crc)
-				debug_printf ("@%010u PX: %u={%u,%u,%u}\n",
+				debug_printf ("@%07u PX: %u={%u,%u,%u}\n",
 					      seconds_since_boot,
 					      oid,
 					      (crc >> 0)  & 0x7FF,
@@ -263,7 +263,7 @@ vnRFtaskRxTx (void *parameter)
 					      (crc >> 11) & 0x7);
 			      else
 				debug_printf
-				  ("@%010u RX: %u,          ,3,0x%02X\n",
+				  ("@%07u RX: %u,          ,3,0x%02X\n",
 				   seconds_since_boot,
 				   swapshort (g_Beacon.pkt.oid),
 				   g_Beacon.pkt.flags);
@@ -273,7 +273,7 @@ vnRFtaskRxTx (void *parameter)
 
 			default:
 			  strength = 0xFF;
-			  debug_printf ("@%010u Uknown Protocol: %u\n",
+			  debug_printf ("@%07u Uknown Protocol: %u\n",
 					seconds_since_boot,
 					g_Beacon.pkt.proto);
 			}
