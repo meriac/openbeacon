@@ -43,6 +43,7 @@
 #include "lwip/ip.h"
 #include "lwip/ip_addr.h"
 #include "led.h"
+#include "env.h"
 #include "cmd.h"
 #include "proto.h"
 #include "sdcard.h"
@@ -112,6 +113,10 @@ vFileTask (void *parameter)
 	vTaskDelay (5000 / portTICK_RATE_MS);
 	debug_printf ("\nFailed to open '%s' for writing!\n\n", logfile);
       }
+
+  /* Enable Debug output as we were able to open the log file */
+  debug_printf ("Starting logging for reader ID %i:\n", env.e.reader_id);
+  PtSetDebugLevel(1);
 
   pos = 0;
   for (;;)
