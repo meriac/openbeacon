@@ -35,7 +35,7 @@
 #define LWIP_NOASSERT 1		// To suppress some errors for now (no debug output)
 #define SYS_LIGHTWEIGHT_PROT            1
 
-#define LWIP_DEBUG
+//#define LWIP_DEBUG
 //#define IP_DEBUG (LWIP_DBG_ON|LWIP_DBG_LEVEL_WARNING)
 //#define ETHARP_DEBUG (LWIP_DBG_ON|LWIP_DBG_LEVEL_WARNING)
 #define ICMP_DEBUG LWIP_DBG_OFF
@@ -57,7 +57,7 @@
 
 /* MEM_SIZE: the size of the heap memory. If the application will send
 a lot of data that needs to be copied, this should be set high. */
-#define MEM_SIZE                2000
+#define MEM_SIZE                1000
 
 /* MEMP_NUM_PBUF: the number of memp struct pbufs. If the application
    sends a lot of data out of ROM (or other static memory), this
@@ -85,10 +85,10 @@ a lot of data that needs to be copied, this should be set high. */
 
 /* ---------- Pbuf options ---------- */
 /* PBUF_POOL_SIZE: the number of buffers in the pbuf pool. */
-#define PBUF_POOL_SIZE          4
+#define PBUF_POOL_SIZE          8
 
 /* PBUF_POOL_BUFSIZE: the size of each pbuf in the pbuf pool. */
-#define PBUF_POOL_BUFSIZE       1500
+#define PBUF_POOL_BUFSIZE       128
 
 /* PBUF_LINK_HLEN: the number of bytes that should be allocated for a
    link level header. */
