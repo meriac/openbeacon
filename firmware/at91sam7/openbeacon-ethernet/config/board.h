@@ -29,7 +29,7 @@
 #include <beacontypes.h>
 #include <lwip/ip.h>
 
-#define VERSION		"1.0"
+#define VERSION		"1.1"
 #define VERSION_INT	0x00010000
 
 /*---------------------------------*/
