@@ -29,8 +29,8 @@
 #include <beacontypes.h>
 #include <lwip/ip.h>
 
-#define VERSION		"1.1"
-#define VERSION_INT	0x00010001
+#define VERSION		"1.2"
+#define VERSION_INT	0x00010002
 
 /*---------------------------------*/
 /* SD-card-sector-size             */

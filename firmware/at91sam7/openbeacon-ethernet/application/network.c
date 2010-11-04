@@ -227,8 +227,6 @@ vNetworkThread (void *pvParameters)
   /* bring it up */
   netif_set_up (&EMAC_if);
 
-  debug_printf ("OpenBeacon firmware version %s starting.\n", VERSION);
-
   /* setup server response UDP packet */
   vNetworkSocket = udp_new ();
   vNetworkSocketBuf =
