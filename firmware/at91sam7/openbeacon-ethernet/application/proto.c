@@ -147,7 +147,7 @@ vnRFtaskRxTx (void *parameter)
   u_int16_t crc, oid;
   u_int8_t strength, t;
   unsigned int delta_t_ms;
-  portTickType time, time_old;
+  portTickType time, time_old, seconds_since_boot;
 
   if (!PtInitNRF ())
     while (1)
@@ -163,13 +163,14 @@ vnRFtaskRxTx (void *parameter)
 
   led_set_tx (1);
 
-  time_old = xTaskGetTickCount ();
+  time_old = xTaskGetTickCount () * portTICK_RATE_MS;
 
   for (;;)
     {
       /* gather statistics */
-      time = xTaskGetTickCount ();
-      delta_t_ms = (time - time_old) * portTICK_RATE_MS;
+      time = xTaskGetTickCount () * portTICK_RATE_MS;
+      delta_t_ms = time - time_old;
+
       if (delta_t_ms > 1000)
 	{
 	  time_old = time;
@@ -230,14 +231,17 @@ vnRFtaskRxTx (void *parameter)
 		    {
 		      rf_crc_ok++;
 
+		      seconds_since_boot = time / 1000;
+
 		      oid = swapshort (g_Beacon.pkt.oid);
 		      if (g_Beacon.pkt.flags & RFBFLAGS_SENSOR)
-			debug_printf ("BUTTON: %u\n\r", oid);
+			debug_printf ("@%07u BUTTON: %u\n", seconds_since_boot, oid);
 
 		      switch (g_Beacon.pkt.proto)
 			{
 			case RFBPROTO_BEACONTRACKER:
-			  debug_printf ("RX: %u,0x%08X,%u,0x%02X\n\r",
+			  debug_printf ("@%07u RX: %u,0x%08X,%u,0x%02X\n",
+					seconds_since_boot,
 					swapshort (g_Beacon.pkt.oid),
 					swaplong (g_Beacon.pkt.p.tracker.seq),
 					g_Beacon.pkt.p.tracker.strength,
@@ -251,14 +255,16 @@ vnRFtaskRxTx (void *parameter)
 			      crc =
 				(swapshort (g_Beacon.pkt.p.prox.oid_prox[t]));
 			      if (crc)
-				debug_printf ("PX: %u={%u,%u,%u}\n\r",
+				debug_printf ("@%07u PX: %u={%u,%u,%u}\n",
+					      seconds_since_boot,
 					      oid,
 					      (crc >> 0)  & 0x7FF,
 					      (crc >> 14) & 0x3,
 					      (crc >> 11) & 0x7);
 			      else
 				debug_printf
-				  ("RX: %u,          ,3,0x%02X\n\r",
+				  ("@%07u RX: %u,          ,3,0x%02X\n",
+				   seconds_since_boot,
 				   swapshort (g_Beacon.pkt.oid),
 				   g_Beacon.pkt.flags);
 			    }
@@ -267,7 +273,8 @@ vnRFtaskRxTx (void *parameter)
 
 			default:
 			  strength = 0xFF;
-			  debug_printf ("Uknown Protocol: %u\n\r",
+			  debug_printf ("@%07u Uknown Protocol: %u\n",
+					seconds_since_boot,
 					g_Beacon.pkt.proto);
 			}
 		    }

@@ -29,8 +29,13 @@
 #include <beacontypes.h>
 #include <lwip/ip.h>
 
-#define VERSION		"1.0"
-#define VERSION_INT	0x00010000
+#define VERSION		"1.2"
+#define VERSION_INT	0x00010002
+
+/*---------------------------------*/
+/* SD-card-sector-size             */
+/*---------------------------------*/
+#define SECTOR_SIZE 512
 
 /*---------------------------------*/
 /* SAM7Board Memories Definition   */

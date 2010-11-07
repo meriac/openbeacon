@@ -171,9 +171,9 @@ tiny_vsprintf (const char *fmt, va_list args)
     {
       if (*fmt != '%')
 	{
-	  vDebugSendHook(*fmt);
 	  if(*fmt=='\n')
 	    vDebugSendHook('\r');
+	  vDebugSendHook(*fmt);
 	  continue;
 	}
 
