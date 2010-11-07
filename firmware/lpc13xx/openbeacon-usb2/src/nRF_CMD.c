@@ -30,12 +30,12 @@
 #include "spi.h"
 
 /* IO definitions */
-#define RF_IRQ_CPU_PORT 0
-#define RF_IRQ_CPU_PIN 4
+#define RF_IRQ_CPU_PORT 1
+#define RF_IRQ_CPU_PIN 9
 #define CPU_CE_RF_PORT 0
-#define CPU_CE_RF_PIN 4
-#define CPU_SWITCH_RF_PORT 3
-#define CPU_SWITCH_RF_PIN 2
+#define CPU_CE_RF_PIN 11
+#define CPU_SWITCH_RF_PORT 0
+#define CPU_SWITCH_RF_PIN 4
 
 #define SPI_MAX_XFER_LEN 33
 #define NRFCMD_MACRO_READ 0x80
@@ -191,9 +191,11 @@ nRFCMD_Init (void)
   /* setup IOs */
   GPIOSetDir (RF_IRQ_CPU_PORT, RF_IRQ_CPU_PIN, 0);
   GPIOSetDir (CPU_CE_RF_PORT, CPU_CE_RF_PIN, 1);
+
+  LPC_IOCON->PIO0_4 = 1 << 8;
   GPIOSetValue (CPU_CE_RF_PORT, CPU_CE_RF_PIN, 0);
   GPIOSetDir (CPU_SWITCH_RF_PORT, CPU_SWITCH_RF_PIN, 1);
-  GPIOSetValue (CPU_SWITCH_RF_PORT, CPU_SWITCH_RF_PIN, 0);
+  GPIOSetValue (CPU_SWITCH_RF_PORT, CPU_SWITCH_RF_PIN, 1);
 
   nRFCMD_Macro = nRFCMD_MacroResult = NULL;
 }
