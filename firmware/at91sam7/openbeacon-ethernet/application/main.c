@@ -38,8 +38,6 @@
 #include <proto.h>
 #include <network.h>
 
-//#include "lwip/ip.h"
-//#include "lwip/ip_addr.h"
 #include "led.h"
 #include "env.h"
 #include "cmd.h"
