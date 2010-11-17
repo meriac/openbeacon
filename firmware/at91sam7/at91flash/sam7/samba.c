@@ -194,8 +194,40 @@ int samba_init( void )
       printf( "unknown sam7s flash size %d\n", samba_chip_info.nvpsiz );
       return -1;
     }
+  } else if( samba_chip_info.arch == AT91_ARCH_AT91SAM7SExx ) {
 
+    switch( samba_chip_info.nvpsiz) {
+    case 32*K:
+      samba_chip_info.page_size = 128;
+      samba_chip_info.lock_bits = 8;
+      break;
+
+    case 64*K:
+      samba_chip_info.page_size = 128;
+      samba_chip_info.lock_bits = 16;
+      break;
+
+    case 128*K:
+      samba_chip_info.page_size = 256;
+      samba_chip_info.lock_bits = 8;
+      break;
+
+    case 256*K:
+      samba_chip_info.page_size = 256;
+      samba_chip_info.lock_bits = 16;
+      break;
+
+    case 512*K:
+      samba_chip_info.page_size = 256;
+      samba_chip_info.lock_bits = 32;
+      break;
+
+    default:
+      printf( "unknown sam7se flash size %d\n", samba_chip_info.nvpsiz );
+      return -1;
+  }
   } else if( samba_chip_info.arch == AT91_ARCH_AT91SAM7Xxx ) {
+
     switch( samba_chip_info.nvpsiz ) {
     case 128*K:
       samba_chip_info.page_size = 256;
