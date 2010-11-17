@@ -1,0 +1,74 @@
+2006-09-15 erik gilling <konkers@konkers.net>
+	* version 0.2.1
+
+2006-09-15 erik gilling <konkers@konkers.net>
+	* include io_libusb in dist
+
+2006-09-06 erik gilling <konkers@konkers.net>
+	* version 0.2.0
+
+2007-02-09 erik gilling <konkers@konkers.net>
+	* add libusb support and make superceed posix as the default
+	* update README
+	
+2007-02-04 erik gilling <konkers@konkers.net>
+	* add version.h include to linux driver
+
+2006-09-28 erik gilling <konkers@konkers.net>
+	* fixed -h argument (thanks Dean)
+	
+2006-09-06 erik gilling <konkers@konkers.net>
+	* version 0.1.1
+
+2006-09-06 erik gilling <konkers@konkers.net>
+	* update help on a few commands
+	* add linux driver fix for kernels > 2.6.14 (thanks Michael Shiloh)
+	* add curses check to configure.in for FC4 (thanks Russ Nelson)
+	
+2006-07-07 erik gilling <konkers@konkers.net>
+	* version 0.1.0
+
+2006-07-07 erik gilling <konkers@konkers.net>
+	* add boot_from_flash command from Liam
+
+2006-06-16 erik gilling <konkers@konkers.net>
+	* unlock_regions uses nvpsize not sramsiz
+
+2006-06-16 erik gilling <konkers@konkers.net>
+	* fix lock bit detection
+	
+2006-06-16 erik gilling <konkers@konkers.net>
+	* fix configure.in to set OS options before looking for headers
+	* add read and read_manual commands
+	* add detection for number of lock bits
+	* fix unlock_regions for devices other than the S64
+	* remove exraneous debugging info
+	* add --exec command line for scriptability
+	
+2006-06-15 erik gilling <konkers@konkers.net>
+	* add win32 support (cygwin only for now)
+
+2006-06-14 erik gilling <konkers@konkers.net>
+	* integrate loaders into sam7 binary
+
+2006-06-14 erik gilling <konkers@konkers.net>
+	* remove endian swapping from write_half_word and write_word
+	
+2006-06-13 erik gilling <konkers@konkers.net>
+	* rename samba_flash to flash
+	* add support for 256 byte pages using flash command
+
+2006-06-13 erik gilling <konkers@konkers.net>
+	* add loader code (tested on sam7s64)
+	
+2006-06-09 erik gilling <konkers@konkers.net>
+	* correct type matching for sam7x
+	* first stab at endianness correction (untested)
+
+2006-06-08 erik gilling <konkers@konkers.net>
+	* read cpuid and size flash page
+	* print out chip info on init
+	
+2005-12-30 erik gilling <konkers@konkers.net>
+	* increment version to 0.0.2
+	* add manual_upload command which does not use samba.bin

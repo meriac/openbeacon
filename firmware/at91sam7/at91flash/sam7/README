@@ -1,0 +1,14 @@
+> ./sam7
+response = 0d0a
+it begins
+sam7> set_clock
+sam7> unlock_regions
+unlocking page 0: done
+unlocking page 1: done
+
+
+sam7> flash test.bin 
+>
+
+
+
