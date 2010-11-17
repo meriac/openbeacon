@@ -263,8 +263,8 @@ vnRFtaskRxTx (void *parameter)
 			  debug_printf ("@%07u RX: %u,0x%08X,%u,0x%02X\n",
 					seconds_since_boot,
 					swapshort (g_Beacon.log.pkt.oid),
-					swaplong (g_Beacon.log.pkt.p.
-						  tracker.seq),
+					swaplong (g_Beacon.log.pkt.p.tracker.
+						  seq),
 					g_Beacon.log.pkt.p.tracker.strength,
 					g_Beacon.log.pkt.flags);
 			  strength = g_Beacon.log.pkt.p.tracker.strength;
@@ -336,7 +336,6 @@ PtStatusRxTx (void)
 static void
 vnRFLogFileFileTask (void *parameter)
 {
-  u_int32_t pos;
   UINT written;
   static TBeaconEnvelopeLog data;
   static FIL fil;
@@ -363,29 +362,27 @@ vnRFLogFileFileTask (void *parameter)
 
       /* Storing clock ticks for flushing cache action */
       time_old = xTaskGetTickCount ();
-      pos = 0;
 
       for (;;)
-	if (xQueueReceive (xLogfile, &data, 100))
-	  {
-	    if (pos == SECTOR_BUFFER_SIZE)
-	      {
-		pos = 0;
-		if (f_write
-		    (&fil, &data, sizeof (data), &written)
-		    || written != sizeof (data))
-		  debug_printf ("\nfailed to write to logfile\n");
-	      }
+	{
+	  /* query queue for new data with a 500ms timeout */
+	  if (xQueueReceive (xLogfile, &data, 500*portTICK_RATE_MS))
+	    {
+	      if (f_write
+		  (&fil, &data, sizeof (data), &written)
+		  || written != sizeof (data))
+		debug_printf ("\nfailed to write to logfile\n");
+	    }
 
-	    /* flush file every 5 seconds */
-	    time = xTaskGetTickCount ();
-	    if ((time - time_old) > (5000 / portTICK_RATE_MS))
-	      {
-		time_old = time;
-		if (f_sync (&fil))
-		  debug_printf ("\nfailed to flush to logfile\n");
-	      }
-	  }
+	  /* flush file every 10 seconds */
+	  time = xTaskGetTickCount ();
+	  if ((time - time_old) >= (10000*portTICK_RATE_MS))
+	    {
+	      time_old = time;
+	      if (f_sync (&fil))
+		debug_printf ("\nfailed to flush to logfile\n");
+	    }
+	}
     }
 }
 
