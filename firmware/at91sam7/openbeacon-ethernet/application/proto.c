@@ -337,10 +337,12 @@ static void
 vnRFLogFileFileTask (void *parameter)
 {
   UINT written;
+  FRESULT res;
   static TBeaconEnvelopeLog data;
   static FIL fil;
   static FATFS fatfs;
-  static const char logfile[] = "LOGFILE.BIN";
+  static FILINFO filinfo;
+  static char logfile[] = "LOGFILE_.BIN";
   portTickType time, time_old;
 
   /* delay SD card init by 5 seconds */
@@ -350,39 +352,68 @@ vnRFLogFileFileTask (void *parameter)
   memset (&fatfs, 0, sizeof (fatfs));
   f_mount (0, &fatfs);
 
-  /* opening new file for write access */
-  debug_printf ("\nCreating logfile (%s).\n", logfile);
-  if (f_open (&fil, logfile, FA_WRITE | FA_CREATE_ALWAYS))
-    debug_printf ("\nfailed to create file\n");
-  else
+  for (logfile[7] = 'A'; logfile[7] < 'Z'; logfile[7]++)
+    switch (res = f_stat (logfile, &filinfo))
+      {
+
+      case FR_OK:
+	/* found existing logfile, advancing to next possible one */
+	debug_printf ("Skipping existing logfile '%s'\n", logfile);
+	break;
+
+      case FR_NO_FILE:
+      case FR_INVALID_NAME:
+	/* opening new file for write access */
+	debug_printf ("\nCreating logfile (%s).\n", logfile);
+	if (f_open (&fil, logfile, FA_WRITE | FA_CREATE_ALWAYS))
+	  debug_printf ("\nfailed to create file\n");
+	else
+	  {
+	    /* Enable Debug output as we were able to open the log file */
+	    debug_printf ("OpenBeacon firmware version %s\nreader_id=%i.\n",
+			  VERSION, env.e.reader_id);
+
+	    /* Storing clock ticks for flushing cache action */
+	    time_old = xTaskGetTickCount ();
+
+	    for (;;)
+	      {
+		/* query queue for new data with a 500ms timeout */
+		if (xQueueReceive (xLogfile, &data, 500 * portTICK_RATE_MS))
+		  {
+		    if (f_write
+			(&fil, &data, sizeof (data), &written)
+			|| written != sizeof (data))
+		      debug_printf ("\nfailed to write to logfile\n");
+		  }
+
+		/* flush file every 10 seconds */
+		time = xTaskGetTickCount ();
+		if ((time - time_old) >= (10000 * portTICK_RATE_MS))
+		  {
+		    time_old = time;
+		    if (f_sync (&fil))
+		      debug_printf ("\nfailed to flush to logfile\n");
+		  }
+	      }
+	  }
+	break;
+
+      default:
+	debug_printf ("Error (%i) while searching for logfile '%s'\n", res,
+		      logfile);
+      }
+
+  // error blinking
+  while (1)
     {
-      /* Enable Debug output as we were able to open the log file */
-      debug_printf ("OpenBeacon firmware version %s\nreader_id=%i.\n",
-		    VERSION, env.e.reader_id);
+      led_set_tx (1);
+      led_set_rx (1);
+      vTaskDelay (250 / portTICK_RATE_MS);
 
-      /* Storing clock ticks for flushing cache action */
-      time_old = xTaskGetTickCount ();
-
-      for (;;)
-	{
-	  /* query queue for new data with a 500ms timeout */
-	  if (xQueueReceive (xLogfile, &data, 500*portTICK_RATE_MS))
-	    {
-	      if (f_write
-		  (&fil, &data, sizeof (data), &written)
-		  || written != sizeof (data))
-		debug_printf ("\nfailed to write to logfile\n");
-	    }
-
-	  /* flush file every 10 seconds */
-	  time = xTaskGetTickCount ();
-	  if ((time - time_old) >= (10000*portTICK_RATE_MS))
-	    {
-	      time_old = time;
-	      if (f_sync (&fil))
-		debug_printf ("\nfailed to flush to logfile\n");
-	    }
-	}
+      led_set_tx (0);
+      led_set_rx (0);
+      vTaskDelay (250 / portTICK_RATE_MS);
     }
 }
 
