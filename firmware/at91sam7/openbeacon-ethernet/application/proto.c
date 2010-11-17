@@ -44,8 +44,6 @@
 #define SECTOR_BUFFER_SIZE 1024
 /**********************************************************************/
 static xQueueHandle xLogfile;
-static const char logfile[] = "LOGFILE.BIN";
-static FATFS fatfs;
 /**********************************************************************/
 static unsigned int rf_rec, rf_decrypt, rf_crc_ok;
 static unsigned int rf_crc_err, rf_pkt_per_sec, rf_rec_old;
@@ -342,6 +340,8 @@ vnRFLogFileFileTask (void *parameter)
   UINT written;
   static TBeaconEnvelopeLog data;
   static FIL fil;
+  static FATFS fatfs;
+  static const char logfile[] = "LOGFILE.BIN";
   portTickType time, time_old;
 
   /* delay SD card init by 5 seconds */
