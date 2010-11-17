@@ -27,7 +27,13 @@
 
 #define NRF_POWERLEVEL_MAX 3
 
-extern TBeaconEnvelope g_Beacon;
+typedef struct
+{
+  u_int32_t time;
+  TBeaconEnvelope log;
+} TBeaconEnvelopeLog;
+
+extern TBeaconEnvelopeLog g_Beacon;
 
 static inline unsigned short
 PtSwapShort (unsigned short src)

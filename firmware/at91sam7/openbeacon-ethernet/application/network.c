@@ -127,7 +127,7 @@ vNetworkSendBeaconToServer (void)
   if (env.e.reader_id && env.e.ip_server.addr && env.e.ip_server_port
       && vNetworkSocketBuf && vNetworkSocket)
     {
-      vNetworkSocketBuf->payload = &g_Beacon;
+      vNetworkSocketBuf->payload = &g_Beacon.log;
       udp_sendto (vNetworkSocket,
 		  vNetworkSocketBuf,
 		  &env.e.ip_server, (u16_t) env.e.ip_server_port);
@@ -230,7 +230,7 @@ vNetworkThread (void *pvParameters)
   /* setup server response UDP packet */
   vNetworkSocket = udp_new ();
   vNetworkSocketBuf =
-    pbuf_alloc (PBUF_TRANSPORT, sizeof (g_Beacon), PBUF_REF);
+    pbuf_alloc (PBUF_TRANSPORT, sizeof (g_Beacon.log), PBUF_REF);
 
   while (pdTRUE)
     {
