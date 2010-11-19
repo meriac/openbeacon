@@ -300,6 +300,14 @@ vCmdTask (void *pvParameters)
 	      /* restore reader id */
 	      env.e.reader_id = t;
 
+	      /* store the configuration */
+	      env_store ();
+
+	      /* wait a bit before the reset */
+	      debug_printf ("restoring original settings"
+			    " after reset pin triggerd & reboot...\n");
+	      vTaskDelay (1000 / portTICK_RATE_MS);
+
 	      /*force watchdog reset */
 	      while (1);
 	    }
