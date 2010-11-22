@@ -31,7 +31,7 @@ typedef struct
 {
   u_int32_t time;
   TBeaconEnvelope log;
-} TBeaconEnvelopeLog;
+} PACKED TBeaconEnvelopeLog;
 
 extern TBeaconEnvelopeLog g_Beacon;
 
