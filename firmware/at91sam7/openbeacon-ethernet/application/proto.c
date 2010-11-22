@@ -220,7 +220,7 @@ vnRFtaskRxTx (void *parameter)
 
 	      // read packet from nRF chip
 	      nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.log.byte,
-				 sizeof (g_Beacon));
+				 sizeof (g_Beacon.log));
 
 	      rf_rec++;
 
@@ -242,7 +242,7 @@ vnRFtaskRxTx (void *parameter)
 		  // verify the crc checksum
 		  crc =
 		    env_crc16 (g_Beacon.log.byte,
-			       sizeof (g_Beacon) - sizeof (u_int16_t));
+			       sizeof (g_Beacon.log) - sizeof (u_int16_t));
 
 		  if (swapshort (g_Beacon.log.pkt.crc) != crc)
 		    rf_crc_err++;
