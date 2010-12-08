@@ -95,7 +95,7 @@ extern WEAK void main(void);
 // External declaration for the pointer to the stack top from the Linker Script
 //
 //*****************************************************************************
-extern void __stack_end__;
+extern char __stack_end__;
 
 //*****************************************************************************
 //
