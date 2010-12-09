@@ -33,8 +33,6 @@
 
 #include "spi.h"
 
-#include "led.h"
-
 /* AT91SAM7X SPI declaration */
 #define AT91C_BASE_SPI AT91C_BASE_SPI0
 #define AT91C_BASE_PDC_SPI AT91C_BASE_PDC_SPI0
@@ -186,15 +184,10 @@ _spi_irq (void)
 				  current_job->destination_buf,
 				  current_job->destination_len, NULL, 0);
 	  AT91C_BASE_PDC_SPI->PDC_PTCR = AT91C_PDC_RXTEN | AT91C_PDC_TXTEN;
-	  led_set_red (0);
-	  led_set_red (1);
-	  led_set_red (0);
-	  led_set_red (1);
 	}
       else
 	{
 	  /* No new job, disable IRQ */
-	  led_set_red (0);
 	  AT91C_BASE_SPI->SPI_IDR = AT91C_SPI_TXEMPTY;
 	}
     }
@@ -281,10 +274,7 @@ spi_transceive (spi_device * device, void *buf, unsigned int len)
       return -EAGAIN;
     }
   else
-    {
-      led_set_red (1);
       AT91C_BASE_SPI->SPI_IER = AT91C_SPI_TXEMPTY;
-    }
   taskEXIT_CRITICAL ();
 
   return 0;
@@ -328,10 +318,7 @@ spi_transceive_from_irq (spi_device * device, void *buf, unsigned int len,
       return -EAGAIN;
     }
   else
-    {
-      led_set_red (1);
       AT91C_BASE_SPI->SPI_IER = AT91C_SPI_TXEMPTY;
-    }
 
   return 0;
 }
