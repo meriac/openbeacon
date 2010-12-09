@@ -407,12 +407,10 @@ vnRFLogFileFileTask (void *parameter)
   // error blinking
   while (1)
     {
-      led_set_tx (1);
-      led_set_rx (1);
+      led_set_red (1);
       vTaskDelay (250 / portTICK_RATE_MS);
 
-      led_set_tx (0);
-      led_set_rx (0);
+      led_set_red (0);
       vTaskDelay (250 / portTICK_RATE_MS);
     }
 }
