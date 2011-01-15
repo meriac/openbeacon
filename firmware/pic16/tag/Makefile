@@ -1,7 +1,8 @@
-COMPILER_PATH=/usr/hitech/picc/9.80/bin/
+COMPILER_PATH=/usr/hitech/picc/9.81/bin/
 PK2=/usr/local/bin/pk2cmd
 CC=$(COMPILER_PATH)picc
 
+MODE=std
 CHIP=16F684
 PROGNAME=openbeacontag
 
@@ -17,7 +18,7 @@ OBJ_OUT=$(patsubst %.c, obj/%.p1, $(SRCS))
 CLEANS=$(OBJ_OUT) $(OBJ_TMP) $(PROG_FILES)
 CLEANS+=obj/startup.as obj/startup.lst obj/startup.rlf obj/$(PROGNAME).hex $(PROGNAME).hex obj/startup.obj funclist
 
-COMMON_FLAGS=-q --MODE=std --outdir=obj --chip=$(CHIP) --codeoffset=0 --warn=0 --errors=1- --char=signed --double=24
+COMMON_FLAGS=-q --outdir=obj --MODE=$(MODE) --chip=$(CHIP) --codeoffset=0 --warn=0 --errors=1- --char=signed --double=24
 CFLAGS=$(COMMON_FLAGS) --pass1
 LDFLAGS=$(COMMON_FLAGS) --summary=mem,file --asmlist --output=+intel --output=+mcof --runtime=+init --runtime=+osccal --runtime=+clear --runtime=+clib --runtime=+keep -m
 

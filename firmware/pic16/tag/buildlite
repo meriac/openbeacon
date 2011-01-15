@@ -1,0 +1,2 @@
+#!/bin/sh
+make MODE=lite clean all

@@ -52,7 +52,7 @@ typedef struct
 
 static TMacroBeacon g_MacroBeacon = {
   0x02,				// Size
-  RF_SETUP | WRITE_REG,		// Setup RF Options
+  NRF_REG_RF_SETUP | WRITE_REG,		// Setup RF Options
   RFB_RFOPTIONS,
 
   sizeof (TBeaconEnvelope) + 1,	// Size
@@ -173,7 +173,7 @@ main (void)
   u_int16_t crc;
 
   /* configure CPU peripherals */
-  OPTION = CONFIG_CPU_OPTION;
+  OPTION_REG = CONFIG_CPU_OPTION;
   TRISA = CONFIG_CPU_TRISA;
   TRISC = CONFIG_CPU_TRISC;
   WPUA = CONFIG_CPU_WPUA;
