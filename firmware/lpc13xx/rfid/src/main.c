@@ -81,6 +81,23 @@ rfid_execute (void *data, unsigned int isize, unsigned int osize)
   return res;
 }
 
+void
+WriteRegister (unsigned short address, unsigned char data)
+{
+  unsigned char cmd[4];
+
+  /* write register */
+  cmd[0] = 0x08;
+  /* high byte of address */
+  cmd[1] = address >> 8;
+  /* low byte of address */
+  cmd[2] = address & 0xFF;
+  /* data value */
+  cmd[3] = data;
+
+  rfid_execute (&cmd, sizeof(cmd), sizeof (data));
+}
+
 int
 main (void)
 {
@@ -107,13 +124,22 @@ main (void)
 
   /* main loop */
   counter = 0;
+
+  /* read firmware revision */
+  debug_printf ("\nreading firmware version...\n");
+  data[0] = 0x02;		/* cmd: GetFirmWareVersion  */
+  rfid_execute (&data, 1, sizeof (data));
+
+  /* enable debug output */
+  debug_printf ("\nenabling debug output...\n");
+  WriteRegister(0x6328,0xFC);
+  // select test bus signal
+  WriteRegister(0x6321,6);
+  // select test bus type
+  WriteRegister(0x6322,0x07);
+
   while (1)
     {
-      /* read firmware revision */
-      debug_printf ("\nreading firmware version...\n");
-      data[0] = 0x02;		/* cmd: GetFirmWareVersion  */
-      rfid_execute (&data, 1, sizeof (data));
-
       /* detect cards in field */
       GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
       debug_printf ("\nchecking for cards...\n");
