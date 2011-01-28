@@ -236,10 +236,10 @@ rfid_init (void)
 
   // Enable SSP peripheral
   LPC_IOCON->PIO0_8 = 0x01 | (0x01 << 3);	/* MISO, Pulldown */
-  LPC_IOCON->PIO0_9 = 0x01;	/* MOSI */
+  LPC_IOCON->PIO0_9 = 0x01;			/* MOSI */
 
-  LPC_IOCON->SCKLOC = 0x00;	/* route to PIO0_10 */
-  LPC_IOCON->JTAG_TCK_PIO0_10 = 0x02;	/* SCK */
+  LPC_IOCON->SCKLOC = 0x00;			/* route to PIO0_10 */
+  LPC_IOCON->JTAG_TCK_PIO0_10 = 0x02;		/* SCK */
 
   /* Set SSP clock to 4.5MHz */
   LPC_SYSCON->SSPCLKDIV = 0x01;
