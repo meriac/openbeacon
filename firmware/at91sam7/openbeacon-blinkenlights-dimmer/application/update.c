@@ -32,9 +32,9 @@
 #include "USB-CDC.h"
 #include "update.h"
 
-extern unsigned int bootloader;
-extern unsigned int bootloader_orig;
-extern unsigned int bootloader_orig_end;
+extern unsigned char bootloader;
+extern unsigned char bootloader_orig;
+extern unsigned char bootloader_orig_end;
 
 void DeviceRevertToUpdateMode (void)
 {
