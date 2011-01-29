@@ -344,9 +344,20 @@ vnRFtaskRxTx (void *parameter)
 
 		    case RFBPROTO_BEACONTRACKER:
 		      strength = g_Beacon.pkt.p.tracker.strength & 0x3;
+		      debug_printf(" R: %04i={%i,0x%08X}\n",
+			(int)oid,
+			(int)strength,
+			swaplong(g_Beacon.pkt.p.tracker.seq)
+			);
 		      break;
 
 		    case RFBPROTO_PROXREPORT:
+		      strength = 3;
+		      debug_printf(" P: %04i={%i,0x%04X}\n",
+			(int)oid,
+			(int)strength,
+			(int)swapshort(g_Beacon.pkt.p.prox.seq)
+			);
 		      for (t = 0; t < PROX_MAX; t++)
 			{
 			  crc = (swapshort (g_Beacon.pkt.p.prox.oid_prox[t]));
@@ -358,12 +369,11 @@ vnRFtaskRxTx (void *parameter)
 				(int)((crc >> 11) & 0x7)
 				);
 			}
-		      strength = 3;
 		      break;
 
 		    default:
 		      strength = 0xFF;
-		      debug_printf("Uknown Protocol: %i\n",(int)g_Beacon.pkt.proto);
+		      debug_printf("Unknown Protocol: %i\n",(int)g_Beacon.pkt.proto);
 		    }
 
 		  if (strength < 0xFF)
@@ -372,7 +382,7 @@ vnRFtaskRxTx (void *parameter)
 		      pcache->bcflags = 0;
 		      pcache->arrival_time = xTaskGetTickCount ();
 		      pcache->tag_oid = oid;
-		      pcache->tag_strength = strength * 0x55;
+		      pcache->tag_strength = strength;
 		      pcache->bcflags = BCFLAGS_VALIDENTRY;
 
 		      g_BeaconCacheHead++;
@@ -417,7 +427,7 @@ vnRFtaskRating (void *parameter)
 
   for (;;)
     {
-      debug_printf("RX:");
+      debug_printf("DIST:");
 
       count = vnRFCopyRating (g_BeaconSortPrint, SORT_PRINT_DEPTH);
       for (i = 0; i < count; i++)
