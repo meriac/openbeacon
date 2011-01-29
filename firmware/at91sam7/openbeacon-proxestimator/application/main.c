@@ -72,6 +72,13 @@ void vApplicationIdleHook(void)
 }
 
 /**********************************************************************/
+void
+vDebugSendHook (char data)
+{
+  vUSBSendByte (data);
+}
+
+/**********************************************************************/
 void __attribute__((noreturn)) mainloop (void)
 {
     prvSetupHardware ();

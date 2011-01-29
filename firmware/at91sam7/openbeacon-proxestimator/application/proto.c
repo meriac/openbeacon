@@ -26,12 +26,12 @@
 #include <string.h>
 #include <board.h>
 #include <beacontypes.h>
-#include <USB-CDC.h>
 #include <sort.h>
 #include "led.h"
 #include "xxtea.h"
 #include "proto.h"
 #include "env.h"
+#include "debug_printf.h"
 #include "nRF24L01/nRF_HW.h"
 #include "nRF24L01/nRF_CMD.h"
 #include "nRF24L01/nRF_API.h"
@@ -247,24 +247,6 @@ vnRFCopyRating (TBeaconSort * Sort, int Items)
     return 0;
 }
 
-static void
-DumpUIntToUSB (unsigned int data)
-{
-  int i = 0;
-  unsigned char buffer[10], *p = &buffer[sizeof (buffer)];
-
-  do
-    {
-      *--p = '0' + (unsigned char) (data % 10);
-      data /= 10;
-      i++;
-    }
-  while (data);
-
-  while (i--)
-    vUSBSendByte (*p++);
-}
-
 static inline void
 wifi_tx (unsigned char power)
 {
@@ -314,16 +296,6 @@ wifi_tx_reader_command (unsigned int reader_id, unsigned char opcode,
   reader_command.data[1] = data1;
 }
 
-static void
-DumpStringToUSB (char *text)
-{
-  unsigned char data;
-
-  if (text)
-    while ((data = *text++) != 0)
-      vUSBSendByte (data);
-}
-
 void
 vnRFtaskRxTx (void *parameter)
 {
@@ -347,8 +319,7 @@ vnRFtaskRxTx (void *parameter)
 	  do
 	    {
 	      // read packet from nRF chip
-	      nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.byte,
-				 sizeof (g_Beacon));
+	      nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.byte, sizeof (g_Beacon));
 
 	      // adjust byte order and decode
 	      shuffle_tx_byteorder ();
@@ -356,33 +327,18 @@ vnRFtaskRxTx (void *parameter)
 	      shuffle_tx_byteorder ();
 
 	      // verify the crc checksum
-	      crc =
-		env_crc16 (g_Beacon.byte,
-			   sizeof (g_Beacon) - sizeof (u_int16_t));
+	      crc = env_crc16 (g_Beacon.byte, sizeof (g_Beacon) - sizeof (u_int16_t));
 
 	      if (swapshort (g_Beacon.pkt.crc) == crc)
 		{
 		  oid = swapshort (g_Beacon.pkt.oid);
 		  if (g_Beacon.pkt.flags & RFBFLAGS_SENSOR)
-		    {
-		      DumpStringToUSB ("BUTTON: ");
-		      DumpUIntToUSB (oid);
-		      DumpStringToUSB ("\n\r");
-		    }
+		      debug_printf("BUTTON: %i\n",oid);
 
 		  switch (g_Beacon.pkt.proto)
 		    {
 
 		    case RFBPROTO_READER_ANNOUNCE:
-/*		      DumpStringToUSB ("READER_ANNOUNCE: ");
-		      DumpUIntToUSB (oid);
-		      DumpStringToUSB (",");
-		      DumpUIntToUSB (g_Beacon.pkt.p.reader_announce.strength);
-		      DumpStringToUSB (",");
-		      DumpUIntToUSB (swaplong
-				     (g_Beacon.pkt.p.reader_announce.uptime));
-		      DumpStringToUSB ("\n\r");*/
-
 		      strength = g_Beacon.pkt.p.reader_announce.strength;
 		      break;
 
@@ -395,27 +351,19 @@ vnRFtaskRxTx (void *parameter)
 			{
 			  crc = (swapshort (g_Beacon.pkt.p.prox.oid_prox[t]));
 			  if (crc)
-			    {
-			      DumpStringToUSB ("PX: ");
-			      DumpUIntToUSB (oid);
-			      DumpStringToUSB ("={");
-			      DumpUIntToUSB ((crc >> 0) & 0x7FF);
-			      DumpStringToUSB (",");
-			      DumpUIntToUSB (((crc >> 14) & 0x3) * 0x55);
-			      DumpStringToUSB (",");
-			      DumpUIntToUSB ((crc >> 11) & 0x7);
-			      DumpStringToUSB ("}\n\r");
-			    }
+			    debug_printf("PX: %04i={%04i,%i,%i}\n",
+				(int)oid,
+				(int)((crc >> 0) & 0x7FF),
+				(int)((crc >> 14) & 0x3),
+				(int)((crc >> 11) & 0x7)
+				);
 			}
-
 		      strength = 3;
 		      break;
 
 		    default:
 		      strength = 0xFF;
-		      DumpStringToUSB ("Uknown Protocol: ");
-		      DumpUIntToUSB (g_Beacon.pkt.proto);
-		      DumpStringToUSB ("\n\r");
+		      debug_printf("Uknown Protocol: %i\n",(int)g_Beacon.pkt.proto);
 		    }
 
 		  if (strength < 0xFF)
@@ -469,22 +417,13 @@ vnRFtaskRating (void *parameter)
 
   for (;;)
     {
-      DumpStringToUSB ("RX:");
+      debug_printf("RX:");
 
       count = vnRFCopyRating (g_BeaconSortPrint, SORT_PRINT_DEPTH);
-      if (count > 0)
-	{
-	  for (i = 0; i < count; i++)
-	    {
-	      DumpStringToUSB (" ");
-	      DumpUIntToUSB (g_BeaconSortPrint[i].tag_strength);
-	      DumpStringToUSB (",");
-	      DumpUIntToUSB (g_BeaconSortPrint[i].tag_oid);
-	    }
-	}
+      for (i = 0; i < count; i++)
+	debug_printf(" %i,%04i",(int)g_BeaconSortPrint[i].tag_strength,(int)g_BeaconSortPrint[i].tag_oid);
 
-      DumpStringToUSB ("\n\r");
-
+      debug_printf("\n");
       vTaskDelay (portTICK_RATE_MS * 950);
     }
 }
