@@ -33,6 +33,7 @@
 // set nRF24L01 broadcast mac
 const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 1, 2, 3, 2, 1 };
 
+#if (USB_HID_IN_REPORT_SIZE>0)||(USB_HID_OUT_REPORT_SIZE>0)
 static uint8_t hid_buffer[USB_HID_IN_REPORT_SIZE];
 
 void
@@ -53,6 +54,7 @@ SetOutReport (uint8_t dst[], uint32_t length)
   (void) dst;
   (void) length;
 }
+#endif
 
 /*
 static void
@@ -108,7 +110,9 @@ main_menue (uint8_t cmd)
 		    " *****************************************************\n");
       spi_status ();
       acc_status ();
+#if (DISK_SIZE>0)
       storage_status ();
+#endif
       nRFCMD_Status ();
       debug_printf (" *****************************************************\n"
 		    "\n");
@@ -139,21 +143,26 @@ main (void)
     }
 
   /* Init USB HID interface */
+#if (USB_HID_IN_REPORT_SIZE>0)||(USB_HID_OUT_REPORT_SIZE>0)
   hid_init ();
+#endif
   /* Init SPI */
   spi_init ();
+  /* Init Storage */
+#if (DISK_SIZE>0)
+  storage_init ();
+#endif
   /* Init OpenBeacon nRF24L01 interface */
   nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0);
   /* Init 3D acceleration sensor */
   acc_init ();
-  /* Init Storage */
-  storage_init ();
   /* Init Bluetooth */
   bt_init ();
 
   /* main loop */
   t = 0;
   firstrun = 1;
+
   while (1)
     {
       /* blink LED0 on every 32th run - FIXME later with sleep */
@@ -186,5 +195,6 @@ main (void)
 	  /* clear UART buffer */
 	  UARTCount = 0;
 	}
+
     }
 }

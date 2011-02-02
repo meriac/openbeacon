@@ -22,6 +22,10 @@
 */
 #include <openbeacon.h>
 #include "storage.h"
+
+#if DISK_SIZE>0
+
+#include "msd.h"
 #include "spi.h"
 
 void
@@ -36,21 +40,34 @@ storage_status (void)
 }
 
 void
-storage_read (uint32_t pos,uint8_t length,uint8_t *data)
+msd_read (uint32_t offset, uint8_t dst[], uint32_t length)
 {
     uint8_t tx[4];
 
     tx[0]=0x03; /* 25MHz Read */
-    tx[1]=(uint8_t)(pos>>16);
-    tx[2]=(uint8_t)(pos>> 8);
-    tx[3]=(uint8_t)(pos);
+    tx[1]=(uint8_t)(offset>>16);
+    tx[2]=(uint8_t)(offset>> 8);
+    tx[3]=(uint8_t)(offset);
 
-    spi_txrx (SPI_CS_FLASH, tx, sizeof(tx), data, length);
+    spi_txrx (SPI_CS_FLASH, tx, sizeof(tx), dst, length);
+}
+
+void
+msd_write(uint32_t offset, uint8_t src[], uint32_t length)
+{
+    (void) offset;
+    (void) src;
+    (void) length;
 }
 
 void
 storage_init (void)
 {
+  /* init USB mass storage */
+  msd_init();
+
   /* setup SPI chipselect pin */
   spi_init_pin (SPI_CS_FLASH);
 }
+
+#endif /* DISK_SIZE>0 */

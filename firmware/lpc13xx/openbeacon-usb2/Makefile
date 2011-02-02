@@ -1,6 +1,6 @@
 TARGET=openbeacon-usb2
 ARCH=LPC13
-CPU=$(ARCH)42
+CPU=$(ARCH)43
 DEBUG=-g
 OPTIM=-Os -mword-relocations
 
@@ -13,6 +13,7 @@ APP_SRC= \
   src/nRF_API.c \
   src/bluetooth.c \
   src/hid.c \
+  src/msd.c \
   src/pin.c \
   src/3d_acceleration.c \
   src/storage.c \
@@ -26,4 +27,3 @@ app_clean:
 	find src -name '*.o' -exec rm \{\} \;
 
 include ../core/Makefile.rules
-

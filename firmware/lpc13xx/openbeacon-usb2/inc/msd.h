@@ -1,6 +1,6 @@
 /***************************************************************
  *
- * OpenBeacon.org - config file
+ * OpenBeacon.org - MSD ROM function code for LPC13xx
  *
  * Copyright 2010 Milosch Meriac <meriac@openbeacon.de>
  *
@@ -20,26 +20,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 */
+#ifndef __MSD_H__
+#define __MSD_H__
 
-#ifndef __CONFIG_H__
-#define __CONFIG_H__
+#define DISK_BLOCK_SIZE 512UL
 
-#define USB_VENDOR_ID 0x2366
-#define USB_PROD_ID 0x0003
-#define USB_DEVICE 1
+extern void msd_init(void);
+extern void msd_read (uint32_t offset, uint8_t dst[], uint32_t length);
+extern void msd_write(uint32_t offset, uint8_t src[], uint32_t length);
 
-/* mass storage device settings */
-#define DISK_SIZE (4UL*1024*1024)
-
-/* HID device settings */
-#define USB_HID_IN_REPORT_SIZE 0
-#define USB_HID_OUT_REPORT_SIZE 0
-
-/* SPI_CS(io_port, io_pin, frequency_in_MHz, mode) */
-#define SPI_CS_FLASH SPI_CS( 1, 8, 80.0, SPI_CS_MODE_NORMAL )
-#define SPI_CS_NRF   SPI_CS( 1,10,  8.0, SPI_CS_MODE_NORMAL )
-#define SPI_CS_ACC3D SPI_CS( 0, 4, 10.0, SPI_CS_MODE_NORMAL )
-
-#define NRF_MAX_MAC_SIZE 5
-
-#endif/*__CONFIG_H__*/
+#endif/*__MSD_H__*/

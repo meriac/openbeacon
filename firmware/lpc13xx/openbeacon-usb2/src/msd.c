@@ -22,9 +22,9 @@
 */
 
 #include <openbeacon.h>
-#include "hid.h"
+#include "msd.h"
 
-#if (USB_HID_IN_REPORT_SIZE>0)||(USB_HID_OUT_REPORT_SIZE>0)
+#if DISK_SIZE>0
 
 #define     EN_TIMER32_1    (1<<10)
 #define     EN_IOCON        (1<<16)
@@ -63,30 +63,33 @@ const uint8_t USB_StringDescriptor[] = {
   /* Index 0x62: Interface 0, Alternate Setting 0 */
   0x0E,				/* bLength */
   USB_STRING_DESCRIPTOR_TYPE,	/* bDescriptorType */
-  'H', 0, 'I', 0, 'D', 0, ' ', 0, ' ', 0, ' ', 0,
+  'M', 0, 'e', 0, 'm', 0, 'o', 0, 'r', 0, 'y', 0,
 };
 
+static const uint8_t SCSI_Inquiry_String[28] = "Logfile OpenBeacon Tag  2.0a";
+
 void
-hid_init (void)
+msd_init (void)
 {
   volatile int i;
   static USB_DEV_INFO DeviceInfo;
-  static HID_DEVICE_INFO HidDevInfo;
+  static MSC_DEVICE_INFO MscDevInfo;
 
   /* Setup ROM initialization structure */
-  HidDevInfo.idVendor = USB_VENDOR_ID;
-  HidDevInfo.idProduct = USB_PROD_ID;
-  HidDevInfo.bcdDevice = USB_DEVICE;
-  HidDevInfo.StrDescPtr = (uint32_t) & USB_StringDescriptor[0];
-  HidDevInfo.InReportCount = USB_HID_IN_REPORT_SIZE;
-  HidDevInfo.OutReportCount = USB_HID_OUT_REPORT_SIZE;
-  HidDevInfo.SampleInterval = 0x20;
-  HidDevInfo.InReport = GetInReport;
-  HidDevInfo.OutReport = SetOutReport;
+  MscDevInfo.idVendor = USB_VENDOR_ID;
+  MscDevInfo.idProduct = USB_PROD_ID;
+  MscDevInfo.bcdDevice = USB_DEVICE;
+  MscDevInfo.StrDescPtr = (uint32_t) &USB_StringDescriptor[0];
+  MscDevInfo.MSCInquiryStr = (uint32_t) &SCSI_Inquiry_String;
+  MscDevInfo.BlockSize = DISK_BLOCK_SIZE;
+  MscDevInfo.BlockCount = DISK_SIZE / DISK_BLOCK_SIZE;
+  MscDevInfo.MemorySize = DISK_SIZE;
+  MscDevInfo.MSC_Read = msd_read;
+  MscDevInfo.MSC_Write = msd_write;
 
   /* Point DeviceInfo to HidDevInfo */
-  DeviceInfo.DevType = USB_DEVICE_CLASS_HUMAN_INTERFACE;
-  DeviceInfo.DevDetailPtr = (uint32_t) & HidDevInfo;
+  DeviceInfo.DevType = USB_DEVICE_CLASS_STORAGE;
+  DeviceInfo.DevDetailPtr = (uint32_t) & MscDevInfo;
 
   /* Enable Timer32_1, IOCON, and USB blocks (for USB ROM driver) */
   LPC_SYSCON->SYSAHBCLKCTRL |= (EN_TIMER32_1 | EN_IOCON | EN_USBREG);
@@ -101,10 +104,13 @@ hid_init (void)
 
   /* USB Initialization ... */
   (*rom)->pUSBD->init (&DeviceInfo);
-
+  /* Initialize Storage */
+  init_msdstate();
   /* ... and USB Connect */
   (*rom)->pUSBD->connect (1);
 
+/*  while (1)
+    __WFI();*/
 }
 
-#endif/* (USB_HID_IN_REPORT_SIZE>0)||(USB_HID_OUT_REPORT_SIZE>0) */
+#endif /* DISK_SIZE */
