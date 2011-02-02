@@ -47,6 +47,9 @@ pin_mode_pmu(uint8_t mode)
 void
 pin_init (void)
 {
+  /* Initialize GPIO (sets up clock) */
+  GPIOInit ();
+
   /* Set LED0 port pin to output */
   LPC_IOCON->JTAG_nTRST_PIO1_2=1;
   GPIOSetDir  ( LED0_PORT, LED0_BIT, 1);

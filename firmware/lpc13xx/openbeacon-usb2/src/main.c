@@ -126,12 +126,8 @@ main (void)
   int t, firstrun;
   volatile int i;
 
-  /* Initialize GPIO (sets up clock) */
-  GPIOInit ();
   /* initialize  pins */
   pin_init ();
-  /* setup SPI chipselect pins */
-  spi_init_pin (SPI_CS_NRF);
 
   /* blink as a sign of boot to detect crashes */
   for (t = 0; t < 10; t++)
