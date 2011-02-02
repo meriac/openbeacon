@@ -70,23 +70,25 @@ void
 hid_init (void)
 {
   volatile int i;
-  static USB_DEV_INFO DeviceInfo;
-  static HID_DEVICE_INFO HidDevInfo;
 
   /* Setup ROM initialization structure */
-  HidDevInfo.idVendor = USB_VENDOR_ID;
-  HidDevInfo.idProduct = USB_PROD_ID;
-  HidDevInfo.bcdDevice = USB_DEVICE;
-  HidDevInfo.StrDescPtr = (uint32_t) & USB_StringDescriptor[0];
-  HidDevInfo.InReportCount = USB_HID_IN_REPORT_SIZE;
-  HidDevInfo.OutReportCount = USB_HID_OUT_REPORT_SIZE;
-  HidDevInfo.SampleInterval = 0x20;
-  HidDevInfo.InReport = GetInReport;
-  HidDevInfo.OutReport = SetOutReport;
+  static const HID_DEVICE_INFO HidDevInfo = {
+    .idVendor = USB_VENDOR_ID,
+    .idProduct = USB_PROD_ID,
+    .bcdDevice = USB_DEVICE,
+    .StrDescPtr = (uint32_t) & USB_StringDescriptor[0],
+    .InReportCount = USB_HID_IN_REPORT_SIZE,
+    .OutReportCount = USB_HID_OUT_REPORT_SIZE,
+    .SampleInterval = 0x20,
+    .InReport = GetInReport,
+    .OutReport = SetOutReport
+  };
 
   /* Point DeviceInfo to HidDevInfo */
-  DeviceInfo.DevType = USB_DEVICE_CLASS_HUMAN_INTERFACE;
-  DeviceInfo.DevDetailPtr = (uint32_t) & HidDevInfo;
+  static const USB_DEV_INFO DeviceInfo = {
+    .DevType = USB_DEVICE_CLASS_HUMAN_INTERFACE,
+    .DevDetailPtr = (uint32_t) & HidDevInfo
+  };
 
   /* Enable Timer32_1, IOCON, and USB blocks (for USB ROM driver) */
   LPC_SYSCON->SYSAHBCLKCTRL |= (EN_TIMER32_1 | EN_IOCON | EN_USBREG);

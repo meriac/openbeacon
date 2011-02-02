@@ -72,24 +72,26 @@ void
 msd_init (void)
 {
   volatile int i;
-  static USB_DEV_INFO DeviceInfo;
-  static MSC_DEVICE_INFO MscDevInfo;
 
   /* Setup ROM initialization structure */
-  MscDevInfo.idVendor = USB_VENDOR_ID;
-  MscDevInfo.idProduct = USB_PROD_ID;
-  MscDevInfo.bcdDevice = USB_DEVICE;
-  MscDevInfo.StrDescPtr = (uint32_t) & USB_StringDescriptor[0];
-  MscDevInfo.MSCInquiryStr = (uint32_t) & SCSI_Inquiry_String;
-  MscDevInfo.BlockSize = DISK_BLOCK_SIZE;
-  MscDevInfo.BlockCount = DISK_SIZE / DISK_BLOCK_SIZE;
-  MscDevInfo.MemorySize = DISK_SIZE;
-  MscDevInfo.MSC_Read = msd_read;
-  MscDevInfo.MSC_Write = msd_write;
+  static const MSC_DEVICE_INFO MscDevInfo = {
+    .idVendor = USB_VENDOR_ID,
+    .idProduct = USB_PROD_ID,
+    .bcdDevice = USB_DEVICE,
+    .StrDescPtr = (uint32_t) & USB_StringDescriptor[0],
+    .MSCInquiryStr = (uint32_t) & SCSI_Inquiry_String,
+    .BlockSize = DISK_BLOCK_SIZE,
+    .BlockCount = DISK_SIZE / DISK_BLOCK_SIZE,
+    .MemorySize = DISK_SIZE,
+    .MSC_Read = msd_read,
+    .MSC_Write = msd_write
+  };
 
-  /* Point DeviceInfo to HidDevInfo */
-  DeviceInfo.DevType = USB_DEVICE_CLASS_STORAGE;
-  DeviceInfo.DevDetailPtr = (uint32_t) & MscDevInfo;
+  /* Point DeviceInfo to MscDevInfo */
+  static const USB_DEV_INFO DeviceInfo = {
+    .DevType = USB_DEVICE_CLASS_STORAGE,
+    .DevDetailPtr = (uint32_t) & MscDevInfo
+  };
 
   /* Enable Timer32_1, IOCON, and USB blocks (for USB ROM driver) */
   LPC_SYSCON->SYSAHBCLKCTRL |= (EN_TIMER32_1 | EN_IOCON | EN_USBREG);

@@ -21,7 +21,7 @@ typedef struct _USBD
 {
   void (*init_clk_pins) (void);
   void (*isr) (void);
-  void (*init) (USB_DEV_INFO * DevInfoPtr);
+  void (*init) (const USB_DEV_INFO * DevInfoPtr);
   void (*connect) (uint32_t con);
 } USBD;
 
