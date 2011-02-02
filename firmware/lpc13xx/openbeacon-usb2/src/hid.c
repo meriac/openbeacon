@@ -107,4 +107,4 @@ hid_init (void)
 
 }
 
-#endif/* (USB_HID_IN_REPORT_SIZE>0)||(USB_HID_OUT_REPORT_SIZE>0) */
+#endif /* (USB_HID_IN_REPORT_SIZE>0)||(USB_HID_OUT_REPORT_SIZE>0) */

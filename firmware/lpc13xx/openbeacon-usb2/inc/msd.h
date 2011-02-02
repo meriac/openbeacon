@@ -25,8 +25,8 @@
 
 #define DISK_BLOCK_SIZE 512UL
 
-extern void msd_init(void);
+extern void msd_init (void);
 extern void msd_read (uint32_t offset, uint8_t dst[], uint32_t length);
-extern void msd_write(uint32_t offset, uint8_t src[], uint32_t length);
+extern void msd_write (uint32_t offset, uint8_t src[], uint32_t length);
 
 #endif/*__MSD_H__*/

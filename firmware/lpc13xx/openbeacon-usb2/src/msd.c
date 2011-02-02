@@ -79,8 +79,8 @@ msd_init (void)
   MscDevInfo.idVendor = USB_VENDOR_ID;
   MscDevInfo.idProduct = USB_PROD_ID;
   MscDevInfo.bcdDevice = USB_DEVICE;
-  MscDevInfo.StrDescPtr = (uint32_t) &USB_StringDescriptor[0];
-  MscDevInfo.MSCInquiryStr = (uint32_t) &SCSI_Inquiry_String;
+  MscDevInfo.StrDescPtr = (uint32_t) & USB_StringDescriptor[0];
+  MscDevInfo.MSCInquiryStr = (uint32_t) & SCSI_Inquiry_String;
   MscDevInfo.BlockSize = DISK_BLOCK_SIZE;
   MscDevInfo.BlockCount = DISK_SIZE / DISK_BLOCK_SIZE;
   MscDevInfo.MemorySize = DISK_SIZE;
@@ -105,7 +105,7 @@ msd_init (void)
   /* USB Initialization ... */
   (*rom)->pUSBD->init (&DeviceInfo);
   /* Initialize Storage */
-  init_msdstate();
+  init_msdstate ();
   /* ... and USB Connect */
   (*rom)->pUSBD->connect (1);
 }

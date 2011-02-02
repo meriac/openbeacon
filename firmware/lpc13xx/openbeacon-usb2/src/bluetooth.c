@@ -50,23 +50,23 @@ bt_init (void)
   UARTInit (115200, 0);
 
   /* fake CTS for now */
-  GPIOSetDir  ( 1, 5, 1);
-  GPIOSetValue( 1, 5, 0);
+  GPIOSetDir (1, 5, 1);
+  GPIOSetValue (1, 5, 0);
 
   /* Set CPU_WAKEUP_BLT port pin to output */
-  LPC_IOCON->ARM_SWDIO_PIO1_3=1;
-  GPIOSetDir  ( CPU_WAKEUP_BLT_PORT, CPU_WAKEUP_BLT_PIN, 1);
-  GPIOSetValue( CPU_WAKEUP_BLT_PORT, CPU_WAKEUP_BLT_PIN, 1);
+  LPC_IOCON->ARM_SWDIO_PIO1_3 = 1;
+  GPIOSetDir (CPU_WAKEUP_BLT_PORT, CPU_WAKEUP_BLT_PIN, 1);
+  GPIOSetValue (CPU_WAKEUP_BLT_PORT, CPU_WAKEUP_BLT_PIN, 1);
 
   /* Set CPU_BLT_WAKEUP port pin to input */
-  LPC_IOCON->PIO2_0=0;
-  GPIOSetDir  ( CPU_BLT_WAKEUP_PORT, CPU_BLT_WAKEUP_PIN, 0);
-  GPIOSetValue( CPU_BLT_WAKEUP_PORT, CPU_BLT_WAKEUP_PIN, 0);
+  LPC_IOCON->PIO2_0 = 0;
+  GPIOSetDir (CPU_BLT_WAKEUP_PORT, CPU_BLT_WAKEUP_PIN, 0);
+  GPIOSetValue (CPU_BLT_WAKEUP_PORT, CPU_BLT_WAKEUP_PIN, 0);
 
   /* Set CPU_ON-OFF_BLT port pin to output */
-  LPC_IOCON->JTAG_TMS_PIO1_0=1;
-  GPIOSetDir  ( CPU_ON_OFF_BLT_PORT, CPU_ON_OFF_BLT_PIN, 1);
-  GPIOSetValue( CPU_ON_OFF_BLT_PORT, CPU_ON_OFF_BLT_PIN, 1);
+  LPC_IOCON->JTAG_TMS_PIO1_0 = 1;
+  GPIOSetDir (CPU_ON_OFF_BLT_PORT, CPU_ON_OFF_BLT_PIN, 1);
+  GPIOSetValue (CPU_ON_OFF_BLT_PORT, CPU_ON_OFF_BLT_PIN, 1);
 
   /* iterate through all bt_init_strings */
   bt_init_pos = 0;
@@ -79,8 +79,8 @@ bt_init (void)
 	    /* emmpty buffers */
 	    UARTCount = 0;
 	    /* output next init string */
-	    if(bt_init_pos<BT_INIT_STRINGS_COUNT)
-		debug_printf ("AT+J%s\n", bt_init_strings[bt_init_pos]);
+	    if (bt_init_pos < BT_INIT_STRINGS_COUNT)
+	      debug_printf ("AT+J%s\n", bt_init_strings[bt_init_pos]);
 	    bt_init_pos++;
 	  }
     }

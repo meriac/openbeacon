@@ -30,6 +30,6 @@
 
 extern void pin_init (void);
 extern void pin_led (uint8_t led);
-extern void pin_mode_pmu(uint8_t mode);
+extern void pin_mode_pmu (uint8_t mode);
 
 #endif /*__PIN_H__*/
