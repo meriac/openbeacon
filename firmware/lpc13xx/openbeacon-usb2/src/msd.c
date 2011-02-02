@@ -108,9 +108,6 @@ msd_init (void)
   init_msdstate();
   /* ... and USB Connect */
   (*rom)->pUSBD->connect (1);
-
-/*  while (1)
-    __WFI();*/
 }
 
 #endif /* DISK_SIZE */
