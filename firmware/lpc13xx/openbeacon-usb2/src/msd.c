@@ -66,12 +66,14 @@ const uint8_t USB_StringDescriptor[] = {
   'M', 0, 'e', 0, 'm', 0, 'o', 0, 'r', 0, 'y', 0,
 };
 
-static const uint8_t SCSI_Inquiry_String[28] = "Logfile OpenBeacon Tag  2.0a";
-
 void
 msd_init (void)
 {
   volatile int i;
+
+  /* 28 byte long SCSI inquiry string */
+  static const uint8_t SCSI_Inquiry_String[28] =
+    "Logfile OpenBeacon Tag  2.0a";
 
   /* Setup ROM initialization structure */
   static const MSC_DEVICE_INFO MscDevInfo = {
