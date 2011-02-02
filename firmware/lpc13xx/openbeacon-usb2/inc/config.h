@@ -32,9 +32,9 @@
 #define USB_HID_OUT_REPORT_SIZE 0
 
 /* SPI_CS(io_port, io_pin, frequency_in_MHz, mode) */
-#define SPI_CS_FLASH SPI_CS( 0, 2, 80.0, SPI_CS_MODE_NORMAL )
+#define SPI_CS_FLASH SPI_CS( 1, 8, 80.0, SPI_CS_MODE_NORMAL )
 #define SPI_CS_NRF   SPI_CS( 1,10,  8.0, SPI_CS_MODE_NORMAL )
-#define SPI_CS_ACC3D SPI_CS( 1, 8, 10.0, SPI_CS_MODE_NORMAL )
+#define SPI_CS_ACC3D SPI_CS( 0, 4, 10.0, SPI_CS_MODE_NORMAL )
 
 #define NRF_MAX_MAC_SIZE 5
 

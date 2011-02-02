@@ -58,6 +58,9 @@ acc_reg_read (uint8_t addr)
 void
 acc_xyz_read (int *x, int *y, int *z)
 {
+  /* dummy read - FIXME */
+  acc_reg_read (0);
+
   /*  get acceleration values */
   *x = (int8_t) acc_reg_read (6);
   *y = (int8_t) acc_reg_read (7);
@@ -77,14 +80,20 @@ acc_status (void)
 void
 acc_init (void)
 {
-  /* setup SPI chipselect pin */
-  spi_init_pin (SPI_CS_ACC3D);
+  /* PIO, PIO0_4 in standard IO functionality */
+  LPC_IOCON->PIO0_4 = 1 << 8;
 
   /* PIO, Inactive Pull, Digital Mode */
   LPC_IOCON->PIO1_11 = 1 << 7;
 
+  /* setup SPI chipselect pin */
+  spi_init_pin (SPI_CS_ACC3D);
+
   /* Set ACC_INT port to input */
   GPIOSetDir (ACC_INT_PORT, ACC_INT_PIN, 0);
+
+  /* dummy read - FIXME */
+  acc_reg_read (0);
 
   /* set 3D acceleration sensor active, 2g - FIXME power saving */
   acc_reg_write (0x16, 0x01 | 0x01 << 2);
