@@ -95,7 +95,7 @@ extern WEAK void main(void);
 // External declaration for the pointer to the stack top from the Linker Script
 //
 //*****************************************************************************
-extern uint32_t __stack_end__;
+extern void __stack_end__(void);
 
 //*****************************************************************************
 //
@@ -106,8 +106,8 @@ extern uint32_t __stack_end__;
 __attribute__ ((section(".isr_vector")))
 void (*const g_pfnVectors[]) (void) =
 {
-    // Core Level - CM3
-    (void *) &__stack_end__,	// The initial stack pointer
+	// Core Level - CM3
+	__stack_end__,		// The initial stack pointer
 	Reset_Handler,		// The reset handler
 	NMI_Handler,		// The NMI handler
 	HardFault_Handler,	// The hard fault handler

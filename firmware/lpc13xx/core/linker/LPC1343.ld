@@ -4,6 +4,6 @@ MEMORY
 	ram	: ORIGIN = 0x10000180, LENGTH = 8K - 0x180
 }
 
-__stack_end__ = 0x10000000 + 8K - 4;
+__stack_end__ = 0x10000000 + 8K - 16;
 
 INCLUDE "../core/linker/LPC13xx.ld"
