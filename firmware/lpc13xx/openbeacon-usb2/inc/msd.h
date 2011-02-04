@@ -24,22 +24,18 @@
 #define __MSD_H__
 
 /***************************************************************
- * bytes per sector
+ * disk configuration
  ***************************************************************/
 #define DISK_BLOCK_SIZE 512UL
-
-/***************************************************************
- * disk geometry - make it small enough
- * to allow FAT16 with 512 byte cluster size
- ***************************************************************/
-#define DISK_CYLINDERS 4UL
 #define DISK_HEADS 255UL
 #define DISK_SECTORS_PER_TRACK 63UL
+#define DISK_CYLINDERS 255UL
 
 /***************************************************************
  * derieved values
  ***************************************************************/
-#define DISK_SECTORS (DISK_CYLINDERS*DISK_HEADS*DISK_SECTORS_PER_TRACK)
+#define SECTORS_PER_CYLINDER (DISK_HEADS*DISK_SECTORS_PER_TRACK)
+#define DISK_SECTORS (SECTORS_PER_CYLINDER*DISK_CYLINDERS)
 #define DISK_SIZE (DISK_SECTORS*DISK_BLOCK_SIZE)
 
 /***************************************************************
