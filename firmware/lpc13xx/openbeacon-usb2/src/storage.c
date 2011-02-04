@@ -28,6 +28,15 @@
 #include "spi.h"
 
 #define IN_RANGE(x,a,b) ((x>=a) && (x<b))
+#define DISK_SECTORS_PER_CLUSTER 1UL
+#define FAT16_SIZE_SECTORS ((uint32_t)((((DISK_SECTORS/DISK_SECTORS_PER_CLUSTER)*2)+DISK_BLOCK_SIZE-1)/DISK_BLOCK_SIZE))
+#define RESERVED_SECTORS_COUNT 1UL
+#define BPB_NUMFATS 2UL
+#define ROOT_DIR_SECTORS 1UL
+#define MAX_FILES_IN_ROOT ((ROOT_DIR_SECTORS*DISK_BLOCK_SIZE)/32)
+#define FIRST_DATA_SECTOR (RESERVED_SECTORS_COUNT+(BPB_NUMFATS*FAT16_SIZE_SECTORS)+ROOT_DIR_SECTORS)
+#define DATA_SECTORS (DISK_SECTORS-FIRST_DATA_SECTOR)
+#define FIRST_SECTOR_OF_CLUSTER(N) (((N-2UL)*DISK_SECTORS_PER_CLUSTER)+FIRST_DATA_SECTOR)
 
 typedef void (*TDiskHandler) (uint32_t offset, uint32_t length,
 			      const void *src, uint8_t * dst);
@@ -56,8 +65,27 @@ typedef struct
 
 typedef struct
 {
-  uint8_t BS_jmpBoot[3];
-  char BS_OEMName[8];
+  uint8_t  BS_jmpBoot[3];
+  char     BS_OEMName[8];
+  uint16_t BPB_BytsPerSec;
+  uint8_t  BPB_SecPerClus;
+  uint16_t BPB_RsvdSecCnt;
+  uint8_t  BPB_NumFATs;
+  uint16_t BPB_RootEntCnt;
+  uint16_t BPB_TotSec16;
+  uint8_t  BPB_Media;
+  uint16_t BPB_FATSz16;
+  uint16_t BPB_SecPerTrk;
+  uint16_t BPB_NumHeads;
+  uint32_t BPB_HiddSec;
+  uint32_t BPB_TotSec32;
+  /* FAT12/FAT16 definition */
+  uint8_t  BS_DrvNum;
+  uint8_t  BS_Reserved1;
+  uint8_t  BS_BootSig;
+  uint32_t BS_VolID;
+  char     BS_VolLab[11];
+  char     BS_FilSysType[8];
 } PACKED TDiskBPB;
 
 void
@@ -71,7 +99,6 @@ storage_status (void)
   /* Show FLASH ID */
   debug_printf (" * FLASH: ID:%02X-%02X-%02X\n", rx[0], rx[1], rx[2]);
 }
-
 
 static void
 msd_read_memory (uint32_t offset, uint32_t length, const void *src,
@@ -112,12 +139,29 @@ msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
   };
 
   /* MBR termination signature */
-  static const uint16_t MBRSignature = 0xAA55;
+  static const uint16_t BootSignature = 0xAA55;
 
   /* BPB - BIOS Parameter Block: actual volume boot block */
   static const TDiskBPB DiskBPB = {
-    .BS_jmpBoot = {0xE9, 0x00, 0x00},
-    .BS_OEMName = "BITMANUF"
+    .BS_jmpBoot     = {0xEB, 0x00, 0x90},
+    .BS_OEMName     = "BITMANUF",
+    .BPB_BytsPerSec = DISK_BLOCK_SIZE,
+    .BPB_SecPerClus = DISK_SECTORS_PER_CLUSTER,
+    .BPB_RsvdSecCnt = RESERVED_SECTORS_COUNT,
+    .BPB_NumFATs    = BPB_NUMFATS,
+    .BPB_RootEntCnt = MAX_FILES_IN_ROOT,
+    .BPB_TotSec16   = DISK_SECTORS - 1,
+    .BPB_Media      = 0xF0,
+    .BPB_FATSz16    = FAT16_SIZE_SECTORS,
+    .BPB_SecPerTrk  = DISK_SECTORS_PER_TRACK,
+    .BPB_NumHeads   = DISK_HEADS,
+    .BPB_HiddSec    = 1,
+    /* FAT12/FAT16 definition */
+    .BS_DrvNum      = 0x80,
+    .BS_BootSig     = 0x29,
+    .BS_VolID       = 0xe9d9489f,
+    .BS_VolLab      = "OPENBEACON",
+    .BS_FilSysType  = "FAT16   ",
   };
 
   /* data mapping of virtual drive */
@@ -139,9 +183,9 @@ msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
     /* MBR termination signature */
     {
      .offset = 0x1FE,
-     .length = sizeof (MBRSignature),
+     .length = sizeof (BootSignature),
      .handler = msd_read_memory,
-     .data = &MBRSignature}
+     .data = &BootSignature}
     ,
     /* BPB - BIOS Parameter Block: actual volume boot block */
     {
@@ -149,6 +193,14 @@ msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
      .length = sizeof (DiskBPB),
      .handler = msd_read_memory,
      .data = &DiskBPB}
+    ,
+    /* BPB termination signature */
+    {
+     .offset = DISK_BLOCK_SIZE+0x1FE,
+     .length = sizeof (BootSignature),
+     .handler = msd_read_memory,
+     .data = &BootSignature}
+    ,
   };
 
   /* ignore zero reads and reads outside of disk area */
