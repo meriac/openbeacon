@@ -1,6 +1,8 @@
 #ifndef __OPENBEACON_H__
 #define __OPENBEACON_H__
 
+#define PACKED __attribute__((packed))
+
 #ifdef  __LPC13xx__
 #include <LPC13xx.h>
 #include <uart.h>

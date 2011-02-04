@@ -83,7 +83,7 @@ msd_init (void)
     .StrDescPtr = (uint32_t) & USB_StringDescriptor[0],
     .MSCInquiryStr = (uint32_t) & SCSI_Inquiry_String,
     .BlockSize = DISK_BLOCK_SIZE,
-    .BlockCount = DISK_SIZE / DISK_BLOCK_SIZE,
+    .BlockCount = DISK_SECTORS,
     .MemorySize = DISK_SIZE,
     .MSC_Read = msd_read,
     .MSC_Write = msd_write

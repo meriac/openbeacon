@@ -23,10 +23,30 @@
 #ifndef __MSD_H__
 #define __MSD_H__
 
+/***************************************************************
+ * bytes per sector
+ ***************************************************************/
 #define DISK_BLOCK_SIZE 512UL
 
+/***************************************************************
+ * disk geometry - make it small enough
+ * to allow FAT16 with 512 byte cluster size
+ ***************************************************************/
+#define DISK_CYLINDERS 4UL
+#define DISK_HEADS 255UL
+#define DISK_SECTORS_PER_TRACK 63UL
+
+/***************************************************************
+ * derieved values
+ ***************************************************************/
+#define DISK_SECTORS (DISK_CYLINDERS*DISK_HEADS*DISK_SECTORS_PER_TRACK)
+#define DISK_SIZE (DISK_SECTORS*DISK_BLOCK_SIZE)
+
+/***************************************************************
+ * exported functions
+ ***************************************************************/
 extern void msd_init (void);
-extern void msd_read (uint32_t offset, uint8_t dst[], uint32_t length);
-extern void msd_write (uint32_t offset, uint8_t src[], uint32_t length);
+extern void msd_read (uint32_t offset, uint8_t *dst, uint32_t length);
+extern void msd_write (uint32_t offset, uint8_t *src, uint32_t length);
 
 #endif/*__MSD_H__*/

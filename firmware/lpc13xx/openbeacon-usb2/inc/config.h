@@ -28,9 +28,6 @@
 #define USB_PROD_ID 0x0003
 #define USB_DEVICE 1
 
-/* mass storage device settings */
-#define DISK_SIZE (4UL*1024*1024)
-
 /* HID device settings */
 #define USB_HID_IN_REPORT_SIZE 0
 #define USB_HID_OUT_REPORT_SIZE 0
