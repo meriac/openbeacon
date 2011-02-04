@@ -28,20 +28,14 @@
 #include "spi.h"
 
 #define IN_RANGE(x,a,b) ((x>=a) && (x<b))
-#define VOLUME_START 1UL
-#define VOLUME_SECTORS (DISK_SECTORS-VOLUME_START)
-#define VOLUME_FSINFO_SECTOR_NUMBER 1UL
-#define VOLUME_BACKUP_BOOT_SECTOR_NUMBER 6UL
 #define DISK_SECTORS_PER_CLUSTER 1UL
-#define FAT32_SIZE_SECTORS ((uint32_t)(((((VOLUME_SECTORS/DISK_SECTORS_PER_CLUSTER)+2)*4)+DISK_BLOCK_SIZE-1)/DISK_BLOCK_SIZE))
-#define RESERVED_SECTORS_COUNT 32UL
+#define FAT16_SIZE_SECTORS ((uint32_t)((((DISK_SECTORS/DISK_SECTORS_PER_CLUSTER)*2)+DISK_BLOCK_SIZE-1)/DISK_BLOCK_SIZE))
+#define RESERVED_SECTORS_COUNT 1UL
 #define BPB_NUMFATS 2UL
-#define ROOT_DIR_CLUSTERS 1UL
-#define ROOT_DIR_CLUSTER_POS 2UL
-#define MAX_FILES_IN_ROOT ((ROOT_DIR_CLUSTERS*DISK_SECTORS_PER_CLUSTER*DISK_BLOCK_SIZE)/32)
-#define FIRST_ROOT_DIR_SECTOR (RESERVED_SECTORS_COUNT+(BPB_NUMFATS*FAT32_SIZE_SECTORS))
-#define FIRST_DATA_SECTOR (FIRST_ROOT_DIR_SECTOR+(ROOT_DIR_CLUSTERS*DISK_SECTORS_PER_CLUSTER))
-#define DATA_SECTORS (VOLUME_SECTORS-FIRST_DATA_SECTOR)
+#define ROOT_DIR_SECTORS 1UL
+#define MAX_FILES_IN_ROOT ((ROOT_DIR_SECTORS*DISK_BLOCK_SIZE)/32)
+#define FIRST_DATA_SECTOR (RESERVED_SECTORS_COUNT+(BPB_NUMFATS*FAT16_SIZE_SECTORS)+ROOT_DIR_SECTORS)
+#define DATA_SECTORS (DISK_SECTORS-FIRST_DATA_SECTOR)
 #define FIRST_SECTOR_OF_CLUSTER(N) (((N-2UL)*DISK_SECTORS_PER_CLUSTER)+FIRST_DATA_SECTOR)
 
 typedef void (*TDiskHandler) (uint32_t offset, uint32_t length,
@@ -85,14 +79,7 @@ typedef struct
   uint16_t BPB_NumHeads;
   uint32_t BPB_HiddSec;
   uint32_t BPB_TotSec32;
-  /* FAT32 definition */
-  uint32_t BPB_FATSz32;
-  uint16_t BPB_ExtFlags;
-  uint16_t BPB_FSVer;
-  uint32_t BPB_RootClus;
-  uint16_t BPB_FSInfo;
-  uint16_t BPB_BkBootSec;
-  uint8_t  BPB_Reserved[12];
+  /* FAT12/FAT16 definition */
   uint8_t  BS_DrvNum;
   uint8_t  BS_Reserved1;
   uint8_t  BS_BootSig;
@@ -140,15 +127,15 @@ msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
     .bootable = 0x00,
     .start = {
 	      .head = 0,
-	      .sector = VOLUME_START+1,
+	      .sector = 2,
 	      .cylinder = 0},
     .partition_type = 0x0C,
     .end = {
 	    .head = DISK_HEADS - 1,
 	    .sector = DISK_SECTORS_PER_TRACK,
 	    .cylinder = DISK_CYLINDERS - 1},
-    .start_lba = VOLUME_START,
-    .length = VOLUME_SECTORS
+    .start_lba = 1,
+    .length = DISK_SECTORS - 1
   };
 
   /* MBR termination signature */
@@ -157,33 +144,25 @@ msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
   /* BPB - BIOS Parameter Block: actual volume boot block */
   static const TDiskBPB DiskBPB = {
     .BS_jmpBoot     = {0xEB, 0x00, 0x90},
-    .BS_OEMName     = "BEACON01",
+    .BS_OEMName     = "BITMANUF",
     .BPB_BytsPerSec = DISK_BLOCK_SIZE,
     .BPB_SecPerClus = DISK_SECTORS_PER_CLUSTER,
     .BPB_RsvdSecCnt = RESERVED_SECTORS_COUNT,
     .BPB_NumFATs    = BPB_NUMFATS,
-    .BPB_Media      = 0xF8,
+    .BPB_RootEntCnt = MAX_FILES_IN_ROOT,
+    .BPB_TotSec16   = DISK_SECTORS - 1,
+    .BPB_Media      = 0xF0,
+    .BPB_FATSz16    = FAT16_SIZE_SECTORS,
     .BPB_SecPerTrk  = DISK_SECTORS_PER_TRACK,
     .BPB_NumHeads   = DISK_HEADS,
     .BPB_HiddSec    = 1,
-    .BPB_TotSec32   = VOLUME_SECTORS,
-
-    /* FAT32 definition */
-    .BPB_FATSz32    = FAT32_SIZE_SECTORS,
-    .BPB_RootClus   = ROOT_DIR_CLUSTER_POS,
-    .BPB_FSInfo     = VOLUME_FSINFO_SECTOR_NUMBER,
-    .BPB_BkBootSec  = VOLUME_BACKUP_BOOT_SECTOR_NUMBER,
-
+    /* FAT12/FAT16 definition */
     .BS_DrvNum      = 0x80,
     .BS_BootSig     = 0x29,
     .BS_VolID       = 0xe9d9489f,
     .BS_VolLab      = "OpenBeacon",
-    .BS_FilSysType  = "FAT32   ",
+    .BS_FilSysType  = "FAT16   ",
   };
-
-  /* FSInfo signatures */
-  static const uint32_t FSI_LeadSig  = 0x41615252;
-  static const uint32_t FSI_StrucSig = 0x61417272;
 
   /* data mapping of virtual drive */
   static const TDiskRecord DiskRecord[] = {
@@ -210,49 +189,14 @@ msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
     ,
     /* BPB - BIOS Parameter Block: actual volume boot block */
     {
-     .offset = (DISK_BLOCK_SIZE*VOLUME_START),
+     .offset = DISK_BLOCK_SIZE,
      .length = sizeof (DiskBPB),
      .handler = msd_read_memory,
      .data = &DiskBPB}
     ,
     /* BPB termination signature */
     {
-     .offset = (DISK_BLOCK_SIZE*VOLUME_START)+0x1FE,
-     .length = sizeof (BootSignature),
-     .handler = msd_read_memory,
-     .data = &BootSignature}
-    ,
-    /* FSI_LeadSig */
-    {
-     .offset = (DISK_BLOCK_SIZE*(VOLUME_FSINFO_SECTOR_NUMBER+VOLUME_START)),
-     .length = sizeof (FSI_LeadSig),
-     .handler = msd_read_memory,
-     .data = &FSI_LeadSig}
-    ,
-    /* FSI_StrucSig */
-    {
-     .offset = (DISK_BLOCK_SIZE*(VOLUME_FSINFO_SECTOR_NUMBER+VOLUME_START))+484,
-     .length = sizeof (FSI_StrucSig),
-     .handler = msd_read_memory,
-     .data = &FSI_StrucSig}
-    ,
-    /* FSI_TrailSig */
-    {
-     .offset = (DISK_BLOCK_SIZE*(VOLUME_FSINFO_SECTOR_NUMBER+VOLUME_START))+0x1FE,
-     .length = sizeof (BootSignature),
-     .handler = msd_read_memory,
-     .data = &BootSignature}
-    ,
-    /* BPB - BIOS Parameter Block Copy */
-    {
-     .offset = (DISK_BLOCK_SIZE*(VOLUME_BACKUP_BOOT_SECTOR_NUMBER+VOLUME_START)),
-     .length = sizeof (DiskBPB),
-     .handler = msd_read_memory,
-     .data = &DiskBPB}
-    ,
-    /* BPB Copy Termination Signature */
-    {
-     .offset = (DISK_BLOCK_SIZE*(VOLUME_BACKUP_BOOT_SECTOR_NUMBER+VOLUME_START))+0x1FE,
+     .offset = DISK_BLOCK_SIZE+0x1FE,
      .length = sizeof (BootSignature),
      .handler = msd_read_memory,
      .data = &BootSignature}
