@@ -160,7 +160,7 @@ msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
     .BS_DrvNum      = 0x80,
     .BS_BootSig     = 0x29,
     .BS_VolID       = 0xe9d9489f,
-    .BS_VolLab      = "OPENBEACON",
+    .BS_VolLab      = "OpenBeacon",
     .BS_FilSysType  = "FAT16   ",
   };
 
