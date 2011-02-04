@@ -40,13 +40,9 @@
 #define DATA_SECTORS (DISK_SECTORS-FIRST_DATA_SECTOR)
 #define FIRST_SECTOR_OF_CLUSTER(N) (((N-2UL)*DISK_SECTORS_PER_CLUSTER)+FIRST_DATA_SECTOR)
 
-typedef void (*TDiskHandler) (uint32_t offset, uint32_t length,
-			      const void *src, uint8_t * dst);
-
 typedef struct
 {
   uint32_t offset, length;
-  TDiskHandler handler;
   const void *data;
 } TDiskRecord;
 
@@ -100,17 +96,6 @@ storage_status (void)
 
   /* Show FLASH ID */
   debug_printf (" * FLASH: ID:%02X-%02X-%02X\n", rx[0], rx[1], rx[2]);
-}
-
-static void
-msd_read_memory (uint32_t offset, uint32_t length, const void *src,
-		 uint8_t * dst)
-{
-/*  debug_printf
-    ("msd_read_memory: offset=0x%08X length=0x%04X src=0x%08X dst=0x%08X\n\n",
-     offset, length, (uint32_t) src, (uint32_t) dst);*/
-
-  memcpy (dst, ((const uint8_t*)src)+offset, length);
 }
 
 void
@@ -172,35 +157,30 @@ msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
     {
      .offset = 0x1B8,
      .length = sizeof (DiskSignature),
-     .handler = msd_read_memory,
      .data = &DiskSignature}
     ,
     /* first partition table entry */
     {
      .offset = 0x1BE,
      .length = sizeof (DiskPartitionTableEntry),
-     .handler = msd_read_memory,
      .data = &DiskPartitionTableEntry}
     ,
     /* MBR termination signature */
     {
      .offset = 0x1FE,
      .length = sizeof (BootSignature),
-     .handler = msd_read_memory,
      .data = &BootSignature}
     ,
     /* BPB - BIOS Parameter Block: actual volume boot block */
     {
      .offset = DISK_BLOCK_SIZE,
      .length = sizeof (DiskBPB),
-     .handler = msd_read_memory,
      .data = &DiskBPB}
     ,
     /* BPB termination signature */
     {
      .offset = DISK_BLOCK_SIZE+0x1FE,
      .length = sizeof (BootSignature),
-     .handler = msd_read_memory,
      .data = &BootSignature}
     ,
   };
@@ -229,16 +209,6 @@ msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
 
       if ((read_end >= rec_start) && (offset < rec_end))
 	{
-/*	  if (once)
-	    {
-	      once = 0;
-	      debug_printf
-		("msd_read: offset=0x%08X length=0x%04X dst=0x%08X\n", offset,
-		 length, (uint32_t) dst);
-	    }
-	  debug_printf ("     rec: offset=0x%08X length=0x%04X end=0x%08X\n",
-			rec_start, rec->length, rec_end);*/
-
 	  if(rec_start>=offset)
 	  {
 	    pos=0;
@@ -251,26 +221,7 @@ msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
 	    p=dst;
 	    count=rec_end-offset;
 	  }
-	
-	  rec->handler(pos,count,rec->data,p);
-//	  debug_printf ("          pos=0x%03X count=0x%03X dst=0x%08X\n",pos,count,(uint32_t)p);
-
-//          pos = 
-/*	  if (IN_RANGE (offset, rec_start, rec_end))
-	  {
-	    pos = offset-rec_start;
-	    rec->handler (pos, (read_end > rec_end) ? rec->length-pos : rec_end-offset,
-			  rec->data, dst);
-	  }
-	  if (IN_RANGE (read_end, rec_start, rec_end))
-	    {
-	      pos = (rec_start < offset) ? offset - rec_start : 0;
-	      rec->handler (pos,
-			    (read_end >
-			     rec_end) ? rec->length - pos : rec_end - offset,
-			    rec->data, dst);
-//          rec->handler (pos, rec->length - pos, rec->data, pos?dst:&dst[rec_start-offset]);
-	    }*/
+	  memcpy (p, ((uint8_t*)rec->data)+pos, count);
 	}
       rec++;
     }
