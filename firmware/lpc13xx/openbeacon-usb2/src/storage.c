@@ -28,8 +28,10 @@
 #include "spi.h"
 
 #define IN_RANGE(x,a,b) ((x>=a) && (x<b))
-#define DISK_SECTORS_PER_CLUSTER 1UL
-#define FAT16_SIZE_SECTORS ((uint32_t)((((DISK_SECTORS/DISK_SECTORS_PER_CLUSTER)*2)+DISK_BLOCK_SIZE-1)/DISK_BLOCK_SIZE))
+#define VOLUME_START 1UL
+#define VOLUME_SECTORS (DISK_SECTORS-VOLUME_START)
+#define DISK_SECTORS_PER_CLUSTER 8UL
+#define FAT16_SIZE_SECTORS ((uint32_t)((((VOLUME_SECTORS/DISK_SECTORS_PER_CLUSTER+2)*2)+DISK_BLOCK_SIZE-1)/DISK_BLOCK_SIZE))
 #define RESERVED_SECTORS_COUNT 1UL
 #define BPB_NUMFATS 2UL
 #define ROOT_DIR_SECTORS 1UL
@@ -127,7 +129,7 @@ msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
     .bootable = 0x00,
     .start = {
 	      .head = 0,
-	      .sector = 2,
+	      .sector = VOLUME_START+1,
 	      .cylinder = 0},
     .partition_type = 0x0C,
     .end = {
@@ -135,7 +137,7 @@ msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
 	    .sector = DISK_SECTORS_PER_TRACK,
 	    .cylinder = DISK_CYLINDERS - 1},
     .start_lba = 1,
-    .length = DISK_SECTORS - 1
+    .length = VOLUME_SECTORS
   };
 
   /* MBR termination signature */
@@ -144,18 +146,18 @@ msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
   /* BPB - BIOS Parameter Block: actual volume boot block */
   static const TDiskBPB DiskBPB = {
     .BS_jmpBoot     = {0xEB, 0x00, 0x90},
-    .BS_OEMName     = "BITMANUF",
+    .BS_OEMName     = "BEACON01",
     .BPB_BytsPerSec = DISK_BLOCK_SIZE,
     .BPB_SecPerClus = DISK_SECTORS_PER_CLUSTER,
     .BPB_RsvdSecCnt = RESERVED_SECTORS_COUNT,
     .BPB_NumFATs    = BPB_NUMFATS,
     .BPB_RootEntCnt = MAX_FILES_IN_ROOT,
-    .BPB_TotSec16   = DISK_SECTORS - 1,
-    .BPB_Media      = 0xF0,
+    .BPB_Media      = 0xF8,
     .BPB_FATSz16    = FAT16_SIZE_SECTORS,
     .BPB_SecPerTrk  = DISK_SECTORS_PER_TRACK,
     .BPB_NumHeads   = DISK_HEADS,
     .BPB_HiddSec    = 1,
+    .BPB_TotSec32   = VOLUME_SECTORS,
     /* FAT12/FAT16 definition */
     .BS_DrvNum      = 0x80,
     .BS_BootSig     = 0x29,

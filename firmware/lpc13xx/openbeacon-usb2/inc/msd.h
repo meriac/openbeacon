@@ -32,7 +32,7 @@
  * disk geometry - make it small enough
  * to allow FAT16 with 512 byte cluster size
  ***************************************************************/
-#define DISK_CYLINDERS 4UL
+#define DISK_CYLINDERS 31UL
 #define DISK_HEADS 255UL
 #define DISK_SECTORS_PER_TRACK 63UL
 
