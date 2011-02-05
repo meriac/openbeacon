@@ -92,6 +92,31 @@ typedef struct
   char BS_FilSysType[8];
 } PACKED TDiskBPB;
 
+#define ATTR_READ_ONLY  0x01
+#define ATTR_HIDDEN     0x02
+#define ATTR_SYSTEM     0x04
+#define ATTR_VOLUME_ID  0x08
+#define ATTR_DIRECTORY  0x10
+#define ATTR_ARCHIVE    0x20
+#define ATTR_LONG_NAME  (ATTR_READ_ONLY | ATTR_HIDDEN | ATTR_SYSTEM | ATTR_VOLUME_ID)
+
+typedef struct
+{
+  char DIR_Name[8];
+  char DIR_Ext[3];
+  uint8_t DIR_Attr;
+  uint8_t DIR_NTRes;
+  uint8_t DIR_CrtTimeTenth;
+  uint16_t DIR_CrtTime;
+  uint16_t DIR_CrtDate;
+  uint16_t DIR_LstAccDate;
+  uint16_t DIR_FstClusHI;
+  uint16_t DIR_WrtTime;
+  uint16_t DIR_WrtDate;
+  uint16_t DIR_FstClusLO;
+  uint32_t DIR_FileSize;
+} PACKED TDiskDirectoryEntry;
+
 static uint32_t debug_level = 0;
 
 void
@@ -132,14 +157,36 @@ msd_read_fat_area (uint32_t offset, uint32_t length, const void *src,
 }
 
 static void
+msd_read_root_dir_entry (int index, TDiskDirectoryEntry * entry)
+{
+  if (index)
+    memset (entry, 0, sizeof (*entry));
+  else
+    {
+      strncpy (entry->DIR_Name, "HELLO", sizeof (entry->DIR_Name));
+      strncpy (entry->DIR_Ext, "TXT", sizeof (entry->DIR_Ext));
+      entry->DIR_Attr = ATTR_READ_ONLY;
+      entry->DIR_FileSize = 0;
+    }
+}
+
+static void
 msd_read_root_dir (uint32_t offset, uint32_t length, const void *src,
 		   uint8_t * dst)
 {
+  int index, count;
+
   (void) src;
   (void) offset;
   (void) dst;
   (void) length;
-  memset (dst, 0, length);
+
+  TDiskDirectoryEntry *entry = (TDiskDirectoryEntry *) dst;
+
+  index = offset / sizeof (TDiskDirectoryEntry);
+  count = length / sizeof (TDiskDirectoryEntry);
+  while (count--)
+    msd_read_root_dir_entry (index++, entry++);
 }
 
 static void
