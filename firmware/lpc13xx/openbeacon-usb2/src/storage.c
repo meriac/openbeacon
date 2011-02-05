@@ -53,11 +53,11 @@ typedef struct _TDiskFile
   uint32_t length;
   TDiskHandler handler;
   const void *data;
-  const char* name;
+  const char *name;
   struct _TDiskFile *next;
 } TDiskFile;
 
-static const TDiskFile* root_directory = NULL;
+static const TDiskFile *root_directory = NULL;
 
 typedef uint16_t TFatCluster;
 
@@ -159,7 +159,7 @@ static void
 msd_read_fat_area (uint32_t offset, uint32_t length, const void *src,
 		   uint8_t * dst)
 {
-  uint32_t count, t;
+  uint32_t count, t, index;
   uint32_t cluster, cluster_start, cluster_end, cluster_count;
   uint32_t cluster_file_start, cluster_file_end, cluster_file_count;
   TFatCluster *fat;
@@ -171,85 +171,96 @@ msd_read_fat_area (uint32_t offset, uint32_t length, const void *src,
   (void) length;
   memset (dst, 0, length);
 
-  if(length<sizeof(TFatCluster))
+  if (length < sizeof (TFatCluster))
     return;
 
   /* get extent of write request */
-  cluster_start = offset/sizeof(TFatCluster);
-  cluster_count = length/sizeof(TFatCluster);
-  cluster_end = cluster_start + cluster_count -1;
+  cluster_start = offset / sizeof (TFatCluster);
+  cluster_count = length / sizeof (TFatCluster);
+  cluster_end = cluster_start + cluster_count - 1;
 
   /* pre-set FAT */
-  fat = (TFatCluster*)dst;
+  fat = (TFatCluster *) dst;
   t = cluster_count;
 
   /* special treatment for reserved clusters */
-  if(!offset)
-  {
-    /* indicate media type */
-    *fat++ = DISK_FAT_EOC;
-    /* indicate clean volume */
-    *fat++ = (0x8000|0x4000);
-    t-=2;
-  }
+  if (!offset)
+    {
+      /* indicate media type */
+      *fat++ = DISK_FAT_EOC;
+      /* indicate clean volume */
+      *fat++ = (0x8000 | 0x4000);
+      t -= 2;
+    }
 
   /* mark all custers as bad by default to make
      sure there is no free space left on the disk
      for new files */
-  while(t--)
-    *fat++=0xFFF7;
+  while (t--)
+    *fat++ = 0xFFF7;
 
   /* first cluster number on disk is 2 */
   cluster = 2;
   file = root_directory;
-  while(file)
-  {
-    if(file->length)
+  while (file)
     {
-	cluster_file_start = cluster;
-	cluster_file_count = (file->length+DISK_CLUSTER_SIZE-1)/DISK_CLUSTER_SIZE;
-	cluster_file_end = cluster_file_start + cluster_file_count - 1;
-
-	/* is the current file in the scope of the current request? */
-	if((cluster_file_start>=cluster_start) && (cluster_file_start<=cluster_end))
+      if (file->length)
 	{
-	    t = cluster_file_start-cluster_start;
-	    count = cluster_count - t;
-	    if(cluster_file_count<count)
-		count = cluster_file_count;
-	    fat = ((TFatCluster*)dst)+t;
-	}
-	else
-	    if((cluster_file_end>=cluster_start) && (cluster_file_end<=cluster_end))
+	  cluster_file_start = cluster;
+	  cluster_file_count =
+	    (file->length + DISK_CLUSTER_SIZE - 1) / DISK_CLUSTER_SIZE;
+	  cluster_file_end = cluster_file_start + cluster_file_count - 1;
+
+	  if ((cluster_end >= cluster_file_start)
+	      && (cluster_start < cluster_file_end))
 	    {
-		count = cluster_file_count - (cluster_start-cluster_file_start);
-		if(count>cluster_count)
-		    count = cluster_count;
-		fat = (TFatCluster*)dst;
+	      if (cluster_file_start < cluster_start)
+		{
+		  index = cluster_start - cluster_file_start;
+		  cluster_file_count -= index;
+		  index += cluster;
+		  count =
+		    (cluster_count >
+		     cluster_file_count) ? cluster_file_count : cluster_count;
+		  fat = (TFatCluster *) dst;
+		}
+	      else
+		{
+		  index = cluster;
+		  t = (cluster_file_start - cluster_start);
+		  count = cluster_count - t;
+		  fat = ((TFatCluster *) dst) + t;
+		}
+
+	      /* populate FAT entries with linked FAT list */
+	      for(t=1;t<=count;t++)
+		{
+		  if (cluster_file_count > 1)
+		    *fat++ = index+t;
+		  else
+		    *fat = DISK_FAT_EOC;
+
+		  cluster_file_count--;
+		  if (!cluster_file_count)
+		    break;
+		}
+	      /* set last entry to EOC (End Of Chain) */
+
 	    }
-	    else
-		count = 0;
+	  else
+	    count = 0;
 
-	if(count)
-	{
-	    /* populate FAT entries with linked FAT list */
-	    for(t=1;t<count;t++)
-		*fat++ = cluster+t;
-	    /* set last entry to EOC (End Of Chain) */
-	    *fat = DISK_FAT_EOC;
+	  cluster += cluster_file_count;
 	}
-
-	cluster += cluster_file_count;
+      file = file->next;
     }
-    file = file->next;
-  }
 }
 
 static void
 msd_read_root_dir (uint32_t offset, uint32_t length, const void *src,
 		   uint8_t * dst)
 {
-  uint32_t cluster,t;
+  uint32_t cluster, t;
   const TDiskFile *file;
   TDiskDirectoryEntry *entry;
 
@@ -259,41 +270,41 @@ msd_read_root_dir (uint32_t offset, uint32_t length, const void *src,
   (void) length;
 
   /* initialize response with zero */
-  memset(dst,0,length);
+  memset (dst, 0, length);
 
   /* first cluster number on disk is 2 */
   cluster = 2;
   /* skip first entries */
   file = root_directory;
   t = offset / sizeof (TDiskDirectoryEntry);
-  while(t--)
-  {
-    if(!file)
+  while (t--)
+    {
+      if (!file)
 	return;
-    file = file->next;
-    cluster += (file->length+DISK_CLUSTER_SIZE-1)/DISK_CLUSTER_SIZE;
-  }
+      file = file->next;
+      cluster += (file->length + DISK_CLUSTER_SIZE - 1) / DISK_CLUSTER_SIZE;
+    }
 
   entry = (TDiskDirectoryEntry *) dst;
   t = length / sizeof (TDiskDirectoryEntry);
   while (t--)
-  {
-    if(!file)
+    {
+      if (!file)
 	return;
 
-    /* populate directpry entry */
-    entry->DIR_Attr = ATTR_READ_ONLY;
-    entry->DIR_FileSize = file->length;
-    entry->DIR_FstClusLO = (file->length)?cluster:0;
-    strncpy (entry->DIR_Name, file->name, sizeof (entry->DIR_Name));
+      /* populate directpry entry */
+      entry->DIR_Attr = ATTR_READ_ONLY;
+      entry->DIR_FileSize = file->length;
+      entry->DIR_FstClusLO = (file->length) ? cluster : 0;
+      strncpy (entry->DIR_Name, file->name, sizeof (entry->DIR_Name));
 
-    /* go to next entry */
-    entry++;
-    file = file->next;
+      /* go to next entry */
+      entry++;
+      file = file->next;
 
-    /* increment cluster pos */
-    cluster += (file->length+DISK_CLUSTER_SIZE-1)/DISK_CLUSTER_SIZE;
-  }
+      /* increment cluster pos */
+      cluster += (file->length + DISK_CLUSTER_SIZE - 1) / DISK_CLUSTER_SIZE;
+    }
 }
 
 static void
@@ -481,14 +492,15 @@ msd_write (uint32_t offset, uint8_t * src, uint32_t length)
   (void) src;
   (void) length;
 }
+
 void
 storage_init (void)
 {
   static const TDiskFile f_readme = {
-    .length = 12345,
+    .length = 100 * 1024 * 1024,
     .handler = NULL,
     .data = NULL,
-    .name =  "ReadMe  txt",
+    .name = "ReadMe  txt",
     .next = NULL,
   };
 
