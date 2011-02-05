@@ -54,7 +54,7 @@ typedef struct _TDiskFile
   TDiskHandler handler;
   const void *data;
   const char *name;
-  struct _TDiskFile *next;
+  const struct _TDiskFile *next;
 } TDiskFile;
 
 static const TDiskFile *root_directory = NULL;
@@ -159,18 +159,16 @@ static void
 msd_read_fat_area (uint32_t offset, uint32_t length, const void *src,
 		   uint8_t * dst)
 {
-  uint32_t count, t, index;
+  uint32_t count, t, index, remaining;
   uint32_t cluster, cluster_start, cluster_end, cluster_count;
   uint32_t cluster_file_start, cluster_file_end, cluster_file_count;
   TFatCluster *fat;
   const TDiskFile *file;
 
-  (void) src;
-  (void) offset;
-  (void) dst;
-  (void) length;
-  memset (dst, 0, length);
+  /* touch unused parameter 'src' */
+  (void)src;
 
+  /* ignore read requests for sizes < cluster table granularity */
   if (length < sizeof (TFatCluster))
     return;
 
@@ -217,39 +215,33 @@ msd_read_fat_area (uint32_t offset, uint32_t length, const void *src,
 	      if (cluster_file_start < cluster_start)
 		{
 		  index = cluster_start - cluster_file_start;
-		  cluster_file_count -= index;
+		  remaining = cluster_file_count - index;
 		  index += cluster;
 		  count =
-		    (cluster_count >
-		     cluster_file_count) ? cluster_file_count : cluster_count;
+		    (cluster_count > remaining) ? remaining : cluster_count;
 		  fat = (TFatCluster *) dst;
 		}
 	      else
 		{
 		  index = cluster;
+		  remaining = cluster_file_count;
 		  t = (cluster_file_start - cluster_start);
 		  count = cluster_count - t;
 		  fat = ((TFatCluster *) dst) + t;
 		}
 
 	      /* populate FAT entries with linked FAT list */
-	      for(t=1;t<=count;t++)
-		{
-		  if (cluster_file_count > 1)
-		    *fat++ = index+t;
+	      if (remaining)
+		for (t = 1; t <= count; t++)
+		  if (remaining-- > 1)
+		    *fat++ = index + t;
 		  else
-		    *fat = DISK_FAT_EOC;
-
-		  cluster_file_count--;
-		  if (!cluster_file_count)
-		    break;
-		}
-	      /* set last entry to EOC (End Of Chain) */
-
+		    {
+		      /* set last entry to EOC (End Of Chain) */
+		      *fat = DISK_FAT_EOC;
+		      break;
+		    }
 	    }
-	  else
-	    count = 0;
-
 	  cluster += cluster_file_count;
 	}
       file = file->next;
@@ -264,10 +256,8 @@ msd_read_root_dir (uint32_t offset, uint32_t length, const void *src,
   const TDiskFile *file;
   TDiskDirectoryEntry *entry;
 
-  (void) src;
-  (void) offset;
-  (void) dst;
-  (void) length;
+  /* touch unused parameter 'src' */
+  (void)src;
 
   /* initialize response with zero */
   memset (dst, 0, length);
@@ -281,8 +271,8 @@ msd_read_root_dir (uint32_t offset, uint32_t length, const void *src,
     {
       if (!file)
 	return;
-      file = file->next;
       cluster += (file->length + DISK_CLUSTER_SIZE - 1) / DISK_CLUSTER_SIZE;
+      file = file->next;
     }
 
   entry = (TDiskDirectoryEntry *) dst;
@@ -298,12 +288,12 @@ msd_read_root_dir (uint32_t offset, uint32_t length, const void *src,
       entry->DIR_FstClusLO = (file->length) ? cluster : 0;
       strncpy (entry->DIR_Name, file->name, sizeof (entry->DIR_Name));
 
+      /* increment cluster pos */
+      cluster += (file->length + DISK_CLUSTER_SIZE - 1) / DISK_CLUSTER_SIZE;
+
       /* go to next entry */
       entry++;
       file = file->next;
-
-      /* increment cluster pos */
-      cluster += (file->length + DISK_CLUSTER_SIZE - 1) / DISK_CLUSTER_SIZE;
     }
 }
 
@@ -496,12 +486,28 @@ msd_write (uint32_t offset, uint8_t * src, uint32_t length)
 void
 storage_init (void)
 {
-  static const TDiskFile f_readme = {
-    .length = 100 * 1024 * 1024,
+  static const TDiskFile f_license = {
+    .length = 1 * 1024,
     .handler = NULL,
     .data = NULL,
-    .name = "ReadMe  txt",
+    .name = "License htm",
     .next = NULL,
+  };
+
+  static const TDiskFile f_benchmark = {
+    .length = 8 * 1024,
+    .handler = NULL,
+    .data = NULL,
+    .name = "Transferimg",
+    .next = &f_license,
+  };
+
+  static const TDiskFile f_readme = {
+    .length = 16 * 1024,
+    .handler = NULL,
+    .data = NULL,
+    .name = "Read-Me txt",
+    .next = &f_benchmark,
   };
 
   root_directory = &f_readme;
