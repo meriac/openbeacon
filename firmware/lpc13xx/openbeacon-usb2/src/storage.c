@@ -36,13 +36,19 @@
 #define BPB_NUMFATS 2UL
 #define ROOT_DIR_SECTORS 1UL
 #define MAX_FILES_IN_ROOT ((ROOT_DIR_SECTORS*DISK_BLOCK_SIZE)/32)
-#define FIRST_DATA_SECTOR (RESERVED_SECTORS_COUNT+(BPB_NUMFATS*FAT16_SIZE_SECTORS)+ROOT_DIR_SECTORS)
+#define FIRST_FAT_SECTOR (RESERVED_SECTORS_COUNT)
+#define FIRST_ROOT_DIR_SECTOR (FIRST_FAT_SECTOR+(BPB_NUMFATS*FAT16_SIZE_SECTORS))
+#define FIRST_DATA_SECTOR (FIRST_ROOT_DIR_SECTOR+ROOT_DIR_SECTORS)
 #define DATA_SECTORS (DISK_SECTORS-FIRST_DATA_SECTOR)
 #define FIRST_SECTOR_OF_CLUSTER(N) (((N-2UL)*DISK_SECTORS_PER_CLUSTER)+FIRST_DATA_SECTOR)
+
+typedef void (*TDiskHandler) (uint32_t offset, uint32_t length,
+			      const void *src, uint8_t * dst);
 
 typedef struct
 {
   uint32_t offset, length;
+  TDiskHandler handler;
   const void *data;
 } TDiskRecord;
 
@@ -86,6 +92,8 @@ typedef struct
   char BS_FilSysType[8];
 } PACKED TDiskBPB;
 
+static uint32_t debug_level = 0;
+
 void
 storage_status (void)
 {
@@ -94,29 +102,58 @@ storage_status (void)
   spi_txrx (SPI_CS_FLASH, &cmd_jedec_read_id, sizeof (cmd_jedec_read_id), rx,
 	    sizeof (rx));
 
+  /* enable debug output */
+  debug_level = 1;
+
   /* Show FLASH ID */
   debug_printf (" * FLASH: ID:%02X-%02X-%02X\n", rx[0], rx[1], rx[2]);
 }
 
-void
-msd_read_data_area (uint32_t offset, uint8_t * dst, uint32_t length)
+static void
+msd_read_data_area (uint32_t offset, uint32_t length, const void *src,
+		    uint8_t * dst)
 {
+  (void) src;
   (void) offset;
+  (void) dst;
+  (void) length;
   memset (dst, 0, length);
 }
 
-void
-msd_read_fat_area (uint32_t offset, uint8_t * dst, uint32_t length)
+static void
+msd_read_fat_area (uint32_t offset, uint32_t length, const void *src,
+		   uint8_t * dst)
 {
+  (void) src;
   (void) offset;
+  (void) dst;
+  (void) length;
   memset (dst, 0, length);
+}
+
+static void
+msd_read_root_dir (uint32_t offset, uint32_t length, const void *src,
+		   uint8_t * dst)
+{
+  (void) src;
+  (void) offset;
+  (void) dst;
+  (void) length;
+  memset (dst, 0, length);
+}
+
+static void
+msd_read_memory (uint32_t offset, uint32_t length, const void *src,
+		 uint8_t * dst)
+{
+  memcpy (dst, ((const uint8_t *) src) + offset, length);
 }
 
 void
 msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
 {
   const TDiskRecord *rec;
-  uint32_t t, read_end, rec_start, rec_end, pos, count;
+  uint32_t t, read_end, rec_start, rec_end, pos, count, written;
   uint8_t *p;
 
   /* disk signature */
@@ -166,34 +203,68 @@ msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
 
   /* data mapping of virtual drive */
   static const TDiskRecord DiskRecord[] = {
+    /* data area */
+    {
+     .offset = (VOLUME_START + FIRST_DATA_SECTOR) * DISK_BLOCK_SIZE,
+     .length = DATA_SECTORS * DISK_BLOCK_SIZE,
+     .handler = msd_read_data_area,
+     .data = NULL}
+    ,
+    /* FAT area - primary copy */
+    {
+     .offset = (VOLUME_START + FIRST_FAT_SECTOR) * DISK_BLOCK_SIZE,
+     .length = FAT16_SIZE_SECTORS * DISK_BLOCK_SIZE,
+     .handler = msd_read_fat_area,
+     .data = NULL}
+    ,
+    /* FAT area - secondary copy */
+    {
+     .offset =
+     (VOLUME_START + FIRST_FAT_SECTOR + FAT16_SIZE_SECTORS) * DISK_BLOCK_SIZE,
+     .length = FAT16_SIZE_SECTORS * DISK_BLOCK_SIZE,
+     .handler = msd_read_fat_area,
+     .data = NULL}
+    ,
+    /* root dir  */
+    {
+     .offset = (VOLUME_START + FIRST_ROOT_DIR_SECTOR) * DISK_BLOCK_SIZE,
+     .length = ROOT_DIR_SECTORS * DISK_BLOCK_SIZE,
+     .handler = msd_read_root_dir,
+     .data = NULL}
+    ,
     /* disk signature */
     {
      .offset = 0x1B8,
      .length = sizeof (DiskSignature),
+     .handler = msd_read_memory,
      .data = &DiskSignature}
     ,
     /* first partition table entry */
     {
      .offset = 0x1BE,
      .length = sizeof (DiskPartitionTableEntry),
+     .handler = msd_read_memory,
      .data = &DiskPartitionTableEntry}
     ,
     /* MBR termination signature */
     {
      .offset = 0x1FE,
      .length = sizeof (BootSignature),
+     .handler = msd_read_memory,
      .data = &BootSignature}
     ,
     /* BPB - BIOS Parameter Block: actual volume boot block */
     {
      .offset = (VOLUME_START * DISK_BLOCK_SIZE),
      .length = sizeof (DiskBPB),
+     .handler = msd_read_memory,
      .data = &DiskBPB}
     ,
     /* BPB termination signature */
     {
      .offset = (VOLUME_START * DISK_BLOCK_SIZE) + 0x1FE,
      .length = sizeof (BootSignature),
+     .handler = msd_read_memory,
      .data = &BootSignature}
     ,
   };
@@ -202,61 +273,51 @@ msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
   if (!length || (offset >= DISK_SIZE))
     return;
 
-  /* truncate reads outside of disk area */
-  if ((offset + length) > DISK_SIZE)
-    length = DISK_SIZE - offset;
+  /* iterate DiskRecords and fill request with content */
+  rec = DiskRecord;
+  t = sizeof (DiskRecord) / sizeof (DiskRecord[0]);
+  read_end = offset + length;
+  written = 0;
 
-  if (offset >= ((VOLUME_START + FIRST_DATA_SECTOR) * DISK_BLOCK_SIZE))
-    msd_read_data_area (offset -
-			((VOLUME_START +
-			  FIRST_DATA_SECTOR) * DISK_BLOCK_SIZE), dst, length);
-  else if (offset >=
-	   ((VOLUME_START + RESERVED_SECTORS_COUNT) * DISK_BLOCK_SIZE))
+  while (t--)
     {
-      offset -= (VOLUME_START + RESERVED_SECTORS_COUNT) * DISK_BLOCK_SIZE;
+      rec_start = rec->offset;
+      rec_end = rec_start + rec->length;
 
-      /* mirror second copy of FAT to first copy */
-      if (offset >= (FAT16_SIZE_SECTORS * DISK_BLOCK_SIZE))
-	offset -= (FAT16_SIZE_SECTORS * DISK_BLOCK_SIZE);
-
-      msd_read_fat_area (offset, dst, length);
-    }
-  else
-    {
-      /* set memory to zero before filling up */
-      memset (dst, 0, length);
-
-      /* iterate DiskRecords and fill request with content */
-      rec = DiskRecord;
-      t = sizeof (DiskRecord) / sizeof (DiskRecord[0]);
-      read_end = offset + length;
-
-      while (t--)
+      if ((read_end >= rec_start) && (offset < rec_end))
 	{
-	  rec_start = rec->offset;
-	  rec_end = rec_start + rec->length;
-
-	  if ((read_end >= rec_start) && (offset < rec_end))
+	  if (rec_start >= offset)
 	    {
-	      if (rec_start >= offset)
-		{
-		  pos = 0;
-		  p = &dst[rec_start - offset];
-		  count =
-		    (rec_end <=
-		     read_end) ? rec->length : read_end - rec_start;
-		}
-	      else
-		{
-		  pos = offset - rec_start;
-		  p = dst;
-		  count = rec_end - offset;
-		}
-	      memcpy (p, ((uint8_t *) rec->data) + pos, count);
+	      pos = 0;
+	      p = &dst[rec_start - offset];
+	      count = (rec_end <= read_end) ?
+		rec->length : read_end - rec_start;
 	    }
-	  rec++;
+	  else
+	    {
+	      pos = offset - rec_start;
+	      p = dst;
+	      count = (read_end > rec_end) ? rec_end - offset : length;
+	    }
+
+	  /* set memory of partial read to zero before filling up */
+	  if (!written && (count != length))
+	    memset (dst, 0, length);
+
+	  /* handle request */
+	  rec->handler (pos, count, rec->data, p);
+	  written += count;
+
+	  /* all bytes handled -> quit */
+	  if (written == length)
+	    break;
 	}
+      rec++;
     }
+
+  /* set memory to zero if not written yet  */
+  if (!written)
+    memset (dst, 0, length);
 }
 
 void
