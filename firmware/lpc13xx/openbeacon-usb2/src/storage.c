@@ -487,7 +487,7 @@ void
 storage_init (void)
 {
   static const TDiskFile f_license = {
-    .length = 1 * 1024,
+    .length = 1234,
     .handler = NULL,
     .data = NULL,
     .name = "License htm",
@@ -495,7 +495,7 @@ storage_init (void)
   };
 
   static const TDiskFile f_benchmark = {
-    .length = 8 * 1024,
+    .length = 100 * 1024 * 1024,
     .handler = NULL,
     .data = NULL,
     .name = "Transferimg",
@@ -503,7 +503,7 @@ storage_init (void)
   };
 
   static const TDiskFile f_readme = {
-    .length = 16 * 1024,
+    .length = 12345678,
     .handler = NULL,
     .data = NULL,
     .name = "Read-Me txt",
