@@ -1,6 +1,6 @@
 /***************************************************************
  *
- * OpenBeacon.org - FLASH storage support
+ * OpenBeacon.org - virtual FAT16 file system support
  *
  * Copyright 2010 Milosch Meriac <meriac@openbeacon.de>
  *
@@ -31,21 +31,37 @@
 #define VOLUME_START 1UL
 #define VOLUME_SECTORS (DISK_SECTORS-VOLUME_START)
 #define DISK_SECTORS_PER_CLUSTER 8UL
+#define DISK_CLUSTER_SIZE (DISK_SECTORS_PER_CLUSTER*DISK_BLOCK_SIZE)
 #define FAT16_SIZE_SECTORS ((uint32_t)((((VOLUME_SECTORS/DISK_SECTORS_PER_CLUSTER+2)*2)+DISK_BLOCK_SIZE-1)/DISK_BLOCK_SIZE))
 #define RESERVED_SECTORS_COUNT 1UL
 #define BPB_NUMFATS 2UL
 #define ROOT_DIR_SECTORS 1UL
-#define MAX_FILES_IN_ROOT ((ROOT_DIR_SECTORS*DISK_BLOCK_SIZE)/32)
+#define MAX_FILES_IN_ROOT ((ROOT_DIR_SECTORS*DISK_BLOCK_SIZE)/sizeof(TDiskDirectoryEntry))
 #define FIRST_FAT_SECTOR (RESERVED_SECTORS_COUNT)
 #define FIRST_ROOT_DIR_SECTOR (FIRST_FAT_SECTOR+(BPB_NUMFATS*FAT16_SIZE_SECTORS))
 #define FIRST_DATA_SECTOR (FIRST_ROOT_DIR_SECTOR+ROOT_DIR_SECTORS)
 #define DATA_SECTORS (DISK_SECTORS-FIRST_DATA_SECTOR)
 #define FIRST_SECTOR_OF_CLUSTER(N) (((N-2UL)*DISK_SECTORS_PER_CLUSTER)+FIRST_DATA_SECTOR)
+#define BPB_MEDIA_TYPE 0xF8
+#define DISK_FAT_EOC (0xFF00|BPB_MEDIA_TYPE)
 
 typedef void (*TDiskHandler) (uint32_t offset, uint32_t length,
 			      const void *src, uint8_t * dst);
 
-typedef struct
+typedef struct _TDiskFile
+{
+  uint32_t length;
+  TDiskHandler handler;
+  const void *data;
+  const char* name;
+  struct _TDiskFile *next;
+} TDiskFile;
+
+static const TDiskFile* root_directory = NULL;
+
+typedef uint16_t TFatCluster;
+
+typedef struct TDiskRecord
 {
   uint32_t offset, length;
   TDiskHandler handler;
@@ -102,8 +118,7 @@ typedef struct
 
 typedef struct
 {
-  char DIR_Name[8];
-  char DIR_Ext[3];
+  char DIR_Name[11];
   uint8_t DIR_Attr;
   uint8_t DIR_NTRes;
   uint8_t DIR_CrtTimeTenth;
@@ -117,8 +132,6 @@ typedef struct
   uint32_t DIR_FileSize;
 } PACKED TDiskDirectoryEntry;
 
-static uint32_t debug_level = 0;
-
 void
 storage_status (void)
 {
@@ -126,9 +139,6 @@ storage_status (void)
   uint8_t rx[3];
   spi_txrx (SPI_CS_FLASH, &cmd_jedec_read_id, sizeof (cmd_jedec_read_id), rx,
 	    sizeof (rx));
-
-  /* enable debug output */
-  debug_level = 1;
 
   /* Show FLASH ID */
   debug_printf (" * FLASH: ID:%02X-%02X-%02X\n", rx[0], rx[1], rx[2]);
@@ -142,51 +152,148 @@ msd_read_data_area (uint32_t offset, uint32_t length, const void *src,
   (void) offset;
   (void) dst;
   (void) length;
-  memset (dst, 0, length);
+  memset (dst, 'X', length);
 }
 
 static void
 msd_read_fat_area (uint32_t offset, uint32_t length, const void *src,
 		   uint8_t * dst)
 {
+  uint32_t count, t;
+  uint32_t cluster, cluster_start, cluster_end, cluster_count;
+  uint32_t cluster_file_start, cluster_file_end, cluster_file_count;
+  TFatCluster *fat;
+  const TDiskFile *file;
+
   (void) src;
   (void) offset;
   (void) dst;
   (void) length;
   memset (dst, 0, length);
-}
 
-static void
-msd_read_root_dir_entry (int index, TDiskDirectoryEntry * entry)
-{
-  if (index)
-    memset (entry, 0, sizeof (*entry));
-  else
+  if(length<sizeof(TFatCluster))
+    return;
+
+  /* get extent of write request */
+  cluster_start = offset/sizeof(TFatCluster);
+  cluster_count = length/sizeof(TFatCluster);
+  cluster_end = cluster_start + cluster_count -1;
+
+  /* pre-set FAT */
+  fat = (TFatCluster*)dst;
+  t = cluster_count;
+
+  /* special treatment for reserved clusters */
+  if(!offset)
+  {
+    /* indicate media type */
+    *fat++ = DISK_FAT_EOC;
+    /* indicate clean volume */
+    *fat++ = (0x8000|0x4000);
+    t-=2;
+  }
+
+  /* mark all custers as bad by default to make
+     sure there is no free space left on the disk
+     for new files */
+  while(t--)
+    *fat++=0xFFF7;
+
+  /* first cluster number on disk is 2 */
+  cluster = 2;
+  file = root_directory;
+  while(file)
+  {
+    if(file->length)
     {
-      strncpy (entry->DIR_Name, "HELLO", sizeof (entry->DIR_Name));
-      strncpy (entry->DIR_Ext, "TXT", sizeof (entry->DIR_Ext));
-      entry->DIR_Attr = ATTR_READ_ONLY;
-      entry->DIR_FileSize = 0;
+	cluster_file_start = cluster;
+	cluster_file_count = (file->length+DISK_CLUSTER_SIZE-1)/DISK_CLUSTER_SIZE;
+	cluster_file_end = cluster_file_start + cluster_file_count - 1;
+
+	/* is the current file in the scope of the current request? */
+	if((cluster_file_start>=cluster_start) && (cluster_file_start<=cluster_end))
+	{
+	    t = cluster_file_start-cluster_start;
+	    count = cluster_count - t;
+	    if(cluster_file_count<count)
+		count = cluster_file_count;
+	    fat = ((TFatCluster*)dst)+t;
+	}
+	else
+	    if((cluster_file_end>=cluster_start) && (cluster_file_end<=cluster_end))
+	    {
+		count = cluster_file_count - (cluster_start-cluster_file_start);
+		if(count>cluster_count)
+		    count = cluster_count;
+		fat = (TFatCluster*)dst;
+	    }
+	    else
+		count = 0;
+
+	if(count)
+	{
+	    /* populate FAT entries with linked FAT list */
+	    for(t=1;t<count;t++)
+		*fat++ = cluster+t;
+	    /* set last entry to EOC (End Of Chain) */
+	    *fat = DISK_FAT_EOC;
+	}
+
+	cluster += cluster_file_count;
     }
+    file = file->next;
+  }
 }
 
 static void
 msd_read_root_dir (uint32_t offset, uint32_t length, const void *src,
 		   uint8_t * dst)
 {
-  int index, count;
+  uint32_t cluster,t;
+  const TDiskFile *file;
+  TDiskDirectoryEntry *entry;
 
   (void) src;
   (void) offset;
   (void) dst;
   (void) length;
 
-  TDiskDirectoryEntry *entry = (TDiskDirectoryEntry *) dst;
+  /* initialize response with zero */
+  memset(dst,0,length);
 
-  index = offset / sizeof (TDiskDirectoryEntry);
-  count = length / sizeof (TDiskDirectoryEntry);
-  while (count--)
-    msd_read_root_dir_entry (index++, entry++);
+  /* first cluster number on disk is 2 */
+  cluster = 2;
+  /* skip first entries */
+  file = root_directory;
+  t = offset / sizeof (TDiskDirectoryEntry);
+  while(t--)
+  {
+    if(!file)
+	return;
+    file = file->next;
+    cluster += (file->length+DISK_CLUSTER_SIZE-1)/DISK_CLUSTER_SIZE;
+  }
+
+  entry = (TDiskDirectoryEntry *) dst;
+  t = length / sizeof (TDiskDirectoryEntry);
+  while (t--)
+  {
+    if(!file)
+	return;
+
+    /* populate directpry entry */
+    entry->DIR_Attr = ATTR_READ_ONLY;
+    entry->DIR_FileSize = file->length;
+    entry->DIR_FstClusLO = (file->length)?cluster:0;
+    strncpy (entry->DIR_Name, file->name, sizeof (entry->DIR_Name));
+
+    /* go to next entry */
+    entry++;
+    file = file->next;
+
+    /* increment cluster pos */
+    cluster += (file->length+DISK_CLUSTER_SIZE-1)/DISK_CLUSTER_SIZE;
+  }
 }
 
 static void
@@ -234,7 +341,7 @@ msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
     .BPB_RsvdSecCnt = RESERVED_SECTORS_COUNT,
     .BPB_NumFATs = BPB_NUMFATS,
     .BPB_RootEntCnt = MAX_FILES_IN_ROOT,
-    .BPB_Media = 0xF8,
+    .BPB_Media = BPB_MEDIA_TYPE,
     .BPB_FATSz16 = FAT16_SIZE_SECTORS,
     .BPB_SecPerTrk = DISK_SECTORS_PER_TRACK,
     .BPB_NumHeads = DISK_HEADS,
@@ -374,10 +481,19 @@ msd_write (uint32_t offset, uint8_t * src, uint32_t length)
   (void) src;
   (void) length;
 }
-
 void
 storage_init (void)
 {
+  static const TDiskFile f_readme = {
+    .length = 12345,
+    .handler = NULL,
+    .data = NULL,
+    .name =  "ReadMe  txt",
+    .next = NULL,
+  };
+
+  root_directory = &f_readme;
+
   /* init USB mass storage */
   msd_init ();
   /* setup SPI chipselect pin */
