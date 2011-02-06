@@ -321,7 +321,7 @@ msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
 	      .head = 0,
 	      .sector = VOLUME_START + 1,
 	      .cylinder = 0},
-    .partition_type = 0x0C,
+    .partition_type = 0x06,
     .end = {
 	    .head = DISK_HEADS - 1,
 	    .sector = DISK_SECTORS_PER_TRACK,
@@ -336,7 +336,7 @@ msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
   /* BPB - BIOS Parameter Block: actual volume boot block */
   static const TDiskBPB DiskBPB = {
     .BS_jmpBoot = {0xEB, 0x00, 0x90},
-    .BS_OEMName = "BEACON01",
+    .BS_OEMName = "MSWIN4.1",
     .BPB_BytsPerSec = DISK_BLOCK_SIZE,
     .BPB_SecPerClus = DISK_SECTORS_PER_CLUSTER,
     .BPB_RsvdSecCnt = RESERVED_SECTORS_COUNT,
@@ -352,7 +352,7 @@ msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
     .BS_DrvNum = 0x80,
     .BS_BootSig = 0x29,
     .BS_VolID = 0xe9d9489f,
-    .BS_VolLab = "OpenBeacon",
+    .BS_VolLab = "OPENBEACON ",
     .BS_FilSysType = "FAT16   ",
   };
 
@@ -490,7 +490,7 @@ storage_init (void)
     .length = 1234,
     .handler = NULL,
     .data = NULL,
-    .name = "License htm",
+    .name = "LICENSE HTM",
     .next = NULL,
   };
 
@@ -498,7 +498,7 @@ storage_init (void)
     .length = 100 * 1024 * 1024,
     .handler = NULL,
     .data = NULL,
-    .name = "Transferimg",
+    .name = "TRANSFERIMG",
     .next = &f_license,
   };
 
@@ -506,7 +506,7 @@ storage_init (void)
     .length = 12345678,
     .handler = NULL,
     .data = NULL,
-    .name = "Read-Me txt",
+    .name = "READ-ME TXT",
     .next = &f_benchmark,
   };
 
