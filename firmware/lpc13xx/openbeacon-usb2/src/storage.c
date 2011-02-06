@@ -83,6 +83,30 @@ typedef struct
   uint32_t length;
 } PACKED TDiskPartitionTableEntry;
 
+#define ATTR_READ_ONLY  0x01
+#define ATTR_HIDDEN     0x02
+#define ATTR_SYSTEM     0x04
+#define ATTR_VOLUME_ID  0x08
+#define ATTR_DIRECTORY  0x10
+#define ATTR_ARCHIVE    0x20
+#define ATTR_LONG_NAME  (ATTR_READ_ONLY | ATTR_HIDDEN | ATTR_SYSTEM | ATTR_VOLUME_ID)
+
+typedef struct
+{
+  char DIR_Name[11];
+  uint8_t DIR_Attr;
+  uint8_t DIR_NTRes;
+  uint8_t DIR_CrtTimeTenth;
+  uint16_t DIR_CrtTime;
+  uint16_t DIR_CrtDate;
+  uint16_t DIR_LstAccDate;
+  uint16_t DIR_FstClusHI;
+  uint16_t DIR_WrtTime;
+  uint16_t DIR_WrtDate;
+  uint16_t DIR_FstClusLO;
+  uint32_t DIR_FileSize;
+} PACKED TDiskDirectoryEntry;
+
 typedef struct
 {
   uint8_t BS_jmpBoot[3];
@@ -108,29 +132,28 @@ typedef struct
   char BS_FilSysType[8];
 } PACKED TDiskBPB;
 
-#define ATTR_READ_ONLY  0x01
-#define ATTR_HIDDEN     0x02
-#define ATTR_SYSTEM     0x04
-#define ATTR_VOLUME_ID  0x08
-#define ATTR_DIRECTORY  0x10
-#define ATTR_ARCHIVE    0x20
-#define ATTR_LONG_NAME  (ATTR_READ_ONLY | ATTR_HIDDEN | ATTR_SYSTEM | ATTR_VOLUME_ID)
-
-typedef struct
-{
-  char DIR_Name[11];
-  uint8_t DIR_Attr;
-  uint8_t DIR_NTRes;
-  uint8_t DIR_CrtTimeTenth;
-  uint16_t DIR_CrtTime;
-  uint16_t DIR_CrtDate;
-  uint16_t DIR_LstAccDate;
-  uint16_t DIR_FstClusHI;
-  uint16_t DIR_WrtTime;
-  uint16_t DIR_WrtDate;
-  uint16_t DIR_FstClusLO;
-  uint32_t DIR_FileSize;
-} PACKED TDiskDirectoryEntry;
+/* BPB - BIOS Parameter Block: actual volume boot block */
+static const TDiskBPB DiskBPB = {
+  .BS_jmpBoot = {0xEB, 0x00, 0x90},
+  .BS_OEMName = "MSWIN4.1",
+  .BPB_BytsPerSec = DISK_BLOCK_SIZE,
+  .BPB_SecPerClus = DISK_SECTORS_PER_CLUSTER,
+  .BPB_RsvdSecCnt = RESERVED_SECTORS_COUNT,
+  .BPB_NumFATs = BPB_NUMFATS,
+  .BPB_RootEntCnt = MAX_FILES_IN_ROOT,
+  .BPB_Media = BPB_MEDIA_TYPE,
+  .BPB_FATSz16 = FAT16_SIZE_SECTORS,
+  .BPB_SecPerTrk = DISK_SECTORS_PER_TRACK,
+  .BPB_NumHeads = DISK_HEADS,
+  .BPB_HiddSec = VOLUME_START,
+  .BPB_TotSec32 = VOLUME_SECTORS,
+  /* FAT12/FAT16 definition */
+  .BS_DrvNum = 0x80,
+  .BS_BootSig = 0x29,
+  .BS_VolID = 0xe9d9489f,
+  .BS_VolLab = "OPENBEACON ",
+  .BS_FilSysType = "FAT16   ",
+};
 
 void
 storage_status (void)
@@ -166,7 +189,7 @@ msd_read_fat_area (uint32_t offset, uint32_t length, const void *src,
   const TDiskFile *file;
 
   /* touch unused parameter 'src' */
-  (void)src;
+  (void) src;
 
   /* ignore read requests for sizes < cluster table granularity */
   if (length < sizeof (TFatCluster))
@@ -257,7 +280,7 @@ msd_read_root_dir (uint32_t offset, uint32_t length, const void *src,
   TDiskDirectoryEntry *entry;
 
   /* touch unused parameter 'src' */
-  (void)src;
+  (void) src;
 
   /* initialize response with zero */
   memset (dst, 0, length);
@@ -282,8 +305,10 @@ msd_read_root_dir (uint32_t offset, uint32_t length, const void *src,
       if (!file)
 	return;
 
-      /* populate directpry entry */
-      entry->DIR_Attr = ATTR_READ_ONLY;
+      /* turn last entry to volume ID */
+      entry->DIR_Attr = file->next ? ATTR_READ_ONLY : ATTR_VOLUME_ID;
+
+      /* populate directory entry */
       entry->DIR_FileSize = file->length;
       entry->DIR_FstClusLO = (file->length) ? cluster : 0;
       strncpy (entry->DIR_Name, file->name, sizeof (entry->DIR_Name));
@@ -333,28 +358,6 @@ msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
   /* MBR termination signature */
   static const uint16_t BootSignature = 0xAA55;
 
-  /* BPB - BIOS Parameter Block: actual volume boot block */
-  static const TDiskBPB DiskBPB = {
-    .BS_jmpBoot = {0xEB, 0x00, 0x90},
-    .BS_OEMName = "MSWIN4.1",
-    .BPB_BytsPerSec = DISK_BLOCK_SIZE,
-    .BPB_SecPerClus = DISK_SECTORS_PER_CLUSTER,
-    .BPB_RsvdSecCnt = RESERVED_SECTORS_COUNT,
-    .BPB_NumFATs = BPB_NUMFATS,
-    .BPB_RootEntCnt = MAX_FILES_IN_ROOT,
-    .BPB_Media = BPB_MEDIA_TYPE,
-    .BPB_FATSz16 = FAT16_SIZE_SECTORS,
-    .BPB_SecPerTrk = DISK_SECTORS_PER_TRACK,
-    .BPB_NumHeads = DISK_HEADS,
-    .BPB_HiddSec = VOLUME_START,
-    .BPB_TotSec32 = VOLUME_SECTORS,
-    /* FAT12/FAT16 definition */
-    .BS_DrvNum = 0x80,
-    .BS_BootSig = 0x29,
-    .BS_VolID = 0xe9d9489f,
-    .BS_VolLab = "OPENBEACON ",
-    .BS_FilSysType = "FAT16   ",
-  };
 
   /* data mapping of virtual drive */
   static const TDiskRecord DiskRecord[] = {
@@ -486,12 +489,9 @@ msd_write (uint32_t offset, uint8_t * src, uint32_t length)
 void
 storage_init (void)
 {
-  static const TDiskFile f_license = {
-    .length = 1234,
-    .handler = NULL,
-    .data = NULL,
-    .name = "LICENSE HTM",
-    .next = NULL,
+  /* last entry in file chain is volume label */
+  static const TDiskFile f_volume_label = {
+    .name = DiskBPB.BS_VolLab,
   };
 
   static const TDiskFile f_benchmark = {
@@ -499,7 +499,7 @@ storage_init (void)
     .handler = NULL,
     .data = NULL,
     .name = "TRANSFERIMG",
-    .next = &f_license,
+    .next = &f_volume_label,
   };
 
   static const TDiskFile f_readme = {
