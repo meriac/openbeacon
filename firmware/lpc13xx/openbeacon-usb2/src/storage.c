@@ -27,7 +27,6 @@
 #if DISK_SIZE>0
 #include "spi.h"
 
-#define IN_RANGE(x,a,b) ((x>=a) && (x<b))
 #define VOLUME_START 1UL
 #define VOLUME_SECTORS (DISK_SECTORS-VOLUME_START)
 #define DISK_SECTORS_PER_CLUSTER 8UL
@@ -107,33 +106,11 @@ typedef struct
   uint32_t DIR_FileSize;
 } PACKED TDiskDirectoryEntry;
 
-typedef struct
-{
-  uint8_t BS_jmpBoot[3];
-  char BS_OEMName[8];
-  uint16_t BPB_BytsPerSec;
-  uint8_t BPB_SecPerClus;
-  uint16_t BPB_RsvdSecCnt;
-  uint8_t BPB_NumFATs;
-  uint16_t BPB_RootEntCnt;
-  uint16_t BPB_TotSec16;
-  uint8_t BPB_Media;
-  uint16_t BPB_FATSz16;
-  uint16_t BPB_SecPerTrk;
-  uint16_t BPB_NumHeads;
-  uint32_t BPB_HiddSec;
-  uint32_t BPB_TotSec32;
-  /* FAT12/FAT16 definition */
-  uint8_t BS_DrvNum;
-  uint8_t BS_Reserved1;
-  uint8_t BS_BootSig;
-  uint32_t BS_VolID;
-  char BS_VolLab[11];
-  char BS_FilSysType[8];
-} PACKED TDiskBPB;
+/* disk signature */
+const uint32_t DiskSignature = 0x1B07CF6E;
 
 /* BPB - BIOS Parameter Block: actual volume boot block */
-static const TDiskBPB DiskBPB = {
+const TDiskBPB DiskBPB = {
   .BS_jmpBoot = {0xEB, 0x00, 0x90},
   .BS_OEMName = "MSWIN4.1",
   .BPB_BytsPerSec = DISK_BLOCK_SIZE,
@@ -336,8 +313,6 @@ msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
   uint32_t t, read_end, rec_start, rec_end, pos, count, written;
   uint8_t *p;
 
-  /* disk signature */
-  static const uint32_t DiskSignature = 0x1B07CF6E;
 
   /* first partition table entry */
   static const TDiskPartitionTableEntry DiskPartitionTableEntry = {
