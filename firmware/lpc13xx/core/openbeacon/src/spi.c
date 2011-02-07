@@ -25,9 +25,6 @@
 
 #define BIT_REVERSE(x) ((unsigned char)(__RBIT(x)>>24))
 
-/* Set default SPI clock to 8MHz - FIXME change to dynamic calculation per peripheral  */
-#define SPI_PRESCALE_CLOCK_CPSDVSR 6
-
 void
 spi_init_pin (spi_cs chipselect)
 {
@@ -39,6 +36,9 @@ spi_txrx (spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
 	  uint16_t rxlen)
 {
   uint8_t data;
+
+  /* SSP0 Clock Prescale Register to SYSCLK/CPSDVSR */
+  LPC_SSP->CPSR = (chipselect>>8)&0xFF;
 
   /* activate chip select */
   GPIOSetValue ((uint8_t) (chipselect >> 24), (uint8_t) (chipselect >> 16),
@@ -87,7 +87,7 @@ void
 spi_status (void)
 {
   debug_printf (" * SPI: CLK:%uMHz\n",
-		(SystemCoreClock / SPI_PRESCALE_CLOCK_CPSDVSR) / 1000000);
+		(SystemCoreClock / LPC_SSP->CPSR) / 1000000);
 }
 
 void
@@ -99,18 +99,18 @@ spi_init (void)
   /* Enable SSP clock */
   LPC_SYSCON->SYSAHBCLKCTRL |= (1 << 11);
 
-  // Enable SSP peripheral
-  LPC_IOCON->PIO0_8 = 0x01 | (0x01 << 3);	/* MISO, Pulldown */
-  LPC_IOCON->PIO0_9 = 0x01;	/* MOSI */
-  LPC_IOCON->SCKLOC = 0x00;	/* route to PIO0_10 */
-  LPC_IOCON->JTAG_TCK_PIO0_10 = 0x02;	/* SCK */
+  /* Enable SSP peripheral MISO, Pulldown */
+  LPC_IOCON->PIO0_8 = 0x01 | (0x01 << 3);
+  /* MOSI */
+  LPC_IOCON->PIO0_9 = 0x01;
+  /* route to PIO0_10 */
+  LPC_IOCON->SCKLOC = 0x00;
+  /* SCK */
+  LPC_IOCON->JTAG_TCK_PIO0_10 = 0x02;
 
   /* Set SSP PCLK to 48MHz DIV=1 */
   LPC_SYSCON->SSPCLKDIV = 0x01;
   /* 8 bit, SPI, SCR=0 */
   LPC_SSP->CR0 = 0x0007;
   LPC_SSP->CR1 = 0x0002;
-  /* SSP0 Clock Prescale Register
-     CPSDVSR = 2 */
-  LPC_SSP->CPSR = SPI_PRESCALE_CLOCK_CPSDVSR;
 }
