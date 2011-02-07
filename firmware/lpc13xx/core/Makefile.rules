@@ -49,6 +49,7 @@ ARM_SRC= \
   $(CORE)openbeacon/src/msd.c \
   $(CORE)openbeacon/src/vfs.c \
   $(CORE)openbeacon/src/hid.c \
+  $(CORE)openbeacon/src/spi.c \
   $(CORE)openbeacon/src/debug_printf.c
 
 #

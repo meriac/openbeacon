@@ -14,8 +14,7 @@ APP_SRC= \
   src/bluetooth.c \
   src/pin.c \
   src/3d_acceleration.c \
-  src/storage.c \
-  src/spi.c
+  src/storage.c
 
 APP_SRC+=$(IMAGES_C)
 
