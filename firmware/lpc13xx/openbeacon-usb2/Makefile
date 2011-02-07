@@ -12,7 +12,6 @@ APP_SRC= \
   src/nRF_CMD.c \
   src/nRF_API.c \
   src/bluetooth.c \
-  src/hid.c \
   src/pin.c \
   src/3d_acceleration.c \
   src/storage.c \
