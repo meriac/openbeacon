@@ -123,6 +123,7 @@ static void
 msd_read_data_area (uint32_t offset, uint32_t length, const void *src,
 		    uint8_t * dst)
 {
+  uint32_t t;
   uint32_t cluster, cluster_start, cluster_end, cluster_count;
   uint32_t cluster_file_count;
 
@@ -169,12 +170,29 @@ msd_read_data_area (uint32_t offset, uint32_t length, const void *src,
 	  if ((cluster_end >= cluster_file_start)
 	      && (cluster_start <= cluster_file_end))
 	    {
+	      /* normalize offset to file start */
+	      offset -= (cluster_file_start * DISK_CLUSTER_SIZE);
+
+	      /* if handler exists - run */
 	      if (file->handler)
-		file->handler (offset -
-			       (cluster_file_start * DISK_CLUSTER_SIZE),
-			       length, file->data, dst);
+		file->handler (offset, length, file->data, dst);
+	      /* if no handler exists copy data */
+	      else if ((file->data) && (offset < file->length))
+		{
+		  /* calculate remaining length */
+		  if ((t = file->length - offset) > length)
+		    t = length;
+
+		  /* copy data to output buffer */
+		  memcpy (dst, ((uint8_t *) file->data) + offset, t);
+
+		  /* if data is smaller, sent remainder to zero */
+		  if (t < length)
+		    memset (&dst[t], 0, length - t);
+		}
+	      /* if no data exists, set to zero */
 	      else
-		memset (dst, ' ', length);
+		memset (dst, 0, length);
 
 	      /* request could be satisfied - bail out with cached file
 	         handle after handling request */
@@ -186,8 +204,8 @@ msd_read_data_area (uint32_t offset, uint32_t length, const void *src,
       file = file->next;
     }
 
-    /* didn't find a matching request - reset cached file to NULL */
-    file = NULL;
+  /* didn't find a matching request - reset cached file to NULL */
+  file = NULL;
 }
 
 static void
@@ -502,14 +520,14 @@ vfs_status (void)
 }
 
 void
-vfs_init (const TDiskFile *file)
+vfs_init (const TDiskFile * file)
 {
-  if(file)
-  {
-    root_directory = file;
-    /* init USB mass storage */
-    msd_init ();
-  }
+  if (file)
+    {
+      root_directory = file;
+      /* init USB mass storage */
+      msd_init ();
+    }
 }
 
 #endif /* USB_DISK_SUPPORT */

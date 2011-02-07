@@ -27,6 +27,10 @@
 #if DISK_SIZE>0
 #include "spi.h"
 
+static const char hello_world[]=
+    "<html><head><meta HTTP-EQUIV=\"REFRESH\" content=\"0; "
+    "url=http://www.openbeacon.org/OpenBeacon_USB_2\"></head></html>";
+
 void
 storage_status (void)
 {
@@ -56,10 +60,10 @@ storage_init (void)
   };
 
   static const TDiskFile f_readme = {
-    .length = 12345678,
+    .length = sizeof(hello_world)-1,
     .handler = NULL,
-    .data = NULL,
-    .name = "READ-ME TXT",
+    .data = &hello_world,
+    .name = "READ-ME HTM",
     .next = &f_benchmark,
   };
 
