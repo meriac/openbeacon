@@ -27,10 +27,6 @@
 #if DISK_SIZE>0
 #include "spi.h"
 
-static const char hello_world[]=
-    "<html><head><meta HTTP-EQUIV=\"REFRESH\" content=\"0; "
-    "url=http://www.openbeacon.org/OpenBeacon_USB_2\"></head></html>";
-
 void
 storage_status (void)
 {
@@ -58,6 +54,11 @@ storage_init (void)
     .name = "TRANSFERIMG",
     .next = &f_volume_label,
   };
+
+  /* readme.htm file that redirects to project page */
+  static const char hello_world[]=
+    "<html><head><meta HTTP-EQUIV=\"REFRESH\" content=\"0; "
+    "url=http://www.openbeacon.org/OpenBeacon_USB_2\"></head></html>";
 
   static const TDiskFile f_readme = {
     .length = sizeof(hello_world)-1,
