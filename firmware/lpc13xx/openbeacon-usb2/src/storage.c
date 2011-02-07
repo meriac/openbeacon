@@ -27,6 +27,8 @@
 #if DISK_SIZE>0
 #include "spi.h"
 
+#define LOGFILE_STORAGE_SIZE (4*1024*1024)
+
 void
 storage_status (void)
 {
@@ -39,6 +41,16 @@ storage_status (void)
   debug_printf (" * FLASH: ID:%02X-%02X-%02X\n", rx[0], rx[1], rx[2]);
 }
 
+static void
+storage_logfile_read_raw (uint32_t offset, uint32_t length, const void *src,
+			  uint8_t * dst)
+{
+  (void) offset;
+  (void) src;
+
+  memset(dst,0,length);
+}
+
 void
 storage_init (void)
 {
@@ -47,29 +59,42 @@ storage_init (void)
     .name = DiskBPB.BS_VolLab,
   };
 
-  static const TDiskFile f_benchmark = {
-    .length = 100 * 1024 * 1024,
-    .handler = NULL,
-    .data = NULL,
-    .name = "TRANSFERIMG",
+  static const TDiskFile f_logfile = {
+    .length = LOGFILE_STORAGE_SIZE,
+    .handler = storage_logfile_read_raw,
+    .data = &f_logfile,
+    .name = "LOGFILE BIN",
     .next = &f_volume_label,
   };
 
-  /* readme.htm file that redirects to project page */
-  static const char hello_world[]=
+  /* read-me.htm file that redirects to project page */
+  static const char readme[] =
     "<html><head><meta HTTP-EQUIV=\"REFRESH\" content=\"0; "
     "url=http://openbeacon.org/OpenBeacon_USB_2\"></head></html>";
 
   static const TDiskFile f_readme = {
-    .length = sizeof(hello_world)-1,
+    .length = sizeof (readme) - 1,
     .handler = NULL,
-    .data = &hello_world,
+    .data = &readme,
     .name = "READ-ME HTM",
-    .next = &f_benchmark,
+    .next = &f_logfile,
+  };
+
+  /* autorun.inf file that redirects to READ-ME.HTM */
+  static const char autorun_inf[] =
+    "[AutoRun]\n"
+    "shellexecute=READ-ME.HTM\n";
+
+  static const TDiskFile f_autorun = {
+    .length = sizeof (autorun_inf) - 1,
+    .handler = NULL,
+    .data = &autorun_inf,
+    .name = "AUTORUN INF",
+    .next = &f_readme,
   };
 
   /* init virtual file system */
-  vfs_init (&f_readme);
+  vfs_init (&f_autorun);
 
   /* setup SPI chipselect pin */
   spi_init_pin (SPI_CS_FLASH);
