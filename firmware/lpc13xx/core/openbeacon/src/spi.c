@@ -35,44 +35,67 @@ int
 spi_txrx (spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
 	  uint16_t rxlen)
 {
-  uint8_t data;
+  uint8_t data, status;
+  uint16_t total, xfered, skipped;
 
   /* SSP0 Clock Prescale Register to SYSCLK/CPSDVSR */
-  LPC_SSP->CPSR = (chipselect>>8)&0xFF;
+  LPC_SSP->CPSR = (chipselect >> 8) & 0xFF;
 
   /* activate chip select */
   GPIOSetValue ((uint8_t) (chipselect >> 24), (uint8_t) (chipselect >> 16),
 		chipselect & SPI_CS_MODE_INVERT_CS);
 
-  while (txlen || rxlen)
+  /* calculate SPI transaction size */
+  if (chipselect & SPI_CS_MODE_SKIP_TX)
     {
-      if (txlen)
+      total = rxlen + txlen;
+      skipped = txlen;
+    }
+  else
+    {
+      total = (txlen >= rxlen) ? txlen : rxlen;
+      skipped = 0;
+    }
+
+  xfered = total;
+  while (xfered)
+    {
+      status = (uint8_t) LPC_SSP->SR;
+
+      if (total && (status & 0x02))
 	{
-	  txlen--;
-	  data = *((uint8_t *) tx);
-	  tx = ((uint8_t *) tx) + 1;
-	  if (chipselect & SPI_CS_MODE_BIT_REVERSED)
-	    data = BIT_REVERSE (data);
+	  total--;
+
+	  if (txlen)
+	    {
+	      txlen--;
+	      data = *((uint8_t *) tx);
+	      tx = ((uint8_t *) tx) + 1;
+	      if (chipselect & SPI_CS_MODE_BIT_REVERSED)
+		data = BIT_REVERSE (data);
+	    }
+	  else
+	    data = 0;
+
+	  LPC_SSP->DR = data;
 	}
-      else
-	data = 0;
 
-      /* wait till ready */
-      while ((LPC_SSP->SR & 0x02) == 0);
-      LPC_SSP->DR = data;
-
-      /* wait till sent */
-      while ((LPC_SSP->SR & 0x04) == 0);
-      data = LPC_SSP->DR;
-
-      /* skip txlen at output */
-      if (rxlen && !(((chipselect & SPI_CS_MODE_SKIP_TX)>0) && txlen))
+      if (status & 0x04)
 	{
-	  rxlen--;
-	  if (chipselect & SPI_CS_MODE_BIT_REVERSED)
-	    data = BIT_REVERSE (data);
-	  *((uint8_t *) rx) = data;
-	  rx = ((uint8_t *) rx) + 1;
+	  data = LPC_SSP->DR;
+	  xfered--;
+
+	  /* skip txlen in output if SPI_CS_MODE_SKIP_TX */
+	  if (skipped)
+	    skipped--;
+	  else if (rxlen)
+	    {
+	      rxlen--;
+	      if (chipselect & SPI_CS_MODE_BIT_REVERSED)
+		data = BIT_REVERSE (data);
+	      *((uint8_t *) rx) = data;
+	      rx = ((uint8_t *) rx) + 1;
+	    }
 	}
     }
 
