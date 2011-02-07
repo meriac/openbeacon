@@ -26,7 +26,6 @@
 #include "spi.h"
 #include "bluetooth.h"
 #include "3d_acceleration.h"
-#include "msd.h"
 #include "storage.h"
 #include "nRF_API.h"
 #include "nRF_CMD.h"

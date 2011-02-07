@@ -46,6 +46,8 @@ ARM_SRC= \
   $(CORE)startup/$(ARCH)xx.c \
   $(CORE)peripherals/src/uart.c \
   $(CORE)peripherals/src/gpio.c \
+  $(CORE)openbeacon/src/msd.c \
+  $(CORE)openbeacon/src/vfs.c \
   $(CORE)openbeacon/src/debug_printf.c
 
 #
