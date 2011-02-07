@@ -58,7 +58,7 @@ storage_init (void)
   /* readme.htm file that redirects to project page */
   static const char hello_world[]=
     "<html><head><meta HTTP-EQUIV=\"REFRESH\" content=\"0; "
-    "url=http://www.openbeacon.org/OpenBeacon_USB_2\"></head></html>";
+    "url=http://openbeacon.org/OpenBeacon_USB_2\"></head></html>";
 
   static const TDiskFile f_readme = {
     .length = sizeof(hello_world)-1,
