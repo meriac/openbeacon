@@ -24,7 +24,7 @@
 #include "msd.h"
 #include "vfs.h"
 
-#if DISK_SIZE>0
+#ifdef USB_DISK_SUPPORT
 
 #define VOLUME_START 1UL
 #define VOLUME_SECTORS (DISK_SECTORS-VOLUME_START)
@@ -512,4 +512,4 @@ vfs_init (const TDiskFile *file)
   }
 }
 
-#endif /* DISK_SIZE>0 */
+#endif /* USB_DISK_SUPPORT */

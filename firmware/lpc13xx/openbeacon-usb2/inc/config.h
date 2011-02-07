@@ -24,13 +24,11 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
+/* enable USB disk support */
+#define USB_DISK_SUPPORT
 #define USB_VENDOR_ID 0x2366
 #define USB_PROD_ID 0x0003
 #define USB_DEVICE 1
-
-/* HID device settings */
-#define USB_HID_IN_REPORT_SIZE 0
-#define USB_HID_OUT_REPORT_SIZE 0
 
 /* SPI_CS(io_port, io_pin, frequency_in_MHz, mode) */
 #define SPI_CS_FLASH SPI_CS( 1, 8, 80.0, SPI_CS_MODE_NORMAL )

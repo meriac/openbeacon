@@ -24,7 +24,7 @@
 #include <openbeacon.h>
 #include "msd.h"
 
-#if DISK_SIZE>0
+#ifdef USB_DISK_SUPPORT
 
 #define     EN_TIMER32_1    (1<<10)
 #define     EN_IOCON        (1<<16)
@@ -114,4 +114,4 @@ msd_init (void)
   (*rom)->pUSBD->connect (1);
 }
 
-#endif /* DISK_SIZE */
+#endif /* USB_DISK_SUPPORT */
