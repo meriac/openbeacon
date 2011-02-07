@@ -28,6 +28,7 @@ typedef uint32_t spi_cs;
 #define SPI_CS_MODE_NORMAL 0
 #define SPI_CS_MODE_INVERT_CS 1
 #define SPI_CS_MODE_BIT_REVERSED 2
+#define SPI_CS_MODE_SKIP_TX 4
 #define SPI_CS(port,pin,spi_clock,mode) ((spi_cs)( ((((uint32_t)port)&0xFF)<<24) | ((((uint32_t)pin)&0xFF)<<16) | ((((uint32_t)(spi_clock*2))&0xFF)<<8) | (((uint32_t)mode)&0xFF) ))
 
 extern void spi_init (void);

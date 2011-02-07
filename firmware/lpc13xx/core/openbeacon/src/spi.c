@@ -65,7 +65,8 @@ spi_txrx (spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
       while ((LPC_SSP->SR & 0x04) == 0);
       data = LPC_SSP->DR;
 
-      if (rxlen)
+      /* skip txlen at output */
+      if (rxlen && !(((chipselect & SPI_CS_MODE_SKIP_TX)>0) && txlen))
 	{
 	  rxlen--;
 	  if (chipselect & SPI_CS_MODE_BIT_REVERSED)

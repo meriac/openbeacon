@@ -45,10 +45,17 @@ static void
 storage_logfile_read_raw (uint32_t offset, uint32_t length, const void *src,
 			  uint8_t * dst)
 {
-  (void) offset;
   (void) src;
 
-  memset(dst,0,length);
+  uint8_t tx[5];
+
+  tx[0]=0x03; /* 25MHz Read */
+  tx[1]=(uint8_t)(offset>>16);
+  tx[2]=(uint8_t)(offset>> 8);
+  tx[3]=(uint8_t)(offset);
+  tx[4]=0x00;
+
+  spi_txrx (SPI_CS_FLASH, tx, sizeof(tx), dst, length);
 }
 
 void
