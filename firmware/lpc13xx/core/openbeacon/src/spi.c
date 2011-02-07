@@ -36,7 +36,7 @@ spi_txrx (spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
 	  uint16_t rxlen)
 {
   uint8_t data, status;
-  uint16_t total, xfered, skipped;
+  uint16_t total, xfered;
 
   /* SSP0 Clock Prescale Register to SYSCLK/CPSDVSR */
   LPC_SSP->CPSR = (chipselect >> 8) & 0xFF;
@@ -46,18 +46,9 @@ spi_txrx (spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
 		chipselect & SPI_CS_MODE_INVERT_CS);
 
   /* calculate SPI transaction size */
-  if (chipselect & SPI_CS_MODE_SKIP_TX)
-    {
-      total = rxlen + txlen;
-      skipped = txlen;
-    }
-  else
-    {
-      total = (txlen >= rxlen) ? txlen : rxlen;
-      skipped = 0;
-    }
+  xfered = total = (chipselect & SPI_CS_MODE_SKIP_TX) ?
+    rxlen + txlen : (txlen >= rxlen) ? txlen : rxlen;
 
-  xfered = total;
   while (xfered)
     {
       status = (uint8_t) LPC_SSP->SR;
@@ -86,11 +77,9 @@ spi_txrx (spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
 	  xfered--;
 
 	  /* skip txlen in output if SPI_CS_MODE_SKIP_TX */
-	  if (skipped)
-	    skipped--;
-	  else if (rxlen)
+	  if (rxlen && (xfered < rxlen))
 	    {
-	      rxlen--;
+	      rxlen --;
 	      if (chipselect & SPI_CS_MODE_BIT_REVERSED)
 		data = BIT_REVERSE (data);
 	      *((uint8_t *) rx) = data;
