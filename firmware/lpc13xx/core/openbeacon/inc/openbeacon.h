@@ -14,6 +14,11 @@
 #error Please specify architecture
 #endif/*__LPC13xx__*/
 
+#define DEVICEID_LPC1311 0x2C42502BUL
+#define DEVICEID_LPC1313 0x2C40102BUL
+#define DEVICEID_LPC1342 0x3D01402BUL
+#define DEVICEID_LPC1343 0x3D00002BUL
+
 #include <config.h>
 #include <debug_printf.h>
 #include <string.h>
