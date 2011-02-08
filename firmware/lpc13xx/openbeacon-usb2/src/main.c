@@ -24,6 +24,7 @@
 #include "pin.h"
 #include "hid.h"
 #include "spi.h"
+#include "iap.h"
 #include "bluetooth.h"
 #include "3d_acceleration.h"
 #include "storage.h"
@@ -56,6 +57,17 @@ SetOutReport (uint8_t *dst, uint32_t length)
 }
 #endif
 
+static void
+show_version (void)
+{
+  TDeviceUID uid;
+
+  iap_read_uid(&uid);
+//  memset(&uid,0,sizeof(uid));
+
+  debug_printf (" * Device UID: %08X:%08X:%08X:%08X\n",uid[0],uid[1],uid[2],uid[3]);
+}
+
 void
 main_menue (uint8_t cmd)
 {
@@ -78,10 +90,15 @@ main_menue (uint8_t cmd)
 		    " * (C) 2010 Milosch Meriac <meriac@openbeacon.de>    *\n"
 		    " *****************************************************\n"
 		    " * H,?          - this help screen\n"
+		    " * P            - invoke ISP programming mode\n"
 		    " * S            - SPI status\n"
 		    " * R            - OpenBeacon nRF24L01 register dump\n"
 		    " *****************************************************\n"
 		    "\n");
+      break;
+    case 'P':
+      debug_printf ("\nRebooting...");
+      iap_invoke_isp ();
       break;
     case 'R':
       nRFCMD_RegisterDump ();
@@ -91,6 +108,7 @@ main_menue (uint8_t cmd)
 		    " *****************************************************\n"
 		    " * OpenBeacon Status Information                     *\n"
 		    " *****************************************************\n");
+      show_version ();
       spi_status ();
       acc_status ();
 #if (DISK_SIZE>0)
