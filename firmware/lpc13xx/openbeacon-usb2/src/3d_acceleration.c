@@ -58,6 +58,9 @@ acc_reg_read (uint8_t addr)
 void
 acc_xyz_read (int *x, int *y, int *z)
 {
+  /* set 3D acceleration sensor active, 2g - FIXME power saving */
+  acc_reg_write (0x16, 0x01 | 0x01 << 2);
+
   /* dummy read - FIXME */
   acc_reg_read (0);
 
@@ -65,6 +68,9 @@ acc_xyz_read (int *x, int *y, int *z)
   *x = (int8_t) acc_reg_read (6);
   *y = (int8_t) acc_reg_read (7);
   *z = (int8_t) acc_reg_read (8);
+
+  /* power off */
+  acc_reg_write (0x16, 0x00);
 }
 
 void
@@ -72,6 +78,7 @@ acc_status (void)
 {
   int x, y, z;
 
+  acc_reg_write (0x16, 0x01 | 0x01 << 2);
   acc_xyz_read (&x, &y, &z);
 
   debug_printf (" * 3D_ACC: X=%04i Y=%04i Z=%04i\n", x, y, z);
@@ -95,6 +102,6 @@ acc_init (void)
   /* dummy read - FIXME */
   acc_reg_read (0);
 
-  /* set 3D acceleration sensor active, 2g - FIXME power saving */
-  acc_reg_write (0x16, 0x01 | 0x01 << 2);
+  /* power off */
+  acc_reg_write (0x16, 0x00);
 }
