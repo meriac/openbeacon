@@ -51,14 +51,10 @@ pmu_sleep (void)
 }
 
 void
-pmu_calibrate (void)
-{
-}
-
-void
 pmu_off (void)
 {
   pin_mode_pmu (1);
+  LPC_SYSCON->PDSLEEPCFG = 0xFFFFFFFF;
   SCB->SCR |= NVIC_LP_SLEEPDEEP;
   LPC_PMU->PCON = 0x2;
   __WFI ();
@@ -67,5 +63,4 @@ pmu_off (void)
 void
 pmu_init (void)
 {
-  LPC_SYSCON->PDSLEEPCFG = 0xFFFFFFFF;
 }
