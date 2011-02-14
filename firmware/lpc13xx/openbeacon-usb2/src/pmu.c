@@ -21,6 +21,7 @@
 
 */
 #include <openbeacon.h>
+#include "pin.h"
 #include "pmu.h"
 
 /* Watchdog oscillator control register setup */
@@ -34,35 +35,19 @@
 #define MAINCLKSEL_WDT_OSC 2
 #define MAINCLKSEL_SYS_PLL_OUT 3
 
-static void
-deep_sleep_cylcles (uin16_t cycles)
-{
-  LPC_TMR->MR0 = cycles;
-}
-
 void
 deep_sleep_ms (uint32_t milliseconds)
 {
+  (void) milliseconds;
+
   /* back up current power states */
-  LPC_SYSCON->PDWAKECFG = LPC_SYSCON->PDRUNCFG;
+  LPC_SYSCON->PDAWAKECFG = LPC_SYSCON->PDRUNCFG;
   __asm volatile ("WFI");
 }
 
 void
 pmu_sleep (void)
 {
-  /* back up current power states */
-  LPC_SYSCON->PDWAKECFG = LPC_SYSCON->PDRUNCFG;
-
-  /* remember main clock setting */
-  LPC_PMU->GPREG0 = LPC_SYSCON->MAINCLKSEL;
-
-  /* switch to watchdog timer oscillator */
-  LPC_SYSCON->MAINCLKSEL = MAINCLKSEL_WDT_OSC;
-
-  /* go to sleep */
-  __asm volatile ("WFI");
-
 }
 
 void
@@ -73,14 +58,14 @@ pmu_calibrate (void)
 void
 pmu_off (void)
 {
+  pin_mode_pmu (1);
+  SCB->SCR |= NVIC_LP_SLEEPDEEP;
+  LPC_PMU->PCON = 0x2;
+  __WFI ();
 }
 
 void
 pmu_init (void)
 {
-  /* in deep sleep only watchdog runs by default */
-  LPC_SYSCON->PDSLEEPCFG = 0xFFF & ~PMU_WDTOSC_PD;
-
-  /* watchdog configuration */
-  LPC_SYSCON->WDTOSCCTRL = DIVSEL | (FREQSEL<<5);
+  LPC_SYSCON->PDSLEEPCFG = 0xFFFFFFFF;
 }

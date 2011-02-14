@@ -25,6 +25,7 @@
 #include "hid.h"
 #include "spi.h"
 #include "iap.h"
+#include "pmu.h"
 #include "bluetooth.h"
 #include "3d_acceleration.h"
 #include "storage.h"
@@ -62,8 +63,8 @@ show_version (void)
 {
   TDeviceUID uid;
 
+  memset(&uid,0,sizeof(uid));
   iap_read_uid(&uid);
-//  memset(&uid,0,sizeof(uid));
 
   debug_printf (" * Device UID: %08X:%08X:%08X:%08X\n",uid[0],uid[1],uid[2],uid[3]);
 }
@@ -111,6 +112,7 @@ main_menue (uint8_t cmd)
       show_version ();
       spi_status ();
       acc_status ();
+//      pmu_status ();
 #if (DISK_SIZE>0)
       storage_status ();
 #endif
@@ -133,16 +135,6 @@ main (void)
 
   /* initialize  pins */
   pin_init ();
-
-  /* blink as a sign of boot to detect crashes */
-  for (t = 0; t < 10; t++)
-    {
-      pin_led (GPIO_LED0);
-      for (i = 0; i < 100000; i++);
-      pin_led (GPIO_LEDS_OFF);
-      for (i = 0; i < 100000; i++);
-    }
-
   /* Init SPI */
   spi_init ();
   /* Init Storage */
@@ -153,17 +145,40 @@ main (void)
 #if (USB_HID_IN_REPORT_SIZE>0)||(USB_HID_OUT_REPORT_SIZE>0)
   hid_init ();
 #endif
+  /* power management init */
+  pmu_init ();
+
+  /* blink as a sign of boot to detect crashes */
+  for (t = 0; t < 10; t++)
+    {
+      pin_led (GPIO_LED0);
+	  for (i = 0; i < 100000; i++);
+      pin_led (GPIO_LEDS_OFF);
+	  for (i = 0; i < 100000; i++);
+    }
+
   /* Init Bluetooth */
   bt_init ();
-  /* Init OpenBeacon nRF24L01 interface */
-  nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0);
   /* Init 3D acceleration sensor */
   acc_init ();
+
+  /* Init OpenBeacon nRF24L01 interface */
+//  nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0);
 
   /* main loop */
   t = 0;
   firstrun = 1;
 
+
+  while (1)
+  {
+      pin_led (GPIO_LEDS_OFF);
+    pmu_off();
+      pin_led (GPIO_LED0);
+    pmu_off();
+  }
+#if 0
+  }
   while (1)
     {
       /* blink LED0 on every 32th run - FIXME later with sleep */
@@ -196,6 +211,6 @@ main (void)
 	  /* clear UART buffer */
 	  UARTCount = 0;
 	}
-
     }
+#endif
 }

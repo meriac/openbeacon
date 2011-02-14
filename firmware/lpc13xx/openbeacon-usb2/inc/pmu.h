@@ -37,7 +37,13 @@
 #define PMU_USBPAD_PD         (1UL <<10)
 #define PMU_RESERVED2_DEEP_PD (1UL <<11)
 
+#define NVIC_LP_SEVONPEND     (0x10)
+#define NVIC_LP_SLEEPDEEP     (0x04)
+#define NVIC_LP_SLEEPONEXIT   (0x02)
+
 extern void pmu_init (void);
 extern void pmu_status (void);
+extern void pmu_off (void);
+
 
 #endif /*__PMU_H__*/

@@ -63,5 +63,5 @@ pin_init (void)
   /* Set to PMU high power mode by default */
   LPC_IOCON->PIO0_5=0;
   GPIOSetDir  ( CPU_MODE_PMU_PORT, CPU_MODE_PMU_BIT, 1);
-  GPIOSetValue( CPU_MODE_PMU_PORT, CPU_MODE_PMU_BIT, 0);
+  pin_mode_pmu (0);
 }
