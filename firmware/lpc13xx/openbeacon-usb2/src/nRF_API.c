@@ -80,6 +80,12 @@ nRFAPI_SetRxMode (uint8_t receive)
   nRFCMD_RegWriteStatusRead (CONFIG | WRITE_REG, receive ? 0x3B : 0x3A);
 }
 
+void
+nRFAPI_PowerDown (void)
+{
+  nRFCMD_RegWriteStatusRead (CONFIG | WRITE_REG, 0x00);
+}
+
 uint8_t
 nRFAPI_Init (uint8_t channel,
 	     const uint8_t * mac, uint8_t mac_size, uint8_t features)
@@ -119,10 +125,11 @@ nRFAPI_Init (uint8_t channel,
   nRFAPI_FlushRX ();
   nRFAPI_FlushTX ();
 
-  nRFAPI_SetRxMode (0);
-
   if (features != 0)
     nRFAPI_SetFeatures (features);
+
+  // power down
+  nRFAPI_PowerDown ();
 
   return 1;
 }

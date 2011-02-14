@@ -58,5 +58,6 @@ extern void nRFAPI_ReuseTX (void);
 extern uint8_t nRFAPI_GetFifoStatus (void);
 extern uint8_t nRFAPI_CarrierDetect (void);
 extern void nRFAPI_SetFeatures (uint8_t features);
+extern void nRFAPI_PowerDown (void);
 
 #endif /*NRF_API_H */
