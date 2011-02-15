@@ -35,6 +35,8 @@
 #define MAINCLKSEL_WDT_OSC 2
 #define MAINCLKSEL_SYS_PLL_OUT 3
 
+static const uint32_t pmu_reason_signature = 0xDEADBEEF;
+
 void
 deep_sleep_ms (uint32_t milliseconds)
 {
@@ -51,13 +53,22 @@ pmu_sleep (void)
 }
 
 void
-pmu_off (void)
+pmu_off (uint32_t reason)
 {
-  pin_mode_pmu (1);
+  LPC_PMU->GPREG0 = pmu_reason_signature;
+  LPC_PMU->GPREG1 = reason;
+
   LPC_SYSCON->PDSLEEPCFG = 0xFFFFFFFF;
   SCB->SCR |= NVIC_LP_SLEEPDEEP;
   LPC_PMU->PCON = 0x2;
+  pin_mode_pmu (1);
   __WFI ();
+}
+
+uint32_t
+pmu_reason (void)
+{
+  return (LPC_PMU->GPREG0==pmu_reason_signature)?LPC_PMU->GPREG1:0;
 }
 
 void

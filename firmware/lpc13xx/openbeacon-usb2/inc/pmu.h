@@ -43,7 +43,7 @@
 
 extern void pmu_init (void);
 extern void pmu_status (void);
-extern void pmu_off (void);
-
+extern void pmu_off (uint32_t reason);
+extern uint32_t pmu_reason (void);
 
 #endif /*__PMU_H__*/
