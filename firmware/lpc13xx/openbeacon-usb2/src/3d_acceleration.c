@@ -78,7 +78,6 @@ acc_status (void)
 {
   int x, y, z;
 
-  acc_reg_write (0x16, 0x01 | 0x01 << 2);
   acc_xyz_read (&x, &y, &z);
 
   debug_printf (" * 3D_ACC: X=%04i Y=%04i Z=%04i\n", x, y, z);
