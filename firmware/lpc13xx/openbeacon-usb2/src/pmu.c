@@ -74,4 +74,5 @@ pmu_reason (void)
 void
 pmu_init (void)
 {
+  pin_mode_pmu (0);
 }
