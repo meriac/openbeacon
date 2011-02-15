@@ -1,7 +1,7 @@
 TARGET=openbeacon-usb2
 ARCH=LPC13
 CPU=$(ARCH)43
-DEBUG=-g
+DEBUG=-g -DDEBUG
 OPTIM=-Os -mword-relocations
 
 APP_CFLAGS=-Iinc -std=gnu99 -fgnu89-inline -D__USE_CMSIS

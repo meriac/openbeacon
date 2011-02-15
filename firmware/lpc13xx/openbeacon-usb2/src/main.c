@@ -169,9 +169,12 @@ main (void)
 
   /* power off */
   pin_led (GPIO_LED0);
-  pmu_off (0);
 
-#if 0
+#ifndef DEBUG
+  pmu_off (0);
+#else
+  int firstrun;
+
   while (1)
     {
       /* blink LED0 on every 32th run - FIXME later with sleep */

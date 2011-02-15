@@ -58,9 +58,6 @@ acc_reg_read (uint8_t addr)
 void
 acc_xyz_read (int *x, int *y, int *z)
 {
-  /* set 3D acceleration sensor active, 2g - FIXME power saving */
-  acc_reg_write (0x16, 0x01 | 0x01 << 2);
-
   /* dummy read - FIXME */
   acc_reg_read (0);
 
@@ -68,9 +65,6 @@ acc_xyz_read (int *x, int *y, int *z)
   *x = (int8_t) acc_reg_read (6);
   *y = (int8_t) acc_reg_read (7);
   *z = (int8_t) acc_reg_read (8);
-
-  /* power off */
-  acc_reg_write (0x16, 0x00);
 }
 
 void
@@ -90,7 +84,7 @@ acc_init (void)
   LPC_IOCON->PIO0_4 = 1 << 8;
 
   /* PIO, Inactive Pull, Digital Mode */
-  LPC_IOCON->PIO1_11 = 1 << 7;
+  LPC_IOCON->PIO1_11 = (1<<7)|(2<<3);
 
   /* setup SPI chipselect pin */
   spi_init_pin (SPI_CS_ACC3D);
@@ -101,6 +95,11 @@ acc_init (void)
   /* dummy read - FIXME */
   acc_reg_read (0);
 
-  /* power off */
+#ifdef  DEBUG
+  /* set 3D acceleration sensor active, 2g - FIXME power saving */
+  acc_reg_write (0x16, 0x01 | 0x01 << 2);
+#else
+  /* power down */
   acc_reg_write (0x16, 0x00);
+#endif/*DEBUG*/
 }
