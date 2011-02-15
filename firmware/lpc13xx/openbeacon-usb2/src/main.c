@@ -39,7 +39,7 @@ const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 1, 2, 3, 2, 1 };
 static uint8_t hid_buffer[USB_HID_IN_REPORT_SIZE];
 
 void
-GetInReport (uint8_t *src, uint32_t length)
+GetInReport (uint8_t * src, uint32_t length)
 {
   (void) src;
   (void) length;
@@ -51,7 +51,7 @@ GetInReport (uint8_t *src, uint32_t length)
 }
 
 void
-SetOutReport (uint8_t *dst, uint32_t length)
+SetOutReport (uint8_t * dst, uint32_t length)
 {
   (void) dst;
   (void) length;
@@ -63,10 +63,11 @@ show_version (void)
 {
   TDeviceUID uid;
 
-  memset(&uid,0,sizeof(uid));
-  iap_read_uid(&uid);
+  memset (&uid, 0, sizeof (uid));
+  iap_read_uid (&uid);
 
-  debug_printf (" * Device UID: %08X:%08X:%08X:%08X\n",uid[0],uid[1],uid[2],uid[3]);
+  debug_printf (" * Device UID: %08X:%08X:%08X:%08X\n", uid[0], uid[1],
+		uid[2], uid[3]);
 }
 
 void
@@ -130,7 +131,7 @@ main_menue (uint8_t cmd)
 int
 main (void)
 {
-  int t, firstrun;
+  int t;
   volatile int i;
 
   /* initialize  pins */
@@ -152,33 +153,25 @@ main (void)
   for (t = 0; t < 10; t++)
     {
       pin_led (GPIO_LED0);
-	  for (i = 0; i < 100000; i++);
+      for (i = 0; i < 100000; i++);
       pin_led (GPIO_LEDS_OFF);
-	  for (i = 0; i < 100000; i++);
+      for (i = 0; i < 100000; i++);
     }
 
   /* Init Bluetooth */
   bt_init ();
   /* Init 3D acceleration sensor */
   acc_init ();
-
   /* Init OpenBeacon nRF24L01 interface */
-//  nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0);
-
+  nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0);
   /* main loop */
   t = 0;
-  firstrun = 1;
 
+  /* power off */
+  pin_led (GPIO_LED0);
+  pmu_off (0);
 
-  while (1)
-  {
-      pin_led (GPIO_LEDS_OFF);
-    pmu_off();
-      pin_led (GPIO_LED0);
-    pmu_off();
-  }
 #if 0
-  }
   while (1)
     {
       /* blink LED0 on every 32th run - FIXME later with sleep */
