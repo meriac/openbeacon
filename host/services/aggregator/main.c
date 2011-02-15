@@ -69,12 +69,12 @@
 #define MX (z>>5^y<<2)+(y>>3^z<<4)^(sum^y)+(tea_key[p&3^e]^z)
 #define DELTA 0x9E3779B9L
 
-/* The Last Hope - AMD Project (Attendee Metadata Project)
+/* CCC 25C3 Key
  *
  * see also http://wiki.openbeacon.org/wiki/EncryptionKeys
  *
 */
-const long tea_key[4]={0x9c43725e,0xad8ec2ab,0x6ebad8db,0xf29c3638};
+const long tea_key[4]={0xbf0c3a08,0x1d4228fc,0x4244b2b0,0x0b4492e9};
 
 static int flagDecrypt=1;
 static int flagLog=1;

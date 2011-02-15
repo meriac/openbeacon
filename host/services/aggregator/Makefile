@@ -1,6 +1,5 @@
 CC:=$(CROSS)gcc
-CFLAGS:=-m32 -fpack-struct=1 
-
+CFLAGS:=-m32 -fpack-struct=1
 
 all: aggregator
 
