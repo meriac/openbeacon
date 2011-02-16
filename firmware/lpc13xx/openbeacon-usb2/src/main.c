@@ -98,10 +98,12 @@ main_menue (uint8_t cmd)
 		    " *****************************************************\n"
 		    "\n");
       break;
+#ifdef MENUE_ALLOW_ISP_REBOOT
     case 'P':
       debug_printf ("\nRebooting...");
       iap_invoke_isp ();
       break;
+#endif
     case 'R':
       nRFCMD_RegisterDump ();
       break;
@@ -131,7 +133,7 @@ main_menue (uint8_t cmd)
 int
 main (void)
 {
-  int t;
+  int t, firstrun;
   volatile int i;
 
   /* initialize  pins */
@@ -150,7 +152,7 @@ main (void)
   pmu_init ();
 
   /* blink as a sign of boot to detect crashes */
-  for (t = 0; t < 10; t++)
+  for (t = 0; t < 20; t++)
     {
       pin_led (GPIO_LED0);
       for (i = 0; i < 100000; i++);
@@ -159,22 +161,14 @@ main (void)
     }
 
   /* Init Bluetooth */
-  bt_init ();
+  bt_init (1);
   /* Init 3D acceleration sensor */
-  acc_init ();
+  acc_init (1);
   /* Init OpenBeacon nRF24L01 interface */
   nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0);
+
   /* main loop */
   t = 0;
-
-  /* power off */
-  pin_led (GPIO_LED0);
-
-#ifndef DEBUG
-  pmu_off (0);
-#else
-  int firstrun;
-
   while (1)
     {
       /* blink LED0 on every 32th run - FIXME later with sleep */
@@ -185,6 +179,14 @@ main (void)
 	  pin_led (GPIO_LEDS_OFF);
 	}
       for (i = 0; i < 200000; i++);
+
+      if (!pin_button0 ())
+	{
+	  bt_init (0);
+	  acc_init (0);
+	  pin_mode_pmu (0);
+	  pmu_off (0);
+	}
 
       if (UARTCount)
 	{
@@ -208,5 +210,4 @@ main (void)
 	  UARTCount = 0;
 	}
     }
-#endif
 }

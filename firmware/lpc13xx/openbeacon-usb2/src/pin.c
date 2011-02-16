@@ -24,6 +24,8 @@
 #include "pin.h"
 
 /* IO definitions */
+#define BUTTON0_PORT 0
+#define BUTTON0_BIT 1
 #define LED0_PORT 1
 #define LED0_BIT 2
 #define LED1_PORT 1
@@ -32,16 +34,22 @@
 #define CPU_MODE_PMU_BIT 5
 
 void
-pin_led(uint8_t led)
+pin_led (uint8_t led)
 {
-    GPIOSetValue( LED0_PORT, LED0_BIT,  led & GPIO_LED0    );
-    GPIOSetValue( LED1_PORT, LED1_BIT, (led & GPIO_LED1)>1 );
+  GPIOSetValue (LED0_PORT, LED0_BIT, led & GPIO_LED0);
+  GPIOSetValue (LED1_PORT, LED1_BIT, (led & GPIO_LED1) > 1);
 }
 
 void
-pin_mode_pmu(uint8_t mode)
+pin_mode_pmu (uint8_t mode)
 {
-    GPIOSetValue( CPU_MODE_PMU_PORT, CPU_MODE_PMU_BIT, mode );
+  GPIOSetValue (CPU_MODE_PMU_PORT, CPU_MODE_PMU_BIT, mode);
+}
+
+uint8_t
+pin_button0 (void)
+{
+  return GPIOGetValue (BUTTON0_PORT, BUTTON0_BIT);
 }
 
 void
@@ -50,18 +58,21 @@ pin_init (void)
   /* Initialize GPIO (sets up clock) */
   GPIOInit ();
 
+  /* switch ISP button pin to input */
+  GPIOSetDir (BUTTON0_PORT, BUTTON0_BIT, 0);
+
   /* Set LED0 port pin to output */
-  LPC_IOCON->JTAG_nTRST_PIO1_2=1;
-  GPIOSetDir  ( LED0_PORT, LED0_BIT, 1);
-  GPIOSetValue( LED0_PORT, LED0_BIT, 0);
+  LPC_IOCON->JTAG_nTRST_PIO1_2 = 1;
+  GPIOSetDir (LED0_PORT, LED0_BIT, 1);
+  GPIOSetValue (LED0_PORT, LED0_BIT, 0);
 
   /* Set LED1 port pin to output */
-  LPC_IOCON->JTAG_TDO_PIO1_1=1;
-  GPIOSetDir  ( LED1_PORT, LED1_BIT, 1);
-  GPIOSetValue( LED1_PORT, LED1_BIT, 0);
+  LPC_IOCON->JTAG_TDO_PIO1_1 = 1;
+  GPIOSetDir (LED1_PORT, LED1_BIT, 1);
+  GPIOSetValue (LED1_PORT, LED1_BIT, 0);
 
   /* Set to PMU high power mode by default */
-  LPC_IOCON->PIO0_5=0;
-  GPIOSetDir  ( CPU_MODE_PMU_PORT, CPU_MODE_PMU_BIT, 1);
+  LPC_IOCON->PIO0_5 = 0;
+  GPIOSetDir (CPU_MODE_PMU_PORT, CPU_MODE_PMU_BIT, 1);
   pin_mode_pmu (0);
 }
