@@ -78,7 +78,7 @@ acc_status (void)
 }
 
 void
-acc_init (void)
+acc_init (uint8_t enabled)
 {
   /* PIO, PIO0_4 in standard IO functionality */
   LPC_IOCON->PIO0_4 = 1 << 8;
@@ -95,11 +95,6 @@ acc_init (void)
   /* dummy read - FIXME */
   acc_reg_read (0);
 
-#ifdef  DEBUG
   /* set 3D acceleration sensor active, 2g - FIXME power saving */
-  acc_reg_write (0x16, 0x01 | 0x01 << 2);
-#else
-  /* power down */
-  acc_reg_write (0x16, 0x00);
-#endif/*DEBUG*/
+  acc_reg_write (0x16, enabled ? (0x01 | 0x01 << 2) : 0x00);
 }

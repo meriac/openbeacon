@@ -24,7 +24,7 @@
 #ifndef __3D_ACCELERATION_H__
 #define __3D_ACCELERATION_H__
 
-extern void acc_init (void);
+extern void acc_init (uint8_t enabled);
 extern void acc_status (void);
 extern void acc_xyz_read (int *x, int *y, int *z);
 

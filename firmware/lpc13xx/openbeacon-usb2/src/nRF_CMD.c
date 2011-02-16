@@ -40,9 +40,6 @@
 #define SPI_MAX_XFER_LEN 33
 #define NRFCMD_MACRO_READ 0x80
 
-const uint8_t *nRFCMD_Macro;
-uint8_t *nRFCMD_MacroResult;
-
 #define SPI_MAX_XFER_LEN 33
 #define NRFCMD_MACRO_READ 0x80
 static uint8_t spi_outbuf[SPI_MAX_XFER_LEN];
@@ -198,6 +195,4 @@ nRFCMD_Init (void)
   LPC_IOCON->PIO0_2 = 0;
   GPIOSetDir (CPU_SWITCH_RF_PORT, CPU_SWITCH_RF_PIN, 1);
   GPIOSetValue (CPU_SWITCH_RF_PORT, CPU_SWITCH_RF_PIN, 0);
-
-  nRFCMD_Macro = nRFCMD_MacroResult = NULL;
 }

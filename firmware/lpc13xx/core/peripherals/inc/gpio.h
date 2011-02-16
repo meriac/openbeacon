@@ -47,6 +47,21 @@ GPIOSetValue (uint32_t portNum, uint32_t bitPosi, uint32_t bitVal)
 }
 
 /*****************************************************************************
+** Function name:		GPIOGetValue
+**
+** Descriptions:		Get a bitvalue in a specific bit position
+**						in GPIO portX(X is the port number.)
+**
+** parameters:			port num, bit position
+** Returned value:		bit value
+**
+*****************************************************************************/
+static __INLINE uint32_t GPIOGetValue( uint32_t portNum, uint32_t bitPosi)
+{
+    return LPC_GPIO[portNum]->MASKED_ACCESS[(1<<bitPosi)] ? 1:0;
+}
+
+/*****************************************************************************
 ** Function name:		GPIOSetDir
 **
 ** Descriptions:		Set the direction in GPIO port
