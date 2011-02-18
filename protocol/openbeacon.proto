@@ -1,5 +1,3 @@
-package OpenBeacon;
-
 enum ObUnit {
   // use the id-range of 100 to 127 for extending this message with custom enums
 

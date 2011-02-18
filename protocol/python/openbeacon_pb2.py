@@ -9,12 +9,12 @@ from google.protobuf import descriptor_pb2
 
 DESCRIPTOR = descriptor.FileDescriptor(
   name='openbeacon.proto',
-  package='OpenBeacon',
-  serialized_pb='\n\x10openbeacon.proto\x12\nOpenBeacon\"\xce\x01\n\nObTracking\x12\t\n\x01x\x18\x01 \x01(\x11\x12\t\n\x01y\x18\x02 \x01(\x11\x12\t\n\x01z\x18\x03 \x01(\x11\x12 \n\x04unit\x18\x04 \x01(\x0e\x32\x12.OpenBeacon.ObUnit\x12\x11\n\treader_id\x18\x05 \x03(\r\x12\x13\n\x0btx_strength\x18\x06 \x01(\r\x12\x0f\n\x07\x61rea_id\x18\x07 \x01(\r\x12\x0f\n\x07room_id\x18\x08 \x01(\r\x12\x13\n\x0b\x62uilding_id\x18\t \x01(\r\x12\x17\n\x0finstallation_id\x18\n \x01(\r*\x05\x08\x64\x10\x80\x01\"3\n\x13ObProximityTagPower\x12\r\n\x05power\x18\x01 \x01(\r\x12\r\n\x05\x63ount\x18\x02 \x01(\r\"S\n\x0eObProximityTag\x12\n\n\x02id\x18\x01 \x02(\r\x12.\n\x05power\x18\x02 \x03(\x0b\x32\x1f.OpenBeacon.ObProximityTagPower*\x05\x08\x64\x10\x80\x01\"`\n\x0eObProximityLog\x12\x0c\n\x04time\x18\x01 \x02(\r\x12\x10\n\x08\x64uration\x18\x02 \x02(\r\x12\'\n\x03tag\x18\x03 \x03(\x0b\x32\x1a.OpenBeacon.ObProximityTag*\x05\x08\x64\x10\x80\x01\"\x80\x02\n\x05ObTag\x12\x0e\n\x06tag_id\x18\x01 \x01(\r\x12\x10\n\x08tag_time\x18\x02 \x01(\r\x12\x18\n\x10tag_power_cycles\x18\x03 \x01(\r\x12\x14\n\x0ctag_strength\x18\x04 \x01(\r\x12\x14\n\x0c\x66orwarder_id\x18\x05 \x03(\r\x12\x1e\n\x16\x66orwarder_storage_time\x18\x06 \x01(\r\x12\x0f\n\x07rx_time\x18\x07 \x01(\x04\x12(\n\x08tracking\x18\x0e \x01(\x0b\x32\x16.OpenBeacon.ObTracking\x12-\n\tproximity\x18\x0f \x03(\x0b\x32\x1a.OpenBeacon.ObProximityLog*\x05\x08\x64\x10\x80\x01*\xa6\x01\n\x06ObUnit\x12\x10\n\x0cOB_UNIT_NONE\x10\x00\x12\x11\n\rOB_UNIT_PIXEL\x10\x01\x12\x16\n\x12OB_UNIT_MILLIMETER\x10\x02\x12\x16\n\x12OB_UNIT_CENTIMETER\x10\x03\x12\x11\n\rOB_UNIT_METER\x10\x04\x12\x10\n\x0cOB_UNIT_INCH\x10\x05\x12\x10\n\x0cOB_UNIT_FEET\x10\x06\x12\x10\n\x0cOB_UNIT_YARD\x10\x07')
+  package='',
+  serialized_pb='\n\x10openbeacon.proto\"\xc3\x01\n\nObTracking\x12\t\n\x01x\x18\x01 \x01(\x11\x12\t\n\x01y\x18\x02 \x01(\x11\x12\t\n\x01z\x18\x03 \x01(\x11\x12\x15\n\x04unit\x18\x04 \x01(\x0e\x32\x07.ObUnit\x12\x11\n\treader_id\x18\x05 \x03(\r\x12\x13\n\x0btx_strength\x18\x06 \x01(\r\x12\x0f\n\x07\x61rea_id\x18\x07 \x01(\r\x12\x0f\n\x07room_id\x18\x08 \x01(\r\x12\x13\n\x0b\x62uilding_id\x18\t \x01(\r\x12\x17\n\x0finstallation_id\x18\n \x01(\r*\x05\x08\x64\x10\x80\x01\"3\n\x13ObProximityTagPower\x12\r\n\x05power\x18\x01 \x01(\r\x12\r\n\x05\x63ount\x18\x02 \x01(\r\"H\n\x0eObProximityTag\x12\n\n\x02id\x18\x01 \x02(\r\x12#\n\x05power\x18\x02 \x03(\x0b\x32\x14.ObProximityTagPower*\x05\x08\x64\x10\x80\x01\"U\n\x0eObProximityLog\x12\x0c\n\x04time\x18\x01 \x02(\r\x12\x10\n\x08\x64uration\x18\x02 \x02(\r\x12\x1c\n\x03tag\x18\x03 \x03(\x0b\x32\x0f.ObProximityTag*\x05\x08\x64\x10\x80\x01\"\xea\x01\n\x05ObTag\x12\x0e\n\x06tag_id\x18\x01 \x01(\r\x12\x10\n\x08tag_time\x18\x02 \x01(\r\x12\x18\n\x10tag_power_cycles\x18\x03 \x01(\r\x12\x14\n\x0ctag_strength\x18\x04 \x01(\r\x12\x14\n\x0c\x66orwarder_id\x18\x05 \x03(\r\x12\x1e\n\x16\x66orwarder_storage_time\x18\x06 \x01(\r\x12\x0f\n\x07rx_time\x18\x07 \x01(\x04\x12\x1d\n\x08tracking\x18\x0e \x01(\x0b\x32\x0b.ObTracking\x12\"\n\tproximity\x18\x0f \x03(\x0b\x32\x0f.ObProximityLog*\x05\x08\x64\x10\x80\x01*\xa6\x01\n\x06ObUnit\x12\x10\n\x0cOB_UNIT_NONE\x10\x00\x12\x11\n\rOB_UNIT_PIXEL\x10\x01\x12\x16\n\x12OB_UNIT_MILLIMETER\x10\x02\x12\x16\n\x12OB_UNIT_CENTIMETER\x10\x03\x12\x11\n\rOB_UNIT_METER\x10\x04\x12\x10\n\x0cOB_UNIT_INCH\x10\x05\x12\x10\n\x0cOB_UNIT_FEET\x10\x06\x12\x10\n\x0cOB_UNIT_YARD\x10\x07')
 
 _OBUNIT = descriptor.EnumDescriptor(
   name='ObUnit',
-  full_name='OpenBeacon.ObUnit',
+  full_name='ObUnit',
   filename=None,
   file=DESCRIPTOR,
   values=[
@@ -53,8 +53,8 @@ _OBUNIT = descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=737,
-  serialized_end=903,
+  serialized_start=670,
+  serialized_end=836,
 )
 
 
@@ -71,76 +71,76 @@ OB_UNIT_YARD = 7
 
 _OBTRACKING = descriptor.Descriptor(
   name='ObTracking',
-  full_name='OpenBeacon.ObTracking',
+  full_name='ObTracking',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     descriptor.FieldDescriptor(
-      name='x', full_name='OpenBeacon.ObTracking.x', index=0,
+      name='x', full_name='ObTracking.x', index=0,
       number=1, type=17, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     descriptor.FieldDescriptor(
-      name='y', full_name='OpenBeacon.ObTracking.y', index=1,
+      name='y', full_name='ObTracking.y', index=1,
       number=2, type=17, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     descriptor.FieldDescriptor(
-      name='z', full_name='OpenBeacon.ObTracking.z', index=2,
+      name='z', full_name='ObTracking.z', index=2,
       number=3, type=17, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     descriptor.FieldDescriptor(
-      name='unit', full_name='OpenBeacon.ObTracking.unit', index=3,
+      name='unit', full_name='ObTracking.unit', index=3,
       number=4, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     descriptor.FieldDescriptor(
-      name='reader_id', full_name='OpenBeacon.ObTracking.reader_id', index=4,
+      name='reader_id', full_name='ObTracking.reader_id', index=4,
       number=5, type=13, cpp_type=3, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     descriptor.FieldDescriptor(
-      name='tx_strength', full_name='OpenBeacon.ObTracking.tx_strength', index=5,
+      name='tx_strength', full_name='ObTracking.tx_strength', index=5,
       number=6, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     descriptor.FieldDescriptor(
-      name='area_id', full_name='OpenBeacon.ObTracking.area_id', index=6,
+      name='area_id', full_name='ObTracking.area_id', index=6,
       number=7, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     descriptor.FieldDescriptor(
-      name='room_id', full_name='OpenBeacon.ObTracking.room_id', index=7,
+      name='room_id', full_name='ObTracking.room_id', index=7,
       number=8, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     descriptor.FieldDescriptor(
-      name='building_id', full_name='OpenBeacon.ObTracking.building_id', index=8,
+      name='building_id', full_name='ObTracking.building_id', index=8,
       number=9, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     descriptor.FieldDescriptor(
-      name='installation_id', full_name='OpenBeacon.ObTracking.installation_id', index=9,
+      name='installation_id', full_name='ObTracking.installation_id', index=9,
       number=10, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
@@ -155,27 +155,27 @@ _OBTRACKING = descriptor.Descriptor(
   options=None,
   is_extendable=True,
   extension_ranges=[(100, 128), ],
-  serialized_start=33,
-  serialized_end=239,
+  serialized_start=21,
+  serialized_end=216,
 )
 
 
 _OBPROXIMITYTAGPOWER = descriptor.Descriptor(
   name='ObProximityTagPower',
-  full_name='OpenBeacon.ObProximityTagPower',
+  full_name='ObProximityTagPower',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     descriptor.FieldDescriptor(
-      name='power', full_name='OpenBeacon.ObProximityTagPower.power', index=0,
+      name='power', full_name='ObProximityTagPower.power', index=0,
       number=1, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     descriptor.FieldDescriptor(
-      name='count', full_name='OpenBeacon.ObProximityTagPower.count', index=1,
+      name='count', full_name='ObProximityTagPower.count', index=1,
       number=2, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
@@ -190,27 +190,27 @@ _OBPROXIMITYTAGPOWER = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=241,
-  serialized_end=292,
+  serialized_start=218,
+  serialized_end=269,
 )
 
 
 _OBPROXIMITYTAG = descriptor.Descriptor(
   name='ObProximityTag',
-  full_name='OpenBeacon.ObProximityTag',
+  full_name='ObProximityTag',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     descriptor.FieldDescriptor(
-      name='id', full_name='OpenBeacon.ObProximityTag.id', index=0,
+      name='id', full_name='ObProximityTag.id', index=0,
       number=1, type=13, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     descriptor.FieldDescriptor(
-      name='power', full_name='OpenBeacon.ObProximityTag.power', index=1,
+      name='power', full_name='ObProximityTag.power', index=1,
       number=2, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
@@ -225,34 +225,34 @@ _OBPROXIMITYTAG = descriptor.Descriptor(
   options=None,
   is_extendable=True,
   extension_ranges=[(100, 128), ],
-  serialized_start=294,
-  serialized_end=377,
+  serialized_start=271,
+  serialized_end=343,
 )
 
 
 _OBPROXIMITYLOG = descriptor.Descriptor(
   name='ObProximityLog',
-  full_name='OpenBeacon.ObProximityLog',
+  full_name='ObProximityLog',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     descriptor.FieldDescriptor(
-      name='time', full_name='OpenBeacon.ObProximityLog.time', index=0,
+      name='time', full_name='ObProximityLog.time', index=0,
       number=1, type=13, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     descriptor.FieldDescriptor(
-      name='duration', full_name='OpenBeacon.ObProximityLog.duration', index=1,
+      name='duration', full_name='ObProximityLog.duration', index=1,
       number=2, type=13, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     descriptor.FieldDescriptor(
-      name='tag', full_name='OpenBeacon.ObProximityLog.tag', index=2,
+      name='tag', full_name='ObProximityLog.tag', index=2,
       number=3, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
@@ -267,76 +267,76 @@ _OBPROXIMITYLOG = descriptor.Descriptor(
   options=None,
   is_extendable=True,
   extension_ranges=[(100, 128), ],
-  serialized_start=379,
-  serialized_end=475,
+  serialized_start=345,
+  serialized_end=430,
 )
 
 
 _OBTAG = descriptor.Descriptor(
   name='ObTag',
-  full_name='OpenBeacon.ObTag',
+  full_name='ObTag',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     descriptor.FieldDescriptor(
-      name='tag_id', full_name='OpenBeacon.ObTag.tag_id', index=0,
+      name='tag_id', full_name='ObTag.tag_id', index=0,
       number=1, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     descriptor.FieldDescriptor(
-      name='tag_time', full_name='OpenBeacon.ObTag.tag_time', index=1,
+      name='tag_time', full_name='ObTag.tag_time', index=1,
       number=2, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     descriptor.FieldDescriptor(
-      name='tag_power_cycles', full_name='OpenBeacon.ObTag.tag_power_cycles', index=2,
+      name='tag_power_cycles', full_name='ObTag.tag_power_cycles', index=2,
       number=3, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     descriptor.FieldDescriptor(
-      name='tag_strength', full_name='OpenBeacon.ObTag.tag_strength', index=3,
+      name='tag_strength', full_name='ObTag.tag_strength', index=3,
       number=4, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     descriptor.FieldDescriptor(
-      name='forwarder_id', full_name='OpenBeacon.ObTag.forwarder_id', index=4,
+      name='forwarder_id', full_name='ObTag.forwarder_id', index=4,
       number=5, type=13, cpp_type=3, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     descriptor.FieldDescriptor(
-      name='forwarder_storage_time', full_name='OpenBeacon.ObTag.forwarder_storage_time', index=5,
+      name='forwarder_storage_time', full_name='ObTag.forwarder_storage_time', index=5,
       number=6, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     descriptor.FieldDescriptor(
-      name='rx_time', full_name='OpenBeacon.ObTag.rx_time', index=6,
+      name='rx_time', full_name='ObTag.rx_time', index=6,
       number=7, type=4, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     descriptor.FieldDescriptor(
-      name='tracking', full_name='OpenBeacon.ObTag.tracking', index=7,
+      name='tracking', full_name='ObTag.tracking', index=7,
       number=14, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     descriptor.FieldDescriptor(
-      name='proximity', full_name='OpenBeacon.ObTag.proximity', index=8,
+      name='proximity', full_name='ObTag.proximity', index=8,
       number=15, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
@@ -351,8 +351,8 @@ _OBTAG = descriptor.Descriptor(
   options=None,
   is_extendable=True,
   extension_ranges=[(100, 128), ],
-  serialized_start=478,
-  serialized_end=734,
+  serialized_start=433,
+  serialized_end=667,
 )
 
 
@@ -366,30 +366,30 @@ class ObTracking(message.Message):
   __metaclass__ = reflection.GeneratedProtocolMessageType
   DESCRIPTOR = _OBTRACKING
   
-  # @@protoc_insertion_point(class_scope:OpenBeacon.ObTracking)
+  # @@protoc_insertion_point(class_scope:ObTracking)
 
 class ObProximityTagPower(message.Message):
   __metaclass__ = reflection.GeneratedProtocolMessageType
   DESCRIPTOR = _OBPROXIMITYTAGPOWER
   
-  # @@protoc_insertion_point(class_scope:OpenBeacon.ObProximityTagPower)
+  # @@protoc_insertion_point(class_scope:ObProximityTagPower)
 
 class ObProximityTag(message.Message):
   __metaclass__ = reflection.GeneratedProtocolMessageType
   DESCRIPTOR = _OBPROXIMITYTAG
   
-  # @@protoc_insertion_point(class_scope:OpenBeacon.ObProximityTag)
+  # @@protoc_insertion_point(class_scope:ObProximityTag)
 
 class ObProximityLog(message.Message):
   __metaclass__ = reflection.GeneratedProtocolMessageType
   DESCRIPTOR = _OBPROXIMITYLOG
   
-  # @@protoc_insertion_point(class_scope:OpenBeacon.ObProximityLog)
+  # @@protoc_insertion_point(class_scope:ObProximityLog)
 
 class ObTag(message.Message):
   __metaclass__ = reflection.GeneratedProtocolMessageType
   DESCRIPTOR = _OBTAG
   
-  # @@protoc_insertion_point(class_scope:OpenBeacon.ObTag)
+  # @@protoc_insertion_point(class_scope:ObTag)
 
 # @@protoc_insertion_point(module_scope)

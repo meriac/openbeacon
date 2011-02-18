@@ -25,8 +25,6 @@
 #include <google/protobuf/generated_message_reflection.h>
 // @@protoc_insertion_point(includes)
 
-namespace OpenBeacon {
-
 // Internal implementation detail -- do not call these.
 void  protobuf_AddDesc_openbeacon_2eproto();
 void protobuf_AssignDesc_openbeacon_2eproto();
@@ -140,12 +138,12 @@ class ObTracking : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 z() const;
   inline void set_z(::google::protobuf::int32 value);
   
-  // optional .OpenBeacon.ObUnit unit = 4;
+  // optional .ObUnit unit = 4;
   inline bool has_unit() const;
   inline void clear_unit();
   static const int kUnitFieldNumber = 4;
-  inline OpenBeacon::ObUnit unit() const;
-  inline void set_unit(OpenBeacon::ObUnit value);
+  inline ObUnit unit() const;
+  inline void set_unit(ObUnit value);
   
   // repeated uint32 reader_id = 5;
   inline int reader_id_size() const;
@@ -195,7 +193,7 @@ class ObTracking : public ::google::protobuf::Message {
   inline void set_installation_id(::google::protobuf::uint32 value);
   
   GOOGLE_PROTOBUF_EXTENSION_ACCESSORS(ObTracking)
-  // @@protoc_insertion_point(class_scope:OpenBeacon.ObTracking)
+  // @@protoc_insertion_point(class_scope:ObTracking)
  private:
   ::google::protobuf::internal::ExtensionSet _extensions_;
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
@@ -301,7 +299,7 @@ class ObProximityTagPower : public ::google::protobuf::Message {
   inline ::google::protobuf::uint32 count() const;
   inline void set_count(::google::protobuf::uint32 value);
   
-  // @@protoc_insertion_point(class_scope:OpenBeacon.ObProximityTagPower)
+  // @@protoc_insertion_point(class_scope:ObProximityTagPower)
  private:
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
   mutable int _cached_size_;
@@ -391,27 +389,27 @@ class ObProximityTag : public ::google::protobuf::Message {
   inline ::google::protobuf::uint32 id() const;
   inline void set_id(::google::protobuf::uint32 value);
   
-  // repeated .OpenBeacon.ObProximityTagPower power = 2;
+  // repeated .ObProximityTagPower power = 2;
   inline int power_size() const;
   inline void clear_power();
   static const int kPowerFieldNumber = 2;
-  inline const ::OpenBeacon::ObProximityTagPower& power(int index) const;
-  inline ::OpenBeacon::ObProximityTagPower* mutable_power(int index);
-  inline ::OpenBeacon::ObProximityTagPower* add_power();
-  inline const ::google::protobuf::RepeatedPtrField< ::OpenBeacon::ObProximityTagPower >&
+  inline const ::ObProximityTagPower& power(int index) const;
+  inline ::ObProximityTagPower* mutable_power(int index);
+  inline ::ObProximityTagPower* add_power();
+  inline const ::google::protobuf::RepeatedPtrField< ::ObProximityTagPower >&
       power() const;
-  inline ::google::protobuf::RepeatedPtrField< ::OpenBeacon::ObProximityTagPower >*
+  inline ::google::protobuf::RepeatedPtrField< ::ObProximityTagPower >*
       mutable_power();
   
   GOOGLE_PROTOBUF_EXTENSION_ACCESSORS(ObProximityTag)
-  // @@protoc_insertion_point(class_scope:OpenBeacon.ObProximityTag)
+  // @@protoc_insertion_point(class_scope:ObProximityTag)
  private:
   ::google::protobuf::internal::ExtensionSet _extensions_;
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
   mutable int _cached_size_;
   
   ::google::protobuf::uint32 id_;
-  ::google::protobuf::RepeatedPtrField< ::OpenBeacon::ObProximityTagPower > power_;
+  ::google::protobuf::RepeatedPtrField< ::ObProximityTagPower > power_;
   friend void  protobuf_AddDesc_openbeacon_2eproto();
   friend void protobuf_AssignDesc_openbeacon_2eproto();
   friend void protobuf_ShutdownFile_openbeacon_2eproto();
@@ -502,20 +500,20 @@ class ObProximityLog : public ::google::protobuf::Message {
   inline ::google::protobuf::uint32 duration() const;
   inline void set_duration(::google::protobuf::uint32 value);
   
-  // repeated .OpenBeacon.ObProximityTag tag = 3;
+  // repeated .ObProximityTag tag = 3;
   inline int tag_size() const;
   inline void clear_tag();
   static const int kTagFieldNumber = 3;
-  inline const ::OpenBeacon::ObProximityTag& tag(int index) const;
-  inline ::OpenBeacon::ObProximityTag* mutable_tag(int index);
-  inline ::OpenBeacon::ObProximityTag* add_tag();
-  inline const ::google::protobuf::RepeatedPtrField< ::OpenBeacon::ObProximityTag >&
+  inline const ::ObProximityTag& tag(int index) const;
+  inline ::ObProximityTag* mutable_tag(int index);
+  inline ::ObProximityTag* add_tag();
+  inline const ::google::protobuf::RepeatedPtrField< ::ObProximityTag >&
       tag() const;
-  inline ::google::protobuf::RepeatedPtrField< ::OpenBeacon::ObProximityTag >*
+  inline ::google::protobuf::RepeatedPtrField< ::ObProximityTag >*
       mutable_tag();
   
   GOOGLE_PROTOBUF_EXTENSION_ACCESSORS(ObProximityLog)
-  // @@protoc_insertion_point(class_scope:OpenBeacon.ObProximityLog)
+  // @@protoc_insertion_point(class_scope:ObProximityLog)
  private:
   ::google::protobuf::internal::ExtensionSet _extensions_;
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
@@ -523,7 +521,7 @@ class ObProximityLog : public ::google::protobuf::Message {
   
   ::google::protobuf::uint32 time_;
   ::google::protobuf::uint32 duration_;
-  ::google::protobuf::RepeatedPtrField< ::OpenBeacon::ObProximityTag > tag_;
+  ::google::protobuf::RepeatedPtrField< ::ObProximityTag > tag_;
   friend void  protobuf_AddDesc_openbeacon_2eproto();
   friend void protobuf_AssignDesc_openbeacon_2eproto();
   friend void protobuf_ShutdownFile_openbeacon_2eproto();
@@ -654,27 +652,27 @@ class ObTag : public ::google::protobuf::Message {
   inline ::google::protobuf::uint64 rx_time() const;
   inline void set_rx_time(::google::protobuf::uint64 value);
   
-  // optional .OpenBeacon.ObTracking tracking = 14;
+  // optional .ObTracking tracking = 14;
   inline bool has_tracking() const;
   inline void clear_tracking();
   static const int kTrackingFieldNumber = 14;
-  inline const ::OpenBeacon::ObTracking& tracking() const;
-  inline ::OpenBeacon::ObTracking* mutable_tracking();
+  inline const ::ObTracking& tracking() const;
+  inline ::ObTracking* mutable_tracking();
   
-  // repeated .OpenBeacon.ObProximityLog proximity = 15;
+  // repeated .ObProximityLog proximity = 15;
   inline int proximity_size() const;
   inline void clear_proximity();
   static const int kProximityFieldNumber = 15;
-  inline const ::OpenBeacon::ObProximityLog& proximity(int index) const;
-  inline ::OpenBeacon::ObProximityLog* mutable_proximity(int index);
-  inline ::OpenBeacon::ObProximityLog* add_proximity();
-  inline const ::google::protobuf::RepeatedPtrField< ::OpenBeacon::ObProximityLog >&
+  inline const ::ObProximityLog& proximity(int index) const;
+  inline ::ObProximityLog* mutable_proximity(int index);
+  inline ::ObProximityLog* add_proximity();
+  inline const ::google::protobuf::RepeatedPtrField< ::ObProximityLog >&
       proximity() const;
-  inline ::google::protobuf::RepeatedPtrField< ::OpenBeacon::ObProximityLog >*
+  inline ::google::protobuf::RepeatedPtrField< ::ObProximityLog >*
       mutable_proximity();
   
   GOOGLE_PROTOBUF_EXTENSION_ACCESSORS(ObTag)
-  // @@protoc_insertion_point(class_scope:OpenBeacon.ObTag)
+  // @@protoc_insertion_point(class_scope:ObTag)
  private:
   ::google::protobuf::internal::ExtensionSet _extensions_;
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
@@ -687,8 +685,8 @@ class ObTag : public ::google::protobuf::Message {
   ::google::protobuf::RepeatedField< ::google::protobuf::uint32 > forwarder_id_;
   ::google::protobuf::uint32 forwarder_storage_time_;
   ::google::protobuf::uint64 rx_time_;
-  ::OpenBeacon::ObTracking* tracking_;
-  ::google::protobuf::RepeatedPtrField< ::OpenBeacon::ObProximityLog > proximity_;
+  ::ObTracking* tracking_;
+  ::google::protobuf::RepeatedPtrField< ::ObProximityLog > proximity_;
   friend void  protobuf_AddDesc_openbeacon_2eproto();
   friend void protobuf_AssignDesc_openbeacon_2eproto();
   friend void protobuf_ShutdownFile_openbeacon_2eproto();
@@ -764,7 +762,7 @@ inline void ObTracking::set_z(::google::protobuf::int32 value) {
   z_ = value;
 }
 
-// optional .OpenBeacon.ObUnit unit = 4;
+// optional .ObUnit unit = 4;
 inline bool ObTracking::has_unit() const {
   return _has_bit(3);
 }
@@ -772,11 +770,11 @@ inline void ObTracking::clear_unit() {
   unit_ = 0;
   _clear_bit(3);
 }
-inline OpenBeacon::ObUnit ObTracking::unit() const {
-  return static_cast< OpenBeacon::ObUnit >(unit_);
+inline ObUnit ObTracking::unit() const {
+  return static_cast< ObUnit >(unit_);
 }
-inline void ObTracking::set_unit(OpenBeacon::ObUnit value) {
-  GOOGLE_DCHECK(OpenBeacon::ObUnit_IsValid(value));
+inline void ObTracking::set_unit(ObUnit value) {
+  GOOGLE_DCHECK(ObUnit_IsValid(value));
   _set_bit(3);
   unit_ = value;
 }
@@ -942,27 +940,27 @@ inline void ObProximityTag::set_id(::google::protobuf::uint32 value) {
   id_ = value;
 }
 
-// repeated .OpenBeacon.ObProximityTagPower power = 2;
+// repeated .ObProximityTagPower power = 2;
 inline int ObProximityTag::power_size() const {
   return power_.size();
 }
 inline void ObProximityTag::clear_power() {
   power_.Clear();
 }
-inline const ::OpenBeacon::ObProximityTagPower& ObProximityTag::power(int index) const {
+inline const ::ObProximityTagPower& ObProximityTag::power(int index) const {
   return power_.Get(index);
 }
-inline ::OpenBeacon::ObProximityTagPower* ObProximityTag::mutable_power(int index) {
+inline ::ObProximityTagPower* ObProximityTag::mutable_power(int index) {
   return power_.Mutable(index);
 }
-inline ::OpenBeacon::ObProximityTagPower* ObProximityTag::add_power() {
+inline ::ObProximityTagPower* ObProximityTag::add_power() {
   return power_.Add();
 }
-inline const ::google::protobuf::RepeatedPtrField< ::OpenBeacon::ObProximityTagPower >&
+inline const ::google::protobuf::RepeatedPtrField< ::ObProximityTagPower >&
 ObProximityTag::power() const {
   return power_;
 }
-inline ::google::protobuf::RepeatedPtrField< ::OpenBeacon::ObProximityTagPower >*
+inline ::google::protobuf::RepeatedPtrField< ::ObProximityTagPower >*
 ObProximityTag::mutable_power() {
   return &power_;
 }
@@ -1003,27 +1001,27 @@ inline void ObProximityLog::set_duration(::google::protobuf::uint32 value) {
   duration_ = value;
 }
 
-// repeated .OpenBeacon.ObProximityTag tag = 3;
+// repeated .ObProximityTag tag = 3;
 inline int ObProximityLog::tag_size() const {
   return tag_.size();
 }
 inline void ObProximityLog::clear_tag() {
   tag_.Clear();
 }
-inline const ::OpenBeacon::ObProximityTag& ObProximityLog::tag(int index) const {
+inline const ::ObProximityTag& ObProximityLog::tag(int index) const {
   return tag_.Get(index);
 }
-inline ::OpenBeacon::ObProximityTag* ObProximityLog::mutable_tag(int index) {
+inline ::ObProximityTag* ObProximityLog::mutable_tag(int index) {
   return tag_.Mutable(index);
 }
-inline ::OpenBeacon::ObProximityTag* ObProximityLog::add_tag() {
+inline ::ObProximityTag* ObProximityLog::add_tag() {
   return tag_.Add();
 }
-inline const ::google::protobuf::RepeatedPtrField< ::OpenBeacon::ObProximityTag >&
+inline const ::google::protobuf::RepeatedPtrField< ::ObProximityTag >&
 ObProximityLog::tag() const {
   return tag_;
 }
-inline ::google::protobuf::RepeatedPtrField< ::OpenBeacon::ObProximityTag >*
+inline ::google::protobuf::RepeatedPtrField< ::ObProximityTag >*
 ObProximityLog::mutable_tag() {
   return &tag_;
 }
@@ -1153,44 +1151,44 @@ inline void ObTag::set_rx_time(::google::protobuf::uint64 value) {
   rx_time_ = value;
 }
 
-// optional .OpenBeacon.ObTracking tracking = 14;
+// optional .ObTracking tracking = 14;
 inline bool ObTag::has_tracking() const {
   return _has_bit(7);
 }
 inline void ObTag::clear_tracking() {
-  if (tracking_ != NULL) tracking_->::OpenBeacon::ObTracking::Clear();
+  if (tracking_ != NULL) tracking_->::ObTracking::Clear();
   _clear_bit(7);
 }
-inline const ::OpenBeacon::ObTracking& ObTag::tracking() const {
+inline const ::ObTracking& ObTag::tracking() const {
   return tracking_ != NULL ? *tracking_ : *default_instance_->tracking_;
 }
-inline ::OpenBeacon::ObTracking* ObTag::mutable_tracking() {
+inline ::ObTracking* ObTag::mutable_tracking() {
   _set_bit(7);
-  if (tracking_ == NULL) tracking_ = new ::OpenBeacon::ObTracking;
+  if (tracking_ == NULL) tracking_ = new ::ObTracking;
   return tracking_;
 }
 
-// repeated .OpenBeacon.ObProximityLog proximity = 15;
+// repeated .ObProximityLog proximity = 15;
 inline int ObTag::proximity_size() const {
   return proximity_.size();
 }
 inline void ObTag::clear_proximity() {
   proximity_.Clear();
 }
-inline const ::OpenBeacon::ObProximityLog& ObTag::proximity(int index) const {
+inline const ::ObProximityLog& ObTag::proximity(int index) const {
   return proximity_.Get(index);
 }
-inline ::OpenBeacon::ObProximityLog* ObTag::mutable_proximity(int index) {
+inline ::ObProximityLog* ObTag::mutable_proximity(int index) {
   return proximity_.Mutable(index);
 }
-inline ::OpenBeacon::ObProximityLog* ObTag::add_proximity() {
+inline ::ObProximityLog* ObTag::add_proximity() {
   return proximity_.Add();
 }
-inline const ::google::protobuf::RepeatedPtrField< ::OpenBeacon::ObProximityLog >&
+inline const ::google::protobuf::RepeatedPtrField< ::ObProximityLog >&
 ObTag::proximity() const {
   return proximity_;
 }
-inline ::google::protobuf::RepeatedPtrField< ::OpenBeacon::ObProximityLog >*
+inline ::google::protobuf::RepeatedPtrField< ::ObProximityLog >*
 ObTag::mutable_proximity() {
   return &proximity_;
 }
@@ -1198,15 +1196,13 @@ ObTag::mutable_proximity() {
 
 // @@protoc_insertion_point(namespace_scope)
 
-}  // namespace OpenBeacon
-
 #ifndef SWIG
 namespace google {
 namespace protobuf {
 
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< OpenBeacon::ObUnit>() {
-  return OpenBeacon::ObUnit_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ObUnit>() {
+  return ObUnit_descriptor();
 }
 
 }  // namespace google

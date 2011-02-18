@@ -10,8 +10,6 @@
 #include <google/protobuf/wire_format.h>
 // @@protoc_insertion_point(includes)
 
-namespace OpenBeacon {
-
 namespace {
 
 const ::google::protobuf::Descriptor* ObTracking_descriptor_ = NULL;
@@ -183,29 +181,27 @@ void protobuf_AddDesc_openbeacon_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\020openbeacon.proto\022\nOpenBeacon\"\316\001\n\nObTra"
-    "cking\022\t\n\001x\030\001 \001(\021\022\t\n\001y\030\002 \001(\021\022\t\n\001z\030\003 \001(\021\022 "
-    "\n\004unit\030\004 \001(\0162\022.OpenBeacon.ObUnit\022\021\n\tread"
-    "er_id\030\005 \003(\r\022\023\n\013tx_strength\030\006 \001(\r\022\017\n\007area"
-    "_id\030\007 \001(\r\022\017\n\007room_id\030\010 \001(\r\022\023\n\013building_i"
-    "d\030\t \001(\r\022\027\n\017installation_id\030\n \001(\r*\005\010d\020\200\001\""
-    "3\n\023ObProximityTagPower\022\r\n\005power\030\001 \001(\r\022\r\n"
-    "\005count\030\002 \001(\r\"S\n\016ObProximityTag\022\n\n\002id\030\001 \002"
-    "(\r\022.\n\005power\030\002 \003(\0132\037.OpenBeacon.ObProximi"
-    "tyTagPower*\005\010d\020\200\001\"`\n\016ObProximityLog\022\014\n\004t"
-    "ime\030\001 \002(\r\022\020\n\010duration\030\002 \002(\r\022\'\n\003tag\030\003 \003(\013"
-    "2\032.OpenBeacon.ObProximityTag*\005\010d\020\200\001\"\200\002\n\005"
-    "ObTag\022\016\n\006tag_id\030\001 \001(\r\022\020\n\010tag_time\030\002 \001(\r\022"
-    "\030\n\020tag_power_cycles\030\003 \001(\r\022\024\n\014tag_strengt"
-    "h\030\004 \001(\r\022\024\n\014forwarder_id\030\005 \003(\r\022\036\n\026forward"
-    "er_storage_time\030\006 \001(\r\022\017\n\007rx_time\030\007 \001(\004\022("
-    "\n\010tracking\030\016 \001(\0132\026.OpenBeacon.ObTracking"
-    "\022-\n\tproximity\030\017 \003(\0132\032.OpenBeacon.ObProxi"
-    "mityLog*\005\010d\020\200\001*\246\001\n\006ObUnit\022\020\n\014OB_UNIT_NON"
-    "E\020\000\022\021\n\rOB_UNIT_PIXEL\020\001\022\026\n\022OB_UNIT_MILLIM"
-    "ETER\020\002\022\026\n\022OB_UNIT_CENTIMETER\020\003\022\021\n\rOB_UNI"
-    "T_METER\020\004\022\020\n\014OB_UNIT_INCH\020\005\022\020\n\014OB_UNIT_F"
-    "EET\020\006\022\020\n\014OB_UNIT_YARD\020\007", 903);
+    "\n\020openbeacon.proto\"\303\001\n\nObTracking\022\t\n\001x\030\001"
+    " \001(\021\022\t\n\001y\030\002 \001(\021\022\t\n\001z\030\003 \001(\021\022\025\n\004unit\030\004 \001(\016"
+    "2\007.ObUnit\022\021\n\treader_id\030\005 \003(\r\022\023\n\013tx_stren"
+    "gth\030\006 \001(\r\022\017\n\007area_id\030\007 \001(\r\022\017\n\007room_id\030\010 "
+    "\001(\r\022\023\n\013building_id\030\t \001(\r\022\027\n\017installation"
+    "_id\030\n \001(\r*\005\010d\020\200\001\"3\n\023ObProximityTagPower\022"
+    "\r\n\005power\030\001 \001(\r\022\r\n\005count\030\002 \001(\r\"H\n\016ObProxi"
+    "mityTag\022\n\n\002id\030\001 \002(\r\022#\n\005power\030\002 \003(\0132\024.ObP"
+    "roximityTagPower*\005\010d\020\200\001\"U\n\016ObProximityLo"
+    "g\022\014\n\004time\030\001 \002(\r\022\020\n\010duration\030\002 \002(\r\022\034\n\003tag"
+    "\030\003 \003(\0132\017.ObProximityTag*\005\010d\020\200\001\"\352\001\n\005ObTag"
+    "\022\016\n\006tag_id\030\001 \001(\r\022\020\n\010tag_time\030\002 \001(\r\022\030\n\020ta"
+    "g_power_cycles\030\003 \001(\r\022\024\n\014tag_strength\030\004 \001"
+    "(\r\022\024\n\014forwarder_id\030\005 \003(\r\022\036\n\026forwarder_st"
+    "orage_time\030\006 \001(\r\022\017\n\007rx_time\030\007 \001(\004\022\035\n\010tra"
+    "cking\030\016 \001(\0132\013.ObTracking\022\"\n\tproximity\030\017 "
+    "\003(\0132\017.ObProximityLog*\005\010d\020\200\001*\246\001\n\006ObUnit\022\020"
+    "\n\014OB_UNIT_NONE\020\000\022\021\n\rOB_UNIT_PIXEL\020\001\022\026\n\022O"
+    "B_UNIT_MILLIMETER\020\002\022\026\n\022OB_UNIT_CENTIMETE"
+    "R\020\003\022\021\n\rOB_UNIT_METER\020\004\022\020\n\014OB_UNIT_INCH\020\005"
+    "\022\020\n\014OB_UNIT_FEET\020\006\022\020\n\014OB_UNIT_YARD\020\007", 836);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "openbeacon.proto", &protobuf_RegisterTypes);
   ObTracking::default_instance_ = new ObTracking();
@@ -394,7 +390,7 @@ bool ObTracking::MergePartialFromCodedStream(
         break;
       }
       
-      // optional .OpenBeacon.ObUnit unit = 4;
+      // optional .ObUnit unit = 4;
       case 4: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
@@ -403,8 +399,8 @@ bool ObTracking::MergePartialFromCodedStream(
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
                  input, &value)));
-          if (OpenBeacon::ObUnit_IsValid(value)) {
-            set_unit(static_cast< OpenBeacon::ObUnit >(value));
+          if (ObUnit_IsValid(value)) {
+            set_unit(static_cast< ObUnit >(value));
           } else {
             mutable_unknown_fields()->AddVarint(4, value);
           }
@@ -555,7 +551,7 @@ void ObTracking::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteSInt32(3, this->z(), output);
   }
   
-  // optional .OpenBeacon.ObUnit unit = 4;
+  // optional .ObUnit unit = 4;
   if (_has_bit(3)) {
     ::google::protobuf::internal::WireFormatLite::WriteEnum(
       4, this->unit(), output);
@@ -619,7 +615,7 @@ void ObTracking::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteSInt32ToArray(3, this->z(), target);
   }
   
-  // optional .OpenBeacon.ObUnit unit = 4;
+  // optional .ObUnit unit = 4;
   if (_has_bit(3)) {
     target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
       4, this->unit(), target);
@@ -692,7 +688,7 @@ int ObTracking::ByteSize() const {
           this->z());
     }
     
-    // optional .OpenBeacon.ObUnit unit = 4;
+    // optional .ObUnit unit = 4;
     if (has_unit()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::EnumSize(this->unit());
@@ -1189,7 +1185,7 @@ bool ObProximityTag::MergePartialFromCodedStream(
         break;
       }
       
-      // repeated .OpenBeacon.ObProximityTagPower power = 2;
+      // repeated .ObProximityTagPower power = 2;
       case 2: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
@@ -1232,7 +1228,7 @@ void ObProximityTag::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteUInt32(1, this->id(), output);
   }
   
-  // repeated .OpenBeacon.ObProximityTagPower power = 2;
+  // repeated .ObProximityTagPower power = 2;
   for (int i = 0; i < this->power_size(); i++) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
       2, this->power(i), output);
@@ -1255,7 +1251,7 @@ void ObProximityTag::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(1, this->id(), target);
   }
   
-  // repeated .OpenBeacon.ObProximityTagPower power = 2;
+  // repeated .ObProximityTagPower power = 2;
   for (int i = 0; i < this->power_size(); i++) {
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
@@ -1285,7 +1281,7 @@ int ObProximityTag::ByteSize() const {
     }
     
   }
-  // repeated .OpenBeacon.ObProximityTagPower power = 2;
+  // repeated .ObProximityTagPower power = 2;
   total_size += 1 * this->power_size();
   for (int i = 0; i < this->power_size(); i++) {
     total_size +=
@@ -1475,7 +1471,7 @@ bool ObProximityLog::MergePartialFromCodedStream(
         break;
       }
       
-      // repeated .OpenBeacon.ObProximityTag tag = 3;
+      // repeated .ObProximityTag tag = 3;
       case 3: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
@@ -1523,7 +1519,7 @@ void ObProximityLog::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteUInt32(2, this->duration(), output);
   }
   
-  // repeated .OpenBeacon.ObProximityTag tag = 3;
+  // repeated .ObProximityTag tag = 3;
   for (int i = 0; i < this->tag_size(); i++) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
       3, this->tag(i), output);
@@ -1551,7 +1547,7 @@ void ObProximityLog::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(2, this->duration(), target);
   }
   
-  // repeated .OpenBeacon.ObProximityTag tag = 3;
+  // repeated .ObProximityTag tag = 3;
   for (int i = 0; i < this->tag_size(); i++) {
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
@@ -1588,7 +1584,7 @@ int ObProximityLog::ByteSize() const {
     }
     
   }
-  // repeated .OpenBeacon.ObProximityTag tag = 3;
+  // repeated .ObProximityTag tag = 3;
   total_size += 1 * this->tag_size();
   for (int i = 0; i < this->tag_size(); i++) {
     total_size +=
@@ -1699,7 +1695,7 @@ ObTag::ObTag()
 }
 
 void ObTag::InitAsDefaultInstance() {
-  tracking_ = const_cast< ::OpenBeacon::ObTracking*>(&::OpenBeacon::ObTracking::default_instance());
+  tracking_ = const_cast< ::ObTracking*>(&::ObTracking::default_instance());
 }
 
 ObTag::ObTag(const ObTag& from)
@@ -1760,7 +1756,7 @@ void ObTag::Clear() {
     forwarder_storage_time_ = 0u;
     rx_time_ = GOOGLE_ULONGLONG(0);
     if (_has_bit(7)) {
-      if (tracking_ != NULL) tracking_->::OpenBeacon::ObTracking::Clear();
+      if (tracking_ != NULL) tracking_->::ObTracking::Clear();
     }
   }
   forwarder_id_.Clear();
@@ -1892,7 +1888,7 @@ bool ObTag::MergePartialFromCodedStream(
         break;
       }
       
-      // optional .OpenBeacon.ObTracking tracking = 14;
+      // optional .ObTracking tracking = 14;
       case 14: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
@@ -1906,7 +1902,7 @@ bool ObTag::MergePartialFromCodedStream(
         break;
       }
       
-      // repeated .OpenBeacon.ObProximityLog proximity = 15;
+      // repeated .ObProximityLog proximity = 15;
       case 15: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
@@ -1980,13 +1976,13 @@ void ObTag::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteUInt64(7, this->rx_time(), output);
   }
   
-  // optional .OpenBeacon.ObTracking tracking = 14;
+  // optional .ObTracking tracking = 14;
   if (_has_bit(7)) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
       14, this->tracking(), output);
   }
   
-  // repeated .OpenBeacon.ObProximityLog proximity = 15;
+  // repeated .ObProximityLog proximity = 15;
   for (int i = 0; i < this->proximity_size(); i++) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
       15, this->proximity(i), output);
@@ -2040,14 +2036,14 @@ void ObTag::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(7, this->rx_time(), target);
   }
   
-  // optional .OpenBeacon.ObTracking tracking = 14;
+  // optional .ObTracking tracking = 14;
   if (_has_bit(7)) {
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
         14, this->tracking(), target);
   }
   
-  // repeated .OpenBeacon.ObProximityLog proximity = 15;
+  // repeated .ObProximityLog proximity = 15;
   for (int i = 0; i < this->proximity_size(); i++) {
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
@@ -2111,7 +2107,7 @@ int ObTag::ByteSize() const {
           this->rx_time());
     }
     
-    // optional .OpenBeacon.ObTracking tracking = 14;
+    // optional .ObTracking tracking = 14;
     if (has_tracking()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
@@ -2129,7 +2125,7 @@ int ObTag::ByteSize() const {
     total_size += 1 * this->forwarder_id_size() + data_size;
   }
   
-  // repeated .OpenBeacon.ObProximityLog proximity = 15;
+  // repeated .ObProximityLog proximity = 15;
   total_size += 1 * this->proximity_size();
   for (int i = 0; i < this->proximity_size(); i++) {
     total_size +=
@@ -2186,7 +2182,7 @@ void ObTag::MergeFrom(const ObTag& from) {
       set_rx_time(from.rx_time());
     }
     if (from._has_bit(7)) {
-      mutable_tracking()->::OpenBeacon::ObTracking::MergeFrom(from.tracking());
+      mutable_tracking()->::ObTracking::MergeFrom(from.tracking());
     }
   }
   _extensions_.MergeFrom(from._extensions_);
@@ -2245,7 +2241,5 @@ void ObTag::Swap(ObTag* other) {
 
 
 // @@protoc_insertion_point(namespace_scope)
-
-}  // namespace OpenBeacon
 
 // @@protoc_insertion_point(global_scope)

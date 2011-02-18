@@ -6,230 +6,230 @@
 #endif
 
 #include "openbeacon.pb-c.h"
-void   open_beacon__ob_tracking__init
-                     (OpenBeacon__ObTracking         *message)
+void   ob_tracking__init
+                     (ObTracking         *message)
 {
-  static OpenBeacon__ObTracking init_value = OPEN_BEACON__OB_TRACKING__INIT;
+  static ObTracking init_value = OB_TRACKING__INIT;
   *message = init_value;
 }
-size_t open_beacon__ob_tracking__get_packed_size
-                     (const OpenBeacon__ObTracking *message)
+size_t ob_tracking__get_packed_size
+                     (const ObTracking *message)
 {
-  PROTOBUF_C_ASSERT (message->base.descriptor == &open_beacon__ob_tracking__descriptor);
+  PROTOBUF_C_ASSERT (message->base.descriptor == &ob_tracking__descriptor);
   return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
 }
-size_t open_beacon__ob_tracking__pack
-                     (const OpenBeacon__ObTracking *message,
+size_t ob_tracking__pack
+                     (const ObTracking *message,
                       uint8_t       *out)
 {
-  PROTOBUF_C_ASSERT (message->base.descriptor == &open_beacon__ob_tracking__descriptor);
+  PROTOBUF_C_ASSERT (message->base.descriptor == &ob_tracking__descriptor);
   return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
 }
-size_t open_beacon__ob_tracking__pack_to_buffer
-                     (const OpenBeacon__ObTracking *message,
+size_t ob_tracking__pack_to_buffer
+                     (const ObTracking *message,
                       ProtobufCBuffer *buffer)
 {
-  PROTOBUF_C_ASSERT (message->base.descriptor == &open_beacon__ob_tracking__descriptor);
+  PROTOBUF_C_ASSERT (message->base.descriptor == &ob_tracking__descriptor);
   return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
 }
-OpenBeacon__ObTracking *
-       open_beacon__ob_tracking__unpack
+ObTracking *
+       ob_tracking__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data)
 {
-  return (OpenBeacon__ObTracking *)
-     protobuf_c_message_unpack (&open_beacon__ob_tracking__descriptor,
+  return (ObTracking *)
+     protobuf_c_message_unpack (&ob_tracking__descriptor,
                                 allocator, len, data);
 }
-void   open_beacon__ob_tracking__free_unpacked
-                     (OpenBeacon__ObTracking *message,
+void   ob_tracking__free_unpacked
+                     (ObTracking *message,
                       ProtobufCAllocator *allocator)
 {
-  PROTOBUF_C_ASSERT (message->base.descriptor == &open_beacon__ob_tracking__descriptor);
+  PROTOBUF_C_ASSERT (message->base.descriptor == &ob_tracking__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-void   open_beacon__ob_proximity_tag_power__init
-                     (OpenBeacon__ObProximityTagPower         *message)
+void   ob_proximity_tag_power__init
+                     (ObProximityTagPower         *message)
 {
-  static OpenBeacon__ObProximityTagPower init_value = OPEN_BEACON__OB_PROXIMITY_TAG_POWER__INIT;
+  static ObProximityTagPower init_value = OB_PROXIMITY_TAG_POWER__INIT;
   *message = init_value;
 }
-size_t open_beacon__ob_proximity_tag_power__get_packed_size
-                     (const OpenBeacon__ObProximityTagPower *message)
+size_t ob_proximity_tag_power__get_packed_size
+                     (const ObProximityTagPower *message)
 {
-  PROTOBUF_C_ASSERT (message->base.descriptor == &open_beacon__ob_proximity_tag_power__descriptor);
+  PROTOBUF_C_ASSERT (message->base.descriptor == &ob_proximity_tag_power__descriptor);
   return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
 }
-size_t open_beacon__ob_proximity_tag_power__pack
-                     (const OpenBeacon__ObProximityTagPower *message,
+size_t ob_proximity_tag_power__pack
+                     (const ObProximityTagPower *message,
                       uint8_t       *out)
 {
-  PROTOBUF_C_ASSERT (message->base.descriptor == &open_beacon__ob_proximity_tag_power__descriptor);
+  PROTOBUF_C_ASSERT (message->base.descriptor == &ob_proximity_tag_power__descriptor);
   return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
 }
-size_t open_beacon__ob_proximity_tag_power__pack_to_buffer
-                     (const OpenBeacon__ObProximityTagPower *message,
+size_t ob_proximity_tag_power__pack_to_buffer
+                     (const ObProximityTagPower *message,
                       ProtobufCBuffer *buffer)
 {
-  PROTOBUF_C_ASSERT (message->base.descriptor == &open_beacon__ob_proximity_tag_power__descriptor);
+  PROTOBUF_C_ASSERT (message->base.descriptor == &ob_proximity_tag_power__descriptor);
   return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
 }
-OpenBeacon__ObProximityTagPower *
-       open_beacon__ob_proximity_tag_power__unpack
+ObProximityTagPower *
+       ob_proximity_tag_power__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data)
 {
-  return (OpenBeacon__ObProximityTagPower *)
-     protobuf_c_message_unpack (&open_beacon__ob_proximity_tag_power__descriptor,
+  return (ObProximityTagPower *)
+     protobuf_c_message_unpack (&ob_proximity_tag_power__descriptor,
                                 allocator, len, data);
 }
-void   open_beacon__ob_proximity_tag_power__free_unpacked
-                     (OpenBeacon__ObProximityTagPower *message,
+void   ob_proximity_tag_power__free_unpacked
+                     (ObProximityTagPower *message,
                       ProtobufCAllocator *allocator)
 {
-  PROTOBUF_C_ASSERT (message->base.descriptor == &open_beacon__ob_proximity_tag_power__descriptor);
+  PROTOBUF_C_ASSERT (message->base.descriptor == &ob_proximity_tag_power__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-void   open_beacon__ob_proximity_tag__init
-                     (OpenBeacon__ObProximityTag         *message)
+void   ob_proximity_tag__init
+                     (ObProximityTag         *message)
 {
-  static OpenBeacon__ObProximityTag init_value = OPEN_BEACON__OB_PROXIMITY_TAG__INIT;
+  static ObProximityTag init_value = OB_PROXIMITY_TAG__INIT;
   *message = init_value;
 }
-size_t open_beacon__ob_proximity_tag__get_packed_size
-                     (const OpenBeacon__ObProximityTag *message)
+size_t ob_proximity_tag__get_packed_size
+                     (const ObProximityTag *message)
 {
-  PROTOBUF_C_ASSERT (message->base.descriptor == &open_beacon__ob_proximity_tag__descriptor);
+  PROTOBUF_C_ASSERT (message->base.descriptor == &ob_proximity_tag__descriptor);
   return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
 }
-size_t open_beacon__ob_proximity_tag__pack
-                     (const OpenBeacon__ObProximityTag *message,
+size_t ob_proximity_tag__pack
+                     (const ObProximityTag *message,
                       uint8_t       *out)
 {
-  PROTOBUF_C_ASSERT (message->base.descriptor == &open_beacon__ob_proximity_tag__descriptor);
+  PROTOBUF_C_ASSERT (message->base.descriptor == &ob_proximity_tag__descriptor);
   return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
 }
-size_t open_beacon__ob_proximity_tag__pack_to_buffer
-                     (const OpenBeacon__ObProximityTag *message,
+size_t ob_proximity_tag__pack_to_buffer
+                     (const ObProximityTag *message,
                       ProtobufCBuffer *buffer)
 {
-  PROTOBUF_C_ASSERT (message->base.descriptor == &open_beacon__ob_proximity_tag__descriptor);
+  PROTOBUF_C_ASSERT (message->base.descriptor == &ob_proximity_tag__descriptor);
   return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
 }
-OpenBeacon__ObProximityTag *
-       open_beacon__ob_proximity_tag__unpack
+ObProximityTag *
+       ob_proximity_tag__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data)
 {
-  return (OpenBeacon__ObProximityTag *)
-     protobuf_c_message_unpack (&open_beacon__ob_proximity_tag__descriptor,
+  return (ObProximityTag *)
+     protobuf_c_message_unpack (&ob_proximity_tag__descriptor,
                                 allocator, len, data);
 }
-void   open_beacon__ob_proximity_tag__free_unpacked
-                     (OpenBeacon__ObProximityTag *message,
+void   ob_proximity_tag__free_unpacked
+                     (ObProximityTag *message,
                       ProtobufCAllocator *allocator)
 {
-  PROTOBUF_C_ASSERT (message->base.descriptor == &open_beacon__ob_proximity_tag__descriptor);
+  PROTOBUF_C_ASSERT (message->base.descriptor == &ob_proximity_tag__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-void   open_beacon__ob_proximity_log__init
-                     (OpenBeacon__ObProximityLog         *message)
+void   ob_proximity_log__init
+                     (ObProximityLog         *message)
 {
-  static OpenBeacon__ObProximityLog init_value = OPEN_BEACON__OB_PROXIMITY_LOG__INIT;
+  static ObProximityLog init_value = OB_PROXIMITY_LOG__INIT;
   *message = init_value;
 }
-size_t open_beacon__ob_proximity_log__get_packed_size
-                     (const OpenBeacon__ObProximityLog *message)
+size_t ob_proximity_log__get_packed_size
+                     (const ObProximityLog *message)
 {
-  PROTOBUF_C_ASSERT (message->base.descriptor == &open_beacon__ob_proximity_log__descriptor);
+  PROTOBUF_C_ASSERT (message->base.descriptor == &ob_proximity_log__descriptor);
   return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
 }
-size_t open_beacon__ob_proximity_log__pack
-                     (const OpenBeacon__ObProximityLog *message,
+size_t ob_proximity_log__pack
+                     (const ObProximityLog *message,
                       uint8_t       *out)
 {
-  PROTOBUF_C_ASSERT (message->base.descriptor == &open_beacon__ob_proximity_log__descriptor);
+  PROTOBUF_C_ASSERT (message->base.descriptor == &ob_proximity_log__descriptor);
   return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
 }
-size_t open_beacon__ob_proximity_log__pack_to_buffer
-                     (const OpenBeacon__ObProximityLog *message,
+size_t ob_proximity_log__pack_to_buffer
+                     (const ObProximityLog *message,
                       ProtobufCBuffer *buffer)
 {
-  PROTOBUF_C_ASSERT (message->base.descriptor == &open_beacon__ob_proximity_log__descriptor);
+  PROTOBUF_C_ASSERT (message->base.descriptor == &ob_proximity_log__descriptor);
   return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
 }
-OpenBeacon__ObProximityLog *
-       open_beacon__ob_proximity_log__unpack
+ObProximityLog *
+       ob_proximity_log__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data)
 {
-  return (OpenBeacon__ObProximityLog *)
-     protobuf_c_message_unpack (&open_beacon__ob_proximity_log__descriptor,
+  return (ObProximityLog *)
+     protobuf_c_message_unpack (&ob_proximity_log__descriptor,
                                 allocator, len, data);
 }
-void   open_beacon__ob_proximity_log__free_unpacked
-                     (OpenBeacon__ObProximityLog *message,
+void   ob_proximity_log__free_unpacked
+                     (ObProximityLog *message,
                       ProtobufCAllocator *allocator)
 {
-  PROTOBUF_C_ASSERT (message->base.descriptor == &open_beacon__ob_proximity_log__descriptor);
+  PROTOBUF_C_ASSERT (message->base.descriptor == &ob_proximity_log__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-void   open_beacon__ob_tag__init
-                     (OpenBeacon__ObTag         *message)
+void   ob_tag__init
+                     (ObTag         *message)
 {
-  static OpenBeacon__ObTag init_value = OPEN_BEACON__OB_TAG__INIT;
+  static ObTag init_value = OB_TAG__INIT;
   *message = init_value;
 }
-size_t open_beacon__ob_tag__get_packed_size
-                     (const OpenBeacon__ObTag *message)
+size_t ob_tag__get_packed_size
+                     (const ObTag *message)
 {
-  PROTOBUF_C_ASSERT (message->base.descriptor == &open_beacon__ob_tag__descriptor);
+  PROTOBUF_C_ASSERT (message->base.descriptor == &ob_tag__descriptor);
   return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
 }
-size_t open_beacon__ob_tag__pack
-                     (const OpenBeacon__ObTag *message,
+size_t ob_tag__pack
+                     (const ObTag *message,
                       uint8_t       *out)
 {
-  PROTOBUF_C_ASSERT (message->base.descriptor == &open_beacon__ob_tag__descriptor);
+  PROTOBUF_C_ASSERT (message->base.descriptor == &ob_tag__descriptor);
   return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
 }
-size_t open_beacon__ob_tag__pack_to_buffer
-                     (const OpenBeacon__ObTag *message,
+size_t ob_tag__pack_to_buffer
+                     (const ObTag *message,
                       ProtobufCBuffer *buffer)
 {
-  PROTOBUF_C_ASSERT (message->base.descriptor == &open_beacon__ob_tag__descriptor);
+  PROTOBUF_C_ASSERT (message->base.descriptor == &ob_tag__descriptor);
   return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
 }
-OpenBeacon__ObTag *
-       open_beacon__ob_tag__unpack
+ObTag *
+       ob_tag__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data)
 {
-  return (OpenBeacon__ObTag *)
-     protobuf_c_message_unpack (&open_beacon__ob_tag__descriptor,
+  return (ObTag *)
+     protobuf_c_message_unpack (&ob_tag__descriptor,
                                 allocator, len, data);
 }
-void   open_beacon__ob_tag__free_unpacked
-                     (OpenBeacon__ObTag *message,
+void   ob_tag__free_unpacked
+                     (ObTag *message,
                       ProtobufCAllocator *allocator)
 {
-  PROTOBUF_C_ASSERT (message->base.descriptor == &open_beacon__ob_tag__descriptor);
+  PROTOBUF_C_ASSERT (message->base.descriptor == &ob_tag__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-static const ProtobufCFieldDescriptor open_beacon__ob_tracking__field_descriptors[10] =
+static const ProtobufCFieldDescriptor ob_tracking__field_descriptors[10] =
 {
   {
     "x",
     1,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_SINT32,
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTracking, has_x),
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTracking, x),
+    PROTOBUF_C_OFFSETOF(ObTracking, has_x),
+    PROTOBUF_C_OFFSETOF(ObTracking, x),
     NULL,
     NULL,
     0,            /* packed */
@@ -240,8 +240,8 @@ static const ProtobufCFieldDescriptor open_beacon__ob_tracking__field_descriptor
     2,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_SINT32,
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTracking, has_y),
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTracking, y),
+    PROTOBUF_C_OFFSETOF(ObTracking, has_y),
+    PROTOBUF_C_OFFSETOF(ObTracking, y),
     NULL,
     NULL,
     0,            /* packed */
@@ -252,8 +252,8 @@ static const ProtobufCFieldDescriptor open_beacon__ob_tracking__field_descriptor
     3,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_SINT32,
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTracking, has_z),
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTracking, z),
+    PROTOBUF_C_OFFSETOF(ObTracking, has_z),
+    PROTOBUF_C_OFFSETOF(ObTracking, z),
     NULL,
     NULL,
     0,            /* packed */
@@ -264,9 +264,9 @@ static const ProtobufCFieldDescriptor open_beacon__ob_tracking__field_descriptor
     4,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_ENUM,
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTracking, has_unit),
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTracking, unit),
-    &open_beacon__ob_unit__descriptor,
+    PROTOBUF_C_OFFSETOF(ObTracking, has_unit),
+    PROTOBUF_C_OFFSETOF(ObTracking, unit),
+    &ob_unit__descriptor,
     NULL,
     0,            /* packed */
     0,NULL,NULL    /* reserved1,reserved2, etc */
@@ -276,8 +276,8 @@ static const ProtobufCFieldDescriptor open_beacon__ob_tracking__field_descriptor
     5,
     PROTOBUF_C_LABEL_REPEATED,
     PROTOBUF_C_TYPE_UINT32,
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTracking, n_reader_id),
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTracking, reader_id),
+    PROTOBUF_C_OFFSETOF(ObTracking, n_reader_id),
+    PROTOBUF_C_OFFSETOF(ObTracking, reader_id),
     NULL,
     NULL,
     0,            /* packed */
@@ -288,8 +288,8 @@ static const ProtobufCFieldDescriptor open_beacon__ob_tracking__field_descriptor
     6,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_UINT32,
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTracking, has_tx_strength),
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTracking, tx_strength),
+    PROTOBUF_C_OFFSETOF(ObTracking, has_tx_strength),
+    PROTOBUF_C_OFFSETOF(ObTracking, tx_strength),
     NULL,
     NULL,
     0,            /* packed */
@@ -300,8 +300,8 @@ static const ProtobufCFieldDescriptor open_beacon__ob_tracking__field_descriptor
     7,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_UINT32,
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTracking, has_area_id),
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTracking, area_id),
+    PROTOBUF_C_OFFSETOF(ObTracking, has_area_id),
+    PROTOBUF_C_OFFSETOF(ObTracking, area_id),
     NULL,
     NULL,
     0,            /* packed */
@@ -312,8 +312,8 @@ static const ProtobufCFieldDescriptor open_beacon__ob_tracking__field_descriptor
     8,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_UINT32,
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTracking, has_room_id),
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTracking, room_id),
+    PROTOBUF_C_OFFSETOF(ObTracking, has_room_id),
+    PROTOBUF_C_OFFSETOF(ObTracking, room_id),
     NULL,
     NULL,
     0,            /* packed */
@@ -324,8 +324,8 @@ static const ProtobufCFieldDescriptor open_beacon__ob_tracking__field_descriptor
     9,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_UINT32,
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTracking, has_building_id),
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTracking, building_id),
+    PROTOBUF_C_OFFSETOF(ObTracking, has_building_id),
+    PROTOBUF_C_OFFSETOF(ObTracking, building_id),
     NULL,
     NULL,
     0,            /* packed */
@@ -336,15 +336,15 @@ static const ProtobufCFieldDescriptor open_beacon__ob_tracking__field_descriptor
     10,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_UINT32,
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTracking, has_installation_id),
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTracking, installation_id),
+    PROTOBUF_C_OFFSETOF(ObTracking, has_installation_id),
+    PROTOBUF_C_OFFSETOF(ObTracking, installation_id),
     NULL,
     NULL,
     0,            /* packed */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
 };
-static const unsigned open_beacon__ob_tracking__field_indices_by_name[] = {
+static const unsigned ob_tracking__field_indices_by_name[] = {
   6,   /* field[6] = area_id */
   8,   /* field[8] = building_id */
   9,   /* field[9] = installation_id */
@@ -356,35 +356,35 @@ static const unsigned open_beacon__ob_tracking__field_indices_by_name[] = {
   1,   /* field[1] = y */
   2,   /* field[2] = z */
 };
-static const ProtobufCIntRange open_beacon__ob_tracking__number_ranges[1 + 1] =
+static const ProtobufCIntRange ob_tracking__number_ranges[1 + 1] =
 {
   { 1, 0 },
   { 0, 10 }
 };
-const ProtobufCMessageDescriptor open_beacon__ob_tracking__descriptor =
+const ProtobufCMessageDescriptor ob_tracking__descriptor =
 {
   PROTOBUF_C_MESSAGE_DESCRIPTOR_MAGIC,
-  "OpenBeacon.ObTracking",
   "ObTracking",
-  "OpenBeacon__ObTracking",
-  "OpenBeacon",
-  sizeof(OpenBeacon__ObTracking),
+  "ObTracking",
+  "ObTracking",
+  "",
+  sizeof(ObTracking),
   10,
-  open_beacon__ob_tracking__field_descriptors,
-  open_beacon__ob_tracking__field_indices_by_name,
-  1,  open_beacon__ob_tracking__number_ranges,
-  (ProtobufCMessageInit) open_beacon__ob_tracking__init,
+  ob_tracking__field_descriptors,
+  ob_tracking__field_indices_by_name,
+  1,  ob_tracking__number_ranges,
+  (ProtobufCMessageInit) ob_tracking__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor open_beacon__ob_proximity_tag_power__field_descriptors[2] =
+static const ProtobufCFieldDescriptor ob_proximity_tag_power__field_descriptors[2] =
 {
   {
     "power",
     1,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_UINT32,
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObProximityTagPower, has_power),
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObProximityTagPower, power),
+    PROTOBUF_C_OFFSETOF(ObProximityTagPower, has_power),
+    PROTOBUF_C_OFFSETOF(ObProximityTagPower, power),
     NULL,
     NULL,
     0,            /* packed */
@@ -395,39 +395,39 @@ static const ProtobufCFieldDescriptor open_beacon__ob_proximity_tag_power__field
     2,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_UINT32,
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObProximityTagPower, has_count),
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObProximityTagPower, count),
+    PROTOBUF_C_OFFSETOF(ObProximityTagPower, has_count),
+    PROTOBUF_C_OFFSETOF(ObProximityTagPower, count),
     NULL,
     NULL,
     0,            /* packed */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
 };
-static const unsigned open_beacon__ob_proximity_tag_power__field_indices_by_name[] = {
+static const unsigned ob_proximity_tag_power__field_indices_by_name[] = {
   1,   /* field[1] = count */
   0,   /* field[0] = power */
 };
-static const ProtobufCIntRange open_beacon__ob_proximity_tag_power__number_ranges[1 + 1] =
+static const ProtobufCIntRange ob_proximity_tag_power__number_ranges[1 + 1] =
 {
   { 1, 0 },
   { 0, 2 }
 };
-const ProtobufCMessageDescriptor open_beacon__ob_proximity_tag_power__descriptor =
+const ProtobufCMessageDescriptor ob_proximity_tag_power__descriptor =
 {
   PROTOBUF_C_MESSAGE_DESCRIPTOR_MAGIC,
-  "OpenBeacon.ObProximityTagPower",
   "ObProximityTagPower",
-  "OpenBeacon__ObProximityTagPower",
-  "OpenBeacon",
-  sizeof(OpenBeacon__ObProximityTagPower),
+  "ObProximityTagPower",
+  "ObProximityTagPower",
+  "",
+  sizeof(ObProximityTagPower),
   2,
-  open_beacon__ob_proximity_tag_power__field_descriptors,
-  open_beacon__ob_proximity_tag_power__field_indices_by_name,
-  1,  open_beacon__ob_proximity_tag_power__number_ranges,
-  (ProtobufCMessageInit) open_beacon__ob_proximity_tag_power__init,
+  ob_proximity_tag_power__field_descriptors,
+  ob_proximity_tag_power__field_indices_by_name,
+  1,  ob_proximity_tag_power__number_ranges,
+  (ProtobufCMessageInit) ob_proximity_tag_power__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor open_beacon__ob_proximity_tag__field_descriptors[2] =
+static const ProtobufCFieldDescriptor ob_proximity_tag__field_descriptors[2] =
 {
   {
     "id",
@@ -435,7 +435,7 @@ static const ProtobufCFieldDescriptor open_beacon__ob_proximity_tag__field_descr
     PROTOBUF_C_LABEL_REQUIRED,
     PROTOBUF_C_TYPE_UINT32,
     0,   /* quantifier_offset */
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObProximityTag, id),
+    PROTOBUF_C_OFFSETOF(ObProximityTag, id),
     NULL,
     NULL,
     0,            /* packed */
@@ -446,39 +446,39 @@ static const ProtobufCFieldDescriptor open_beacon__ob_proximity_tag__field_descr
     2,
     PROTOBUF_C_LABEL_REPEATED,
     PROTOBUF_C_TYPE_MESSAGE,
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObProximityTag, n_power),
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObProximityTag, power),
-    &open_beacon__ob_proximity_tag_power__descriptor,
+    PROTOBUF_C_OFFSETOF(ObProximityTag, n_power),
+    PROTOBUF_C_OFFSETOF(ObProximityTag, power),
+    &ob_proximity_tag_power__descriptor,
     NULL,
     0,            /* packed */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
 };
-static const unsigned open_beacon__ob_proximity_tag__field_indices_by_name[] = {
+static const unsigned ob_proximity_tag__field_indices_by_name[] = {
   0,   /* field[0] = id */
   1,   /* field[1] = power */
 };
-static const ProtobufCIntRange open_beacon__ob_proximity_tag__number_ranges[1 + 1] =
+static const ProtobufCIntRange ob_proximity_tag__number_ranges[1 + 1] =
 {
   { 1, 0 },
   { 0, 2 }
 };
-const ProtobufCMessageDescriptor open_beacon__ob_proximity_tag__descriptor =
+const ProtobufCMessageDescriptor ob_proximity_tag__descriptor =
 {
   PROTOBUF_C_MESSAGE_DESCRIPTOR_MAGIC,
-  "OpenBeacon.ObProximityTag",
   "ObProximityTag",
-  "OpenBeacon__ObProximityTag",
-  "OpenBeacon",
-  sizeof(OpenBeacon__ObProximityTag),
+  "ObProximityTag",
+  "ObProximityTag",
+  "",
+  sizeof(ObProximityTag),
   2,
-  open_beacon__ob_proximity_tag__field_descriptors,
-  open_beacon__ob_proximity_tag__field_indices_by_name,
-  1,  open_beacon__ob_proximity_tag__number_ranges,
-  (ProtobufCMessageInit) open_beacon__ob_proximity_tag__init,
+  ob_proximity_tag__field_descriptors,
+  ob_proximity_tag__field_indices_by_name,
+  1,  ob_proximity_tag__number_ranges,
+  (ProtobufCMessageInit) ob_proximity_tag__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor open_beacon__ob_proximity_log__field_descriptors[3] =
+static const ProtobufCFieldDescriptor ob_proximity_log__field_descriptors[3] =
 {
   {
     "time",
@@ -486,7 +486,7 @@ static const ProtobufCFieldDescriptor open_beacon__ob_proximity_log__field_descr
     PROTOBUF_C_LABEL_REQUIRED,
     PROTOBUF_C_TYPE_UINT32,
     0,   /* quantifier_offset */
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObProximityLog, time),
+    PROTOBUF_C_OFFSETOF(ObProximityLog, time),
     NULL,
     NULL,
     0,            /* packed */
@@ -498,7 +498,7 @@ static const ProtobufCFieldDescriptor open_beacon__ob_proximity_log__field_descr
     PROTOBUF_C_LABEL_REQUIRED,
     PROTOBUF_C_TYPE_UINT32,
     0,   /* quantifier_offset */
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObProximityLog, duration),
+    PROTOBUF_C_OFFSETOF(ObProximityLog, duration),
     NULL,
     NULL,
     0,            /* packed */
@@ -509,48 +509,48 @@ static const ProtobufCFieldDescriptor open_beacon__ob_proximity_log__field_descr
     3,
     PROTOBUF_C_LABEL_REPEATED,
     PROTOBUF_C_TYPE_MESSAGE,
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObProximityLog, n_tag),
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObProximityLog, tag),
-    &open_beacon__ob_proximity_tag__descriptor,
+    PROTOBUF_C_OFFSETOF(ObProximityLog, n_tag),
+    PROTOBUF_C_OFFSETOF(ObProximityLog, tag),
+    &ob_proximity_tag__descriptor,
     NULL,
     0,            /* packed */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
 };
-static const unsigned open_beacon__ob_proximity_log__field_indices_by_name[] = {
+static const unsigned ob_proximity_log__field_indices_by_name[] = {
   1,   /* field[1] = duration */
   2,   /* field[2] = tag */
   0,   /* field[0] = time */
 };
-static const ProtobufCIntRange open_beacon__ob_proximity_log__number_ranges[1 + 1] =
+static const ProtobufCIntRange ob_proximity_log__number_ranges[1 + 1] =
 {
   { 1, 0 },
   { 0, 3 }
 };
-const ProtobufCMessageDescriptor open_beacon__ob_proximity_log__descriptor =
+const ProtobufCMessageDescriptor ob_proximity_log__descriptor =
 {
   PROTOBUF_C_MESSAGE_DESCRIPTOR_MAGIC,
-  "OpenBeacon.ObProximityLog",
   "ObProximityLog",
-  "OpenBeacon__ObProximityLog",
-  "OpenBeacon",
-  sizeof(OpenBeacon__ObProximityLog),
+  "ObProximityLog",
+  "ObProximityLog",
+  "",
+  sizeof(ObProximityLog),
   3,
-  open_beacon__ob_proximity_log__field_descriptors,
-  open_beacon__ob_proximity_log__field_indices_by_name,
-  1,  open_beacon__ob_proximity_log__number_ranges,
-  (ProtobufCMessageInit) open_beacon__ob_proximity_log__init,
+  ob_proximity_log__field_descriptors,
+  ob_proximity_log__field_indices_by_name,
+  1,  ob_proximity_log__number_ranges,
+  (ProtobufCMessageInit) ob_proximity_log__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor open_beacon__ob_tag__field_descriptors[9] =
+static const ProtobufCFieldDescriptor ob_tag__field_descriptors[9] =
 {
   {
     "tag_id",
     1,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_UINT32,
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTag, has_tag_id),
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTag, tag_id),
+    PROTOBUF_C_OFFSETOF(ObTag, has_tag_id),
+    PROTOBUF_C_OFFSETOF(ObTag, tag_id),
     NULL,
     NULL,
     0,            /* packed */
@@ -561,8 +561,8 @@ static const ProtobufCFieldDescriptor open_beacon__ob_tag__field_descriptors[9] 
     2,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_UINT32,
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTag, has_tag_time),
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTag, tag_time),
+    PROTOBUF_C_OFFSETOF(ObTag, has_tag_time),
+    PROTOBUF_C_OFFSETOF(ObTag, tag_time),
     NULL,
     NULL,
     0,            /* packed */
@@ -573,8 +573,8 @@ static const ProtobufCFieldDescriptor open_beacon__ob_tag__field_descriptors[9] 
     3,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_UINT32,
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTag, has_tag_power_cycles),
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTag, tag_power_cycles),
+    PROTOBUF_C_OFFSETOF(ObTag, has_tag_power_cycles),
+    PROTOBUF_C_OFFSETOF(ObTag, tag_power_cycles),
     NULL,
     NULL,
     0,            /* packed */
@@ -585,8 +585,8 @@ static const ProtobufCFieldDescriptor open_beacon__ob_tag__field_descriptors[9] 
     4,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_UINT32,
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTag, has_tag_strength),
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTag, tag_strength),
+    PROTOBUF_C_OFFSETOF(ObTag, has_tag_strength),
+    PROTOBUF_C_OFFSETOF(ObTag, tag_strength),
     NULL,
     NULL,
     0,            /* packed */
@@ -597,8 +597,8 @@ static const ProtobufCFieldDescriptor open_beacon__ob_tag__field_descriptors[9] 
     5,
     PROTOBUF_C_LABEL_REPEATED,
     PROTOBUF_C_TYPE_UINT32,
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTag, n_forwarder_id),
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTag, forwarder_id),
+    PROTOBUF_C_OFFSETOF(ObTag, n_forwarder_id),
+    PROTOBUF_C_OFFSETOF(ObTag, forwarder_id),
     NULL,
     NULL,
     0,            /* packed */
@@ -609,8 +609,8 @@ static const ProtobufCFieldDescriptor open_beacon__ob_tag__field_descriptors[9] 
     6,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_UINT32,
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTag, has_forwarder_storage_time),
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTag, forwarder_storage_time),
+    PROTOBUF_C_OFFSETOF(ObTag, has_forwarder_storage_time),
+    PROTOBUF_C_OFFSETOF(ObTag, forwarder_storage_time),
     NULL,
     NULL,
     0,            /* packed */
@@ -621,8 +621,8 @@ static const ProtobufCFieldDescriptor open_beacon__ob_tag__field_descriptors[9] 
     7,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_UINT64,
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTag, has_rx_time),
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTag, rx_time),
+    PROTOBUF_C_OFFSETOF(ObTag, has_rx_time),
+    PROTOBUF_C_OFFSETOF(ObTag, rx_time),
     NULL,
     NULL,
     0,            /* packed */
@@ -634,8 +634,8 @@ static const ProtobufCFieldDescriptor open_beacon__ob_tag__field_descriptors[9] 
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_MESSAGE,
     0,   /* quantifier_offset */
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTag, tracking),
-    &open_beacon__ob_tracking__descriptor,
+    PROTOBUF_C_OFFSETOF(ObTag, tracking),
+    &ob_tracking__descriptor,
     NULL,
     0,            /* packed */
     0,NULL,NULL    /* reserved1,reserved2, etc */
@@ -645,15 +645,15 @@ static const ProtobufCFieldDescriptor open_beacon__ob_tag__field_descriptors[9] 
     15,
     PROTOBUF_C_LABEL_REPEATED,
     PROTOBUF_C_TYPE_MESSAGE,
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTag, n_proximity),
-    PROTOBUF_C_OFFSETOF(OpenBeacon__ObTag, proximity),
-    &open_beacon__ob_proximity_log__descriptor,
+    PROTOBUF_C_OFFSETOF(ObTag, n_proximity),
+    PROTOBUF_C_OFFSETOF(ObTag, proximity),
+    &ob_proximity_log__descriptor,
     NULL,
     0,            /* packed */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
 };
-static const unsigned open_beacon__ob_tag__field_indices_by_name[] = {
+static const unsigned ob_tag__field_indices_by_name[] = {
   4,   /* field[4] = forwarder_id */
   5,   /* field[5] = forwarder_storage_time */
   8,   /* field[8] = proximity */
@@ -664,42 +664,42 @@ static const unsigned open_beacon__ob_tag__field_indices_by_name[] = {
   1,   /* field[1] = tag_time */
   7,   /* field[7] = tracking */
 };
-static const ProtobufCIntRange open_beacon__ob_tag__number_ranges[2 + 1] =
+static const ProtobufCIntRange ob_tag__number_ranges[2 + 1] =
 {
   { 1, 0 },
   { 14, 7 },
   { 0, 9 }
 };
-const ProtobufCMessageDescriptor open_beacon__ob_tag__descriptor =
+const ProtobufCMessageDescriptor ob_tag__descriptor =
 {
   PROTOBUF_C_MESSAGE_DESCRIPTOR_MAGIC,
-  "OpenBeacon.ObTag",
   "ObTag",
-  "OpenBeacon__ObTag",
-  "OpenBeacon",
-  sizeof(OpenBeacon__ObTag),
+  "ObTag",
+  "ObTag",
+  "",
+  sizeof(ObTag),
   9,
-  open_beacon__ob_tag__field_descriptors,
-  open_beacon__ob_tag__field_indices_by_name,
-  2,  open_beacon__ob_tag__number_ranges,
-  (ProtobufCMessageInit) open_beacon__ob_tag__init,
+  ob_tag__field_descriptors,
+  ob_tag__field_indices_by_name,
+  2,  ob_tag__number_ranges,
+  (ProtobufCMessageInit) ob_tag__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-const ProtobufCEnumValue open_beacon__ob_unit__enum_values_by_number[8] =
+const ProtobufCEnumValue ob_unit__enum_values_by_number[8] =
 {
-  { "OB_UNIT_NONE", "OPEN_BEACON__OB_UNIT__OB_UNIT_NONE", 0 },
-  { "OB_UNIT_PIXEL", "OPEN_BEACON__OB_UNIT__OB_UNIT_PIXEL", 1 },
-  { "OB_UNIT_MILLIMETER", "OPEN_BEACON__OB_UNIT__OB_UNIT_MILLIMETER", 2 },
-  { "OB_UNIT_CENTIMETER", "OPEN_BEACON__OB_UNIT__OB_UNIT_CENTIMETER", 3 },
-  { "OB_UNIT_METER", "OPEN_BEACON__OB_UNIT__OB_UNIT_METER", 4 },
-  { "OB_UNIT_INCH", "OPEN_BEACON__OB_UNIT__OB_UNIT_INCH", 5 },
-  { "OB_UNIT_FEET", "OPEN_BEACON__OB_UNIT__OB_UNIT_FEET", 6 },
-  { "OB_UNIT_YARD", "OPEN_BEACON__OB_UNIT__OB_UNIT_YARD", 7 },
+  { "OB_UNIT_NONE", "OB_UNIT__OB_UNIT_NONE", 0 },
+  { "OB_UNIT_PIXEL", "OB_UNIT__OB_UNIT_PIXEL", 1 },
+  { "OB_UNIT_MILLIMETER", "OB_UNIT__OB_UNIT_MILLIMETER", 2 },
+  { "OB_UNIT_CENTIMETER", "OB_UNIT__OB_UNIT_CENTIMETER", 3 },
+  { "OB_UNIT_METER", "OB_UNIT__OB_UNIT_METER", 4 },
+  { "OB_UNIT_INCH", "OB_UNIT__OB_UNIT_INCH", 5 },
+  { "OB_UNIT_FEET", "OB_UNIT__OB_UNIT_FEET", 6 },
+  { "OB_UNIT_YARD", "OB_UNIT__OB_UNIT_YARD", 7 },
 };
-static const ProtobufCIntRange open_beacon__ob_unit__value_ranges[] = {
+static const ProtobufCIntRange ob_unit__value_ranges[] = {
 {0, 0},{0, 8}
 };
-const ProtobufCEnumValueIndex open_beacon__ob_unit__enum_values_by_name[8] =
+const ProtobufCEnumValueIndex ob_unit__enum_values_by_name[8] =
 {
   { "OB_UNIT_CENTIMETER", 3 },
   { "OB_UNIT_FEET", 6 },
@@ -710,18 +710,18 @@ const ProtobufCEnumValueIndex open_beacon__ob_unit__enum_values_by_name[8] =
   { "OB_UNIT_PIXEL", 1 },
   { "OB_UNIT_YARD", 7 },
 };
-const ProtobufCEnumDescriptor open_beacon__ob_unit__descriptor =
+const ProtobufCEnumDescriptor ob_unit__descriptor =
 {
   PROTOBUF_C_ENUM_DESCRIPTOR_MAGIC,
-  "OpenBeacon.ObUnit",
   "ObUnit",
-  "OpenBeacon__ObUnit",
-  "OpenBeacon",
+  "ObUnit",
+  "ObUnit",
+  "",
   8,
-  open_beacon__ob_unit__enum_values_by_number,
+  ob_unit__enum_values_by_number,
   8,
-  open_beacon__ob_unit__enum_values_by_name,
+  ob_unit__enum_values_by_name,
   1,
-  open_beacon__ob_unit__value_ranges,
+  ob_unit__value_ranges,
   NULL,NULL,NULL,NULL   /* reserved[1234] */
 };

@@ -8,29 +8,29 @@
 PROTOBUF_C_BEGIN_DECLS
 
 
-typedef struct _OpenBeacon__ObTracking OpenBeacon__ObTracking;
-typedef struct _OpenBeacon__ObProximityTagPower OpenBeacon__ObProximityTagPower;
-typedef struct _OpenBeacon__ObProximityTag OpenBeacon__ObProximityTag;
-typedef struct _OpenBeacon__ObProximityLog OpenBeacon__ObProximityLog;
-typedef struct _OpenBeacon__ObTag OpenBeacon__ObTag;
+typedef struct _ObTracking ObTracking;
+typedef struct _ObProximityTagPower ObProximityTagPower;
+typedef struct _ObProximityTag ObProximityTag;
+typedef struct _ObProximityLog ObProximityLog;
+typedef struct _ObTag ObTag;
 
 
 /* --- enums --- */
 
-typedef enum _OpenBeacon__ObUnit {
-  OPEN_BEACON__OB_UNIT__OB_UNIT_NONE = 0,
-  OPEN_BEACON__OB_UNIT__OB_UNIT_PIXEL = 1,
-  OPEN_BEACON__OB_UNIT__OB_UNIT_MILLIMETER = 2,
-  OPEN_BEACON__OB_UNIT__OB_UNIT_CENTIMETER = 3,
-  OPEN_BEACON__OB_UNIT__OB_UNIT_METER = 4,
-  OPEN_BEACON__OB_UNIT__OB_UNIT_INCH = 5,
-  OPEN_BEACON__OB_UNIT__OB_UNIT_FEET = 6,
-  OPEN_BEACON__OB_UNIT__OB_UNIT_YARD = 7
-} OpenBeacon__ObUnit;
+typedef enum _ObUnit {
+  OB_UNIT__OB_UNIT_NONE = 0,
+  OB_UNIT__OB_UNIT_PIXEL = 1,
+  OB_UNIT__OB_UNIT_MILLIMETER = 2,
+  OB_UNIT__OB_UNIT_CENTIMETER = 3,
+  OB_UNIT__OB_UNIT_METER = 4,
+  OB_UNIT__OB_UNIT_INCH = 5,
+  OB_UNIT__OB_UNIT_FEET = 6,
+  OB_UNIT__OB_UNIT_YARD = 7
+} ObUnit;
 
 /* --- messages --- */
 
-struct  _OpenBeacon__ObTracking
+struct  _ObTracking
 {
   ProtobufCMessage base;
   protobuf_c_boolean has_x;
@@ -40,7 +40,7 @@ struct  _OpenBeacon__ObTracking
   protobuf_c_boolean has_z;
   int32_t z;
   protobuf_c_boolean has_unit;
-  OpenBeacon__ObUnit unit;
+  ObUnit unit;
   size_t n_reader_id;
   uint32_t *reader_id;
   protobuf_c_boolean has_tx_strength;
@@ -54,12 +54,12 @@ struct  _OpenBeacon__ObTracking
   protobuf_c_boolean has_installation_id;
   uint32_t installation_id;
 };
-#define OPEN_BEACON__OB_TRACKING__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&open_beacon__ob_tracking__descriptor) \
+#define OB_TRACKING__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&ob_tracking__descriptor) \
     , 0,0, 0,0, 0,0, 0,0, 0,NULL, 0,0, 0,0, 0,0, 0,0, 0,0 }
 
 
-struct  _OpenBeacon__ObProximityTagPower
+struct  _ObProximityTagPower
 {
   ProtobufCMessage base;
   protobuf_c_boolean has_power;
@@ -67,37 +67,37 @@ struct  _OpenBeacon__ObProximityTagPower
   protobuf_c_boolean has_count;
   uint32_t count;
 };
-#define OPEN_BEACON__OB_PROXIMITY_TAG_POWER__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&open_beacon__ob_proximity_tag_power__descriptor) \
+#define OB_PROXIMITY_TAG_POWER__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&ob_proximity_tag_power__descriptor) \
     , 0,0, 0,0 }
 
 
-struct  _OpenBeacon__ObProximityTag
+struct  _ObProximityTag
 {
   ProtobufCMessage base;
   uint32_t id;
   size_t n_power;
-  OpenBeacon__ObProximityTagPower **power;
+  ObProximityTagPower **power;
 };
-#define OPEN_BEACON__OB_PROXIMITY_TAG__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&open_beacon__ob_proximity_tag__descriptor) \
+#define OB_PROXIMITY_TAG__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&ob_proximity_tag__descriptor) \
     , 0, 0,NULL }
 
 
-struct  _OpenBeacon__ObProximityLog
+struct  _ObProximityLog
 {
   ProtobufCMessage base;
   uint32_t time;
   uint32_t duration;
   size_t n_tag;
-  OpenBeacon__ObProximityTag **tag;
+  ObProximityTag **tag;
 };
-#define OPEN_BEACON__OB_PROXIMITY_LOG__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&open_beacon__ob_proximity_log__descriptor) \
+#define OB_PROXIMITY_LOG__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&ob_proximity_log__descriptor) \
     , 0, 0, 0,NULL }
 
 
-struct  _OpenBeacon__ObTag
+struct  _ObTag
 {
   ProtobufCMessage base;
   protobuf_c_boolean has_tag_id;
@@ -114,126 +114,126 @@ struct  _OpenBeacon__ObTag
   uint32_t forwarder_storage_time;
   protobuf_c_boolean has_rx_time;
   uint64_t rx_time;
-  OpenBeacon__ObTracking *tracking;
+  ObTracking *tracking;
   size_t n_proximity;
-  OpenBeacon__ObProximityLog **proximity;
+  ObProximityLog **proximity;
 };
-#define OPEN_BEACON__OB_TAG__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&open_beacon__ob_tag__descriptor) \
+#define OB_TAG__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&ob_tag__descriptor) \
     , 0,0, 0,0, 0,0, 0,0, 0,NULL, 0,0, 0,0, NULL, 0,NULL }
 
 
-/* OpenBeacon__ObTracking methods */
-void   open_beacon__ob_tracking__init
-                     (OpenBeacon__ObTracking         *message);
-size_t open_beacon__ob_tracking__get_packed_size
-                     (const OpenBeacon__ObTracking   *message);
-size_t open_beacon__ob_tracking__pack
-                     (const OpenBeacon__ObTracking   *message,
+/* ObTracking methods */
+void   ob_tracking__init
+                     (ObTracking         *message);
+size_t ob_tracking__get_packed_size
+                     (const ObTracking   *message);
+size_t ob_tracking__pack
+                     (const ObTracking   *message,
                       uint8_t             *out);
-size_t open_beacon__ob_tracking__pack_to_buffer
-                     (const OpenBeacon__ObTracking   *message,
+size_t ob_tracking__pack_to_buffer
+                     (const ObTracking   *message,
                       ProtobufCBuffer     *buffer);
-OpenBeacon__ObTracking *
-       open_beacon__ob_tracking__unpack
+ObTracking *
+       ob_tracking__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data);
-void   open_beacon__ob_tracking__free_unpacked
-                     (OpenBeacon__ObTracking *message,
+void   ob_tracking__free_unpacked
+                     (ObTracking *message,
                       ProtobufCAllocator *allocator);
-/* OpenBeacon__ObProximityTagPower methods */
-void   open_beacon__ob_proximity_tag_power__init
-                     (OpenBeacon__ObProximityTagPower         *message);
-size_t open_beacon__ob_proximity_tag_power__get_packed_size
-                     (const OpenBeacon__ObProximityTagPower   *message);
-size_t open_beacon__ob_proximity_tag_power__pack
-                     (const OpenBeacon__ObProximityTagPower   *message,
+/* ObProximityTagPower methods */
+void   ob_proximity_tag_power__init
+                     (ObProximityTagPower         *message);
+size_t ob_proximity_tag_power__get_packed_size
+                     (const ObProximityTagPower   *message);
+size_t ob_proximity_tag_power__pack
+                     (const ObProximityTagPower   *message,
                       uint8_t             *out);
-size_t open_beacon__ob_proximity_tag_power__pack_to_buffer
-                     (const OpenBeacon__ObProximityTagPower   *message,
+size_t ob_proximity_tag_power__pack_to_buffer
+                     (const ObProximityTagPower   *message,
                       ProtobufCBuffer     *buffer);
-OpenBeacon__ObProximityTagPower *
-       open_beacon__ob_proximity_tag_power__unpack
+ObProximityTagPower *
+       ob_proximity_tag_power__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data);
-void   open_beacon__ob_proximity_tag_power__free_unpacked
-                     (OpenBeacon__ObProximityTagPower *message,
+void   ob_proximity_tag_power__free_unpacked
+                     (ObProximityTagPower *message,
                       ProtobufCAllocator *allocator);
-/* OpenBeacon__ObProximityTag methods */
-void   open_beacon__ob_proximity_tag__init
-                     (OpenBeacon__ObProximityTag         *message);
-size_t open_beacon__ob_proximity_tag__get_packed_size
-                     (const OpenBeacon__ObProximityTag   *message);
-size_t open_beacon__ob_proximity_tag__pack
-                     (const OpenBeacon__ObProximityTag   *message,
+/* ObProximityTag methods */
+void   ob_proximity_tag__init
+                     (ObProximityTag         *message);
+size_t ob_proximity_tag__get_packed_size
+                     (const ObProximityTag   *message);
+size_t ob_proximity_tag__pack
+                     (const ObProximityTag   *message,
                       uint8_t             *out);
-size_t open_beacon__ob_proximity_tag__pack_to_buffer
-                     (const OpenBeacon__ObProximityTag   *message,
+size_t ob_proximity_tag__pack_to_buffer
+                     (const ObProximityTag   *message,
                       ProtobufCBuffer     *buffer);
-OpenBeacon__ObProximityTag *
-       open_beacon__ob_proximity_tag__unpack
+ObProximityTag *
+       ob_proximity_tag__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data);
-void   open_beacon__ob_proximity_tag__free_unpacked
-                     (OpenBeacon__ObProximityTag *message,
+void   ob_proximity_tag__free_unpacked
+                     (ObProximityTag *message,
                       ProtobufCAllocator *allocator);
-/* OpenBeacon__ObProximityLog methods */
-void   open_beacon__ob_proximity_log__init
-                     (OpenBeacon__ObProximityLog         *message);
-size_t open_beacon__ob_proximity_log__get_packed_size
-                     (const OpenBeacon__ObProximityLog   *message);
-size_t open_beacon__ob_proximity_log__pack
-                     (const OpenBeacon__ObProximityLog   *message,
+/* ObProximityLog methods */
+void   ob_proximity_log__init
+                     (ObProximityLog         *message);
+size_t ob_proximity_log__get_packed_size
+                     (const ObProximityLog   *message);
+size_t ob_proximity_log__pack
+                     (const ObProximityLog   *message,
                       uint8_t             *out);
-size_t open_beacon__ob_proximity_log__pack_to_buffer
-                     (const OpenBeacon__ObProximityLog   *message,
+size_t ob_proximity_log__pack_to_buffer
+                     (const ObProximityLog   *message,
                       ProtobufCBuffer     *buffer);
-OpenBeacon__ObProximityLog *
-       open_beacon__ob_proximity_log__unpack
+ObProximityLog *
+       ob_proximity_log__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data);
-void   open_beacon__ob_proximity_log__free_unpacked
-                     (OpenBeacon__ObProximityLog *message,
+void   ob_proximity_log__free_unpacked
+                     (ObProximityLog *message,
                       ProtobufCAllocator *allocator);
-/* OpenBeacon__ObTag methods */
-void   open_beacon__ob_tag__init
-                     (OpenBeacon__ObTag         *message);
-size_t open_beacon__ob_tag__get_packed_size
-                     (const OpenBeacon__ObTag   *message);
-size_t open_beacon__ob_tag__pack
-                     (const OpenBeacon__ObTag   *message,
+/* ObTag methods */
+void   ob_tag__init
+                     (ObTag         *message);
+size_t ob_tag__get_packed_size
+                     (const ObTag   *message);
+size_t ob_tag__pack
+                     (const ObTag   *message,
                       uint8_t             *out);
-size_t open_beacon__ob_tag__pack_to_buffer
-                     (const OpenBeacon__ObTag   *message,
+size_t ob_tag__pack_to_buffer
+                     (const ObTag   *message,
                       ProtobufCBuffer     *buffer);
-OpenBeacon__ObTag *
-       open_beacon__ob_tag__unpack
+ObTag *
+       ob_tag__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data);
-void   open_beacon__ob_tag__free_unpacked
-                     (OpenBeacon__ObTag *message,
+void   ob_tag__free_unpacked
+                     (ObTag *message,
                       ProtobufCAllocator *allocator);
 /* --- per-message closures --- */
 
-typedef void (*OpenBeacon__ObTracking_Closure)
-                 (const OpenBeacon__ObTracking *message,
+typedef void (*ObTracking_Closure)
+                 (const ObTracking *message,
                   void *closure_data);
-typedef void (*OpenBeacon__ObProximityTagPower_Closure)
-                 (const OpenBeacon__ObProximityTagPower *message,
+typedef void (*ObProximityTagPower_Closure)
+                 (const ObProximityTagPower *message,
                   void *closure_data);
-typedef void (*OpenBeacon__ObProximityTag_Closure)
-                 (const OpenBeacon__ObProximityTag *message,
+typedef void (*ObProximityTag_Closure)
+                 (const ObProximityTag *message,
                   void *closure_data);
-typedef void (*OpenBeacon__ObProximityLog_Closure)
-                 (const OpenBeacon__ObProximityLog *message,
+typedef void (*ObProximityLog_Closure)
+                 (const ObProximityLog *message,
                   void *closure_data);
-typedef void (*OpenBeacon__ObTag_Closure)
-                 (const OpenBeacon__ObTag *message,
+typedef void (*ObTag_Closure)
+                 (const ObTag *message,
                   void *closure_data);
 
 /* --- services --- */
@@ -241,12 +241,12 @@ typedef void (*OpenBeacon__ObTag_Closure)
 
 /* --- descriptors --- */
 
-extern const ProtobufCEnumDescriptor    open_beacon__ob_unit__descriptor;
-extern const ProtobufCMessageDescriptor open_beacon__ob_tracking__descriptor;
-extern const ProtobufCMessageDescriptor open_beacon__ob_proximity_tag_power__descriptor;
-extern const ProtobufCMessageDescriptor open_beacon__ob_proximity_tag__descriptor;
-extern const ProtobufCMessageDescriptor open_beacon__ob_proximity_log__descriptor;
-extern const ProtobufCMessageDescriptor open_beacon__ob_tag__descriptor;
+extern const ProtobufCEnumDescriptor    ob_unit__descriptor;
+extern const ProtobufCMessageDescriptor ob_tracking__descriptor;
+extern const ProtobufCMessageDescriptor ob_proximity_tag_power__descriptor;
+extern const ProtobufCMessageDescriptor ob_proximity_tag__descriptor;
+extern const ProtobufCMessageDescriptor ob_proximity_log__descriptor;
+extern const ProtobufCMessageDescriptor ob_tag__descriptor;
 
 PROTOBUF_C_END_DECLS
 
