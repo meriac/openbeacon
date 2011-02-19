@@ -37,6 +37,9 @@ message ObTracking {
 }
 
 message ObProximityTagPower {
+  // use this id-range for extending this message with custom types
+  extensions 100 to 127;
+
   // transmit strength of the packet received
   optional uint32            power = 1;
   // received count
