@@ -1,6 +1,8 @@
 <?php
+function read_proto($file)
+{
     $body = '';
-    foreach(file('openbeacon.proto') as $line)
+    foreach(file($file) as $line)
     {
 	$line = preg_replace('/\/\/ .*$/','',$line);
 	$line = preg_replace('/ [ ]+/',' ',$line);
@@ -10,7 +12,6 @@
     }
 
     $proto = array();
-
     if(preg_match_all('/(?P<type>[a-z]+) (?P<name>[a-z]+) {(?P<content>[^}]+)}/i',$body,$matches))
     {
 	foreach($matches['name'] as $id => $name)
@@ -48,6 +49,10 @@
 	}
     }
     ksort($proto);
+    return $proto;
+}
 
-    print_r($proto);
+
+$proto = read_proto('openbeacon.proto');
+print_r($proto);
 ?>
