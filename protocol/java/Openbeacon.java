@@ -781,7 +781,8 @@ public final class Openbeacon {
   }
   
   public static final class ObProximityTagPower extends
-      com.google.protobuf.GeneratedMessage {
+      com.google.protobuf.GeneratedMessage.ExtendableMessage<
+        ObProximityTagPower> {
     // Use ObProximityTagPower.newBuilder() to construct.
     private ObProximityTagPower() {
       initFields();
@@ -824,18 +825,22 @@ public final class Openbeacon {
     private void initFields() {
     }
     public final boolean isInitialized() {
+      if (!extensionsAreInitialized()) return false;
       return true;
     }
     
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       getSerializedSize();
+      com.google.protobuf.GeneratedMessage.ExtendableMessage
+        .ExtensionWriter extensionWriter = newExtensionWriter();
       if (hasPower()) {
         output.writeUInt32(1, getPower());
       }
       if (hasCount()) {
         output.writeUInt32(2, getCount());
       }
+      extensionWriter.writeUntil(128, output);
       getUnknownFields().writeTo(output);
     }
     
@@ -853,6 +858,7 @@ public final class Openbeacon {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(2, getCount());
       }
+      size += extensionsSerializedSize();
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
       return size;
@@ -933,7 +939,8 @@ public final class Openbeacon {
     public Builder toBuilder() { return newBuilder(this); }
     
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> {
+        com.google.protobuf.GeneratedMessage.ExtendableBuilder<
+          Openbeacon.ObProximityTagPower, Builder> {
       private Openbeacon.ObProximityTagPower result;
       
       // Construct using Openbeacon.ObProximityTagPower.newBuilder()
@@ -1017,6 +1024,7 @@ public final class Openbeacon {
         if (other.hasCount()) {
           setCount(other.getCount());
         }
+        this.mergeExtensionFields(other);
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
@@ -1154,6 +1162,9 @@ public final class Openbeacon {
     }
     public final boolean isInitialized() {
       if (!hasId) return false;
+      for (Openbeacon.ObProximityTagPower element : getPowerList()) {
+        if (!element.isInitialized()) return false;
+      }
       if (!extensionsAreInitialized()) return false;
       return true;
     }
@@ -2667,22 +2678,23 @@ public final class Openbeacon {
       "2\007.ObUnit\022\021\n\treader_id\030\005 \003(\r\022\023\n\013tx_stren" +
       "gth\030\006 \001(\r\022\017\n\007area_id\030\007 \001(\r\022\017\n\007room_id\030\010 " +
       "\001(\r\022\023\n\013building_id\030\t \001(\r\022\027\n\017installation" +
-      "_id\030\n \001(\r*\005\010d\020\200\001\"3\n\023ObProximityTagPower\022" +
-      "\r\n\005power\030\001 \001(\r\022\r\n\005count\030\002 \001(\r\"H\n\016ObProxi" +
-      "mityTag\022\n\n\002id\030\001 \002(\r\022#\n\005power\030\002 \003(\0132\024.ObP" +
-      "roximityTagPower*\005\010d\020\200\001\"U\n\016ObProximityLo" +
-      "g\022\014\n\004time\030\001 \002(\r\022\020\n\010duration\030\002 \002(\r\022\034\n\003tag",
-      "\030\003 \003(\0132\017.ObProximityTag*\005\010d\020\200\001\"\352\001\n\005ObTag" +
-      "\022\016\n\006tag_id\030\001 \001(\r\022\020\n\010tag_time\030\002 \001(\r\022\030\n\020ta" +
-      "g_power_cycles\030\003 \001(\r\022\024\n\014tag_strength\030\004 \001" +
-      "(\r\022\024\n\014forwarder_id\030\005 \003(\r\022\036\n\026forwarder_st" +
-      "orage_time\030\006 \001(\r\022\017\n\007rx_time\030\007 \001(\004\022\035\n\010tra" +
-      "cking\030\016 \001(\0132\013.ObTracking\022\"\n\tproximity\030\017 " +
-      "\003(\0132\017.ObProximityLog*\005\010d\020\200\001*\246\001\n\006ObUnit\022\020" +
-      "\n\014OB_UNIT_NONE\020\000\022\021\n\rOB_UNIT_PIXEL\020\001\022\026\n\022O" +
-      "B_UNIT_MILLIMETER\020\002\022\026\n\022OB_UNIT_CENTIMETE" +
-      "R\020\003\022\021\n\rOB_UNIT_METER\020\004\022\020\n\014OB_UNIT_INCH\020\005",
-      "\022\020\n\014OB_UNIT_FEET\020\006\022\020\n\014OB_UNIT_YARD\020\007"
+      "_id\030\n \001(\r*\005\010d\020\200\001\":\n\023ObProximityTagPower\022" +
+      "\r\n\005power\030\001 \001(\r\022\r\n\005count\030\002 \001(\r*\005\010d\020\200\001\"H\n\016" +
+      "ObProximityTag\022\n\n\002id\030\001 \002(\r\022#\n\005power\030\002 \003(" +
+      "\0132\024.ObProximityTagPower*\005\010d\020\200\001\"U\n\016ObProx" +
+      "imityLog\022\014\n\004time\030\001 \002(\r\022\020\n\010duration\030\002 \002(\r",
+      "\022\034\n\003tag\030\003 \003(\0132\017.ObProximityTag*\005\010d\020\200\001\"\352\001" +
+      "\n\005ObTag\022\016\n\006tag_id\030\001 \001(\r\022\020\n\010tag_time\030\002 \001(" +
+      "\r\022\030\n\020tag_power_cycles\030\003 \001(\r\022\024\n\014tag_stren" +
+      "gth\030\004 \001(\r\022\024\n\014forwarder_id\030\005 \003(\r\022\036\n\026forwa" +
+      "rder_storage_time\030\006 \001(\r\022\017\n\007rx_time\030\007 \001(\004" +
+      "\022\035\n\010tracking\030\016 \001(\0132\013.ObTracking\022\"\n\tproxi" +
+      "mity\030\017 \003(\0132\017.ObProximityLog*\005\010d\020\200\001*\246\001\n\006O" +
+      "bUnit\022\020\n\014OB_UNIT_NONE\020\000\022\021\n\rOB_UNIT_PIXEL" +
+      "\020\001\022\026\n\022OB_UNIT_MILLIMETER\020\002\022\026\n\022OB_UNIT_CE" +
+      "NTIMETER\020\003\022\021\n\rOB_UNIT_METER\020\004\022\020\n\014OB_UNIT",
+      "_INCH\020\005\022\020\n\014OB_UNIT_FEET\020\006\022\020\n\014OB_UNIT_YAR" +
+      "D\020\007"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

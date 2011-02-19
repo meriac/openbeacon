@@ -74,7 +74,7 @@ void protobuf_AssignDesc_openbeacon_2eproto() {
       ObProximityTagPower_offsets_,
       GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ObProximityTagPower, _has_bits_[0]),
       GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ObProximityTagPower, _unknown_fields_),
-      -1,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ObProximityTagPower, _extensions_),
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(ObProximityTagPower));
@@ -186,22 +186,23 @@ void protobuf_AddDesc_openbeacon_2eproto() {
     "2\007.ObUnit\022\021\n\treader_id\030\005 \003(\r\022\023\n\013tx_stren"
     "gth\030\006 \001(\r\022\017\n\007area_id\030\007 \001(\r\022\017\n\007room_id\030\010 "
     "\001(\r\022\023\n\013building_id\030\t \001(\r\022\027\n\017installation"
-    "_id\030\n \001(\r*\005\010d\020\200\001\"3\n\023ObProximityTagPower\022"
-    "\r\n\005power\030\001 \001(\r\022\r\n\005count\030\002 \001(\r\"H\n\016ObProxi"
-    "mityTag\022\n\n\002id\030\001 \002(\r\022#\n\005power\030\002 \003(\0132\024.ObP"
-    "roximityTagPower*\005\010d\020\200\001\"U\n\016ObProximityLo"
-    "g\022\014\n\004time\030\001 \002(\r\022\020\n\010duration\030\002 \002(\r\022\034\n\003tag"
-    "\030\003 \003(\0132\017.ObProximityTag*\005\010d\020\200\001\"\352\001\n\005ObTag"
-    "\022\016\n\006tag_id\030\001 \001(\r\022\020\n\010tag_time\030\002 \001(\r\022\030\n\020ta"
-    "g_power_cycles\030\003 \001(\r\022\024\n\014tag_strength\030\004 \001"
-    "(\r\022\024\n\014forwarder_id\030\005 \003(\r\022\036\n\026forwarder_st"
-    "orage_time\030\006 \001(\r\022\017\n\007rx_time\030\007 \001(\004\022\035\n\010tra"
-    "cking\030\016 \001(\0132\013.ObTracking\022\"\n\tproximity\030\017 "
-    "\003(\0132\017.ObProximityLog*\005\010d\020\200\001*\246\001\n\006ObUnit\022\020"
-    "\n\014OB_UNIT_NONE\020\000\022\021\n\rOB_UNIT_PIXEL\020\001\022\026\n\022O"
-    "B_UNIT_MILLIMETER\020\002\022\026\n\022OB_UNIT_CENTIMETE"
-    "R\020\003\022\021\n\rOB_UNIT_METER\020\004\022\020\n\014OB_UNIT_INCH\020\005"
-    "\022\020\n\014OB_UNIT_FEET\020\006\022\020\n\014OB_UNIT_YARD\020\007", 836);
+    "_id\030\n \001(\r*\005\010d\020\200\001\":\n\023ObProximityTagPower\022"
+    "\r\n\005power\030\001 \001(\r\022\r\n\005count\030\002 \001(\r*\005\010d\020\200\001\"H\n\016"
+    "ObProximityTag\022\n\n\002id\030\001 \002(\r\022#\n\005power\030\002 \003("
+    "\0132\024.ObProximityTagPower*\005\010d\020\200\001\"U\n\016ObProx"
+    "imityLog\022\014\n\004time\030\001 \002(\r\022\020\n\010duration\030\002 \002(\r"
+    "\022\034\n\003tag\030\003 \003(\0132\017.ObProximityTag*\005\010d\020\200\001\"\352\001"
+    "\n\005ObTag\022\016\n\006tag_id\030\001 \001(\r\022\020\n\010tag_time\030\002 \001("
+    "\r\022\030\n\020tag_power_cycles\030\003 \001(\r\022\024\n\014tag_stren"
+    "gth\030\004 \001(\r\022\024\n\014forwarder_id\030\005 \003(\r\022\036\n\026forwa"
+    "rder_storage_time\030\006 \001(\r\022\017\n\007rx_time\030\007 \001(\004"
+    "\022\035\n\010tracking\030\016 \001(\0132\013.ObTracking\022\"\n\tproxi"
+    "mity\030\017 \003(\0132\017.ObProximityLog*\005\010d\020\200\001*\246\001\n\006O"
+    "bUnit\022\020\n\014OB_UNIT_NONE\020\000\022\021\n\rOB_UNIT_PIXEL"
+    "\020\001\022\026\n\022OB_UNIT_MILLIMETER\020\002\022\026\n\022OB_UNIT_CE"
+    "NTIMETER\020\003\022\021\n\rOB_UNIT_METER\020\004\022\020\n\014OB_UNIT"
+    "_INCH\020\005\022\020\n\014OB_UNIT_FEET\020\006\022\020\n\014OB_UNIT_YAR"
+    "D\020\007", 843);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "openbeacon.proto", &protobuf_RegisterTypes);
   ObTracking::default_instance_ = new ObTracking();
@@ -909,6 +910,7 @@ ObProximityTagPower* ObProximityTagPower::New() const {
 }
 
 void ObProximityTagPower::Clear() {
+  _extensions_.Clear();
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     power_ = 0u;
     count_ = 0u;
@@ -960,6 +962,11 @@ bool ObProximityTagPower::MergePartialFromCodedStream(
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
           return true;
         }
+        if ((800u <= tag && tag < 1024u)) {
+          DO_(_extensions_.ParseField(tag, input, default_instance_,
+                                      mutable_unknown_fields()));
+          continue;
+        }
         DO_(::google::protobuf::internal::WireFormat::SkipField(
               input, tag, mutable_unknown_fields()));
         break;
@@ -982,6 +989,10 @@ void ObProximityTagPower::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteUInt32(2, this->count(), output);
   }
   
+  // Extension range [100, 128)
+  _extensions_.SerializeWithCachedSizes(
+      100, 128, output);
+  
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -999,6 +1010,10 @@ void ObProximityTagPower::SerializeWithCachedSizes(
   if (_has_bit(1)) {
     target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(2, this->count(), target);
   }
+  
+  // Extension range [100, 128)
+  target = _extensions_.SerializeWithCachedSizesToArray(
+      100, 128, target);
   
   if (!unknown_fields().empty()) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
@@ -1026,6 +1041,8 @@ int ObProximityTagPower::ByteSize() const {
     }
     
   }
+  total_size += _extensions_.ByteSize();
+  
   if (!unknown_fields().empty()) {
     total_size +=
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
@@ -1059,6 +1076,7 @@ void ObProximityTagPower::MergeFrom(const ObProximityTagPower& from) {
       set_count(from.count());
     }
   }
+  _extensions_.MergeFrom(from._extensions_);
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
 
@@ -1076,7 +1094,8 @@ void ObProximityTagPower::CopyFrom(const ObProximityTagPower& from) {
 
 bool ObProximityTagPower::IsInitialized() const {
   
-  return true;
+  
+  if (!_extensions_.IsInitialized()) return false;  return true;
 }
 
 void ObProximityTagPower::Swap(ObProximityTagPower* other) {
@@ -1086,6 +1105,7 @@ void ObProximityTagPower::Swap(ObProximityTagPower* other) {
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);
+    _extensions_.Swap(&other->_extensions_);
   }
 }
 
@@ -1341,6 +1361,9 @@ void ObProximityTag::CopyFrom(const ObProximityTag& from) {
 bool ObProximityTag::IsInitialized() const {
   if ((_has_bits_[0] & 0x00000001) != 0x00000001) return false;
   
+  for (int i = 0; i < power_size(); i++) {
+    if (!this->power(i).IsInitialized()) return false;
+  }
   
   if (!_extensions_.IsInitialized()) return false;  return true;
 }

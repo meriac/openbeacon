@@ -299,8 +299,10 @@ class ObProximityTagPower : public ::google::protobuf::Message {
   inline ::google::protobuf::uint32 count() const;
   inline void set_count(::google::protobuf::uint32 value);
   
+  GOOGLE_PROTOBUF_EXTENSION_ACCESSORS(ObProximityTagPower)
   // @@protoc_insertion_point(class_scope:ObProximityTagPower)
  private:
+  ::google::protobuf::internal::ExtensionSet _extensions_;
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
   mutable int _cached_size_;
   
