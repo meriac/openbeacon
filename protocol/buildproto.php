@@ -1,8 +1,43 @@
+#!/usr/bin/php
 <?php
+
+define('WIRETYPE_VARIANT',     0);
+define('WIRETYPE_64BIT',       1);
+define('WIRETYPE_LENGTH',      2);
+define('WIRETYPE_GROUP_START', 3);
+define('WIRETYPE_GROUP_END',   4);
+define('WIRETYPE_32BIT',       5);
+
+$wire_type = array (
+    // Variant
+    'int32'    => WIRETYPE_VARIANT,
+    'int64'    => WIRETYPE_VARIANT,
+    'uint32'   => WIRETYPE_VARIANT,
+    'uint64'   => WIRETYPE_VARIANT,
+    'sint32'   => WIRETYPE_VARIANT,
+    'sint64'   => WIRETYPE_VARIANT,
+    'bool'     => WIRETYPE_VARIANT,
+    'enum'     => WIRETYPE_VARIANT,
+
+    // 64-bit
+    'fixed64'  => WIRETYPE_64BIT,
+    'sfixed64' => WIRETYPE_64BIT,
+    'double'   => WIRETYPE_64BIT,
+
+    // Length
+    'string'   => WIRETYPE_LENGTH,
+    'bytes'    => WIRETYPE_LENGTH,
+
+    // 32-bit
+    'fixed32'  => WIRETYPE_32BIT,
+    'sfixed32' => WIRETYPE_32BIT,
+    'float'    => WIRETYPE_32BIT
+);
+
 function read_proto($file)
 {
     $body = '';
-    foreach(file($file) as $line)
+    foreach(file($file.'.proto') as $line)
     {
 	$line = preg_replace('/\/\/ .*$/','',$line);
 	$line = preg_replace('/ [ ]+/',' ',$line);
@@ -52,7 +87,58 @@ function read_proto($file)
     return $proto;
 }
 
+function dump_enum($type, $data)
+{
+    echo "\n// enumeration type $type declaration\n";
+    echo "typedef enum {\n";
+    foreach($data as $id => $name)
+	echo "  $name = $id,\n";
+    echo "} $type;\n";
+}
 
-$proto = read_proto('openbeacon.proto');
+function dump_message($type, $data)
+{
+    $define = strtoupper($type).'_';
+    echo "\n// $type - field number declaration\n";
+    foreach ($data as $id => $item)
+	if($id>0)
+	    echo '#define '.$define.strtoupper($item['name'])." $id\n";
+
+    echo "\n// $type - struct declaration\n";
+    echo "typedef struct {\n";
+    echo "  uint32_t __active_fields;\n";
+    foreach ($data as $id => $item)
+	if($id>0)
+	{
+	    $type = $item['type'];
+
+	    switch($mode=$item['mode'])
+	    {
+		case 'optional':
+		    echo "  $type"."_t $item[name];\n";
+		    break;
+	    }
+	}
+    echo "} $type;\n";
+}
+
+$class = 'openbeacon';
+$proto = read_proto($class);
+
 print_r($proto);
+
+$define = '__'.strtoupper($class).'_H__';
+echo "#ifndef $define\n";
+echo "#define $define\n";
+
+if(isset($proto['enum']))
+    foreach($proto['enum'] as $type => $data)
+	dump_enum($type,$data);
+
+if(isset($proto['message']))
+    foreach($proto['message'] as $type => $data)
+	dump_message($type,$data);
+
+echo "\n#endif/*$define*/\n"
+
 ?>
