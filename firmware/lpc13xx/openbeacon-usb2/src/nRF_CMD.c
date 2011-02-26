@@ -45,6 +45,8 @@
 static uint8_t spi_outbuf[SPI_MAX_XFER_LEN];
 static uint8_t spi_inbuf[SPI_MAX_XFER_LEN];
 
+static int g_packet_rxed=0;
+
 void
 nRFCMD_CE (uint8_t enable)
 {
@@ -177,6 +179,13 @@ nRFCMD_RegisterDump (void)
 void
 nRFCMD_Status (void)
 {
+  debug_printf (" * nRF24L01+: rxed=%u\n",g_packet_rxed);
+}
+
+void
+WAKEUP_IRQHandlerPIO1_9 (void)
+{
+  g_packet_rxed=1;
 }
 
 void
@@ -186,9 +195,15 @@ nRFCMD_Init (void)
   spi_init_pin (SPI_CS_NRF);
 
   /* setup IOs */
+  LPC_IOCON->PIO1_9 = 0;
   GPIOSetDir (RF_IRQ_CPU_PORT, RF_IRQ_CPU_PIN, 0);
+  NVIC_EnableIRQ (WAKEUP_PIO1_9_IRQn);
+  LPC_SYSCON->STARTAPRP0 = (LPC_SYSCON->STARTAPRP0 & ~STARTxPRP0_PIO1_9);
+  LPC_SYSCON->STARTRSRP0CLR = STARTxPRP0_PIO1_9;
+  LPC_SYSCON->STARTERP0 |= STARTxPRP0_PIO1_9;
 
-  LPC_IOCON->JTAG_TDI_PIO0_11 = 0;
+
+  LPC_IOCON->JTAG_TDI_PIO0_11 = 1;
   GPIOSetDir (CPU_CE_RF_PORT, CPU_CE_RF_PIN, 1);
   GPIOSetValue (CPU_CE_RF_PORT, CPU_CE_RF_PIN, 0);
 
