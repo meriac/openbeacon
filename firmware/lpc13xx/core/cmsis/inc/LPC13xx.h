@@ -482,4 +482,51 @@ typedef struct {
 #define LPC_GPIO2             ((LPC_GPIO_TypeDef   *) LPC_GPIO2_BASE )
 #define LPC_GPIO3             ((LPC_GPIO_TypeDef   *) LPC_GPIO3_BASE )
 
+
+
+/******************************************************************************/
+/*                         IO Start logic Register Delcaration                */
+/******************************************************************************/
+#define STARTxPRP0_PIO0_0	(1UL<<0)
+#define STARTxPRP0_PIO0_1	(1UL<<1)
+#define STARTxPRP0_PIO0_2	(1UL<<2)
+#define STARTxPRP0_PIO0_3	(1UL<<3)
+#define STARTxPRP0_PIO0_4	(1UL<<4)
+#define STARTxPRP0_PIO0_5	(1UL<<5)
+#define STARTxPRP0_PIO0_6	(1UL<<6)
+#define STARTxPRP0_PIO0_7	(1UL<<7)
+#define STARTxPRP0_PIO0_8	(1UL<<8)
+#define STARTxPRP0_PIO0_9	(1UL<<9)
+#define STARTxPRP0_PIO0_10	(1UL<<10)
+#define STARTxPRP0_PIO0_11	(1UL<<11)
+#define STARTxPRP0_PIO1_0	(1UL<<12)
+#define STARTxPRP0_PIO1_1	(1UL<<13)
+#define STARTxPRP0_PIO1_2	(1UL<<14)
+#define STARTxPRP0_PIO1_3	(1UL<<15)
+#define STARTxPRP0_PIO1_4	(1UL<<16)
+#define STARTxPRP0_PIO1_5	(1UL<<17)
+#define STARTxPRP0_PIO1_6	(1UL<<18)
+#define STARTxPRP0_PIO1_7	(1UL<<19)
+#define STARTxPRP0_PIO1_8	(1UL<<20)
+#define STARTxPRP0_PIO1_9	(1UL<<21)
+#define STARTxPRP0_PIO1_10	(1UL<<22)
+#define STARTxPRP0_PIO1_11	(1UL<<23)
+#define STARTxPRP0_PIO2_0	(1UL<<24)
+#define STARTxPRP0_PIO2_1	(1UL<<25)
+#define STARTxPRP0_PIO2_2	(1UL<<26)
+#define STARTxPRP0_PIO2_3	(1UL<<27)
+#define STARTxPRP0_PIO2_4	(1UL<<28)
+#define STARTxPRP0_PIO2_5	(1UL<<29)
+#define STARTxPRP0_PIO2_6	(1UL<<30)
+#define STARTxPRP0_PIO2_7	(1UL<<31)
+
+#define STARTxPRP1_PIO2_8	(1UL<<0)
+#define STARTxPRP1_PIO2_9	(1UL<<1)
+#define STARTxPRP1_PIO2_10	(1UL<<2)
+#define STARTxPRP1_PIO2_11	(1UL<<3)
+#define STARTxPRP1_PIO3_0	(1UL<<4)
+#define STARTxPRP1_PIO3_1	(1UL<<4)
+#define STARTxPRP1_PIO3_2	(1UL<<6)
+#define STARTxPRP1_PIO3_3	(1UL<<7)
+
 #endif				// __LPC13xx_H__
