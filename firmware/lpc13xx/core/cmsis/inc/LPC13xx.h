@@ -44,46 +44,50 @@ typedef enum IRQn {
     SysTick_IRQn = -1,			/*!< 15 Cortex-M3 System Tick Interrupt                   */
 
 /******  LPC13xx Specific Interrupt Numbers *******************************************************/
-    WAKEUP0_IRQn = 0,			/*!< All I/O pins can be used as wakeup source.           */
-    WAKEUP1_IRQn = 1,			/*!< There are 40 pins in total for LPC17xx               */
-    WAKEUP2_IRQn = 2,
-    WAKEUP3_IRQn = 3,
-    WAKEUP4_IRQn = 4,
-    WAKEUP5_IRQn = 5,
-    WAKEUP6_IRQn = 6,
-    WAKEUP7_IRQn = 7,
-    WAKEUP8_IRQn = 8,
-    WAKEUP9_IRQn = 9,
-    WAKEUP10_IRQn = 10,
-    WAKEUP11_IRQn = 11,
-    WAKEUP12_IRQn = 12,
-    WAKEUP13_IRQn = 13,
-    WAKEUP14_IRQn = 14,
-    WAKEUP15_IRQn = 15,
-    WAKEUP16_IRQn = 16,
-    WAKEUP17_IRQn = 17,
-    WAKEUP18_IRQn = 18,
-    WAKEUP19_IRQn = 19,
-    WAKEUP20_IRQn = 20,
-    WAKEUP21_IRQn = 21,
-    WAKEUP22_IRQn = 22,
-    WAKEUP23_IRQn = 23,
-    WAKEUP24_IRQn = 24,
-    WAKEUP25_IRQn = 25,
-    WAKEUP26_IRQn = 26,
-    WAKEUP27_IRQn = 27,
-    WAKEUP28_IRQn = 28,
-    WAKEUP29_IRQn = 29,
-    WAKEUP30_IRQn = 30,
-    WAKEUP31_IRQn = 31,
-    WAKEUP32_IRQn = 32,
-    WAKEUP33_IRQn = 33,
-    WAKEUP34_IRQn = 34,
-    WAKEUP35_IRQn = 35,
-    WAKEUP36_IRQn = 36,
-    WAKEUP37_IRQn = 37,
-    WAKEUP38_IRQn = 38,
-    WAKEUP39_IRQn = 39,
+    WAKEUP_PIO0_0_IRQn = 0,		/*!< All I/O pins can be used as wakeup source.           */
+    WAKEUP_PIO0_1_IRQn = 1,		/*!< There are 40 pins in total for LPC17xx               */
+    WAKEUP_PIO0_2_IRQn = 2,
+    WAKEUP_PIO0_3_IRQn = 3,
+    WAKEUP_PIO0_4_IRQn = 4,
+    WAKEUP_PIO0_5_IRQn = 5,
+    WAKEUP_PIO0_6_IRQn = 6,
+    WAKEUP_PIO0_7_IRQn = 7,
+    WAKEUP_PIO0_8_IRQn = 8,
+    WAKEUP_PIO0_9_IRQn = 9,
+    WAKEUP_PIO0_10_IRQn = 10,
+    WAKEUP_PIO0_11_IRQn = 11,
+
+    WAKEUP_PIO1_0_IRQn = 12,
+    WAKEUP_PIO1_1_IRQn = 13,
+    WAKEUP_PIO1_2_IRQn = 14,
+    WAKEUP_PIO1_3_IRQn = 15,
+    WAKEUP_PIO1_4_IRQn = 16,
+    WAKEUP_PIO1_5_IRQn = 17,
+    WAKEUP_PIO1_6_IRQn = 18,
+    WAKEUP_PIO1_7_IRQn = 19,
+    WAKEUP_PIO1_8_IRQn = 20,
+    WAKEUP_PIO1_9_IRQn = 21,
+    WAKEUP_PIO1_10_IRQn = 22,
+    WAKEUP_PIO1_11_IRQn = 23,
+
+    WAKEUP_PIO2_0_IRQn = 24,
+    WAKEUP_PIO2_1_IRQn = 25,
+    WAKEUP_PIO2_2_IRQn = 26,
+    WAKEUP_PIO2_3_IRQn = 27,
+    WAKEUP_PIO2_4_IRQn = 28,
+    WAKEUP_PIO2_5_IRQn = 29,
+    WAKEUP_PIO2_6_IRQn = 30,
+    WAKEUP_PIO2_7_IRQn = 31,
+    WAKEUP_PIO2_8_IRQn = 31,
+    WAKEUP_PIO2_9_IRQn = 33,
+    WAKEUP_PIO2_10_IRQn = 34,
+    WAKEUP_PIO2_11_IRQn = 35,
+
+    WAKEUP_PIO3_0_IRQn = 36,
+    WAKEUP_PIO3_1_IRQn = 37,
+    WAKEUP_PIO3_2_IRQn = 38,
+    WAKEUP_PIO3_3_IRQn = 39,
+
     I2C_IRQn = 40,		/*!< I2C Interrupt                                    */
     TIMER_16_0_IRQn = 41,	/*!< 16-bit Timer0 Interrupt                          */
     TIMER_16_1_IRQn = 42,	/*!< 16-bit Timer1 Interrupt                          */
@@ -477,5 +481,52 @@ typedef struct {
 #define LPC_GPIO1             ((LPC_GPIO_TypeDef   *) LPC_GPIO1_BASE )
 #define LPC_GPIO2             ((LPC_GPIO_TypeDef   *) LPC_GPIO2_BASE )
 #define LPC_GPIO3             ((LPC_GPIO_TypeDef   *) LPC_GPIO3_BASE )
+
+
+
+/******************************************************************************/
+/*                         IO Start logic Register Delcaration                */
+/******************************************************************************/
+#define STARTxPRP0_PIO0_0	(1UL<<0)
+#define STARTxPRP0_PIO0_1	(1UL<<1)
+#define STARTxPRP0_PIO0_2	(1UL<<2)
+#define STARTxPRP0_PIO0_3	(1UL<<3)
+#define STARTxPRP0_PIO0_4	(1UL<<4)
+#define STARTxPRP0_PIO0_5	(1UL<<5)
+#define STARTxPRP0_PIO0_6	(1UL<<6)
+#define STARTxPRP0_PIO0_7	(1UL<<7)
+#define STARTxPRP0_PIO0_8	(1UL<<8)
+#define STARTxPRP0_PIO0_9	(1UL<<9)
+#define STARTxPRP0_PIO0_10	(1UL<<10)
+#define STARTxPRP0_PIO0_11	(1UL<<11)
+#define STARTxPRP0_PIO1_0	(1UL<<12)
+#define STARTxPRP0_PIO1_1	(1UL<<13)
+#define STARTxPRP0_PIO1_2	(1UL<<14)
+#define STARTxPRP0_PIO1_3	(1UL<<15)
+#define STARTxPRP0_PIO1_4	(1UL<<16)
+#define STARTxPRP0_PIO1_5	(1UL<<17)
+#define STARTxPRP0_PIO1_6	(1UL<<18)
+#define STARTxPRP0_PIO1_7	(1UL<<19)
+#define STARTxPRP0_PIO1_8	(1UL<<20)
+#define STARTxPRP0_PIO1_9	(1UL<<21)
+#define STARTxPRP0_PIO1_10	(1UL<<22)
+#define STARTxPRP0_PIO1_11	(1UL<<23)
+#define STARTxPRP0_PIO2_0	(1UL<<24)
+#define STARTxPRP0_PIO2_1	(1UL<<25)
+#define STARTxPRP0_PIO2_2	(1UL<<26)
+#define STARTxPRP0_PIO2_3	(1UL<<27)
+#define STARTxPRP0_PIO2_4	(1UL<<28)
+#define STARTxPRP0_PIO2_5	(1UL<<29)
+#define STARTxPRP0_PIO2_6	(1UL<<30)
+#define STARTxPRP0_PIO2_7	(1UL<<31)
+
+#define STARTxPRP1_PIO2_8	(1UL<<0)
+#define STARTxPRP1_PIO2_9	(1UL<<1)
+#define STARTxPRP1_PIO2_10	(1UL<<2)
+#define STARTxPRP1_PIO2_11	(1UL<<3)
+#define STARTxPRP1_PIO3_0	(1UL<<4)
+#define STARTxPRP1_PIO3_1	(1UL<<4)
+#define STARTxPRP1_PIO3_2	(1UL<<6)
+#define STARTxPRP1_PIO3_3	(1UL<<7)
 
 #endif				// __LPC13xx_H__

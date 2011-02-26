@@ -166,6 +166,8 @@ main (void)
   acc_init (1);
   /* Init OpenBeacon nRF24L01 interface */
   nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0);
+  nRFAPI_SetRxMode (1);
+  nRFCMD_CE (1);
 
   /* main loop */
   t = 0;

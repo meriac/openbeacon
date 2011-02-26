@@ -1,0 +1,102 @@
+enum ObUnit {
+  // use the id-range of 100 to 127 for extending this message with custom enums
+
+  OB_UNIT_NONE = 0;
+  OB_UNIT_PIXEL = 1;
+  OB_UNIT_MILLIMETER = 2;
+  OB_UNIT_CENTIMETER = 3;
+  OB_UNIT_METER = 4;
+  OB_UNIT_INCH = 5;
+  OB_UNIT_FEET = 6;
+  OB_UNIT_YARD = 7;
+}
+
+message ObTracking {
+  // use this id-range for extending this message with custom types
+  extensions 100 to 127;
+
+  // x,y,z coordinates of tag position
+  optional sint32            x = 1;
+  optional sint32            y = 2;
+  optional sint32            z = 3;
+
+  // measurement units for tag coordinates
+  optional ObUnit            unit = 4;
+
+  // reader id's that picked up this tracking data
+  repeated uint32            reader_id = 5 [packed=true];
+
+  // transmit strength of the tx packet
+  optional uint32            tx_strength = 6;
+
+  // optionally add information about location
+  optional uint32            area_id = 7;
+  optional uint32            room_id = 8;
+  optional uint32            building_id = 9;
+  optional uint32            installation_id = 10;
+}
+
+message ObProximityTagPower {
+  // use this id-range for extending this message with custom types
+  extensions 100 to 127;
+
+  // transmit strength of the packet received
+  optional uint32            power = 1;
+  // received count
+  optional uint32            count = 2;
+}
+
+message ObProximityTag {
+  // use this id-range for extending this message with custom types
+  extensions 100 to 127;
+
+  // packed id of the packet received
+  required uint32            id = 1;
+
+  // zero or more sightings
+  repeated ObProximityTagPower power = 2;
+}
+
+message ObProximityLog {
+  // use this id-range for extending this message with custom types
+  extensions 100 to 127;
+
+  // end of reception time in seconds
+  required uint32            time = 1;
+
+  // aggregation of reception in seconds (time-duration=start_time)
+  required uint32            duration = 2;
+
+  // zero or more tags seen
+  repeated ObProximityTag    tag = 3;
+}
+
+message ObTag {
+  // use this id-range for extending this message with custom types
+  extensions 100 to 127;
+
+  // rx id
+  optional uint32            tag_id = 1;
+
+  // internal tag time in seconds
+  optional uint32            tag_time = 2;
+
+  // tag power cycles
+  optional uint32            tag_power_cycles = 3;
+
+  // tag tx strength
+  optional uint32            tag_strength = 4;
+
+  // forwarding id's - usually readers - reverse route array in case of meshing
+  repeated uint32            forwarder_id = 5 [packed=true];
+
+  // if packet is forwarded, store/forward time is incremented in [ms]
+  optional uint32            forwarder_storage_time = 6;
+
+  // time of reception in [ms] - set inside the aggregator code, storage_time added
+  optional uint64            rx_time = 7;
+
+  // positioning layer added 
+  optional ObTracking        tracking = 14;
+  repeated ObProximityLog    proximity = 15;
+}
