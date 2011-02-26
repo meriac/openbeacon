@@ -110,7 +110,7 @@ nRFAPI_Init (uint8_t channel,
 
   // set payload sizes
   for (i = 0; i <= 5; i++)
-    nRFAPI_SetPipeSizeRX (i, 2);
+    nRFAPI_SetPipeSizeRX (i, 16);
 
   // set TX retry count
   nRFAPI_TxRetries (0);
