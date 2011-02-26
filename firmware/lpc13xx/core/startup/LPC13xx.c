@@ -79,7 +79,50 @@ void PIOINT3_IRQHandler(void) ALIAS(IntDefaultHandler);
 void PIOINT2_IRQHandler(void) ALIAS(IntDefaultHandler);
 void PIOINT1_IRQHandler(void) ALIAS(IntDefaultHandler);
 void PIOINT0_IRQHandler(void) ALIAS(IntDefaultHandler);
-void WAKEUP_IRQHandler(void) ALIAS(IntDefaultHandler);
+
+void WAKEUP_IRQHandlerPIO0_0 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO0_1 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO0_2 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO0_3 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO0_4 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO0_5 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO0_6 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO0_7 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO0_8 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO0_9 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO0_10(void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO0_11(void) ALIAS(IntDefaultHandler);
+
+void WAKEUP_IRQHandlerPIO1_0 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO1_1 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO1_2 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO1_3 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO1_4 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO1_5 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO1_6 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO1_7 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO1_8 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO1_9 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO1_10(void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO1_11(void) ALIAS(IntDefaultHandler);
+
+void WAKEUP_IRQHandlerPIO2_0 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO2_1 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO2_2 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO2_3 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO2_4 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO2_5 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO2_6 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO2_7 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO2_8 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO2_9 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO2_10(void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO2_11(void) ALIAS(IntDefaultHandler);
+
+void WAKEUP_IRQHandlerPIO3_0 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO3_1 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO3_2 (void) ALIAS(IntDefaultHandler);
+void WAKEUP_IRQHandlerPIO3_3 (void) ALIAS(IntDefaultHandler);
 
 //*****************************************************************************
 //
@@ -128,46 +171,46 @@ void (*const g_pfnVectors[]) (void) =
 	//   PIO1 (0:11)
 	//   PIO2 (0:11)
 	//   PIO3 (0:3)
-	WAKEUP_IRQHandler,	// PIO0_0  Wakeup
-	WAKEUP_IRQHandler,	// PIO0_1  Wakeup
-	WAKEUP_IRQHandler,	// PIO0_2  Wakeup
-	WAKEUP_IRQHandler,	// PIO0_3  Wakeup
-	WAKEUP_IRQHandler,	// PIO0_4  Wakeup
-	WAKEUP_IRQHandler,	// PIO0_5  Wakeup
-	WAKEUP_IRQHandler,	// PIO0_6  Wakeup
-	WAKEUP_IRQHandler,	// PIO0_7  Wakeup
-	WAKEUP_IRQHandler,	// PIO0_8  Wakeup
-	WAKEUP_IRQHandler,	// PIO0_9  Wakeup
-	WAKEUP_IRQHandler,	// PIO0_10 Wakeup
-	WAKEUP_IRQHandler,	// PIO0_11 Wakeup
-	WAKEUP_IRQHandler,	// PIO1_0  Wakeup
-	WAKEUP_IRQHandler,	// PIO1_1  Wakeup
-	WAKEUP_IRQHandler,	// PIO1_2  Wakeup
-	WAKEUP_IRQHandler,	// PIO1_3  Wakeup
-	WAKEUP_IRQHandler,	// PIO1_4  Wakeup
-	WAKEUP_IRQHandler,	// PIO1_5  Wakeup
-	WAKEUP_IRQHandler,	// PIO1_6  Wakeup
-	WAKEUP_IRQHandler,	// PIO1_7  Wakeup
-	WAKEUP_IRQHandler,	// PIO1_8  Wakeup
-	WAKEUP_IRQHandler,	// PIO1_9  Wakeup
-	WAKEUP_IRQHandler,	// PIO1_10 Wakeup
-	WAKEUP_IRQHandler,	// PIO1_11 Wakeup
-	WAKEUP_IRQHandler,	// PIO2_0  Wakeup
-	WAKEUP_IRQHandler,	// PIO2_1  Wakeup
-	WAKEUP_IRQHandler,	// PIO2_2  Wakeup
-	WAKEUP_IRQHandler,	// PIO2_3  Wakeup
-	WAKEUP_IRQHandler,	// PIO2_4  Wakeup
-	WAKEUP_IRQHandler,	// PIO2_5  Wakeup
-	WAKEUP_IRQHandler,	// PIO2_6  Wakeup
-	WAKEUP_IRQHandler,	// PIO2_7  Wakeup
-	WAKEUP_IRQHandler,	// PIO2_8  Wakeup
-	WAKEUP_IRQHandler,	// PIO2_9  Wakeup
-	WAKEUP_IRQHandler,	// PIO2_10 Wakeup
-	WAKEUP_IRQHandler,	// PIO2_11 Wakeup
-	WAKEUP_IRQHandler,	// PIO3_0  Wakeup
-	WAKEUP_IRQHandler,	// PIO3_1  Wakeup
-	WAKEUP_IRQHandler,	// PIO3_2  Wakeup
-	WAKEUP_IRQHandler,	// PIO3_3  Wakeup  
+	WAKEUP_IRQHandlerPIO0_0,	// PIO0_0  Wakeup
+	WAKEUP_IRQHandlerPIO0_1,	// PIO0_1  Wakeup
+	WAKEUP_IRQHandlerPIO0_2,	// PIO0_2  Wakeup
+	WAKEUP_IRQHandlerPIO0_3,	// PIO0_3  Wakeup
+	WAKEUP_IRQHandlerPIO0_4,	// PIO0_4  Wakeup
+	WAKEUP_IRQHandlerPIO0_5,	// PIO0_5  Wakeup
+	WAKEUP_IRQHandlerPIO0_6,	// PIO0_6  Wakeup
+	WAKEUP_IRQHandlerPIO0_7,	// PIO0_7  Wakeup
+	WAKEUP_IRQHandlerPIO0_8,	// PIO0_8  Wakeup
+	WAKEUP_IRQHandlerPIO0_9,	// PIO0_9  Wakeup
+	WAKEUP_IRQHandlerPIO0_10,	// PIO0_10 Wakeup
+	WAKEUP_IRQHandlerPIO0_11,	// PIO0_11 Wakeup
+	WAKEUP_IRQHandlerPIO1_0,	// PIO1_0  Wakeup
+	WAKEUP_IRQHandlerPIO1_1,	// PIO1_1  Wakeup
+	WAKEUP_IRQHandlerPIO1_2,	// PIO1_2  Wakeup
+	WAKEUP_IRQHandlerPIO1_3,	// PIO1_3  Wakeup
+	WAKEUP_IRQHandlerPIO1_4,	// PIO1_4  Wakeup
+	WAKEUP_IRQHandlerPIO1_5,	// PIO1_5  Wakeup
+	WAKEUP_IRQHandlerPIO1_6,	// PIO1_6  Wakeup
+	WAKEUP_IRQHandlerPIO1_7,	// PIO1_7  Wakeup
+	WAKEUP_IRQHandlerPIO1_8,	// PIO1_8  Wakeup
+	WAKEUP_IRQHandlerPIO1_9,	// PIO1_9  Wakeup
+	WAKEUP_IRQHandlerPIO1_10,	// PIO1_10 Wakeup
+	WAKEUP_IRQHandlerPIO1_11,	// PIO1_11 Wakeup
+	WAKEUP_IRQHandlerPIO2_0,	// PIO2_0  Wakeup
+	WAKEUP_IRQHandlerPIO2_1,	// PIO2_1  Wakeup
+	WAKEUP_IRQHandlerPIO2_2,	// PIO2_2  Wakeup
+	WAKEUP_IRQHandlerPIO2_3,	// PIO2_3  Wakeup
+	WAKEUP_IRQHandlerPIO2_4,	// PIO2_4  Wakeup
+	WAKEUP_IRQHandlerPIO2_5,	// PIO2_5  Wakeup
+	WAKEUP_IRQHandlerPIO2_6,	// PIO2_6  Wakeup
+	WAKEUP_IRQHandlerPIO2_7,	// PIO2_7  Wakeup
+	WAKEUP_IRQHandlerPIO2_8,	// PIO2_8  Wakeup
+	WAKEUP_IRQHandlerPIO2_9,	// PIO2_9  Wakeup
+	WAKEUP_IRQHandlerPIO2_10,	// PIO2_10 Wakeup
+	WAKEUP_IRQHandlerPIO2_11,	// PIO2_11 Wakeup
+	WAKEUP_IRQHandlerPIO3_0,	// PIO3_0  Wakeup
+	WAKEUP_IRQHandlerPIO3_1,	// PIO3_1  Wakeup
+	WAKEUP_IRQHandlerPIO3_2,	// PIO3_2  Wakeup
+	WAKEUP_IRQHandlerPIO3_3,	// PIO3_3  Wakeup
 	I2C_IRQHandler,		// I2C0
 	TIMER16_0_IRQHandler,	// CT16B0 (16-bit Timer 0)
 	TIMER16_1_IRQHandler,	// CT16B1 (16-bit Timer 1)
