@@ -24,7 +24,7 @@ message ObTracking {
   optional ObUnit            unit = 4;
 
   // reader id's that picked up this tracking data
-  repeated uint32            reader_id = 5;
+  repeated uint32            reader_id = 5 [packed=true];
 
   // transmit strength of the tx packet
   optional uint32            tx_strength = 6;
@@ -88,7 +88,7 @@ message ObTag {
   optional uint32            tag_strength = 4;
 
   // forwarding id's - usually readers - reverse route array in case of meshing
-  repeated uint32            forwarder_id = 5;
+  repeated uint32            forwarder_id = 5 [packed=true];
 
   // if packet is forwarded, store/forward time is incremented in [ms]
   optional uint32            forwarder_storage_time = 6;
