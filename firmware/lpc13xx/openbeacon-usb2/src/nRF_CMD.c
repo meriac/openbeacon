@@ -186,6 +186,9 @@ void
 WAKEUP_IRQHandlerPIO1_9 (void)
 {
   g_packet_rxed=1;
+
+  /* Clear pending IRQ */
+  LPC_SYSCON->STARTRSRP0CLR = STARTxPRP0_PIO1_9;
 }
 
 void
