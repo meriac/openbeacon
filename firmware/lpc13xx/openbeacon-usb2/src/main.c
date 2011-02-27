@@ -171,8 +171,9 @@ main (void)
 #endif
   /* power management init */
   pmu_init ();
-  // init IO layer of nRF24L01
-  nRFCMD_Init ();
+  /* Init OpenBeacon nRF24L01 interface */
+  nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0);
+  nRFAPI_SetRxMode (1);
 
   /* blink as a sign of boot to detect crashes */
   for (t = 0; t < 20; t++)
@@ -187,9 +188,6 @@ main (void)
   bt_init (1);
   /* Init 3D acceleration sensor */
   acc_init (1);
-  /* Init OpenBeacon nRF24L01 interface */
-  nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0);
-  nRFAPI_SetRxMode (1);
   nRFCMD_CE (1);
 
   /* main loop */

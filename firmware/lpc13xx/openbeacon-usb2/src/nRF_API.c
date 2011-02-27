@@ -92,6 +92,9 @@ nRFAPI_Init (uint8_t channel,
 {
   uint8_t i;
 
+  // init IO layer of nRF24L01
+  nRFCMD_Init ();
+
   // check validity
   if (mac_size < 3 || mac_size > 5 || !nRFAPI_DetectChip ())
     return 0;
