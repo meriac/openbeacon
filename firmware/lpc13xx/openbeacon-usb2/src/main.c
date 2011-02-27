@@ -155,6 +155,8 @@ main (void)
   uint16_t crc;
   uint32_t oid;
 
+  /* wait on boot - debounce */
+  for (i = 0; i < 2000000; i++);
   /* initialize  pins */
   pin_init ();
   /* Init SPI */
@@ -169,6 +171,8 @@ main (void)
 #endif
   /* power management init */
   pmu_init ();
+  // init IO layer of nRF24L01
+  nRFCMD_Init ();
 
   /* blink as a sign of boot to detect crashes */
   for (t = 0; t < 20; t++)
@@ -193,12 +197,11 @@ main (void)
   while (1)
     {
       /* blink LED0 on every 32th run - FIXME later with sleep */
-      if ((t++ & 0x1FFF) == 0)
-	{
-	  pin_led (GPIO_LED0);
-	  for (i = 0; i < 100000; i++);
-	  pin_led (GPIO_LEDS_OFF);
-	}
+      if ((t++ & 0x1F) == 0)
+	pin_led (GPIO_LED0);
+      /* wait anyway */
+      for (i = 0; i < 100000; i++);
+      pin_led (GPIO_LEDS_OFF);
 
       if (!pin_button0 ())
 	{
@@ -270,16 +273,7 @@ main (void)
 
 		if (strength < 0xFF)
 		  {
-/*		      pcache = &g_BeaconCache[g_BeaconCacheHead];
-		      pcache->bcflags = 0;
-		      pcache->arrival_time = xTaskGetTickCount ();
-		      pcache->tag_oid = oid;
-		      pcache->tag_strength = strength;
-		      pcache->bcflags = BCFLAGS_VALIDENTRY;
-
-		      g_BeaconCacheHead++;
-		      if (g_BeaconCacheHead >= FIFO_DEPTH)
-			g_BeaconCacheHead = 0;*/
+		    /* do something with the data */
 		  }
 		pin_led (GPIO_LEDS_OFF);
 	      }

@@ -92,9 +92,6 @@ nRFAPI_Init (uint8_t channel,
 {
   uint8_t i;
 
-  // init lower layer
-  nRFCMD_Init ();
-
   // check validity
   if (mac_size < 3 || mac_size > 5 || !nRFAPI_DetectChip ())
     return 0;
@@ -129,7 +126,7 @@ nRFAPI_Init (uint8_t channel,
     nRFAPI_SetFeatures (features);
 
   // power down
-  nRFAPI_PowerDown ();
+  // nRFAPI_PowerDown ();
 
   return 1;
 }
