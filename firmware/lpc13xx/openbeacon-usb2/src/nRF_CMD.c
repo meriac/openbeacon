@@ -44,7 +44,7 @@
 #define NRFCMD_MACRO_READ 0x80
 static uint8_t spi_outbuf[SPI_MAX_XFER_LEN];
 static uint8_t spi_inbuf[SPI_MAX_XFER_LEN];
-static uint8_t g_packet_rxed=0;
+static volatile uint8_t g_packet_rxed=0;
 
 void
 nRFCMD_CE (uint8_t enable)
