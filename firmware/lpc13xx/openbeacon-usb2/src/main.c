@@ -208,66 +208,68 @@ main (void)
 	  pmu_off (0);
 	}
 
-      do
-	{
-	  // read packet from nRF chip
-	  nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.byte, sizeof (g_Beacon));
+      if (nRFCMD_WaitRx (10))
+	do
+	  {
+	    // read packet from nRF chip
+	    nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.byte, sizeof (g_Beacon));
 
-	  // adjust byte order and decode
-	  xxtea_decode (g_Beacon.block, XXTEA_BLOCK_COUNT, xxtea_key);
+	    // adjust byte order and decode
+	    xxtea_decode (g_Beacon.block, XXTEA_BLOCK_COUNT, xxtea_key);
 
-	  // verify the crc checksum
-	  crc = crc16 (g_Beacon.byte, sizeof (g_Beacon) - sizeof (uint16_t));
+	    // verify the crc checksum
+	    crc =
+	      crc16 (g_Beacon.byte, sizeof (g_Beacon) - sizeof (uint16_t));
 
-	  if (ntohs (g_Beacon.pkt.crc) == crc)
-	    {
-	      pin_led (GPIO_LED1);
+	    if (ntohs (g_Beacon.pkt.crc) == crc)
+	      {
+		pin_led (GPIO_LED1);
 
-	      oid = ntohs (g_Beacon.pkt.oid);
-	      if (g_Beacon.pkt.flags & RFBFLAGS_SENSOR)
-		debug_printf ("BUTTON: %i\n", oid);
+		oid = ntohs (g_Beacon.pkt.oid);
+		if (g_Beacon.pkt.flags & RFBFLAGS_SENSOR)
+		  debug_printf ("BUTTON: %i\n", oid);
 
-	      switch (g_Beacon.pkt.proto)
-		{
+		switch (g_Beacon.pkt.proto)
+		  {
 
-		case RFBPROTO_READER_ANNOUNCE:
-		  strength = g_Beacon.pkt.p.reader_announce.strength;
-		  break;
+		  case RFBPROTO_READER_ANNOUNCE:
+		    strength = g_Beacon.pkt.p.reader_announce.strength;
+		    break;
 
-		case RFBPROTO_BEACONTRACKER:
-		  strength = g_Beacon.pkt.p.tracker.strength & 0x3;
-		  debug_printf (" R: %04i={%i,0x%08X}\n",
-				(int) oid,
-				(int) strength,
-				ntohl (g_Beacon.pkt.p.tracker.seq));
-		  break;
+		  case RFBPROTO_BEACONTRACKER:
+		    strength = g_Beacon.pkt.p.tracker.strength & 0x3;
+		    debug_printf (" R: %04i={%i,0x%08X}\n",
+				  (int) oid,
+				  (int) strength,
+				  ntohl (g_Beacon.pkt.p.tracker.seq));
+		    break;
 
-		case RFBPROTO_PROXREPORT:
-		  strength = 3;
-		  debug_printf (" P: %04i={%i,0x%04X}\n",
-				(int) oid,
-				(int) strength,
-				(int) ntohs (g_Beacon.pkt.p.prox.seq));
-		  for (t = 0; t < PROX_MAX; t++)
-		    {
-		      crc = (ntohs (g_Beacon.pkt.p.prox.oid_prox[t]));
-		      if (crc)
-			debug_printf ("PX: %04i={%04i,%i,%i}\n",
-				      (int) oid,
-				      (int) ((crc >> 0) & 0x7FF),
-				      (int) ((crc >> 14) & 0x3),
-				      (int) ((crc >> 11) & 0x7));
-		    }
-		  break;
+		  case RFBPROTO_PROXREPORT:
+		    strength = 3;
+		    debug_printf (" P: %04i={%i,0x%04X}\n",
+				  (int) oid,
+				  (int) strength,
+				  (int) ntohs (g_Beacon.pkt.p.prox.seq));
+		    for (t = 0; t < PROX_MAX; t++)
+		      {
+			crc = (ntohs (g_Beacon.pkt.p.prox.oid_prox[t]));
+			if (crc)
+			  debug_printf ("PX: %04i={%04i,%i,%i}\n",
+					(int) oid,
+					(int) ((crc >> 0) & 0x7FF),
+					(int) ((crc >> 14) & 0x3),
+					(int) ((crc >> 11) & 0x7));
+		      }
+		    break;
 
-		default:
-		  strength = 0xFF;
-		  debug_printf ("Unknown Protocol: %i\n",
-				(int) g_Beacon.pkt.proto);
-		}
+		  default:
+		    strength = 0xFF;
+		    debug_printf ("Unknown Protocol: %i\n",
+				  (int) g_Beacon.pkt.proto);
+		  }
 
-	      if (strength < 0xFF)
-		{
+		if (strength < 0xFF)
+		  {
 /*		      pcache = &g_BeaconCache[g_BeaconCacheHead];
 		      pcache->bcflags = 0;
 		      pcache->arrival_time = xTaskGetTickCount ();
@@ -278,11 +280,11 @@ main (void)
 		      g_BeaconCacheHead++;
 		      if (g_BeaconCacheHead >= FIFO_DEPTH)
 			g_BeaconCacheHead = 0;*/
-		}
-	      pin_led (GPIO_LEDS_OFF);
-	    }
-	}
-      while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
+		  }
+		pin_led (GPIO_LEDS_OFF);
+	      }
+	  }
+	while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
 
       nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
 
