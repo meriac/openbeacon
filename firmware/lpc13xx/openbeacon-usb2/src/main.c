@@ -151,7 +151,7 @@ main (void)
 {
   int t, firstrun;
   volatile int i;
-  uint8_t strength;
+  uint8_t strength,status;
   uint16_t crc;
   uint32_t oid;
 
@@ -283,8 +283,10 @@ main (void)
 		  }
 		pin_led (GPIO_LEDS_OFF);
 	      }
+	  status = nRFAPI_GetFifoStatus ();
+	  debug_printf("Status: 0x%02X\n",status);
 	  }
-	while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
+	while ((status & FIFO_RX_EMPTY) == 0);
 
       nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
 
