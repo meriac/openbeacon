@@ -214,9 +214,7 @@ main (void)
 	  nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.byte, sizeof (g_Beacon));
 
 	  // adjust byte order and decode
-	  xxtea_shuffle (g_Beacon.block, XXTEA_BLOCK_COUNT);
 	  xxtea_decode (g_Beacon.block, XXTEA_BLOCK_COUNT, xxtea_key);
-	  xxtea_shuffle (g_Beacon.block, XXTEA_BLOCK_COUNT);
 
 	  // verify the crc checksum
 	  crc = crc16 (g_Beacon.byte, sizeof (g_Beacon) - sizeof (uint16_t));
