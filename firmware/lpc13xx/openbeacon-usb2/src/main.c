@@ -1,6 +1,6 @@
 /***************************************************************
  *
- * OpenBeacon.org - main file for OpenPCD2 basic demo
+ * OpenBeacon.org - main file for OpenBeacon USB II Bluetooth
  *
  * Copyright 2010 Milosch Meriac <meriac@openbeacon.de>
  *
@@ -26,14 +26,30 @@
 #include "spi.h"
 #include "iap.h"
 #include "pmu.h"
+#include "crc16.h"
+#include "xxtea.h"
 #include "bluetooth.h"
 #include "3d_acceleration.h"
 #include "storage.h"
 #include "nRF_API.h"
 #include "nRF_CMD.h"
+#include "openbeacon-proto.h"
 
-// set nRF24L01 broadcast mac
-const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 1, 2, 3, 2, 1 };
+/* OpenBeacon packet */
+static TBeaconEnvelope g_Beacon;
+
+/* Default TEA encryption key of the tag - MUST CHANGE ! */
+static const uint32_t xxtea_key[4] = {
+  0x00112233,
+  0x44556677,
+  0x8899AABB,
+  0xCCDDEEFF
+};
+
+/* set nRF24L01 broadcast mac */
+static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = {
+  1, 2, 3, 2, 1
+};
 
 #if (USB_HID_IN_REPORT_SIZE>0)||(USB_HID_OUT_REPORT_SIZE>0)
 static uint8_t hid_buffer[USB_HID_IN_REPORT_SIZE];
@@ -135,7 +151,12 @@ main (void)
 {
   int t, firstrun;
   volatile int i;
+  uint8_t strength,status;
+  uint16_t crc;
+  uint32_t oid;
 
+  /* wait on boot - debounce */
+  for (i = 0; i < 2000000; i++);
   /* initialize  pins */
   pin_init ();
   /* Init SPI */
@@ -150,6 +171,9 @@ main (void)
 #endif
   /* power management init */
   pmu_init ();
+  /* Init OpenBeacon nRF24L01 interface */
+  nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0);
+  nRFAPI_SetRxMode (1);
 
   /* blink as a sign of boot to detect crashes */
   for (t = 0; t < 20; t++)
@@ -164,9 +188,6 @@ main (void)
   bt_init (1);
   /* Init 3D acceleration sensor */
   acc_init (1);
-  /* Init OpenBeacon nRF24L01 interface */
-  nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0);
-  nRFAPI_SetRxMode (1);
   nRFCMD_CE (1);
 
   /* main loop */
@@ -175,12 +196,10 @@ main (void)
     {
       /* blink LED0 on every 32th run - FIXME later with sleep */
       if ((t++ & 0x1F) == 0)
-	{
-	  pin_led (GPIO_LED0);
-	  for (i = 0; i < 100000; i++);
-	  pin_led (GPIO_LEDS_OFF);
-	}
-      for (i = 0; i < 200000; i++);
+	pin_led (GPIO_LED0);
+      /* wait anyway */
+      for (i = 0; i < 100000; i++);
+      pin_led (GPIO_LEDS_OFF);
 
       if (!pin_button0 ())
 	{
@@ -189,6 +208,79 @@ main (void)
 	  pin_mode_pmu (0);
 	  pmu_off (0);
 	}
+
+      if (nRFCMD_WaitRx (10))
+	do
+	  {
+	    // read packet from nRF chip
+	    nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.byte, sizeof (g_Beacon));
+
+	    // adjust byte order and decode
+	    xxtea_decode (g_Beacon.block, XXTEA_BLOCK_COUNT, xxtea_key);
+
+	    // verify the crc checksum
+	    crc =
+	      crc16 (g_Beacon.byte, sizeof (g_Beacon) - sizeof (uint16_t));
+
+	    if (ntohs (g_Beacon.pkt.crc) == crc)
+	      {
+		pin_led (GPIO_LED1);
+
+		oid = ntohs (g_Beacon.pkt.oid);
+		if (g_Beacon.pkt.flags & RFBFLAGS_SENSOR)
+		  debug_printf ("BUTTON: %i\n", oid);
+
+		switch (g_Beacon.pkt.proto)
+		  {
+
+		  case RFBPROTO_READER_ANNOUNCE:
+		    strength = g_Beacon.pkt.p.reader_announce.strength;
+		    break;
+
+		  case RFBPROTO_BEACONTRACKER:
+		    strength = g_Beacon.pkt.p.tracker.strength & 0x3;
+		    debug_printf (" R: %04i={%i,0x%08X}\n",
+				  (int) oid,
+				  (int) strength,
+				  ntohl (g_Beacon.pkt.p.tracker.seq));
+		    break;
+
+		  case RFBPROTO_PROXREPORT:
+		    strength = 3;
+		    debug_printf (" P: %04i={%i,0x%04X}\n",
+				  (int) oid,
+				  (int) strength,
+				  (int) ntohs (g_Beacon.pkt.p.prox.seq));
+		    for (t = 0; t < PROX_MAX; t++)
+		      {
+			crc = (ntohs (g_Beacon.pkt.p.prox.oid_prox[t]));
+			if (crc)
+			  debug_printf ("PX: %04i={%04i,%i,%i}\n",
+					(int) oid,
+					(int) ((crc >> 0) & 0x7FF),
+					(int) ((crc >> 14) & 0x3),
+					(int) ((crc >> 11) & 0x7));
+		      }
+		    break;
+
+		  default:
+		    strength = 0xFF;
+		    debug_printf ("Unknown Protocol: %i\n",
+				  (int) g_Beacon.pkt.proto);
+		  }
+
+		if (strength < 0xFF)
+		  {
+		    /* do something with the data */
+		  }
+		pin_led (GPIO_LEDS_OFF);
+	      }
+	  status = nRFAPI_GetFifoStatus ();
+	  debug_printf("Status: 0x%02X\n",status);
+	  }
+	while ((status & FIFO_RX_EMPTY) == 0);
+
+      nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
 
       if (UARTCount)
 	{

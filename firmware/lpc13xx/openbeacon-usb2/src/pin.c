@@ -36,8 +36,8 @@
 void
 pin_led (uint8_t led)
 {
-  GPIOSetValue (LED0_PORT, LED0_BIT, led & GPIO_LED0);
-  GPIOSetValue (LED1_PORT, LED1_BIT, (led & GPIO_LED1) > 1);
+  GPIOSetValue (LED0_PORT, LED0_BIT, (led & GPIO_LED0) > 0);
+  GPIOSetValue (LED1_PORT, LED1_BIT, (led & GPIO_LED1) > 0);
 }
 
 void

@@ -25,8 +25,8 @@
 
 */
 #include <openbeacon.h>
-#include <nRF_HW.h>
-#include <nRF_CMD.h>
+#include "nRF_HW.h"
+#include "nRF_CMD.h"
 #include "spi.h"
 
 /* IO definitions */
@@ -44,8 +44,7 @@
 #define NRFCMD_MACRO_READ 0x80
 static uint8_t spi_outbuf[SPI_MAX_XFER_LEN];
 static uint8_t spi_inbuf[SPI_MAX_XFER_LEN];
-
-static int g_packet_rxed=0;
+static volatile uint8_t g_packet_rxed=0;
 
 void
 nRFCMD_CE (uint8_t enable)
@@ -191,6 +190,18 @@ WAKEUP_IRQHandlerPIO1_9 (void)
   LPC_SYSCON->STARTRSRP0CLR = STARTxPRP0_PIO1_9;
 }
 
+
+extern uint8_t nRFCMD_WaitRx(uint32_t ticks)
+{
+  (void) ticks;
+
+  if(!g_packet_rxed)
+    return 0;
+
+  g_packet_rxed=0;
+  return 1;
+}
+
 void
 nRFCMD_Init (void)
 {
@@ -204,7 +215,6 @@ nRFCMD_Init (void)
   LPC_SYSCON->STARTAPRP0 = (LPC_SYSCON->STARTAPRP0 & ~STARTxPRP0_PIO1_9);
   LPC_SYSCON->STARTRSRP0CLR = STARTxPRP0_PIO1_9;
   LPC_SYSCON->STARTERP0 |= STARTxPRP0_PIO1_9;
-
 
   LPC_IOCON->JTAG_TDI_PIO0_11 = 1;
   GPIOSetDir (CPU_CE_RF_PORT, CPU_CE_RF_PIN, 1);

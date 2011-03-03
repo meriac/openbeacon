@@ -22,5 +22,21 @@
 #include <config.h>
 #include <debug_printf.h>
 #include <string.h>
+#include <crc16.h>
+
+static inline uint16_t htons(uint16_t x)
+{
+  __asm__ ("rev16 %0, %1" : "=r" (x) : "r" (x));
+  return x;
+}
+
+static inline uint32_t htonl(uint32_t x)
+{
+  __asm__ ("rev %0, %1" : "=r" (x) : "r" (x));
+  return x;
+}
+
+#define ntohl(l) htonl(l)
+#define ntohs(s) htons(s)
 
 #endif/*__OPENBEACON_H__*/

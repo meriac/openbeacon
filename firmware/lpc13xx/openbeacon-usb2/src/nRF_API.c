@@ -92,7 +92,7 @@ nRFAPI_Init (uint8_t channel,
 {
   uint8_t i;
 
-  // init lower layer
+  // init IO layer of nRF24L01
   nRFCMD_Init ();
 
   // check validity
@@ -129,7 +129,7 @@ nRFAPI_Init (uint8_t channel,
     nRFAPI_SetFeatures (features);
 
   // power down
-  nRFAPI_PowerDown ();
+  // nRFAPI_PowerDown ();
 
   return 1;
 }

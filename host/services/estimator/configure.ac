@@ -1,8 +1,8 @@
 AC_INIT([estimator],[0.1],[meriac@bitmanufaktur.de])
 AM_INIT_AUTOMAKE([-Wall -Werror])
-WITH_MYSQL()
 AC_PROG_CC
 AC_PROG_CXX
+AC_LANG_CPLUSPLUS
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
     Makefile
@@ -23,6 +23,9 @@ AC_CHECK_HEADERS([string.h])
 AC_CHECK_HEADERS([sys/socket.h])
 AC_CHECK_HEADERS([sys/time.h])
 AC_CHECK_HEADERS([unistd.h])
+AC_CHECK_HEADERS([pthread.h])
+
+AC_CHECK_LIB([pthread],[pthread_create],[LDFLAGS=-lpthread],[AC_MSG_ERROR([No pthread library is available])])
 
 AC_C_INLINE
 AC_FUNC_MALLOC
