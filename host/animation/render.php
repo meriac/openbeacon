@@ -32,8 +32,9 @@ define('HEIGHT',1200);
 
 define('RADIUS', HEIGHT/7);
 define('INNER_SPACE', RADIUS/5);
-define('CROSSING', 3);
+define('CROSSING', 4);
 define('ANIMATION_STEPS', 100);
+define('ANIMATION_ANGLE', 10);
 define('CIRCUMFERENCE', 2 * M_PI * RADIUS);
 define('SPEED', CIRCUMFERENCE/ANIMATION_STEPS/3);
 
@@ -57,9 +58,8 @@ function imagewheel ($img, $x ,$y, $alpha, $color)
 function imagewheelmove ($img, $x ,$y, $speed)
 {
     $color = 0xFF;
-    $delta_angle = ($speed*180)/(M_PI*RADIUS);
-    $alpha = $x / $delta_angle;
-    $start_x = $x - ($speed * ANIMATION_STEPS);
+    $start_x = $x - ($speed*ANIMATION_STEPS);
+    $alpha = 360*($x/CIRCUMFERENCE);
 
     $steps = ANIMATION_STEPS;
 
@@ -70,7 +70,7 @@ function imagewheelmove ($img, $x ,$y, $speed)
 
 	$color -= 0x100/ANIMATION_STEPS;
 	$start_x += $speed;
-	$alpha += $delta_angle;
+	$alpha += 360*($speed/CIRCUMFERENCE);
     }
 }
 
@@ -91,5 +91,5 @@ function imagewheelanim ($x, $y, $speed, $steps)
 
 }
 
-imagewheelanim (0, HEIGHT/2, 10, WIDTH/10);
+imagewheelanim (-RADIUS, HEIGHT/2, 5, (WIDTH+(3*RADIUS))/5);
 ?>

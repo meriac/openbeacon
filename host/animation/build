@@ -1,0 +1,3 @@
+#!/bin/bash
+./render.php
+mencoder "mf://*.png" -mf fps=25 -o test.avi -ovc lavc -lavcopts vcodec=msmpeg4v2:vbitrate=8000
