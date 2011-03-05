@@ -1,4 +1,3 @@
-#!/usr/bin/php
 <?php
 /***************************************************************
  *
@@ -32,7 +31,7 @@ define('HEIGHT',1200);
 
 define('RADIUS', HEIGHT/7);
 define('INNER_SPACE', RADIUS/5);
-define('CROSSING', 4);
+define('CROSSING', 3);
 define('ANIMATION_STEPS', 100);
 define('ANIMATION_ANGLE', 10);
 define('CIRCUMFERENCE', 2 * M_PI * RADIUS);
