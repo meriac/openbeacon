@@ -35,7 +35,6 @@ define('CROSSING', 3);
 define('ANIMATION_STEPS', 100);
 define('ANIMATION_ANGLE', 10);
 define('CIRCUMFERENCE', 2 * M_PI * RADIUS);
-define('SPEED', CIRCUMFERENCE/ANIMATION_STEPS/3);
 
 function imagecrossing ($img, $x, $y, $alpha, $color)
 {
