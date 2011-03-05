@@ -55,7 +55,7 @@ function imagewheel ($img, $x ,$y, $alpha, $color)
 
 function imagewheelmove ($img, $x ,$y, $speed)
 {
-    $color = 0xFF;
+    $color = 0x00;
     $start_x = $x - ($speed*ANIMATION_STEPS);
     $alpha = 360*($x/CIRCUMFERENCE);
 
@@ -66,7 +66,7 @@ function imagewheelmove ($img, $x ,$y, $speed)
 	$col = imagecolorallocate($img,$color, $color, $color);
 	imagewheel($img, $start_x, $y, $alpha, $col);
 
-	$color -= 0x100/ANIMATION_STEPS;
+	$color += 0x100/ANIMATION_STEPS;
 	$start_x += $speed;
 	$alpha += 360*($speed/CIRCUMFERENCE);
     }
@@ -78,7 +78,7 @@ function imagewheelanim ($x, $y, $speed, $steps)
     {
 	$img = imagecreatetruecolor(WIDTH, HEIGHT);
 	imageantialias($img, true);
-	$col_back = imagecolorallocate($img,0xFF,0xFF,0xFF);
+	$col_back = imagecolorallocate($img,0x00,0x00,0x00);
         imagefilledrectangle($img,0,0,WIDTH,HEIGHT,$col_back);
 
 	imagewheelmove($img,$x, $y, $speed);
@@ -90,5 +90,5 @@ function imagewheelanim ($x, $y, $speed, $steps)
 
 }
 
-imagewheelanim (-RADIUS, HEIGHT/2, 5, (WIDTH+(3*RADIUS))/5);
+imagewheelanim (-RADIUS, HEIGHT/2, 5, (WIDTH+(4*RADIUS))/5);
 ?>
