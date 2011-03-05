@@ -27,9 +27,9 @@
 */
 
 define('WIDTH', 1920);
-define('HEIGHT',1200);
+define('HEIGHT',350);
 
-define('RADIUS', HEIGHT/7);
+define('RADIUS', 160);
 define('INNER_SPACE', RADIUS/5);
 define('CROSSING', 3);
 define('ANIMATION_STEPS', 100);
@@ -76,7 +76,8 @@ function imagewheelanim ($x, $y, $speed, $steps)
 {
     for($i=0;$i<$steps;$i++)
     {
-        $img = imagecreate(WIDTH, HEIGHT);
+	$img = imagecreatetruecolor(WIDTH, HEIGHT);
+	imageantialias($img, true);
 	$col_back = imagecolorallocate($img,0xFF,0xFF,0xFF);
         imagefilledrectangle($img,0,0,WIDTH,HEIGHT,$col_back);
 
