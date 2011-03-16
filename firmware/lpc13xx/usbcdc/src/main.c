@@ -124,7 +124,6 @@ main (void)
   GPIOSetValue (LED_PORT, LED_BIT, 0);
 
   USBIOClkConfig ();
-
   VCOM_Init ();			// VCOM Initialization
   USB_Init ();			// USB Initialization
   USB_Connect (1);		// USB Connect
@@ -133,8 +132,6 @@ main (void)
   SystemCoreClockUpdate ();
   UARTInit (115200, 0);
   debug_printf("Hello World!\n");
-
-  while (!USB_Configuration);	// wait until USB is configured
 
   i=0;
   while (1)
