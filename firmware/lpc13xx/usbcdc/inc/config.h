@@ -37,7 +37,9 @@ How to use:
 
 #define TRUE 1
 #define FALSE 0
+#ifndef NULL
 #define NULL 0
+#endif/*NULL*/
 
 /*********************************************************************************
 **                            End Of File
