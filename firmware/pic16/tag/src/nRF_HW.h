@@ -98,4 +98,7 @@
 #define NRF_MAX_MAC_SIZE 5
 #define NRF_MAX_BUFFER_SIZE 32
 
+#define NRF_TX_POWER_HIGH 0
+#define NRF_TX_POWER_LOW 1
+
 #endif /*NRF_HW_H */

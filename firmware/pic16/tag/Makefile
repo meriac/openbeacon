@@ -37,7 +37,7 @@ flash: counted
 	$(PK2) -A5 -PPIC$(CHIP) -F$(PROGNAME).hex -M -YP
 
 publish: counted
-	scp -P30303 $(PROGNAME).hex singularity.bitmanufaktur.net:/home/wwwrun/open.bitmanufaktur.com/web/www/people/milosch/pictag/
+	cp $(PROGNAME).hex ~/Share/
 
 counted: $(PROGNAME).hex
 	php ./create_counted_firmware.php

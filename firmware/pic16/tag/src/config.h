@@ -33,7 +33,7 @@
  *  CPU peripherals settings
  *
  * configuration:
- *      RA0                     input
+ *      RA0     TX_POWER        ouptput
  *      RA1     SENSOR          input
  *      RA2     nRF_IRQ         input
  *      RA3     Vpp             input
@@ -49,7 +49,7 @@
  *
  ***************************************************************/
 
-#define CONFIG_PIN_COMPAT	RA0
+#define CONFIG_PIN_TX_POWER	RA0
 #define CONFIG_PIN_SENSOR	RA1
 #define CONFIG_PIN_IRQ		RA2
 
@@ -76,5 +76,11 @@
  ***************************************************************/
 
 #define CONFIG_DEFAULT_CHANNEL 81
+
+#ifdef  CONFIG_HIRES_LOCATION
+#define CONFIG_MAX_POWER_LEVELS 8
+#else /*CONFIG_HIRES_LOCATION*/
+#define CONFIG_MAX_POWER_LEVELS 4
+#endif/*CONFIG_HIRES_LOCATION*/
 
 #endif

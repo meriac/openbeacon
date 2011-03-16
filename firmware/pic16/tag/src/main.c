@@ -180,7 +180,9 @@ main (void)
   ANSEL = CONFIG_CPU_ANSEL;
   CMCON0 = CONFIG_CPU_CMCON0;
   OSCCON = CONFIG_CPU_OSCCON;
-  CONFIG_PIN_COMPAT = 0;
+#ifndef CONFIG_HIRES_LOCATION
+  CONFIG_PIN_TX_POWER = NRF_TX_POWER_HIGH;
+#endif/*CONFIG_HIRES_LOCATION*/
 
   timer_init ();
 
@@ -240,21 +242,26 @@ main (void)
 	TRISA = CONFIG_CPU_TRISA & ~0x02;
 	CONFIG_PIN_SENSOR = 0;
 	sleep_jiffies (JIFFIES_PER_MS (10) +
-		       (rand () % JIFFIES_PER_MS (180)));
+		(rand () % JIFFIES_PER_MS (500)));
 	CONFIG_PIN_SENSOR = 1;
 	TRISA = CONFIG_CPU_TRISA;
 
+#ifdef CONFIG_HIRES_LOCATION
+	if((i & 4)==0)
+	    CONFIG_PIN_TX_POWER = NRF_TX_POWER_LOW;
+#endif CONFIG_HIRES_LOCATION
 	// send it away
 	nRFCMD_Macro ((unsigned char *) &g_MacroBeacon);
-	status = (i & 0xF) == 0;
 
-	if (status)
+	if ((i & 0x1F) == 0)
 	  CONFIG_PIN_LED = 1;
 	nRFCMD_Execute ();
-	if (status)
-	  CONFIG_PIN_LED = 0;
+	CONFIG_PIN_LED = 0;
+#ifdef CONFIG_HIRES_LOCATION
+	CONFIG_PIN_TX_POWER = NRF_TX_POWER_HIGH;
+#endif CONFIG_HIRES_LOCATION
 
-	if (++i >= 4)
+	if (++i >= CONFIG_MAX_POWER_LEVELS)
 	  {
 	    i = 0;
 	    seq++;
