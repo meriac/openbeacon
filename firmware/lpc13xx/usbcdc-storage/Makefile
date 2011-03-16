@@ -1,4 +1,4 @@
-TARGET=cdc_acm_msd
+TARGET=usbcdc-storage
 ARCH=LPC13
 CPU=$(ARCH)43
 DEBUG=-g
