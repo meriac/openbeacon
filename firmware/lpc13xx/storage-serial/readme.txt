@@ -36,4 +36,5 @@ The project makes use of code from the following library projects:
 This library project must exist in the same workspace in order
 for the project to successfully build.
 
-For more details, read the comments in config.h
+For more details, read the comments in config.h and
+http://www.nxp.com/documents/application_note/AN11018.pdf
