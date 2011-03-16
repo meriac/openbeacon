@@ -10,6 +10,7 @@
  */
 
 #include <LPC13xx.h>
+#ifndef UART_DISABLE
 #include <ctype.h>
 #include <uart.h>
 #include <debug_printf.h>
@@ -363,3 +364,4 @@ void hex_dump (const unsigned char *buf, unsigned int addr, unsigned int len)
                 debug_printf("|\n\r");
         }
 }
+#endif /* UART_DISABLE */

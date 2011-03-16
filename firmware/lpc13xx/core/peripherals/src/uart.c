@@ -9,6 +9,7 @@
  *
 ******************************************************************************/
 #include "LPC13xx.h"
+#ifndef UART_DISABLE
 #include "uart.h"
 
 // CodeRed - change for CMSIS 1.3
@@ -159,7 +160,7 @@ void UARTSendChar(uint8_t data)
 ** Returned value:	None
 ** 
 *****************************************************************************/
-void UARTSend(uint8_t * BufferPtr, uint32_t Length)
+void UARTSend(const uint8_t * BufferPtr, uint32_t Length)
 {
 
     while (Length != 0) {
@@ -182,3 +183,4 @@ void UARTSend(uint8_t * BufferPtr, uint32_t Length)
 /******************************************************************************
 **                            End Of File
 ******************************************************************************/
+#endif /* UART_DISABLE */

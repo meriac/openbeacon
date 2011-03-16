@@ -8,8 +8,9 @@
  *   2008.08.21  ver 1.00    Preliminary version, first Release
  *
 ******************************************************************************/
-#ifndef __UART_H
-#define __UART_H
+#ifndef __UART_H__
+#define __UART_H__
+#ifndef UART_DISABLE
 
 #define RS485_ENABLED	0
 #define TX_INTERRUPT	0	/* 0 if TX uses polling, 1 interrupt driven. */
@@ -47,12 +48,13 @@
 extern void UARTInit (uint32_t Baudrate,uint8_t rtscts);
 extern void UART_IRQHandler (void);
 extern void UARTSendChar (uint8_t data);
-extern void UARTSend (uint8_t * BufferPtr, uint32_t Length);
+extern void UARTSend (const uint8_t * BufferPtr, uint32_t Length);
 
 extern volatile uint32_t UARTCount;
 extern volatile uint8_t UARTBuffer[BUFSIZE];
 
-#endif /* end __UART_H */
+#endif /* UART_DISABLE */
+#endif /* end __UART_H__ */
 /*****************************************************************************
 **                            End Of File
 ******************************************************************************/
