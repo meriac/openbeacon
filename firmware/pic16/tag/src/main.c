@@ -242,7 +242,7 @@ main (void)
 	TRISA = CONFIG_CPU_TRISA & ~0x02;
 	CONFIG_PIN_SENSOR = 0;
 	sleep_jiffies (JIFFIES_PER_MS (10) +
-		(rand () % JIFFIES_PER_MS (500)));
+		(rand () % JIFFIES_PER_MS (180)));
 	CONFIG_PIN_SENSOR = 1;
 	TRISA = CONFIG_CPU_TRISA;
 
@@ -250,17 +250,17 @@ main (void)
 	if((i & 4)==0)
 	    CONFIG_PIN_TX_POWER = NRF_TX_POWER_LOW;
 #endif CONFIG_HIRES_LOCATION
+
 	// send it away
 	nRFCMD_Macro ((unsigned char *) &g_MacroBeacon);
 
-	if ((i & 0x1F) == 0)
+	if (!i && ((((unsigned char)seq) & 0x7) == 0))
 	  CONFIG_PIN_LED = 1;
 	nRFCMD_Execute ();
 	CONFIG_PIN_LED = 0;
 #ifdef CONFIG_HIRES_LOCATION
 	CONFIG_PIN_TX_POWER = NRF_TX_POWER_HIGH;
 #endif CONFIG_HIRES_LOCATION
-
 	if (++i >= CONFIG_MAX_POWER_LEVELS)
 	  {
 	    i = 0;

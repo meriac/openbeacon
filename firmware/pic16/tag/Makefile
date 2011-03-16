@@ -37,7 +37,7 @@ flash: counted
 	$(PK2) -A5 -PPIC$(CHIP) -F$(PROGNAME).hex -M -YP
 
 publish: counted
-	cp $(PROGNAME).hex ~/Share/
+	cp $(PROGNAME).hex /mnt/Projekte/OpenBeacon/
 
 counted: $(PROGNAME).hex
 	php ./create_counted_firmware.php
