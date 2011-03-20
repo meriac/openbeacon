@@ -143,8 +143,6 @@ void main_menue(uint8_t cmd)
 static
 void nRF_Task(void *pvParameters)
 {
-	portTickType xNextWakeTime;
-
 	int t, firstrun;
 	uint8_t strength, status;
 	uint16_t crc;
@@ -152,17 +150,14 @@ void nRF_Task(void *pvParameters)
 
 	(void) pvParameters;
 
-	/* Initialise xNextWakeTime - this only needs to be done once. */
-	xNextWakeTime = xTaskGetTickCount();
-
 	/* blink as a sign of boot to detect crashes */
 	for (t = 0; t < 20; t++)
 	{
 		pin_led(GPIO_LED0);
-		vTaskDelayUntil(&xNextWakeTime, 50 / portTICK_RATE_MS);
+		vTaskDelay(50 / portTICK_RATE_MS);
 
 		pin_led(GPIO_LEDS_OFF);
-		vTaskDelayUntil(&xNextWakeTime, 50 / portTICK_RATE_MS);
+		vTaskDelay(50 / portTICK_RATE_MS);
 	}
 
 	/* Init OpenBeacon nRF24L01 interface */
