@@ -10,6 +10,14 @@
 #include <usbdesc.h>
 #include <gpio.h>
 #include <rom_drivers.h>
+#ifdef  __LPC1343__
+#define LPC_RAM_SIZE (8*1024)
+#define LPC_FLASH_SIZE (32*1024)
+#endif/*__LPC1343__*/
+#ifdef  __LPC1342__
+#define LPC_RAM_SIZE (4*1024)
+#define LPC_FLASH_SIZE (16*1024)
+#endif/*__LPC1342__*/
 #else /*__LPC13xx__*/
 #error Please specify architecture
 #endif/*__LPC13xx__*/
@@ -19,7 +27,14 @@
 #define DEVICEID_LPC1342 0x3D01402BUL
 #define DEVICEID_LPC1343 0x3D00002BUL
 
+
 #include <config.h>
+
+#ifdef  ENABLE_FREERTOS
+#include <FreeRTOS.h>
+#include <task.h>
+#endif/*ENABLE_FREERTOS*/
+
 #include <debug_printf.h>
 #include <string.h>
 #include <crc16.h>
