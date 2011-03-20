@@ -169,13 +169,13 @@ void nRF_Task(void *pvParameters)
 	t = 0;
 	while (1)
 	{
-		/* blink LED0 on every 32th run */
-		if ((t++ & 0x1F) == 0)
+		/* blink LED0 on every 10th run */
+		if ((t++ % 10) == 0)
+		{
 			pin_led(GPIO_LED0);
-		/* wait anyway */
-		vTaskDelay(10 / portTICK_RATE_MS);
-
-		pin_led(GPIO_LEDS_OFF);
+			vTaskDelay(10 / portTICK_RATE_MS);
+			pin_led(GPIO_LEDS_OFF);
+		}
 
 		/* tunr off after button press */
 		if (!pin_button0())
@@ -186,7 +186,7 @@ void nRF_Task(void *pvParameters)
 			pmu_off(0);
 		}
 
-		if (nRFCMD_WaitRx(10))
+		if (nRFCMD_WaitRx(100 / portTICK_RATE_MS))
 			do
 			{
 				// read packet from nRF chip

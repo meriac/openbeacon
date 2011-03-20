@@ -46,6 +46,8 @@ static uint8_t spi_outbuf[SPI_MAX_XFER_LEN];
 static uint8_t spi_inbuf[SPI_MAX_XFER_LEN];
 static volatile uint8_t g_packet_rxed=0;
 
+static xSemaphoreHandle xnRF_SemaphoreACK;
+
 void
 nRFCMD_CE (uint8_t enable)
 {
@@ -184,22 +186,20 @@ nRFCMD_Status (void)
 void
 WAKEUP_IRQHandlerPIO1_9 (void)
 {
-  g_packet_rxed=1;
+  portBASE_TYPE xTaskWoken = pdFALSE;
+
+  xTaskWoken = xSemaphoreGiveFromISR( xnRF_SemaphoreACK, &xTaskWoken );
 
   /* Clear pending IRQ */
   LPC_SYSCON->STARTRSRP0CLR = STARTxPRP0_PIO1_9;
+
+  portEND_SWITCHING_ISR (xTaskWoken);
 }
 
-
-extern uint8_t nRFCMD_WaitRx(uint32_t ticks)
+uint8_t
+nRFCMD_WaitRx(uint32_t ticks)
 {
-  (void) ticks;
-
-  if(!g_packet_rxed)
-    return 0;
-
-  g_packet_rxed=0;
-  return 1;
+  return xSemaphoreTake(xnRF_SemaphoreACK,ticks);
 }
 
 void
@@ -207,6 +207,9 @@ nRFCMD_Init (void)
 {
   /* setup SPI chipselect pin */
   spi_init_pin (SPI_CS_NRF);
+
+  /* initialize semaphores */
+  vSemaphoreCreateBinary(xnRF_SemaphoreACK);
 
   /* setup IOs */
   LPC_IOCON->PIO1_9 = 0;

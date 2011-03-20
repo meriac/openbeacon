@@ -33,6 +33,7 @@
 #ifdef  ENABLE_FREERTOS
 #include <FreeRTOS.h>
 #include <task.h>
+#include <semphr.h>
 #endif/*ENABLE_FREERTOS*/
 
 #include <debug_printf.h>
