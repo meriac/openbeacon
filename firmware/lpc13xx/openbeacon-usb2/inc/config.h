@@ -37,4 +37,9 @@
 
 #define NRF_MAX_MAC_SIZE 5
 
+/* FreeRTOS configuration */
+#define ENABLE_FREERTOS
+#define TASK_NRF_STACK_SIZE 256
+#define TASK_NRF_PRIORITY (tskIDLE_PRIORITY + 2)
+
 #endif/*__CONFIG_H__*/

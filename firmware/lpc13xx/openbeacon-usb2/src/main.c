@@ -101,11 +101,13 @@ void main_menue(uint8_t cmd)
 			" * (C) 2010 Milosch Meriac <meriac@openbeacon.de>    *\n"
 			" *****************************************************\n"
 			" * H,?          - this help screen\n"
-			" * P            - invoke ISP programming mode\n"
-			" * S            - SPI status\n"
-			" * R            - OpenBeacon nRF24L01 register dump\n"
-			" *****************************************************\n"
-			"\n");
+#ifdef MENUE_ALLOW_ISP_REBOOT
+				" * P            - invoke ISP programming mode\n"
+#endif
+				" * S            - SPI status\n"
+				" * R            - OpenBeacon nRF24L01 register dump\n"
+				" *****************************************************\n"
+				"\n");
 		break;
 #ifdef MENUE_ALLOW_ISP_REBOOT
 		case 'P':
@@ -138,64 +140,49 @@ void main_menue(uint8_t cmd)
 	debug_printf("\n# ");
 }
 
-int main(void)
+static
+void nRF_Task(void *pvParameters)
 {
+	portTickType xNextWakeTime;
+
 	int t, firstrun;
-	volatile int i;
 	uint8_t strength, status;
 	uint16_t crc;
 	uint32_t oid;
 
-	/* wait on boot - debounce */
-	for (i = 0; i < 2000000; i++)
-		;
-	/* initialize  pins */
-	pin_init();
-	/* Init SPI */
-	spi_init();
-	/* Init Storage */
-#if (DISK_SIZE>0)
-	storage_init();
-#endif
-	/* Init USB HID interface */
-#if (USB_HID_IN_REPORT_SIZE>0)||(USB_HID_OUT_REPORT_SIZE>0)
-	hid_init ();
-#endif
-	/* power management init */
-	pmu_init();
-	/* Init OpenBeacon nRF24L01 interface */
-	nRFAPI_Init(81, broadcast_mac, sizeof(broadcast_mac), 0);
-	nRFAPI_SetRxMode(1);
+	(void) pvParameters;
+
+	/* Initialise xNextWakeTime - this only needs to be done once. */
+	xNextWakeTime = xTaskGetTickCount();
 
 	/* blink as a sign of boot to detect crashes */
 	for (t = 0; t < 20; t++)
 	{
 		pin_led(GPIO_LED0);
-		for (i = 0; i < 100000; i++)
-			;
+		vTaskDelayUntil(&xNextWakeTime, 50 / portTICK_RATE_MS);
+
 		pin_led(GPIO_LEDS_OFF);
-		for (i = 0; i < 100000; i++)
-			;
+		vTaskDelayUntil(&xNextWakeTime, 50 / portTICK_RATE_MS);
 	}
 
-	/* Init Bluetooth */
-	bt_init(1);
-	/* Init 3D acceleration sensor */
-	acc_init(1);
+	/* Init OpenBeacon nRF24L01 interface */
+	nRFAPI_Init(81, broadcast_mac, sizeof(broadcast_mac), 0);
+	nRFAPI_SetRxMode(1);
 	nRFCMD_CE(1);
 
 	/* main loop */
 	t = 0;
 	while (1)
 	{
-		/* blink LED0 on every 32th run - FIXME later with sleep */
+		/* blink LED0 on every 32th run */
 		if ((t++ & 0x1F) == 0)
 			pin_led(GPIO_LED0);
 		/* wait anyway */
-		for (i = 0; i < 100000; i++)
-			;
+		vTaskDelay(10 / portTICK_RATE_MS);
+
 		pin_led(GPIO_LEDS_OFF);
 
+		/* tunr off after button press */
 		if (!pin_button0())
 		{
 			bt_init(0);
@@ -226,7 +213,6 @@ int main(void)
 
 					switch (g_Beacon.pkt.proto)
 					{
-
 					case RFBPROTO_READER_ANNOUNCE:
 						strength = g_Beacon.pkt.p.reader_announce.strength;
 						break;
@@ -284,7 +270,7 @@ int main(void)
 				firstrun = 0;
 			}
 			else
-				/* execute menue command with last character received */
+				/* execute menu command with last character received */
 				main_menue(UARTBuffer[UARTCount - 1]);
 
 			/* LED1 off again */
@@ -294,4 +280,38 @@ int main(void)
 			UARTCount = 0;
 		}
 	}
+}
+
+int main(void)
+{
+	volatile int i;
+	/* wait on boot - debounce */
+	for (i = 0; i < 2000000; i++)
+		;
+	/* initialize  pins */
+	pin_init();
+	/* Init SPI */
+	spi_init();
+	/* Init Storage */
+#ifdef USB_DISK_SUPPORT
+	storage_init();
+#endif
+	/* Init USB HID interface */
+#if (USB_HID_IN_REPORT_SIZE>0)||(USB_HID_OUT_REPORT_SIZE>0)
+	hid_init ();
+#endif
+	/* power management init */
+	pmu_init();
+	/* Init Bluetooth */
+	bt_init(1);
+	/* Init 3D acceleration sensor */
+	acc_init(1);
+
+	xTaskCreate(nRF_Task, (const signed char*) "nRF", TASK_NRF_STACK_SIZE,
+			NULL, TASK_NRF_PRIORITY, NULL);
+
+	/* Start the tasks running. */
+	vTaskStartScheduler();
+
+	return 0;
 }
