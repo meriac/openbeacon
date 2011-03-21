@@ -42,4 +42,6 @@
 #define TASK_NRF_STACK_SIZE 256
 #define TASK_NRF_PRIORITY (tskIDLE_PRIORITY + 2)
 
+#define UPDATE_INTERVAL_MS 250
+
 #endif/*__CONFIG_H__*/
