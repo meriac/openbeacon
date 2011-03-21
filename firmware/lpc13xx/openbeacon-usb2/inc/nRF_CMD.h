@@ -35,6 +35,7 @@ extern uint8_t nRFCMD_RegReadBuf (uint8_t reg, uint8_t * buf, uint8_t count);
 extern uint8_t nRFCMD_GetRegSize (uint8_t reg);
 extern uint8_t nRFCMD_WaitRx(uint32_t ticks);
 extern void nRFCMD_CE (uint8_t enable);
+extern void nRFCMD_Power (uint8_t enable);
 extern void nRFCMD_ReadWriteBuffer (const uint8_t * tx_data, uint8_t * rx_data, uint32_t len);
 extern void nRFCMD_ExecMacro (const uint8_t * macro);
 extern void nRFCMD_RegisterDump (void);
