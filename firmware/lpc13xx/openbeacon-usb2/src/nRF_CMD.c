@@ -53,6 +53,11 @@ void nRFCMD_CE(uint8_t enable)
 	GPIOSetValue(CPU_CE_RF_PORT, CPU_CE_RF_PIN, enable ? 1 : 0);
 }
 
+void nRFCMD_Power(uint8_t enable)
+{
+	GPIOSetValue(CPU_SWITCH_RF_PORT, CPU_SWITCH_RF_PIN, enable ? 0 : 1);
+}
+
 void nRFCMD_ReadWriteBuffer(const uint8_t * tx_data, uint8_t * rx_data,
 		uint32_t len)
 {
@@ -185,7 +190,13 @@ void WAKEUP_IRQHandlerPIO1_9(void)
 
 uint8_t nRFCMD_WaitRx(uint32_t ticks)
 {
-	return xSemaphoreTake(xnRF_SemaphoreACK, ticks);
+	if (xSemaphoreTake(xnRF_SemaphoreACK, ticks))
+	{
+		g_packet_rxed++;
+		return pdTRUE;
+	}
+	else
+		return pdFALSE;
 }
 
 void nRFCMD_Init(void)
