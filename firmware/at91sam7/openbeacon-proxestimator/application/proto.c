@@ -343,7 +343,7 @@ vnRFtaskRxTx (void *parameter)
 		      break;
 
 		    case RFBPROTO_BEACONTRACKER:
-		      strength = g_Beacon.pkt.p.tracker.strength & 0x3;
+		      strength = g_Beacon.pkt.p.tracker.strength;
 		      debug_printf(" R: %04i={%i,0x%08X}\n",
 			(int)oid,
 			(int)strength,
