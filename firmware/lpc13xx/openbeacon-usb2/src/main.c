@@ -46,6 +46,10 @@ static const uint32_t xxtea_key[4] =
 static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] =
 { 1, 2, 3, 2, 1 };
 
+/* device UUID */
+static uint16_t tag_id;
+static TDeviceUID device_uuid;
+
 #if (USB_HID_IN_REPORT_SIZE>0)||(USB_HID_OUT_REPORT_SIZE>0)
 static uint8_t hid_buffer[USB_HID_IN_REPORT_SIZE];
 
@@ -71,13 +75,9 @@ SetOutReport (uint8_t * dst, uint32_t length)
 
 static void show_version(void)
 {
-	TDeviceUID uid;
-
-	memset(&uid, 0, sizeof(uid));
-	iap_read_uid(&uid);
-
-	debug_printf(" * Device UID: %08X:%08X:%08X:%08X\n", uid[0], uid[1],
-			uid[2], uid[3]);
+	debug_printf(" * Tag ID: %i\n", (uint16_t) device_uuid[3]);
+	debug_printf(" * Device UID: %08X:%08X:%08X:%08X\n", device_uuid[0],
+			device_uuid[1], device_uuid[2], device_uuid[3]);
 }
 
 void main_menue(uint8_t cmd)
@@ -125,6 +125,7 @@ void main_menue(uint8_t cmd)
 			" *****************************************************\n");
 		show_version();
 		spi_status();
+		nRFCMD_Status();
 		acc_status();
 		//      pmu_status ();
 #if (DISK_SIZE>0)
@@ -141,14 +142,68 @@ void main_menue(uint8_t cmd)
 }
 
 static
+void nRF_tx(uint8_t power)
+{
+	/* update crc */
+	g_Beacon.pkt.crc = htons(crc16(g_Beacon.byte, sizeof(g_Beacon)
+			- sizeof(uint16_t)));
+	/* encrypt data */
+	xxtea_encode(g_Beacon.block, XXTEA_BLOCK_COUNT, xxtea_key);
+
+	pin_led(GPIO_LED0);
+
+	/* update power pin */
+	nRFCMD_Power(power & 0x4);
+
+	/* disable RX mode */
+	nRFCMD_CE(0);
+	vTaskDelay(5 / portTICK_RATE_MS);
+
+	/* switch to TX mode */
+	nRFAPI_SetRxMode(0);
+
+	/* set TX power */
+	nRFAPI_SetTxPower(power & 0x3);
+
+	/* upload data to nRF24L01 */
+	nRFAPI_TX(g_Beacon.byte, sizeof(g_Beacon));
+
+	/* transmit data */
+	nRFCMD_CE(1);
+
+	/* wait until packet is transmitted */
+	vTaskDelay(2 / portTICK_RATE_MS);
+
+	/* switch to RX mode again */
+	nRFAPI_SetRxMode(1);
+
+	pin_led(GPIO_LEDS_OFF);
+
+	if (power & 0x4)
+		nRFCMD_Power(0);
+}
+
+static
 void nRF_Task(void *pvParameters)
 {
 	int t, firstrun;
 	uint8_t strength, status;
 	uint16_t crc;
-	uint32_t oid;
+	uint32_t seq, oid;
+	portTickType LastUpdateTicks, Ticks;
 
 	(void) pvParameters;
+
+	/* Initialize OpenBeacon nRF24L01 interface */
+	if(!nRFAPI_Init(81, broadcast_mac, sizeof(broadcast_mac), 0))
+		for(;;)
+		{
+			pin_led(GPIO_LED0|GPIO_LED1);
+			vTaskDelay(500 / portTICK_RATE_MS);
+
+			pin_led(GPIO_LEDS_OFF);
+			vTaskDelay(500 / portTICK_RATE_MS);
+		}
 
 	/* blink as a sign of boot to detect crashes */
 	for (t = 0; t < 20; t++)
@@ -160,23 +215,15 @@ void nRF_Task(void *pvParameters)
 		vTaskDelay(50 / portTICK_RATE_MS);
 	}
 
-	/* Init OpenBeacon nRF24L01 interface */
-	nRFAPI_Init(81, broadcast_mac, sizeof(broadcast_mac), 0);
 	nRFAPI_SetRxMode(1);
 	nRFCMD_CE(1);
 
+	LastUpdateTicks = xTaskGetTickCount();
+
 	/* main loop */
-	t = 0;
+	seq = t = 0;
 	while (1)
 	{
-		/* blink LED0 on every 10th run */
-		if ((t++ % 10) == 0)
-		{
-			pin_led(GPIO_LED0);
-			vTaskDelay(10 / portTICK_RATE_MS);
-			pin_led(GPIO_LEDS_OFF);
-		}
-
 		/* turn off after button press */
 		if (!pin_button0())
 		{
@@ -186,7 +233,7 @@ void nRF_Task(void *pvParameters)
 			pmu_off(0);
 		}
 
-		if (nRFCMD_WaitRx(100 / portTICK_RATE_MS))
+		if (nRFCMD_WaitRx(10 / portTICK_RATE_MS))
 			do
 			{
 				// read packet from nRF chip
@@ -195,7 +242,7 @@ void nRF_Task(void *pvParameters)
 				// adjust byte order and decode
 				xxtea_decode(g_Beacon.block, XXTEA_BLOCK_COUNT, xxtea_key);
 
-				// verify the crc checksum
+				// verify the CRC checksum
 				crc = crc16(g_Beacon.byte, sizeof(g_Beacon) - sizeof(uint16_t));
 
 				if (ntohs (g_Beacon.pkt.crc) == crc)
@@ -213,7 +260,7 @@ void nRF_Task(void *pvParameters)
 						break;
 
 					case RFBPROTO_BEACONTRACKER:
-						strength = g_Beacon.pkt.p.tracker.strength & 0x3;
+						strength = g_Beacon.pkt.p.tracker.strength;
 						debug_printf(" R: %04i={%i,0x%08X}\n", (int) oid,
 								(int) strength,
 								ntohl (g_Beacon.pkt.p.tracker.seq));
@@ -251,6 +298,23 @@ void nRF_Task(void *pvParameters)
 			} while ((status & FIFO_RX_EMPTY) == 0);
 
 		nRFAPI_ClearIRQ(MASK_IRQ_FLAGS);
+
+		// update regularly
+		if (((Ticks = xTaskGetTickCount()) - LastUpdateTicks)
+				> UPDATE_INTERVAL_MS)
+		{
+			LastUpdateTicks = Ticks;
+
+			/* setup tracking packet */
+			bzero(&g_Beacon, sizeof(g_Beacon));
+			g_Beacon.pkt.oid = ntohs ((uint16_t)device_uuid[3]);
+			g_Beacon.pkt.proto = RFBPROTO_BEACONTRACKER;
+			g_Beacon.pkt.p.tracker.strength = seq % 8;
+			g_Beacon.pkt.p.tracker.seq = htonl(seq++);
+
+			/* send away packet */
+			nRF_tx(g_Beacon.pkt.p.tracker.strength);
+		}
 
 		if (UARTCount)
 		{
@@ -300,6 +364,10 @@ int main(void)
 	bt_init(1);
 	/* Init 3D acceleration sensor */
 	acc_init(1);
+	/* read device UUID */
+	bzero(&device_uuid, sizeof(device_uuid));
+	iap_read_uid(&device_uuid);
+	tag_id = crc16((uint8_t*) &device_uuid, sizeof(device_uuid));
 
 	xTaskCreate(nRF_Task, (const signed char*) "nRF", TASK_NRF_STACK_SIZE,
 			NULL, TASK_NRF_PRIORITY, NULL);
