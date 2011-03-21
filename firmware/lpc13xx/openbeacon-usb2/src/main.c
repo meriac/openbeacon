@@ -186,7 +186,7 @@ void nRF_tx(uint8_t power)
 static
 void nRF_Task(void *pvParameters)
 {
-	int t, firstrun;
+	int t, active;
 	uint8_t strength, status;
 	uint16_t crc;
 	uint32_t seq, oid;
@@ -195,10 +195,11 @@ void nRF_Task(void *pvParameters)
 	(void) pvParameters;
 
 	/* Initialize OpenBeacon nRF24L01 interface */
-	if(!nRFAPI_Init(81, broadcast_mac, sizeof(broadcast_mac), 0))
-		for(;;)
+	if (!nRFAPI_Init(81, broadcast_mac, sizeof(broadcast_mac), 0))
+		/* bail out if can't initialize */
+		for (;;)
 		{
-			pin_led(GPIO_LED0|GPIO_LED1);
+			pin_led(GPIO_LED0 | GPIO_LED1);
 			vTaskDelay(500 / portTICK_RATE_MS);
 
 			pin_led(GPIO_LEDS_OFF);
@@ -221,7 +222,9 @@ void nRF_Task(void *pvParameters)
 	LastUpdateTicks = xTaskGetTickCount();
 
 	/* main loop */
+	active = 0;
 	seq = t = 0;
+	UARTCount = 0;
 	while (1)
 	{
 		/* turn off after button press */
@@ -250,7 +253,7 @@ void nRF_Task(void *pvParameters)
 					pin_led(GPIO_LED1);
 
 					oid = ntohs (g_Beacon.pkt.oid);
-					if (g_Beacon.pkt.flags & RFBFLAGS_SENSOR)
+					if (((g_Beacon.pkt.flags & RFBFLAGS_SENSOR) > 0) && active)
 						debug_printf("BUTTON: %i\n", oid);
 
 					switch (g_Beacon.pkt.proto)
@@ -261,20 +264,22 @@ void nRF_Task(void *pvParameters)
 
 					case RFBPROTO_BEACONTRACKER:
 						strength = g_Beacon.pkt.p.tracker.strength;
-						debug_printf(" R: %04i={%i,0x%08X}\n", (int) oid,
-								(int) strength,
-								ntohl (g_Beacon.pkt.p.tracker.seq));
+						if (active)
+							debug_printf(" R: %04i={%i,0x%08X}\n", (int) oid,
+									(int) strength,
+									ntohl (g_Beacon.pkt.p.tracker.seq));
 						break;
 
 					case RFBPROTO_PROXREPORT:
 						strength = 3;
-						debug_printf(" P: %04i={%i,0x%04X}\n", (int) oid,
-								(int) strength,
-								(int) ntohs (g_Beacon.pkt.p.prox.seq));
+						if (active)
+							debug_printf(" P: %04i={%i,0x%04X}\n", (int) oid,
+									(int) strength,
+									(int) ntohs (g_Beacon.pkt.p.prox.seq));
 						for (t = 0; t < PROX_MAX; t++)
 						{
 							crc = (ntohs (g_Beacon.pkt.p.prox.oid_prox[t]));
-							if (crc)
+							if (crc && active)
 								debug_printf("PX: %04i={%04i,%i,%i}\n",
 										(int) oid, (int) ((crc >> 0) & 0x7FF),
 										(int) ((crc >> 14) & 0x3), (int) ((crc
@@ -284,8 +289,9 @@ void nRF_Task(void *pvParameters)
 
 					default:
 						strength = 0xFF;
-						debug_printf("Unknown Protocol: %i\n",
-								(int) g_Beacon.pkt.proto);
+						if (active)
+							debug_printf("Unknown Protocol: %i\n",
+									(int) g_Beacon.pkt.proto);
 					}
 
 					if (strength < 0xFF)
@@ -322,10 +328,10 @@ void nRF_Task(void *pvParameters)
 			pin_led(GPIO_LED1);
 
 			/* show help screen upon Bluetooth connect */
-			if (firstrun)
+			if (!active)
 			{
+				active = 1;
 				debug_printf("press 'H' for help...\n# ");
-				firstrun = 0;
 			}
 			else
 				/* execute menu command with last character received */
