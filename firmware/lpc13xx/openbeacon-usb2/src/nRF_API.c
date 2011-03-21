@@ -95,6 +95,9 @@ nRFAPI_Init (uint8_t channel,
   // init IO layer of nRF24L01
   nRFCMD_Init ();
 
+  /* wait for nRF to boot */
+  vTaskDelay(10 / portTICK_RATE_MS);
+
   // check validity
   if (mac_size < 3 || mac_size > 5 || !nRFAPI_DetectChip ())
     return 0;
@@ -127,9 +130,6 @@ nRFAPI_Init (uint8_t channel,
 
   if (features != 0)
     nRFAPI_SetFeatures (features);
-
-  // power down
-  // nRFAPI_PowerDown ();
 
   return 1;
 }
