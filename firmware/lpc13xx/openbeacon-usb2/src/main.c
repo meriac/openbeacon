@@ -177,7 +177,7 @@ void nRF_Task(void *pvParameters)
 			pin_led(GPIO_LEDS_OFF);
 		}
 
-		/* tunr off after button press */
+		/* turn off after button press */
 		if (!pin_button0())
 		{
 			bt_init(0);
@@ -248,7 +248,6 @@ void nRF_Task(void *pvParameters)
 					pin_led(GPIO_LEDS_OFF);
 				}
 				status = nRFAPI_GetFifoStatus();
-				debug_printf("Status: 0x%02X\n", status);
 			} while ((status & FIFO_RX_EMPTY) == 0);
 
 		nRFAPI_ClearIRQ(MASK_IRQ_FLAGS);
