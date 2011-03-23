@@ -1,2549 +1,2630 @@
-2010-02-28 23:07  meriac
+commit 5d941121a47fc3006b21eeecda89e572d9264274
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Wed Mar 23 19:42:21 2011 +0100
 
-	* [r625] update_changelog: update script
+    moved firmware/at91sam7/openbeacon-openpicc2 to OpenPICC2 branch
 
-2010-02-28 23:05  meriac
+commit 5aa3952b15a23844b98270cfac1631e5af140a65
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Mon Mar 21 04:10:11 2011 +0100
 
-	* [r624] ChangeLog: updated changelog
+    allow to show all strength values
 
-2010-02-28 23:03  meriac
+commit 9251cbbdad31caf8ba517b34c52c0c87d5c87366
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Sat Jan 29 15:41:29 2011 +0100
 
-	* [r623] core/os/boot/Cstartup_SAM7.c: addes support for lowlevel
-	  board init hook
+    additional proximity protocol decoding
 
-2010-02-28 22:53  meriac
+commit c98610470f532d41d0d961a4dfc881a29bfb5213
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Sat Jan 29 14:33:43 2011 +0100
 
-	* [r622] openbeacon-wlan/Makefile,
-	  openbeacon-wlan/application/main.c,
-	  openbeacon-wlan/application/openbeacon.h,
-	  openbeacon-wlan/application/wifi.c: added remote cmd interface
+    added debug_printf support
 
-2010-02-28 22:11  meriac
+commit 9572288cfcb2e68d2ab1a9e2f7bc20071b19dc12
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Fri Jan 28 14:34:14 2011 +0100
 
-	* [r621] openbeacon-wlan/application/main.c,
-	  openbeacon-wlan/application/openbeacon.h,
-	  openbeacon-wlan/application/wifi.c,
-	  openbeacon-wlan/config/board.h: added tx code
+    fixed compiling error
 
-2010-02-28 17:50  meriac
+commit 2b909fe77e2dfb88fe009de718df252261daa846
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Fri Jan 28 14:33:51 2011 +0100
 
-	* [r620] openbeacon-wlan/application/wifi.c: receiving works
+    fixed compiling error
 
-2010-02-28 17:46  meriac
+commit 7681218e0150dc592b6eec9f8cdd39c847cf5283
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Sun Jan 23 13:12:38 2011 +0100
 
-	* [r619] openbeacon-wlan/application/wifi.c: enabled nRF again
+    added support for latest cdc_acm kernel bug
 
-2010-02-28 17:27  meriac
+commit 2ad6116ce20c6b61b699ab704cb4df37622e2e67
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Thu Dec 9 12:20:22 2010 +0100
 
-	* [r618] openbeacon-wlan/Makefile,
-	  openbeacon-wlan/application/main.c,
-	  openbeacon-wlan/config/atmel-rom.ld,
-	  openbeacon-wlan/config/board.h: move data to SDRAM
+    error blinking code for file system now on red power LED
 
-2010-02-28 17:04  meriac
+commit befb4138945e0e1c41ef92130108c4b2d457a175
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Thu Dec 9 12:16:11 2010 +0100
 
-	* [r617] openbeacon-wlan/Makefile,
-	  openbeacon-wlan/config/FreeRTOSConfig.h,
-	  openbeacon-wlan/config/board.h,
-	  openbeacon-wlan/config/descriptors.h: sdram test works
+    removed red LED handling from SPI code
 
-2010-02-28 17:02  meriac
+commit a9159b5f64f0a2b9ac49a88329473c40853db272
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Mon Nov 22 15:13:31 2010 +0100
 
-	* [r616] openbeacon-wlan/application/main.c,
-	  openbeacon-wlan/application/sdram.c,
-	  openbeacon-wlan/application/sdram.h,
-	  openbeacon-wlan/application/wifi.c,
-	  openbeacon-wlan/application/xxtea.c,
-	  openbeacon-wlan/application/xxtea.h: sdram test works
+    fixed aligment issue in binary log
 
-2010-02-28 15:56  meriac
+commit 575f47f38ef19ad2cdf0a91f39973dc674eb089a
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Mon Nov 22 13:48:27 2010 +0100
 
-	* [r615] openbeacon-wlan/Makefile,
-	  openbeacon-wlan/application/wifi.c,
-	  openbeacon-wlan/application/wifi.h,
-	  openbeacon-wlan/application/xxtea.c,
-	  openbeacon-wlan/application/xxtea.h,
-	  openbeacon-wlan/config/board.h: added nRF code again
+    fixed binary log file problem
 
-2010-02-27 23:45  meriac
+commit 02b2db2372482ba6dbeb86c74ca5501b80444d2d
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Fri Nov 19 15:55:00 2010 +0100
 
-	* [r614] openbeacon-wlan/application/wifi.c: extended factory reset
-	  toggles
+    fixed environment settings reset on pinhole button press
 
-2010-02-27 23:40  meriac
+commit b4c9b53574f305147a75ec34aff9bc0291454226
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Thu Nov 18 00:43:35 2010 +0100
 
-	* [r613] openbeacon-wlan/application/wifi.c,
-	  openbeacon-wlan/application/wifi.h: fixed firmware settings reset
+    added incrementing ligfile names
 
-2010-02-27 19:16  meriac
+commit 39c8375c4ed56a3600233dea2418b04dcff7dec5
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Wed Nov 17 21:47:02 2010 +0100
 
-	* [r612] openbeacon-wlan/application/wifi.c: enable reset to stored
-	  user settings
+    fixed binary logfile thread and changed flushing to 10 seconds
 
-2010-02-27 18:32  meriac
+commit ee835745412908e3ae71b35d70c7a7cf30c6102f
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Wed Nov 17 21:34:02 2010 +0100
 
-	* [r611] openbeacon-wlan/application/wifi.c,
-	  openbeacon-wlan/application/wifi.h,
-	  openbeacon-wlan/config/board.h: allow USB terminal communication
-	  to WIFI module
+    moved global static variables to local function
 
-2010-02-27 15:25  meriac
+commit 7afc4288f1a51deec78b8676f239e6505c9f1139
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Wed Nov 17 21:10:10 2010 +0100
 
-	* [r610] openbeacon-wlan/application/utils.h,
-	  openbeacon-wlan/application/wifi.c: added factory reset
+    cleanup
 
-2010-02-27 13:07  meriac
+commit 2c14308c53e938320020ab5e4e90b2a7073b9aa5
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Wed Nov 17 21:08:29 2010 +0100
 
-	* [r609] openbeacon-wlan/application/uart.c,
-	  openbeacon-wlan/application/uart.h,
-	  openbeacon-wlan/application/wifi.c,
-	  openbeacon-wlan/application/wifi.h: renamed uart.* to wifi.*
+    changed logfile to binary logging - debug output on USB console needs now to be enabled manually via USB command 'd1'
 
-2010-02-27 13:06  meriac
+commit 55e53ec51a72f41e7474ea0cf2c3dd0034d5314e
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Wed Nov 17 18:50:49 2010 +0100
 
-	* [r608] openbeacon-wlan/Makefile,
-	  openbeacon-wlan/application/main.c,
-	  openbeacon-wlan/application/uart.c,
-	  openbeacon-wlan/application/uart.h: renamed functions from uart_
-	  to wifi_
+    updatet .gitignore to hide files that are created after a ./configure run
 
-2010-02-27 12:00  meriac
+commit 273484d5297876863767c1ba4c837f8799ceed4f
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Wed Nov 17 17:40:14 2010 +0100
 
-	* [r607] openbeacon-wlan/application/uart.c,
-	  openbeacon-wlan/config/board.h: AD-HOC mode enabled by default
+    renamed to sam7utils & added .gitignore
 
-2010-02-26 18:48  meriac
+commit 828cf8c39f122496e438b0e6c657a2850f9c87e7
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Wed Nov 17 17:36:26 2010 +0100
 
-	* [r606] openbeacon-wlan/Makefile,
-	  openbeacon-wlan/application/cmd.c,
-	  openbeacon-wlan/application/cmd.h,
-	  openbeacon-wlan/application/main.c,
-	  openbeacon-wlan/application/proto.c,
-	  openbeacon-wlan/application/proto.h,
-	  openbeacon-wlan/application/uart.c,
-	  openbeacon-wlan/application/xxtea.c,
-	  openbeacon-wlan/application/xxtea.h, openbeacon-wlan/doc: deleted
-	  crap
+    added latest at91flash tool to repository doe to inaccessible source server http://oss.tekno.us/sam7utils
 
-2010-02-23 23:12  meriac
+commit 1d8e3fe66e75923ca48afa8b2ac555e8c74d58de
+Author: Erik Gilling <konkers@konkers.net>
+Date:   Wed Nov 17 17:30:27 2010 +0100
 
-	* [r605] openbeacon-adc/application/proto.c: stupid offset
-	  correction for testing
+    added latest sam7utils source package from http://oss.tekno.us/sam7utils - website is down since months and this inaccessible.
 
-2010-02-23 22:36  meriac
+commit 81706449ea0ba883c73facbdbd9f8704c28ac2f8
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Wed Nov 17 17:02:31 2010 +0100
 
-	* [r604] openbeacon-adc/Makefile,
-	  openbeacon-adc/application/proto.c,
-	  openbeacon-adc/config/atmel-rom.ld,
-	  openbeacon-adc/config/board.h: added proper CIR filter
+    fixed stupid gcc warning
 
-2010-02-21 21:29  meriac
+commit d951d4354087c15755fb0edf3568df89b8719f66
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Fri Nov 5 00:05:33 2010 +0100
 
-	* [r603] core/openbeacon/syscalls.c, core/os/usb/USBIsr.c: added
-	  USB remove option
+    7 instead of 10 figures for timestamp are enough due to the division by 1000 from milliseconds to seconds
 
-2010-02-21 21:23  meriac
+commit 0ead05c3efa24b7282f9b8efaec39e73c60fdacb
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Thu Nov 4 23:21:49 2010 +0100
 
-	* [r602] core/os/usb/USB-CDC.c, core/os/usb/USB-CDC.h: added USB
-	  remove option
+    using integrated string functions for copy, fill, compare and search strings
 
-2010-02-21 21:20  meriac
+commit fa48fadc7f8d3684e2e72af43e0763962332f7f0
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Thu Nov 4 22:46:21 2010 +0100
 
-	* [r601] openbeacon-adc/Makefile,
-	  openbeacon-adc/application/main.c,
-	  openbeacon-adc/application/proto.c,
-	  openbeacon-adc/config/board.h,
-	  openbeacon-adc/config/descriptors.h: deleted USB support, added
-	  fas UART data output
+    added logging to logfile and file sync ever 5 seconds - increased fw version
 
-2010-02-21 16:14  meriac
+commit c5ce7597a4d252ec4b650eeb5b8c195d7b751d3c
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Thu Nov 4 21:51:41 2010 +0100
 
-	* [r600] openbeacon-adc/application/proto.c: test cheap integration
+    fixed mmc write bug
 
-2010-02-21 02:12  meriac
+commit ab3606ab4f26143077f36b6779977ee0889acf50
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Thu Nov 4 21:45:19 2010 +0100
 
-	* [r599] openbeacon-adc/application/proto.c: reformatting
+    moved the code base from dosfs to fatfs library due to dosfs lack of flushing and general FAT parsing problems
 
-2010-02-21 00:39  meriac
+commit 586165dc432e7aa2038e930b983942c4e8e3464f
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Thu Nov 4 12:25:59 2010 +0100
 
-	* [r598] openbeacon-adc/Makefile: target binary name changed
+    added time information and reader id logging
 
-2010-02-20 18:16  meriac
+commit 45878463c3b08dbaa1e22ce66dc54b8953f9e0fc
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Thu Nov 4 12:09:56 2010 +0100
 
-	* [r597] openbeacon-adc/application/proto.c,
-	  openbeacon-adc/config/board.h: 200kHz sampling mode
+    disabled debug output and decreased memory requirements
 
-2010-02-20 17:32  meriac
+commit eda5117ad5f431438f672f4e7b96463496a1a272
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Thu Nov 4 12:09:17 2010 +0100
 
-	* [r596] openbeacon-adc, openbeacon-adc/Makefile,
-	  openbeacon-adc/application, openbeacon-adc/application/main.c,
-	  openbeacon-adc/application/proto.c,
-	  openbeacon-adc/application/proto.h, openbeacon-adc/config,
-	  openbeacon-adc/config/FreeRTOSConfig.h,
-	  openbeacon-adc/config/atmel-rom.ld,
-	  openbeacon-adc/config/board.h,
-	  openbeacon-adc/config/descriptors.h: OpenBeacon ADC code
+    disabled verbose error message, corrected written value
 
-2010-02-01 19:46  meriac
+commit 4d5d150c8ee3d7c373e6eabe8c5d773bbad8890b
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Thu Nov 4 12:08:39 2010 +0100
 
-	* [r581] openbeacon-wlan/application/uart.c: added 1.8MBit support
-	  for WLAN module
+    corrected order of \n \r
 
-2010-02-01 19:36  meriac
+commit 63854a0d23e80dcbf9511b5a0aa5a6134083fce1
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Thu Nov 4 12:08:02 2010 +0100
 
-	* [r580] openbeacon-wlan/application/cmd.c,
-	  openbeacon-wlan/application/cmd.h,
-	  openbeacon-wlan/application/main.c,
-	  openbeacon-wlan/application/proto.c,
-	  openbeacon-wlan/application/uart.c,
-	  openbeacon-wlan/application/uart.h: added 1MBit support for WLAN
-	  module
+    cleanup - switched order to stay alphabetical
 
-2010-02-01 10:32  meriac
+commit ab869535a0b776b020c2d692c1f78426d23e9b54
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Thu Nov 4 12:06:55 2010 +0100
 
-	* [r579] openbeacon-wlan/application/cmd.c,
-	  openbeacon-wlan/application/main.c,
-	  openbeacon-wlan/application/proto.c: moved green LED enabled past
-	  nRF-initialization
+    increased version to 1.1
 
-2010-02-01 10:21  meriac
+commit fc852323da4a558115f1996e59663966a490a638
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Thu Nov 4 12:06:22 2010 +0100
 
-	* [r578] core/openbeacon/nRF24L01/nRF_CMD.c: added support for
-	  nonstandard chipselect
+    remove RAMFUNC declaration to save memory
 
-2010-02-01 10:16  meriac
+commit f87169ad971e47ad333d3921aeb97cafe823dc06
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Wed Nov 3 18:28:59 2010 +0100
 
-	* [r577] openbeacon-wlan/Makefile,
-	  openbeacon-wlan/application/cmd.c,
-	  openbeacon-wlan/application/cmd.h,
-	  openbeacon-wlan/application/main.c,
-	  openbeacon-wlan/application/openbeacon.h,
-	  openbeacon-wlan/application/proto.c,
-	  openbeacon-wlan/application/uart.c,
-	  openbeacon-wlan/application/xxtea.c,
-	  openbeacon-wlan/application/xxtea.h,
-	  openbeacon-wlan/config/board.h: added proximity protocol support
+    fixed logfile writing
 
-2009-12-28 02:19  meriac
+commit fd8aedf113feaeaa955bf61e547789f94e9d3b2f
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Wed Nov 3 13:03:05 2010 +0100
 
-	* [r576] core/os/core/portmacro.h: Fabian Richter pointed out
-	  compiling problem - added fix
+    hooked up log file writer from FIFO
 
-2009-12-14 11:47  meriac
+commit e7b77c15d9bb6f6f945c692779313645195185c8
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Wed Nov 3 12:18:15 2010 +0100
 
-	* [r575] core/openbeacon/nRF24L01/nRF_CMD.c,
-	  openbeacon-wlan/Makefile, openbeacon-wlan/application/main.c,
-	  openbeacon-wlan/application/proto.c,
-	  openbeacon-wlan/application/spi.c,
-	  openbeacon-wlan/application/spi.h,
-	  openbeacon-wlan/application/uart.c,
-	  openbeacon-wlan/config/board.h: openbeacon wlan fixes
+    moved generic debug_printf to OpenBeacon core and fixed other projects to work with new vDebugSendHook approach
 
-2009-12-14 11:05  meriac
+commit 4ad1713cd5bd9c8b984631819871571383db3195
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Wed Nov 3 12:06:06 2010 +0100
 
-	* [r574] core/openbeacon/nRF24L01/nRF_CMD.c: added support for CSN
-	  on PIOB
+    added support for logfile on MicroSDHC-Card - debug_printf output is now saved to the logfile additionally
 
-2009-12-05 10:03  meriac
+commit 264f487218f951a677b8a664d246cbb3acdeb0b1
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Wed Nov 3 09:43:34 2010 +0100
 
-	* [r573] openbeacon-fossin/application/cmd.c: removed prescaler
+    added write support to FAT and SD-card code
 
-2009-12-05 09:49  meriac
+commit ea9d0611237f159b44057737416f90ac95c4e3e0
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Wed Nov 3 06:10:01 2010 +0100
 
-	* [r572] openbeacon-fossin/application/cmd.c: removed prescaler
+    added first support for integrated MicroSD card slot
 
-2009-12-05 08:50  meriac
+commit b414b1501830a93a11d978fed1a2cc9f621c640a
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Tue Sep 21 00:08:45 2010 +0200
 
-	* [r571] openbeacon-fossin/Makefile: modified make file for
-	  audio.raw
+    added exception to exlude compiled binaries
 
-2009-12-05 08:44  meriac
+commit f28469545ed8c5e7c0c41f74ce1a7924e324c503
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Wed Sep 15 09:16:55 2010 +0000
 
-	* [r570] openbeacon-fossin/audio.raw: added raw audio file
+    added USB id for OpenPCD 2 basic
 
-2009-12-05 08:19  meriac
+commit a28f38984f1e6f08257d2320ec7a51956518d01d
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Sep 14 13:29:15 2010 +0000
 
-	* [r569] openbeacon-fossin/Makefile,
-	  openbeacon-fossin/application/cmd.c: fixed makefile
+    adjusted encryption key
 
-2009-12-05 03:49  meriac
+commit 667db59f7df0074f073aeb812c73eac74de469f7
+Author: Oberling <oberling@users.sourceforge.net>
+Date:   Fri Jul 30 07:51:52 2010 +0000
 
-	* [r568] openbeacon-fossin/Makefile: fixed makefile
+    initial check-in: dump out received bytes to USB serial port
 
-2009-12-05 03:47  meriac
+commit 5d5542e5a87a9776ff452749057140e09cb7d078
+Author: Oberling <oberling@users.sourceforge.net>
+Date:   Fri Jul 30 07:49:13 2010 +0000
 
-	* [r567] openbeacon-fossin/audio.raw, openbeacon-fossin/audio.wav:
-	  updated audio file
+    reverted to 782 - my mistake
 
-2009-12-05 03:44  meriac
+commit 7e0262fe29c934c47b1a045c4ad5fd45a69ce83e
+Author: Oberling <oberling@users.sourceforge.net>
+Date:   Fri Jul 30 07:48:03 2010 +0000
 
-	* [r566] openbeacon-fossin/audio.wav: fixed makefile
+    reverted to 782 - my mistake
 
-2009-12-05 03:42  meriac
+commit 113a83689262cefe21e4a0694bff8581b5fdaf00
+Author: Oberling <oberling@users.sourceforge.net>
+Date:   Fri Jul 30 07:38:38 2010 +0000
 
-	* [r565] openbeacon-fossin/Makefile: fixed warning
+    initial check-in: dump out received bytes to USB serial port
 
-2009-12-05 03:40  meriac
+commit bdc4b03fc5bb5af8250d24f0cf6ec1b424ce54a6
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jul 6 22:39:36 2010 +0000
 
-	* [r564] openbeacon-fossin/Makefile, openbeacon-fossin/audio.raw:
-	  added converted audio file
+    update statistics
 
-2009-12-05 03:39  meriac
+commit df2039a4c81f1a27d99380d58bbdb20adcc15a6c
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jul 6 20:52:30 2010 +0000
 
-	* [r563] openbeacon-fossin/Makefile,
-	  openbeacon-fossin/application/audio.s,
-	  openbeacon-fossin/application/cmd.c: linked in audio file
+    added statistics,cleanup
 
-2009-12-05 03:09  meriac
+commit 337c4f100748c7aa98307a3d685ab2337e31b2e2
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jul 6 20:52:07 2010 +0000
 
-	* [r562] openbeacon-fossin/Makefile: added frequency
+    added statistics,cleanup
 
-2009-12-05 03:05  meriac
+commit af680b76522d0d7ab16e781410705c356d7ddf38
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jul 6 20:51:57 2010 +0000
 
-	* [r561] openbeacon-fossin/Makefile, openbeacon-fossin/audio.wav:
-	  added audio file
+    added statistics,cleanup
 
-2009-12-05 02:45  meriac
+commit 501a6efefe0df06872d5bf3d1f086248b41c976f
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jul 6 20:50:27 2010 +0000
 
-	* [r560] openbeacon-fossin/application/cmd.c: latest changes
+    rearranged task priorities
 
-2009-12-04 15:03  meriac
+commit 873442d0cfb9004eb9db4e357992cfdd9e016b7c
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jul 6 19:52:04 2010 +0000
 
-	* [r559] openbeacon-fossin/application/cmd.c: moved sound to
-	  separate vBeep function
+    switched RF interface to 'Beacon 2'
 
-2009-12-04 14:27  meriac
+commit bac54f66402456886a07d041cbf91e27a3f6234a
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jul 6 19:25:44 2010 +0000
 
-	* [r558] openbeacon-fossin/application/openbeacon.h,
-	  openbeacon-fossin/application/pwm.c: remove dead files
+    reformatting
 
-2009-12-04 14:26  meriac
+commit 32c9c98ce7773140bab08ff876358b07fcb76721
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jul 6 19:19:48 2010 +0000
 
-	* [r557] openbeacon-fossin, openbeacon-fossin/Makefile,
-	  openbeacon-fossin/application,
-	  openbeacon-fossin/application/cmd.c,
-	  openbeacon-fossin/application/cmd.h,
-	  openbeacon-fossin/application/main.c,
-	  openbeacon-fossin/application/openbeacon.h,
-	  openbeacon-fossin/application/pwm.c, openbeacon-fossin/config,
-	  openbeacon-fossin/config/FreeRTOSConfig.h,
-	  openbeacon-fossin/config/atmel-rom.ld,
-	  openbeacon-fossin/config/board.h,
-	  openbeacon-fossin/config/descriptors.h: added foss.in special
-	  audio dongle
+    UDP forwarding defaults
 
-2009-12-04 06:37  meriac
+commit d37ebdba8218c6c718329e725affd10a590f29ed
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jul 6 18:58:55 2010 +0000
 
-	* [r556] openbeacon-proxestimator/application/openbeacon.h,
-	  openbeacon-proxestimator/application/proto.c,
-	  openbeacon-proxestimator/application/proto.h,
-	  openbeacon-proxestimator/application/xxtea.c: proximity added
+    added UDP server code
 
-2009-12-04 06:15  meriac
+commit 745fcd4d98bbb9ef6915b666d6458642bab715f4
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jul 6 18:21:11 2010 +0000
 
-	* [r555] openbeacon-proxestimator/application/xxtea.c: new key
+    added ieee.org IAB notification
 
-2009-12-04 06:06  meriac
+commit 88eb30ea023fb99a406acfcc7110b3cbf5acebd3
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jul 6 18:17:05 2010 +0000
 
-	* [r554] openbeacon-proxestimator/application/main.c: mainloop fix
+    adapted to changed directory
 
-2009-12-04 06:04  meriac
+commit 671cab714360efffb7151392c0a8fd1c0f6fd372
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jul 6 18:14:44 2010 +0000
 
-	* [r553] openbeacon-proxestimator,
-	  openbeacon-proxestimator/Makefile,
-	  openbeacon-proxestimator/application,
-	  openbeacon-proxestimator/application/cmd.c,
-	  openbeacon-proxestimator/application/cmd.h,
-	  openbeacon-proxestimator/application/main.c,
-	  openbeacon-proxestimator/application/openbeacon.h,
-	  openbeacon-proxestimator/application/proto.c,
-	  openbeacon-proxestimator/application/proto.h,
-	  openbeacon-proxestimator/application/xxtea.c,
-	  openbeacon-proxestimator/application/xxtea.h,
-	  openbeacon-proxestimator/config,
-	  openbeacon-proxestimator/config/FreeRTOSConfig.h,
-	  openbeacon-proxestimator/config/atmel-rom.ld,
-	  openbeacon-proxestimator/config/board.h,
-	  openbeacon-proxestimator/config/descriptors.h: added proximity
-	  estimator code
+    renamed blinkenlights wmcu and dimmer directories to something more meaningful
 
-2009-10-18 00:55  meriac
+commit 30fececb18ddbe6ee12d5ee2f37bbf131a1208e5
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jul 6 17:56:00 2010 +0000
 
-	* [r552] openbeacon-wlan/application/uart.c: added initial UART ISR
-	  code
+    changed to static IP by default
 
-2009-10-18 00:54  meriac
+commit 0ebb99ecaedc2c73d2f0b4a24951bfb9eec35c19
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jul 6 16:26:07 2010 +0000
 
-	* [r551] openbeacon-wlan/config/board.h: fixed typo
+    added ip setting functions and display of active network configuration
 
-2009-10-17 23:45  meriac
+commit 307c3eb603954668bf70bd3a48f1439f9c6f012c
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jul 6 13:38:52 2010 +0000
 
-	* [r550] core/os/core/ARM7_AT91SAM7/AT91SAM7SE512.h: dos2unix
+    cleanup
 
-2009-10-17 22:45  meriac
+commit 595322597a7910a3c66bee4764a0aac5f0e121c0
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jul 6 13:16:15 2010 +0000
 
-	* [r549] openbeacon-wlan/application/uart.c: wake up WLAN module
+    defaulting to DHCP
 
-2009-10-17 21:31  meriac
+commit 5f89ec48622f7f4a6ea327fbe54c08584805f31a
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jul 6 12:18:26 2010 +0000
 
-	* [r548] openbeacon-wlan/application/uart.c,
-	  openbeacon-wlan/config/board.h: UART initialization
+    extended command line interface
 
-2009-10-17 19:59  meriac
+commit 37bc8d275cf246e006e94764927b5362b659c89a
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jul 6 12:17:47 2010 +0000
 
-	* [r547] openbeacon-wlan/Makefile,
-	  openbeacon-wlan/application/main.c,
-	  openbeacon-wlan/application/sdram.c,
-	  openbeacon-wlan/application/uart.c,
-	  openbeacon-wlan/application/uart.h,
-	  openbeacon-wlan/config/board.h: inital check in of UART code
+    move unlock code before flash/copy code
 
-2009-09-09 20:34  meriac
+commit 8685b26b1dd700541f2d86153e9d46372681ea54
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jul 6 12:16:39 2010 +0000
 
-	* [r546] ChangeLog, update_changelog: added script update_changelog
-	  to refresh SVN ChangeLog
+    removed buffer for debug_printf.c to allow unlimited string length
 
-2009-09-09 20:30  meriac
+commit 90bcb33585245eed9482a69eaaff68a545c2a5cf
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jul 6 00:30:17 2010 +0000
 
-	* [r545] ChangeLog: created ChangeLog
+    reformatted network config status
 
-2009-09-09 20:20  meriac
+commit d219243a629737a757925c2bd2bf5e8f1ef7e7e4
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jul 6 00:25:22 2010 +0000
 
-	* [r544] core/os/core/MemMang/heap_1.c,
-	  core/os/core/MemMang/heap_2.c, core/os/core/MemMang/heap_3.c,
-	  core/os/core/include/FreeRTOS.h,
-	  core/os/core/include/StackMacros.h,
-	  core/os/core/include/croutine.h, core/os/core/include/list.h,
-	  core/os/core/include/portable.h, core/os/core/include/projdefs.h,
-	  core/os/core/include/queue.h, core/os/core/include/semphr.h,
-	  core/os/core/include/task.h, core/os/core/list.c,
-	  core/os/core/port.c, core/os/core/portISR.c,
-	  core/os/core/portmacro.h, core/os/core/queue.c,
-	  core/os/core/tasks.c: updated operating system to lastest
-	  FreeRTOS.org version 5.4.2
+    first check-in of cmd line code
 
-2009-08-16 16:51  meriac
+commit e95eca3bc2514a43a7a780c2e8f550b3d19a0927
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Jul 5 13:54:58 2010 +0000
 
-	* [r543] openbeacon-wlan, openbeacon-wlan/Makefile,
-	  openbeacon-wlan/application, openbeacon-wlan/application/main.c,
-	  openbeacon-wlan/application/openbeacon.h,
-	  openbeacon-wlan/application/proto.c,
-	  openbeacon-wlan/application/proto.h,
-	  openbeacon-wlan/application/sdram.c,
-	  openbeacon-wlan/application/sdram.h,
-	  openbeacon-wlan/application/spi.c,
-	  openbeacon-wlan/application/spi.h,
-	  openbeacon-wlan/application/utils.h,
-	  openbeacon-wlan/application/xxtea.c,
-	  openbeacon-wlan/application/xxtea.h, openbeacon-wlan/config,
-	  openbeacon-wlan/config/FreeRTOSConfig.h,
-	  openbeacon-wlan/config/atmel-rom.ld,
-	  openbeacon-wlan/config/board.h,
-	  openbeacon-wlan/config/descriptors.h, openbeacon-wlan/doc,
-	  openbeacon-wlan/doc/dosfs-example.c,
-	  openbeacon-wlan/doc/dosfs-readme.txt: initial check in of
-	  OpenBeacon WLAN
+    added initial cmd processing
 
-2009-07-10 17:20  henryk
+commit 466ad563c3ceed48fde3e1a0c43898508602f181
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Jul 5 13:53:29 2010 +0000
 
-	* [r542] openbeacon-openpicc2/Makefile: Regression: spi.c can only
-	  be compiled with -O0, not -O2. This was broken in r357. Revert
-	  Makefile to earlier workaround while I'm looking for a proper fix
+    added initial cmd processing
 
-2009-07-02 23:52  henryk
+commit aaf30ed9abfa332e1741631c6a6e505837b59212
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Jul 5 13:41:12 2010 +0000
 
-	* [r540] openbeacon-openpicc2/application/paint/paint.c: Fix last
-	  commit
+    move debug_printf to core
 
-2009-07-02 17:00  henryk
+commit 196ea6d86a0fd7519ed5e3f8e8709daeded2fe97
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Jul 5 13:38:04 2010 +0000
 
-	* [r539] openbeacon-openpicc2/application/paint/paint.c: Add
-	  command to draw non-filled circle
+    fixed USB id
 
-2009-07-02 17:00  henryk
+commit 00835aa4c20615a4e0f7a6cb8276ce2a2ad0fdcc
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Jul 5 13:23:10 2010 +0000
 
-	* [r538] openbeacon-openpicc2/application/eink/eink.c: Let the eInk
-	  controller know that its SDRAM is actually 32MB and not 16MB
+    fixed USB dependency
 
-2009-06-28 21:48  henryk
+commit ce831e2651b6073747066844dee25c97bf90b22a
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Jul 5 13:11:12 2010 +0000
 
-	* [r537] openbeacon-openpicc2/Makefile,
-	  openbeacon-openpicc2/application/spi.c: Work around the internal
-	  compiler error. For some reason "&xTaskWoken" leads to an
-	  internal compiler error, unless xTaskWoken is global or static
+    moved debug_printf to core
 
-2009-06-23 11:53  henryk
+commit ea0b1f76a177bf51c096af1cc697d5dca7c1d0be
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Jul 5 08:35:45 2010 +0000
 
-	* [r536] openbeacon-openpicc2/application/image/image.c,
-	  openbeacon-openpicc2/application/image/image.h,
-	  openbeacon-openpicc2/application/paint/paint.c: Add function to
-	  load image from PGM file
+    production IP case
 
-2009-06-23 11:50  henryk
+commit ea9c92af9a96fc0c21ee9fbb6a9dfc235e9b44c0
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jun 29 09:18:16 2010 +0000
 
-	* [r535] openbeacon-openpicc2/openocd.cfg: Enable fast memory
-	  access
+    added input button support
 
-2009-06-23 11:48  henryk
+commit 4a64d85b5bb9d457c21ad22c7e9e5b6d8c7d8452
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jun 29 08:39:23 2010 +0000
 
-	* [r534] openbeacon-openpicc2/application/dosfs/fat_helper.c,
-	  openbeacon-openpicc2/application/dosfs/fat_helper.h: Add
-	  fat_helper_open
+    added RX/TX LED support and Proxestimator debug output
 
-2009-06-23 11:46  henryk
+commit ad55ea658daebadae56468e13b9e29718423396a
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jun 29 05:39:06 2010 +0000
 
-	* [r533] openbeacon-openpicc2/application/dosfs/sdcard.c: Undo
-	  r526, not worth the trouble.
-	  Also reduce sdcard bus speed, doesn't seem stable
+    OpenBeacon PoE Ethernt initial check-in
 
-2009-06-23 00:59  henryk
+commit bd2b7cb6b93001f592a3a0163280d09014faf960
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat May 22 22:01:08 2010 +0000
 
-	* [r532] openbeacon-openpicc2/application/image/image.h: Forgotten
-	  prototypes
+    initial check in
 
-2009-06-23 00:58  henryk
+commit 69bd541f9a3a1312cd746c0a3edf2a5fc67107bc
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Thu Mar 18 13:34:42 2010 +0000
 
-	* [r531] openbeacon-openpicc2/application/image/image.c: Add
-	  functions to allocate images from malloc (not used currently
-	  since malloc-memory is in SRAM)
+    updated to FreeRTOS V6.0.4
 
-2009-06-22 14:23  henryk
+commit 971606985da5f983ac57b50c956e25f3faa279ed
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Thu Mar 18 13:17:57 2010 +0000
 
-	* [r530] openbeacon-openpicc2/application/nfc/picc_emu.c: Ignore
-	  empty lines
+    deleted deprecated boot loader
 
-2009-06-22 14:23  henryk
+commit 49742d9928f22b1ed8d0b9af5095e7f38816a306
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Thu Mar 18 13:14:38 2010 +0000
 
-	* [r529] openbeacon-openpicc2/application/spi.c: Fix change config
-	  when called from bus exclusive
+    NRF_RFOPTIONS override added
 
-2009-06-22 10:20  henryk
+commit adb79a52b16311a17db655cd5c866fe5b8aac3ea
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Mar 9 01:21:56 2010 +0000
 
-	* [r528] openbeacon-openpicc2/application/dosfs/sdcard.c: Restrict
-	  enhancement to non-SRAM areas
+    added expect script for configuration
 
-2009-06-22 09:56  henryk
+commit 79ac37735909c57907c7e94f41f369d619641c60
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Mar 8 23:11:58 2010 +0000
 
-	* [r527] openbeacon-openpicc2/application/dosfs/sdcard.c: bla
+    improved reset line handling
 
-2009-06-22 09:39  henryk
+commit db507218731ea95eed704fb2c2c39d042498dba4
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Mar 2 14:56:30 2010 +0000
 
-	* [r526] openbeacon-openpicc2/application/dosfs/sdcard.c: Small
-	  performance increase (about 2%, now at 1.81 MB/s)
+    reset baudrate after WIFI reset
 
-2009-06-21 22:21  henryk
+commit 8d9c2536bcf57900ba2d7993de8c50932189addc
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Mar 2 11:13:43 2010 +0000
 
-	* [r525] openbeacon-openpicc2/application/dosfs/sdcard.c: Even
-	  further increase the bus speed (and correspondingly increase
-	  timeout counters).
-	  This brings the speed up to 1.77 MB/s (56% increase) but may be
-	  even more unreliable (the spec says we're still in the clear,
-	  though).
+    remove factory reset code - please use remote reset
 
-2009-06-21 11:08  henryk
+commit edcb0088b5ad506c414dd771799a42f34527f14a
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Mar 2 11:09:18 2010 +0000
 
-	* [r524] openbeacon-openpicc2/application/dosfs/dosfs.c: Add note
-	  about possible tweaking. Probably not worth the effort to
-	  properly investigate.
+    fixed remote reset
 
-2009-06-21 11:04  henryk
+commit 4c4e4d5892346c1c79780180db971d15d2db80cc
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Mar 2 10:09:33 2010 +0000
 
-	* [r523] openbeacon-openpicc2/application/dosfs/dosfs.c: Enhance
-	  the multi-sector optimization to also apply for reads longer than
-	  two sectors but shorter than the complete cluster. Less than 1%
-	  performance increase.
+    changed default reader id
 
-2009-06-21 10:49  henryk
+commit c0f04907b6f0eb8e4c28f597e4d53c0dc7b641f9
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Mar 2 10:04:33 2010 +0000
 
-	* [r522] openbeacon-openpicc2/application/dosfs/dosfs.c: Properly
-	  maintain the FAT cache, 3% performance increase (now 1.12 MB/s)
+    changed default reader id
 
-2009-06-20 20:57  henryk
+commit bc91f113794cd0a7b8669da71581a253d66b8145
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Mar 2 10:00:18 2010 +0000
 
-	* [r521] openbeacon-openpicc2/application/dosfs/sdcard.c: Properly
-	  implement READ_MULTIPLE_BLOCK in sdcard_disk_read(). HUGE
-	  performance increase, now at 1.09 MB/s.
+    fixed linker file
 
-2009-06-20 20:56  henryk
+commit c3f871752876b6451fae3512f2f39ca3f75be2dd
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Mar 2 09:39:48 2010 +0000
 
-	* [r520] openbeacon-openpicc2/application/spi.c,
-	  openbeacon-openpicc2/application/spi.h: Add
-	  spi_force_transmit_pin()/spi_release_transmit_pin() to be used in
-	  bus exclusive mode to force the MOSI pin to a specific logic
-	  level regardless of the transmitted data values in transceive
+    fixed flash + SDRAM combination
 
-2009-06-20 17:10  henryk
+commit 3d0929116e4fc1561a341d9d89ac420a3d9b1054
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Mar 2 09:28:27 2010 +0000
 
-	* [r519] openbeacon-openpicc2/application/dosfs/dosfs.c: Implement
-	  multi-sector read optimiziation within a cluster, brings another
-	  ten or so percent; speed is now 0.598 MB/s
+    added support for remotely configuring OpenBeacon WLAN
 
-2009-06-20 11:17  henryk
+commit b096612edd19ec9500f97744e19bb48d44dde529
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Mar 2 09:25:22 2010 +0000
 
-	* [r518] openbeacon-openpicc2/application/dosfs/sdcard.c: Optimize
-	  CRC discard, slight performance increase (2%)
+    added support for settin OID
 
-2009-06-20 11:07  henryk
+commit a4959e5f00c18ab38f19f2f991f2b12a1ac2a5dd
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Mar 1 07:08:30 2010 +0000
 
-	* [r517] openbeacon-openpicc2/application/dosfs/sdcard.c: Make
-	  sdcard_claim()/_release() nestable and bracket DFS_ReadSector()
-	  with a claim/release pair. This means that the SPI will only be
-	  put into bus exclusive once per call to DFS_ReadSector()
-	  Obviously this will only really bring benefits when
-	  DFS_ReadSector() is called with a count > 1. Preliminary results
-	  show a speed-up of up to 10%
+    added support for reader_announce protocol
 
-2009-06-19 21:21  henryk
+commit f8fb0f8b8755e85f647c8f0de2d6986e61bbc23e
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Mar 1 06:45:18 2010 +0000
 
-	* [r516] openbeacon-openpicc2/application/dosfs/sdcard.c:
-	  Aggressively optimize the sdcard reading: decrease the clock
-	  divisor (to 4, leading to a SPI clock rate of about 11.98
-	  megahertz) and increase the cutoff for blocking mode (thereby
-	  basically
-	  eliminating the background mode calls). This brings the sdcard
-	  read speed up to 0.54 megabytes per second, but beware that this
-	  is potentially unsafe, leading to watchdog resets
+    updated to latest openbeacon.h
 
-2009-06-19 20:50  henryk
+commit 875bb60ec217c6cae0743ef7631c77d1aa81c931
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Mar 1 06:43:10 2010 +0000
 
-	* [r515] openbeacon-openpicc2/application/dosfs/sdcard.c,
-	  openbeacon-openpicc2/application/dosfs/sdcard.h,
-	  openbeacon-openpicc2/application/spi.c,
-	  openbeacon-openpicc2/application/spi.h: Add a blocking mode to
-	  SPI, can only be invoked while the device is bus_exclusive
-	  Fix spi_transceive for the bus_exclusive case (should reject new
-	  jobs until the bus is free again)
-	  Convert sdcard code to use the blocking mode for short transfers,
-	  brings sdcard read speed to about 0.29 MB/s (up from 0.22 MB/s)
-	  Fix sdcard.[ch] indentation
+    added WIFI reset
 
-2009-06-19 14:13  henryk
+commit 68b566d4dafeb35d31a9cf75cf938624849e09aa
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Mar 1 06:39:34 2010 +0000
 
-	* [r514] openbeacon-openpicc2/application/dosfs/fat_helper.c,
-	  openbeacon-openpicc2/application/dosfs/fat_helper.h,
-	  openbeacon-openpicc2/application/paint/paint.c: Add function to
-	  load from file into a data buffer
-	  API change: fat_loadimage() is now fat_load_eink_image_buffer(),
-	  length parameter is now a pointer
+    cleanup
 
-2009-06-19 00:27  henryk
+commit ce389d62b03c43483ea454b70c45613be2731a7a
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Mar 1 06:38:00 2010 +0000
 
-	* [r513] openbeacon-openpicc2/Makefile,
-	  openbeacon-openpicc2/application/dosfs,
-	  openbeacon-openpicc2/application/dosfs.c,
-	  openbeacon-openpicc2/application/dosfs.h,
-	  openbeacon-openpicc2/application/dosfs/dosfs.c,
-	  openbeacon-openpicc2/application/dosfs/dosfs.h,
-	  openbeacon-openpicc2/application/dosfs/fat_helper.c,
-	  openbeacon-openpicc2/application/dosfs/fat_helper.h,
-	  openbeacon-openpicc2/application/dosfs/sdcard.c,
-	  openbeacon-openpicc2/application/dosfs/sdcard.h,
-	  openbeacon-openpicc2/application/main.c,
-	  openbeacon-openpicc2/application/paint/paint.c,
-	  openbeacon-openpicc2/application/sdcard.c,
-	  openbeacon-openpicc2/application/sdcard.h: Add fat_helper from
-	  erdgeist, allows to load directly from sdcard to an eink
-	  image_buffer
+    fixed packet length
 
-2009-06-14 09:00  henryk
+commit 39fac1dc1c298166ec06e9aa8a1ad994bfd25629
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Mar 1 05:34:03 2010 +0000
 
-	* [r512] openbeacon-openpicc2/application/eink/eink.c,
-	  openbeacon-openpicc2/application/eink/eink_lowlevel.h: Bla
+    support multipacket on WIFI
 
-2009-06-14 08:27  henryk
+commit df8057e8fe1ad3cea76495a30ef1dac0a361948e
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Mar 1 05:18:06 2010 +0000
 
-	* [r511] openbeacon-openpicc2/application/eink/eink.c,
-	  openbeacon-openpicc2/application/eink/eink.h,
-	  openbeacon-openpicc2/application/eink/eink_lowlevel.h: Implement
-	  sleep (STANDBY) for the eInk controller. When the fixed PCBs are
-	  available (where the PLL will actually turn on reliably) the
-	  sleep mode may even be changed to SLEEP (PLL off).
+    UART tx workaround works
 
-2009-06-13 15:28  henryk
+commit 12bde266d0ae8ec833323c4fc7cdea2d46690e2c
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Mar 1 02:04:00 2010 +0000
 
-	* [r510] openbeacon-openpicc2/application/eink/eink.c,
-	  openbeacon-openpicc2/application/eink/eink.h: Add definitions for
-	  8" display
+    added factory testing
 
-2009-06-13 10:42  henryk
+commit 4f24f5c979069097384155d32db93f4e871e426f
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Mar 1 01:14:30 2010 +0000
 
-	* [r509] openbeacon-openpicc2/application/paint/paint.c: Only
-	  schedule updates after a command was executed
+    added fifo code for nRF rx path
 
-2009-06-12 06:33  henryk
+commit 7110d435bf32307b11ec51f2dbb555ef8ac981ef
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Mar 1 00:27:38 2010 +0000
 
-	* [r508] openbeacon-openpicc2/application/eink/eink.c,
-	  openbeacon-openpicc2/application/paint/paint.c,
-	  openbeacon-openpicc2/application/power.c: Reenable ADC (was off
-	  for debugging)
-	  Add command to query power
+    added announcement broadcast support
 
-2009-06-11 15:21  henryk
+commit fe5633a5d9b02da55f49cd3fda2051f4d8e41de9
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Mar 1 00:11:25 2010 +0000
 
-	* [r507] openbeacon-openpicc2/application/paint/paint.c: Forgot one
-	  reset_background
+    added sequence number to repsonse packets
 
-2009-06-11 15:18  henryk
+commit eb59a068a3e8059d0aa4eb6885cc0ff242350e3d
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Mar 1 00:08:10 2010 +0000
 
-	* [r506] openbeacon-openpicc2/application/paint/paint.c: Add a
-	  kludgy hack to be able to paint black Direct Update on a
-	  grayscale background.
-	  The trick is to first paint the grayscale image, then fill the
-	  update buffer with white and paint on that white.
-	  Due to the bi-stable display technology the grayscale image will
-	  persist, but be overwritten by black pixel when a real update
-	  comes
+    switched text command interface to opcodes
 
-2009-06-11 14:01  henryk
+commit 80ad86d247bedb3ca69182ae612c77ca594fc65c
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Feb 28 23:36:13 2010 +0000
 
-	* [r505] openbeacon-openpicc2/application/paint/paint.c: There was
-	  some strange output problem
+    updated readme.txt with sam7utils specific infos
 
-2009-06-11 13:33  henryk
+commit 603ff1ab673d5b1e100600a25aa6770b3d5ffe2d
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Feb 28 23:31:57 2010 +0000
 
-	* [r504] openbeacon-openpicc2/application/main.c: Sanitize
-	  indentation
+    added sam7utils-0.2.1.patch -> see http://oss.tekno.us/sam7utils/
 
-2009-06-11 10:30  henryk
+commit 6c38283b5c63b2168505024049db2bbba1308761
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Feb 28 23:14:12 2010 +0000
 
-	* [r503] openbeacon-openpicc2/application/image/image.c,
-	  openbeacon-openpicc2/application/main.c,
-	  openbeacon-openpicc2/application/paint/paint.c: Slight speedup in
-	  circle drawing
-	  Reenable power-save
+    improved reset
 
-2009-06-11 05:11  henryk
+commit 6132636d7ee88dfcb09f4d0870a92255d25725c1
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Feb 28 23:08:17 2010 +0000
 
-	* [r502] openbeacon-openpicc2/application/paint/paint.c: Radically
-	  cleanup paint.c.
-	  New feature: Modes (background=image, background=blank) can be
-	  switched with a command: mode_blank for black/white drawing on
-	  white, mode_background for grayscale drawing on a background
-	  image
+    updated ChangeLog
 
-2009-06-10 17:19  henryk
+commit a72d145a6ee17d1460690c74e03759597cd57e32
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Feb 28 23:07:21 2010 +0000
 
-	* [r501] openbeacon-openpicc2/application/image/image.c:
-	  Dramatically speed up filled circle code
+    update script
 
-2009-06-10 16:08  henryk
+commit abd24a73188f093d67948cdbbd79aad43c18e6d2
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Feb 28 23:05:29 2010 +0000
 
-	* [r500] openbeacon-openpicc2/application/image/image.c: Fix circle
-	  shape
+    updated changelog
 
-2009-06-10 15:32  henryk
+commit 38c59e66f6dfeffd75c18277eea2b0457fbe1996
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Feb 28 23:03:54 2010 +0000
 
-	* [r499] openbeacon-openpicc2/Makefile: Move stack to SRAM again,
-	  eliminates the crashes. Just don't stark too many/too big tasks.
-	  (with paint and eink activated about 26k of 32k SRAM are being
-	  used)
+    addes support for lowlevel board init hook
 
-2009-06-10 15:30  henryk
+commit 2e6c281bb3ec27d990f4c25e20c3656344894f96
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Feb 28 22:53:47 2010 +0000
 
-	* [r498] openbeacon-openpicc2/application/main.c: Better (and
-	  concurrent) SDRAM test
+    added remote cmd interface
 
-2009-06-10 05:28  henryk
+commit 7e4d4c79401c98f5afc1ff3fa2b992550a9da399
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Feb 28 22:11:19 2010 +0000
 
-	* [r497] openbeacon-openpicc2/application/main.c: Use inline ASM
-	  for faster (and bursty) SDRAM test.
-	  Perform random SDRAM accesses in SDRAM test
+    added tx code
 
-2009-06-10 03:29  henryk
+commit fa544f00cf15d92155e98b673be8d50bf7c6a70d
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Feb 28 17:50:11 2010 +0000
 
-	* [r496] openbeacon-openpicc2/application/sdram.c,
-	  openbeacon-openpicc2/application/sdram.h: Increase all the wait
-	  times in the SDRAM initialization on a hint from Milosch. Still
-	  not working any better
+    receiving works
 
-2009-06-09 13:13  henryk
+commit 13b38755db09a939b83d5c48fc5807ecb8821d7d
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Feb 28 17:46:28 2010 +0000
 
-	* [r495] openbeacon-openpicc2/flash.txt: Flash-script, execute with
-	  sam7 < flash.txt
-	  Will enable the power self-hold circuit, so you only need to have
-	  pressed power down at the beginning.
-	  Also activates the LEDs: Red -> Still Flashing, Green -> Flash
-	  complete
+    enabled nRF again
 
-2009-06-09 10:20  henryk
+commit 29447ebacd9523bfd447c351c1e0107967ea5d7e
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Feb 28 17:27:18 2010 +0000
 
-	* [r494] openbeacon-openpicc2/application/sdram.c: (Hopefully) fix
-	  SDRAM Mode Register initialization
+    move data to SDRAM
 
-2009-06-08 12:02  henryk
+commit 8b51d13d27d9a1d672216bd26f5a896ab5543d44
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Feb 28 17:04:56 2010 +0000
 
-	* [r493] core/os/boot/boot.s: Flash green LED in case of Data
-	  Abort. Warning: overwrites registers 0 and 1
+    sdram test works
 
-2009-06-08 11:51  henryk
+commit c28130d6ad7818852f0fa1434a43ced91b8f2eb2
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Feb 28 17:02:19 2010 +0000
 
-	* [r492] core/os/boot/Cstartup_SAM7.c: Disable watchdog in debug
-	  halt
+    sdram test works
 
-2009-06-08 11:09  henryk
+commit 3d484f38929cc3ae5fc139731e58fe2b1234f279
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Feb 28 15:56:11 2010 +0000
 
-	* [r491] openbeacon-openpicc2/application/eink/eink.c,
-	  openbeacon-openpicc2/application/main.c,
-	  openbeacon-openpicc2/application/power.c: Disable ADC and AD7147
+    added nRF code again
 
-2009-06-08 10:28  henryk
+commit 82230369a53597365ebf151c8924e558b2f20dd7
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Feb 27 23:45:12 2010 +0000
 
-	* [r490] openbeacon-openpicc2/application/paint/paint.c: Print
-	  reset reason
+    extended factory reset toggles
 
-2009-06-08 04:51  henryk
+commit cc48a3e97da057fc5d48c146a9740d22a602be99
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Feb 27 23:40:11 2010 +0000
 
-	* [r489] openbeacon-openpicc2/application/image/image.c,
-	  openbeacon-openpicc2/application/image/image.h,
-	  openbeacon-openpicc2/application/main.c,
-	  openbeacon-openpicc2/application/paint/paint.c: Somewhat working
-	  paint application. Still extremely crashy
+    fixed firmware settings reset
 
-2009-06-07 05:57  henryk
+commit a8c406a19c580ceeed2b5b43072ab5c0ea9f9498
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Feb 27 19:16:47 2010 +0000
 
-	* [r488] openbeacon-openpicc2/application/paint/paint.c: bla
+    enable reset to stored user settings
 
-2009-06-07 00:43  henryk
+commit 037fb93218f83de8c9a48ba2318a144c4a577ecc
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Feb 27 18:32:33 2010 +0000
 
-	* [r487] openbeacon-openpicc2/application/paint/paint.c: Continuous
-	  update
+    allow USB terminal communication to WIFI module
 
-2009-06-06 21:14  henryk
+commit e1116322e0c6bba5cadab3cbd2e6f529680e79e9
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Feb 27 15:25:36 2010 +0000
 
-	* [r486] openbeacon-openpicc2/application/image/image.c,
-	  openbeacon-openpicc2/application/image/image.h,
-	  openbeacon-openpicc2/application/paint/paint.c: More photogenic
-	  ants
+    added factory reset
 
-2009-06-06 03:10  henryk
+commit 20ddceb03cf042a4b762b7aa24fc0d307cd3834f
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Feb 27 13:07:55 2010 +0000
 
-	* [r485] openbeacon-openpicc2/application/paint/paint.c: Darkened
-	  by a hundred ants
+    renamed uart.* to wifi.*
 
-2009-06-06 02:27  henryk
+commit 1ab075267af7c9dfc2734311fd74145534ff60d0
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Feb 27 13:06:42 2010 +0000
 
-	* [r484] openbeacon-openpicc2/application/eink/eink.c,
-	  openbeacon-openpicc2/application/eink/eink.h: Fix image size
-	  computation
-	  Revert wait state setting, doesn't seem to do much
+    renamed functions from uart_ to wifi_
 
-2009-06-05 06:21  henryk
+commit 1c33f588f1b29c1b2a74c778a5e7ef652285c63b
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Feb 27 12:00:17 2010 +0000
 
-	* [r483] openbeacon-openpicc2/Makefile,
-	  openbeacon-openpicc2/application/paint/paint.c,
-	  openbeacon-openpicc2/txtr_composite.pgm,
-	  openbeacon-openpicc2/txtr_composite.xcf: Add a demonstration
-	  spinner
+    AD-HOC mode enabled by default
 
-2009-06-05 04:28  henryk
+commit 3850717faed01c22e5658ddceb443a9e467b6201
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri Feb 26 18:48:06 2010 +0000
 
-	* [r482] openbeacon-openpicc2/application/main.c: Put the processor
-	  into Idle Mode when no task is running
-	  Add ASM SDRAM write and speed test. Disabled since it takes a lot
-	  of power
+    deleted crap
 
-2009-06-05 03:04  henryk
+commit 26511f508b20207f289e541e2f71fcc3f4b4486c
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Feb 23 23:12:06 2010 +0000
 
-	* [r481] openbeacon-openpicc2/application/eink/eink.c,
-	  openbeacon-openpicc2/application/eink/eink_mgmt.c: Finally fix
-	  eink_job_add_area_with_offset functionality
+    stupid offset correction for testing
 
-2009-06-04 03:49  henryk
+commit 0841d7c1f7dc6b3f5c380e05c01eedde1c4f2869
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Feb 23 22:36:26 2010 +0000
 
-	* [r480]
-	  openbeacon-openpicc2/application/eink/eink_image_buffer.dia: Add
-	  eink_burst_write_end to the diagram
+    added proper CIR filter
 
-2009-06-04 03:14  henryk
+commit 1124ac8e85032ef15ce8dfea8bf2a1dc13641275
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Feb 21 21:29:40 2010 +0000
 
-	* [r479] openbeacon-openpicc2/application/eink/eink.c: Use the
-	  optimized 40-byte transfer for most of the image downloads
-	  regardless of the regardless of the size or alignment of the
-	  buffer
+    added USB remove option
 
-2009-06-03 23:13  henryk
+commit 5b983826fb7e2c67b9eb09a0139ea6ffef433c14
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Feb 21 21:23:08 2010 +0000
 
-	* [r478] openbeacon-openpicc2/application/paint/paint.c: Solve the
-	  mystery of the unwhite white
+    added USB remove option
 
-2009-06-03 21:10  henryk
+commit a3e2494c85311a6b1bafcd72babdb471fcce30ed
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Feb 21 21:20:56 2010 +0000
 
-	* [r477] openbeacon-openpicc2/application/eink/eink.c: Fix a
-	  lingering problem with the mutexes and their order
-	  Add a new function eink_burst_write_end that must be called after
-	  eink_burst_write_begin and before any other register or memory
-	  actions and frees the mutexes that were taken by
-	  eink_burst_write_begin again.
+    deleted USB support, added fas UART data output
 
-2009-06-03 08:20  henryk
+commit 880c9c428cd447db182a55f490a7d38990ef36f1
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Feb 21 16:14:24 2010 +0000
 
-	* [r475] openbeacon-openpicc2/application/eink/eink.c: Remove some
-	  cruft
+    test cheap integration
 
-2009-06-03 04:33  henryk
+commit 15ceb0d752a1d5c4be52e3bbf58fc2c7b49c583c
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Feb 21 02:12:16 2010 +0000
 
-	* [r474] openbeacon-openpicc2/application/main.c: Enable external
-	  reset button
+    reformatting
 
-2009-06-03 04:32  henryk
+commit 22ac881fc3b3d602c1dd8378184651cbbf6ef31e
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Feb 21 00:39:45 2010 +0000
 
-	* [r473] openbeacon-openpicc2/application/eink/eink.c: Increase
-	  wait states again (is this more stable?), speed down to 8.96 MB/s
+    target binary name changed
 
-2009-06-03 04:31  henryk
+commit dc13d178173ddf4070a3643c2aa07c41580d84c1
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Feb 20 18:16:07 2010 +0000
 
-	* [r472] openbeacon-openpicc2/application/eink/eink_mgmt.c: Disable
-	  debug output
+    200kHz sampling mode
 
-2009-06-03 04:31  henryk
+commit c8e6e2c71e9b55929dee3e88af8430e9858209fb
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Feb 20 17:32:35 2010 +0000
 
-	* [r471] openbeacon-openpicc2/application/paint/paint.c,
-	  openbeacon-openpicc2/config/board.h: Increase stack size
+    OpenBeacon ADC code
 
-2009-06-03 04:30  henryk
+commit 71e44592565ea98cbabab80de0eab9ee85e27e6f
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Feb 1 19:46:07 2010 +0000
 
-	* [r470] openbeacon-openpicc2/openocd.cfg: Set CPU Id
+    added 1.8MBit support for WLAN module
 
-2009-06-02 14:46  henryk
+commit 0d8b6193c7c7c2d8fb2f8021b897e4f7afa7ecdd
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Feb 1 19:36:13 2010 +0000
 
-	* [r469] openbeacon-openpicc2, openbeacon-openpicc2/application,
-	  openbeacon-openpicc2/application/paint/paint.c: Add concurrent
-	  drawing of black rectangles for demonstration purposes
+    added 1MBit support for WLAN module
 
-2009-06-02 14:42  henryk
+commit 515b3036cd84731a3e0090e19357837621362e85
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Feb 1 10:32:34 2010 +0000
 
-	* [r468] openbeacon-openpicc2/application/eink/eink.c: Add mutex
-	  protection for all eInk accesses
+    moved green LED enabled past nRF-initialization
 
-2009-06-02 14:41  henryk
+commit bb9a24f22873019029599610ddab517a6be7a03b
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Feb 1 10:21:32 2010 +0000
 
-	* [r467] openbeacon-openpicc2/application/eink/eink_mgmt.c: Bug fix
-	  for LUT assignment
+    added support for nonstandard chipselect
 
-2009-06-02 14:40  henryk
+commit 7fb88fcff23093ae658ac444ec48b3b0d34b8a9d
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Feb 1 10:16:48 2010 +0000
 
-	* [r466] openbeacon-openpicc2/application/image/image.c,
-	  openbeacon-openpicc2/application/utils.h: Properly round up sizes
+    added proximity protocol support
 
-2009-06-02 14:39  henryk
+commit 0ca363306466b787681ac835d0e52e13e0c6be19
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Dec 28 02:19:33 2009 +0000
 
-	* [r465] openbeacon-openpicc2/openocd.cfg: openocd configuration
-	  (not tested)
+    Fabian Richter pointed out compiling problem - added fix
 
-2009-06-02 04:24  henryk
+commit b80e37af99f3f90fc713a2974f26d70cfb167f6b
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Dec 14 11:47:22 2009 +0000
 
-	* [r464]
-	  openbeacon-openpicc2/application/eink/eink_image_buffer.dia:
-	  Relationships between the different controller memory access
-	  functions
+    openbeacon wlan fixes
 
-2009-06-02 04:21  henryk
+commit b10b4fe48a7fd51dc461bc044431aa8a13202cc3
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Dec 14 11:05:04 2009 +0000
 
-	* [r463] openbeacon-openpicc2/application/eink/eink.c,
-	  openbeacon-openpicc2/application/eink/eink.h,
-	  openbeacon-openpicc2/application/eink/eink_mgmt.c,
-	  openbeacon-openpicc2/config/board.h: Add new
-	  UPDATE_MODE_PART_SPECIAL with additional semantics (this smells
-	  like a hack, not sure whether it will stay)
-	  Implement (hopefully) correct LUT assignment
-	  Protect memory access vs. update buffer synthesis with mutex.
-	  Probably still need mutexes for all the other eink_* functions
+    added support for CSN on PIOB
 
-2009-06-01 06:51  henryk
+commit 673e3f456d6205a3098c03858c8c52ec4615f89f
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Dec 5 10:03:24 2009 +0000
 
-	* [r462] openbeacon-openpicc2/application/ebook/ebook.c,
-	  openbeacon-openpicc2/application/image/image.c,
-	  openbeacon-openpicc2/application/image/image.h,
-	  openbeacon-openpicc2/application/paint/paint.c: Accessor method
-	  to get BPP as enum eink_pack_mode
-	  Convert ebook to image api
+    removed prescaler
 
-2009-06-01 06:20  henryk
+commit c5ffe8933f56640e3a26e31b7e7eacdd26280e83
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Dec 5 09:49:49 2009 +0000
 
-	* [r461] openbeacon-openpicc2/application/image/image.c,
-	  openbeacon-openpicc2/application/image/image.h,
-	  openbeacon-openpicc2/application/paint/paint.c: Add method to
-	  create (or fill) an image_t with a solid color
+    removed prescaler
 
-2009-06-01 05:42  henryk
+commit fd8b24d1139de03a28b4c94e436ce8d1125a20ce
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Dec 5 08:50:58 2009 +0000
 
-	* [r460] openbeacon-openpicc2/Makefile,
-	  openbeacon-openpicc2/application/ebook/ebook.c,
-	  openbeacon-openpicc2/application/image,
-	  openbeacon-openpicc2/application/image/image.c,
-	  openbeacon-openpicc2/application/image/image.h,
-	  openbeacon-openpicc2/application/image/splash.h,
-	  openbeacon-openpicc2/application/main.c,
-	  openbeacon-openpicc2/application/paint/paint.c,
-	  openbeacon-openpicc2/application/splash.h,
-	  openbeacon-openpicc2/generate_splash.c: Refactor splash code to a
-	  newly created image module
-	  Move paint.c to this new API (still need to convert ebook.c)
+    modified make file for audio.raw
 
-2009-06-01 04:19  henryk
+commit 7e122939b0cc4ca3547aade7adb4460b6bc1d8c2
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Dec 5 08:44:02 2009 +0000
 
-	* [r459] openbeacon-openpicc2/application/paint/paint.c,
-	  openbeacon-openpicc2/application/splash.h,
-	  openbeacon-openpicc2/generate_splash.c: Give the option of
-	  packing splash images with more than one pixel per byte. Reduces
-	  image size, dramatically reduces load time (e.g. half time for
-	  4bpp, that's 49ms per full image)
+    added raw audio file
 
-2009-05-31 04:18  henryk
+commit 5c80dc0b0ecd74ffb3305312ad83d896e15ac81c
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Dec 5 08:19:14 2009 +0000
 
-	* [r458] openbeacon-openpicc2/application/paint/paint.c: Properly
-	  calculate size for the monochrome images, reduces time for those
-	  images to 25%. Start time is now at 175ms (was at 397 with the
-	  latest assembler code, was at 1200 last morning before the
-	  assembler code).
+    fixed makefile
 
-2009-05-31 03:57  henryk
+commit 489b5ab912c5adb065fd861019b650756615b26e
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Dec 5 03:49:40 2009 +0000
 
-	* [r457] openbeacon-openpicc2/application/eink/eink.c,
-	  openbeacon-openpicc2/application/paint/paint.c: Use Store
-	  Multiple instead of multiple stores, reduces times somewhat
-	  Add 32-byte optimized code path. This path is now at 99ms per
-	  image (9.98 MB/s!).
+    fixed makefile
 
-2009-05-30 11:28  henryk
+commit 2fba06f956a084f0e4464ede7c7007b322098a42
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Dec 5 03:47:58 2009 +0000
 
-	* [r456] openbeacon-openpicc2/application/eink/eink.c,
-	  openbeacon-openpicc2/application/paint/paint.c: Better living
-	  through preprocessor defines
-	  Also new case for 16-byte alignment, brings time per image down
-	  to 144 ms (that's 6.86 MB/s!)
+    updated audio file
 
-2009-05-30 10:56  henryk
+commit 1b61c4e40c9f4393ecea03520d590eed9a5e2b1e
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Dec 5 03:44:50 2009 +0000
 
-	* [r455] openbeacon-openpicc2/application/eink/eink.c: Complete
-	  optimized inline ASM for 8-byte case, is now 166 milliseconds per
-	  full image load (down from 243 ms this morning, yeah!)
+    fixed makefile
 
-2009-05-30 10:12  henryk
+commit 6e161c865b0ecc4f61c4c2a06bdf01a9a2cb02f2
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Dec 5 03:42:15 2009 +0000
 
-	* [r454] openbeacon-openpicc2/application/eink/eink.c: Speed up the
-	  8-byte case by 17%
+    fixed warning
 
-2009-05-29 15:50  henryk
+commit f5c0b2a7ea1d7f6ee38a9f023c2bca593660ad2b
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Dec 5 03:40:52 2009 +0000
 
-	* [r453] openbeacon-openpicc2/application/eink/eink.c: Separate the
-	  different optimized codepaths for easier analysis
+    added converted audio file
 
-2009-05-29 15:20  henryk
+commit aa452915b29c01653c890d72abb25b72e41af5dc
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Dec 5 03:39:16 2009 +0000
 
-	* [r452] openbeacon-openpicc2/application/eink/eink.c: Optimized
-	  case for 8-byte alignment
+    linked in audio file
 
-2009-05-29 15:14  henryk
+commit 5e505bdde9533ba5de64c756584977db2e86ca9a
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Dec 5 03:09:43 2009 +0000
 
-	* [r451] openbeacon-openpicc2/application/eink/eink.c,
-	  openbeacon-openpicc2/application/paint/paint.c: Optimized loader
-	  code for the 32-bit aligned case
+    added frequency
 
-2009-05-29 13:46  henryk
+commit 4ae01551820ca989e3cb8af7610129999920e4d4
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Dec 5 03:05:32 2009 +0000
 
-	* [r450] openbeacon-openpicc2/application/main.c,
-	  openbeacon-openpicc2/application/paint/paint.c,
-	  openbeacon-openpicc2/application/splash.h,
-	  openbeacon-openpicc2/bg.pgm, openbeacon-openpicc2/bg.xcf: Better
-	  BG image
-	  Move splash decompression to SDRAM
-	  Have battery bar at the right edge
+    added audio file
 
-2009-05-28 20:33  henryk
+commit 6ed7cc62ff889056d9de18722698a77bbb5b32c2
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Dec 5 02:45:27 2009 +0000
 
-	* [r449] openbeacon-openpicc2/bg.pgm, openbeacon-openpicc2/bg.xcf:
-	  Add missing background image
+    latest changes
 
-2009-05-28 20:12  henryk
+commit 91d148096d5f6e01baa60c4641f5811f21e6480b
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri Dec 4 15:03:55 2009 +0000
 
-	* [r448] openbeacon-openpicc2/Makefile,
-	  openbeacon-openpicc2/application/ebook/ebook.c,
-	  openbeacon-openpicc2/application/main.c,
-	  openbeacon-openpicc2/application/paint,
-	  openbeacon-openpicc2/application/paint/paint.c,
-	  openbeacon-openpicc2/application/paint/paint.h: Begin paint
-	  application
+    moved sound to separate vBeep function
 
-2009-05-28 19:47  henryk
+commit 8d02d6c8b3cf7a48fc55de4c7628aea8fe48b05c
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri Dec 4 14:27:17 2009 +0000
 
-	* [r447] openbeacon-openpicc2/application/ebook/ebook.c: bla
+    remove dead files
 
-2009-05-28 19:19  henryk
+commit 1c3e20dff93e8616c79dd378287219ab119b9f31
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri Dec 4 14:26:27 2009 +0000
 
-	* [r446] openbeacon-openpicc2/application/main.c: Measure SDRAM
-	  test time
+    added foss.in special audio dongle
 
-2009-05-28 19:19  henryk
+commit bdd18b94c5dbf5514726a2d29c01f99591af0010
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri Dec 4 06:37:59 2009 +0000
 
-	* [r445] openbeacon-openpicc2/application/ebook/ebook.c,
-	  openbeacon-openpicc2/application/eink/eink.c: Lower waitstates
-	  (slightly increase interface speed)
+    proximity added
 
-2009-05-28 11:26  henryk
+commit 97efa36c62e92ea1b3f20c4e08c203e45760686a
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri Dec 4 06:15:16 2009 +0000
 
-	* [r444] openbeacon-openpicc2/application/ebook/ebook.c,
-	  openbeacon-openpicc2/application/eink/eink.c,
-	  openbeacon-openpicc2/application/eink/eink.h,
-	  openbeacon-openpicc2/application/eink/eink_mgmt.c,
-	  openbeacon-openpicc2/application/main.c: 9.7" display
-	  initializisation working, some buffer management problems
-	  remaining
+    new key
 
-2009-05-28 11:22  henryk
+commit 9c8164478c372b528c6ea4646e88fefd6bd6d654
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri Dec 4 06:06:27 2009 +0000
 
-	* [r443] openbeacon-openpicc2/application/nfc/libnfc_demo.c: bla
+    mainloop fix
 
-2009-05-27 18:31  henryk
+commit 618a5ec3013c0a31648aea0b29388d025a11d7d3
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri Dec 4 06:04:52 2009 +0000
 
-	* [r442] openbeacon-openpicc2/application/ebook/ebook.c,
-	  openbeacon-openpicc2/application/eink/eink.c: Whitespace?
+    added proximity estimator code
 
-2009-05-27 18:26  henryk
+commit b4178bcfa90fd26eee2962ce8e116df20336c402
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Oct 18 00:55:47 2009 +0000
 
-	* [r441] openbeacon-openpicc2/application/eink/eink.c,
-	  openbeacon-openpicc2/application/eink/eink_flash.c: Fix previous
-	  change to the communications check code.
-	  As it turns out, registers > 0x0100 can not be used before
-	  SYS_RUN has been issued
-	  Move the comm check in the normal codepath behind the SYS_RUN
-	  Add a simplified comm check in the flash codepath and just check
-	  whether the PLL settings were received correctly
+    added initial UART ISR code
 
-2009-05-20 20:29  henryk
+commit 18f0218deb46e092e8a80918db0fe43d10062d31
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Oct 18 00:54:57 2009 +0000
 
-	* [r440] openbeacon-openpicc2/Makefile,
-	  openbeacon-openpicc2/application/main.c,
-	  openbeacon-openpicc2/config/atmel-rom_sdram.ld: Add new linker
-	  file, puts the RAM that malloc() uses into SDRAM.
-	  Warning: Do not call malloc (or a function that calls malloc)
-	  before initializing SDRAM
-	  Warning: Does not run on BOARD_V0_1 anymore
+    fixed typo
 
-2009-04-24 13:55  henryk
+commit b193f2e08972c712fe74e9b39f89bcdcfc74e546
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Oct 17 23:45:16 2009 +0000
 
-	* [r439] openbeacon-openpicc2/application/eink/eink.c,
-	  openbeacon-openpicc2/application/eink/eink_flash.c,
-	  openbeacon-openpicc2/application/eink/eink_lowlevel.h,
-	  openbeacon-openpicc2/application/eink/eink_mgmt.c: Add new
-	  lowlevel function eink_controller_check_supported() which does
-	  revision check and communications check and use it in the
-	  flash_acquire code (otherwise it might be possible to enter
-	  conditional_reflash with malfunctioning FPC cable)
+    dos2unix
 
-2009-04-15 22:24  henryk
+commit 89464c795aff8cd1a70da1d3223c2acddfdea823
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Oct 17 22:45:19 2009 +0000
 
-	* [r438] openbeacon-openpicc2/application/main.c,
-	  openbeacon-openpicc2/application/sdram.c,
-	  openbeacon-openpicc2/config/board.h: Add infrastructure for
-	  multiple board layouts
-	  Add new board v0.2
+    wake up WLAN module
 
-2009-04-14 15:19  henryk
+commit bddef0836dc147eada2d1620051acd6ab0f9febd
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Oct 17 21:31:04 2009 +0000
 
-	* [r437] openbeacon-openpicc2/application/nfc/libnfc_demo.c: libnfc
-	  performance test
+    UART initialization
 
-2009-04-14 15:19  henryk
+commit ef90b4cf8678cac11a05429e1348ffb369a12826
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Oct 17 19:59:11 2009 +0000
 
-	* [r436] core/Makefile.rules: Add possibility to add additional
-	  object files
+    inital check in of UART code
 
-2009-04-14 15:18  henryk
+commit 6e8b296dd3443a759e59a0e1e7f3bf5e8f656f2d
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Wed Sep 9 20:34:56 2009 +0000
 
-	* [r435] core/openbeacon/beacontypes.h: Not used anymore, clash
-	  with libnfc
+    added script update_changelog to refresh SVN ChangeLog
 
-2009-04-11 16:37  henryk
+commit ed9e853a3ad3b355ccbabe140dae62e227293976
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Wed Sep 9 20:30:31 2009 +0000
 
-	* [r434] openbeacon-openpicc2/Makefile,
-	  openbeacon-openpicc2/application,
-	  openbeacon-openpicc2/application/main.c,
-	  openbeacon-openpicc2/application/nfc/libnfc_demo.c,
-	  openbeacon-openpicc2/application/nfc/libnfc_demo.h,
-	  openbeacon-openpicc2/application/nfc/pn532_libnfc_reader.c,
-	  openbeacon-openpicc2/application/nfc/pn532_libnfc_reader.h: Add
-	  demo for libnfc use (Warning: Lots of ugly print debugs,
-	  circumventing printf since it's crashing too often. hope that
-	  gets better when we have the additional RAM)
+    created ChangeLog
 
-2009-04-11 15:49  henryk
+commit 1e5f5a1a64bba025a7ba568c563e1444c543fd8a
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Wed Sep 9 20:20:57 2009 +0000
 
-	* [r433] openbeacon-openpicc2/application/nfc/picc_emu.c,
-	  openbeacon-openpicc2/application/nfc/pn532.c,
-	  openbeacon-openpicc2/application/nfc/pn532.h,
-	  openbeacon-openpicc2/application/nfc/pn532_demo.c: Changed
-	  signedness
+    updated operating system to lastest FreeRTOS.org version 5.4.2
 
-2009-04-11 12:46  henryk
+commit 94d6974c41773c1b36d4c1f0c76067392108e28d
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Aug 16 16:51:02 2009 +0000
 
-	* [r432] openbeacon-openpicc2/application/libnfc/Makefile.rules,
-	  openbeacon-openpicc2/application/libnfc/linux/Makefile,
-	  openbeacon-openpicc2/application/libnfc/macosx/Makefile: Move
-	  common linux/macos Makefile code to include file
+    initial check in of OpenBeacon WLAN
 
-2009-04-11 12:41  henryk
+commit ed913ff365d23e9c8f45b20e87ec44c08cfc5051
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Fri Jul 10 17:20:58 2009 +0000
 
-	* [r431] openbeacon-openpicc2/application/libnfc/dev_acr122.c,
-	  openbeacon-openpicc2/application/libnfc/dev_acr122.h,
-	  openbeacon-openpicc2/application/libnfc/dev_pn531.c,
-	  openbeacon-openpicc2/application/libnfc/dev_pn531.h,
-	  openbeacon-openpicc2/application/libnfc/libnfc.c,
-	  openbeacon-openpicc2/application/libnfc/linux/Makefile,
-	  openbeacon-openpicc2/application/libnfc/types.h: Move to new
-	  reader driver API, change linux Makefile accordingly
+    Regression: spi.c can only be compiled with -O0, not -O2. This was broken in r357. Revert Makefile to earlier workaround while I'm looking for a proper fix
 
-2009-04-11 12:38  henryk
+commit d99cf8c88c852e4d6f3e08a2b30d4bb3d3254b8d
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Thu Jul 2 23:52:14 2009 +0000
 
-	* [r430] openbeacon-openpicc2/application/libnfc/dev_pn531.c: Make
-	  GNU-Source, fixes compile error in libusb
+    Fix last commit
 
-2009-04-11 12:35  henryk
+commit 4574b348353d7d79b32e948ed966b6ff0a5b371b
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Thu Jul 2 17:00:50 2009 +0000
 
-	* [r429] openbeacon-openpicc2/application/libnfc/libnfc.h: Fix
-	  prototype
+    Add command to draw non-filled circle
 
-2009-04-11 12:30  henryk
+commit f5784c5edf6b23933562f053a4b960ed38151f3d
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Thu Jul 2 17:00:19 2009 +0000
 
-	* [r428] openbeacon-openpicc2/application/libnfc/bitutils.c: Swap
-	  keywords, for more pedantic compile options
+    Let the eInk controller know that its SDRAM is actually 32MB and not 16MB
 
-2009-04-11 12:29  henryk
+commit 55edeb91ef6152bf749ca6a2fae61e5a814e1e7e
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sun Jun 28 21:48:50 2009 +0000
 
-	* [r427] openbeacon-openpicc2/application/libnfc/anticol.c,
-	  openbeacon-openpicc2/application/libnfc/bitutils.c,
-	  openbeacon-openpicc2/application/libnfc/bitutils.h,
-	  openbeacon-openpicc2/application/libnfc/defines.h,
-	  openbeacon-openpicc2/application/libnfc/dev_acr122.c,
-	  openbeacon-openpicc2/application/libnfc/dev_acr122.h,
-	  openbeacon-openpicc2/application/libnfc/dev_pn531.c,
-	  openbeacon-openpicc2/application/libnfc/dev_pn531.h,
-	  openbeacon-openpicc2/application/libnfc/libnfc.c,
-	  openbeacon-openpicc2/application/libnfc/libnfc.h,
-	  openbeacon-openpicc2/application/libnfc/list.c,
-	  openbeacon-openpicc2/application/libnfc/mftool.c,
-	  openbeacon-openpicc2/application/libnfc/mifaretag.h,
-	  openbeacon-openpicc2/application/libnfc/relay.c,
-	  openbeacon-openpicc2/application/libnfc/simulate.c,
-	  openbeacon-openpicc2/application/libnfc/types.h: Sanitize line
-	  endings
+    Work around the internal compiler error. For some reason "&xTaskWoken" leads to an internal compiler error, unless xTaskWoken is global or static
 
-2009-04-11 12:20  henryk
+commit cbce6671c89c459eae94e51415c109cb1b40be08
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Jun 23 11:53:11 2009 +0000
 
-	* [r426] openbeacon-openpicc2/application/libnfc,
-	  openbeacon-openpicc2/application/libnfc/LICENSE.TXT,
-	  openbeacon-openpicc2/application/libnfc/README.TXT,
-	  openbeacon-openpicc2/application/libnfc/anticol.c,
-	  openbeacon-openpicc2/application/libnfc/bitutils.c,
-	  openbeacon-openpicc2/application/libnfc/bitutils.h,
-	  openbeacon-openpicc2/application/libnfc/defines.h,
-	  openbeacon-openpicc2/application/libnfc/dev_acr122.c,
-	  openbeacon-openpicc2/application/libnfc/dev_acr122.h,
-	  openbeacon-openpicc2/application/libnfc/dev_pn531.c,
-	  openbeacon-openpicc2/application/libnfc/dev_pn531.h,
-	  openbeacon-openpicc2/application/libnfc/libnfc.c,
-	  openbeacon-openpicc2/application/libnfc/libnfc.h,
-	  openbeacon-openpicc2/application/libnfc/linux,
-	  openbeacon-openpicc2/application/libnfc/linux/Makefile,
-	  openbeacon-openpicc2/application/libnfc/list.c,
-	  openbeacon-openpicc2/application/libnfc/macosx,
-	  openbeacon-openpicc2/application/libnfc/macosx/Makefile,
-	  openbeacon-openpicc2/application/libnfc/mftool.c,
-	  openbeacon-openpicc2/application/libnfc/mifaretag.h,
-	  openbeacon-openpicc2/application/libnfc/relay.c,
-	  openbeacon-openpicc2/application/libnfc/simulate.c,
-	  openbeacon-openpicc2/application/libnfc/types.h,
-	  openbeacon-openpicc2/application/libnfc/win32,
-	  openbeacon-openpicc2/application/libnfc/win32/anticol.vcproj,
-	  openbeacon-openpicc2/application/libnfc/win32/bin,
-	  openbeacon-openpicc2/application/libnfc/win32/bin/anticol.exe,
-	  openbeacon-openpicc2/application/libnfc/win32/bin/libnfc.dll,
-	  openbeacon-openpicc2/application/libnfc/win32/bin/libnfc.lib,
-	  openbeacon-openpicc2/application/libnfc/win32/bin/list.exe,
-	  openbeacon-openpicc2/application/libnfc/win32/bin/mftool.exe,
-	  openbeacon-openpicc2/application/libnfc/win32/bin/relay.exe,
-	  openbeacon-openpicc2/application/libnfc/win32/bin/simulate.exe,
-	  openbeacon-openpicc2/application/libnfc/win32/drivers,
-	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v1,
-	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v1/Release.txt,
-	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v1/acr122.cat,
-	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v1/acr122.inf,
-	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v1/acr122.sys,
-	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v1/acr122x64.sys,
-	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v2,
-	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v2/98ME,
-	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v2/98ME/a122w98.sys,
-	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v2/98ME/acr122.inf,
-	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v2/Jacspcsc.dll,
-	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v2/acr122.cat,
-	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v2/acr122.inf,
-	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v2/acr122.sys,
-	  openbeacon-openpicc2/application/libnfc/win32/drivers/acr122v2/acr122x64.sys,
-	  openbeacon-openpicc2/application/libnfc/win32/drivers/pn531,
-	  openbeacon-openpicc2/application/libnfc/win32/drivers/pn531/libusb0.dll,
-	  openbeacon-openpicc2/application/libnfc/win32/drivers/pn531/libusb0.sys,
-	  openbeacon-openpicc2/application/libnfc/win32/drivers/pn531/libusb0_x64.dll,
-	  openbeacon-openpicc2/application/libnfc/win32/drivers/pn531/libusb0_x64.sys,
-	  openbeacon-openpicc2/application/libnfc/win32/drivers/pn531/pn531.cat,
-	  openbeacon-openpicc2/application/libnfc/win32/drivers/pn531/pn531.inf,
-	  openbeacon-openpicc2/application/libnfc/win32/drivers/pn531/pn531_x64.cat,
-	  openbeacon-openpicc2/application/libnfc/win32/libnfc.def,
-	  openbeacon-openpicc2/application/libnfc/win32/libnfc.sln,
-	  openbeacon-openpicc2/application/libnfc/win32/libnfc.vcproj,
-	  openbeacon-openpicc2/application/libnfc/win32/libusb,
-	  openbeacon-openpicc2/application/libnfc/win32/libusb/libusb.lib,
-	  openbeacon-openpicc2/application/libnfc/win32/libusb/libusb0.dll,
-	  openbeacon-openpicc2/application/libnfc/win32/libusb/libusb0_x64.dll,
-	  openbeacon-openpicc2/application/libnfc/win32/libusb/usb.h,
-	  openbeacon-openpicc2/application/libnfc/win32/list.vcproj,
-	  openbeacon-openpicc2/application/libnfc/win32/mftool.vcproj,
-	  openbeacon-openpicc2/application/libnfc/win32/relay.vcproj,
-	  openbeacon-openpicc2/application/libnfc/win32/simulate.vcproj,
-	  openbeacon-openpicc2/application/libnfc/win32/winscard.lib: Add
-	  and commit an unmodified libnfc 1.1.0 release from
-	  http://www.libnfc.org/ to add my own patches
+    Add function to load image from PGM file
 
-2009-03-11 12:51  meriac
+commit da34c087175f601bb484ac7df1d8c4314d7c6fed
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Jun 23 11:50:00 2009 +0000
 
-	* [r425] core/openbeacon/env.c, core/openbeacon/env.h: added
-	  support for resetting boot loader
+    Enable fast memory access
 
-2009-03-11 12:51  meriac
+commit 0f043375bb202d846a56e2a3a3673e73b5e9bfbb
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Jun 23 11:48:09 2009 +0000
 
-	* [r424] core/os/usb/USB-CDC.c, core/os/usb/USB-CDC.h: added USB
-	  detach code
+    Add fat_helper_open
 
-2009-03-06 01:35  meriac
+commit 85e3c7ada5a8ae0591234e31d9bf381c5150eabe
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Jun 23 11:46:21 2009 +0000
 
-	* [r423] bootloader/Makefile, bootloader/application/console.c,
-	  bootloader/application/update, bootloader/application/update.c,
-	  bootloader/application/update.h, bootloader/application/update.s,
-	  bootloader/application/update/AT91SAM7S128-bootloader-orig.bin,
-	  bootloader/application/update/AT91SAM7S128-bootloader.bin,
-	  bootloader/config/atmel-rom.ld: addedd bootloader code
+    Undo r526, not worth the trouble.
+    Also reduce sdcard bus speed, doesn't seem stable
 
-2009-03-03 21:40  meriac
+commit 4ed7fce301b1e6ca0fc6426985f8403ec134ade8
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Jun 23 00:59:55 2009 +0000
 
-	* [r422] openbeacon-openpicc2/application/adc.c: indent
+    Forgotten prototypes
 
-2009-03-03 21:39  meriac
+commit c8d86855c245891cfa1f5dc0edf1e169080a2f60
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Jun 23 00:58:44 2009 +0000
 
-	* [r421] openbeacon-openpicc2/application/adc.c: fixed ADC watchdog
-	  reset problem
+    Add functions to allocate images from malloc (not used currently since malloc-memory is in SRAM)
 
-2009-03-03 19:31  henryk
+commit 1accd8466ddaf5115ac9a9e8de26a94c845a424b
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Mon Jun 22 14:23:51 2009 +0000
 
-	* [r420] openbeacon-openpicc2/application/nfc/picc_emu.c: Enable
-	  debugging messages
+    Ignore empty lines
 
-2009-02-27 18:16  meriac
+commit 4888f8121455c1dc94f8c3b3754236feaf724c43
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Mon Jun 22 14:23:29 2009 +0000
 
-	* [r419] bootloader/application/console.c: added Xon/Xoffsupport
+    Fix change config when called from bus exclusive
 
-2009-02-27 16:05  meriac
+commit e2a8a09b3f2793fee172de31d175a492c8d93b8e
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Mon Jun 22 10:20:24 2009 +0000
 
-	* [r418] bootloader/application/console.c: added intel HEX file
-	  parsing
+    Restrict enhancement to non-SRAM areas
 
-2009-02-27 14:31  meriac
+commit 138016143081802918607efd736604cbe74ac3b1
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Mon Jun 22 09:56:09 2009 +0000
 
-	* [r417] bootloader, bootloader/Makefile, bootloader/application,
-	  bootloader/application/console.c,
-	  bootloader/application/console.h, bootloader/application/main.c,
-	  bootloader/config, bootloader/config/FreeRTOSConfig.h,
-	  bootloader/config/atmel-rom.ld, bootloader/config/board.h,
-	  bootloader/config/descriptors.h: initial boot loader console code
-	  checkin
+    bla
 
-2009-02-24 20:21  meriac
+commit e2890e4b5027e9c4dc4d2118d0ddf32768080cc3
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Mon Jun 22 09:39:25 2009 +0000
 
-	* [r416] usb-id-list.txt: added USB id for boot loader
+    Small performance increase (about 2%, now at 1.81 MB/s)
 
-2009-02-24 20:20  meriac
+commit c8f96c43da9040df187769857c65990d41af40f8
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sun Jun 21 22:21:08 2009 +0000
 
-	* [r415] openbeacon-blinkenlights/application/main.c,
-	  openbeacon-estimator/application/main.c,
-	  openbeacon-network/application/main.c,
-	  openbeacon-openpicc2/application/main.c,
-	  openbeacon-sniffer/application/main.c,
-	  openbouncer/application/main.c: changed name of 'main' function
-	  to 'mainloop' to get rid of compiler warning
+    Even further increase the bus speed (and correspondingly increase timeout counters).
+    This brings the speed up to 1.77 MB/s (56% increase) but may be even more unreliable (the spec says we're still in the clear, though).
 
-2009-02-24 20:08  meriac
+commit f08a957a6e5f9ea26efebbf96467c15b988ae5ca
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sun Jun 21 11:08:26 2009 +0000
 
-	* [r414] core/openbeacon/nRF24L01/nRF_CMD.c: only compile code if
-	  CE_PIN define is set
+    Add note about possible tweaking. Probably not worth the effort to properly investigate.
 
-2009-02-24 19:56  meriac
+commit e7baaa7023b28333ace960769b0eddf802c160a7
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sun Jun 21 11:04:46 2009 +0000
 
-	* [r413] core/os/boot/boot.s: changed name of 'main' function to
-	  'mainloop' to get rid of compiler warning
+    Enhance the multi-sector optimization to also apply for reads longer than two sectors but shorter than the complete cluster. Less than 1% performance increase.
 
-2009-02-24 16:37  meriac
+commit 7d515eb248a3ba9610a7c6fef428654093b8d805
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sun Jun 21 10:49:50 2009 +0000
 
-	* [r412] openbeacon-openpicc2/generate_splash.c: ran indent to
-	  reformat code
+    Properly maintain the FAT cache, 3% performance increase (now 1.12 MB/s)
 
-2009-02-24 16:05  meriac
+commit cc3efa7b31cbc1d10dc6587772de982d68c4094a
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat Jun 20 20:57:58 2009 +0000
 
-	* [r411] core/Makefile.rules, core/os/boot/boot.s: fixed section
-	  garbage collection
+    Properly implement READ_MULTIPLE_BLOCK in sdcard_disk_read(). HUGE performance increase, now at 1.09 MB/s.
 
-2009-02-24 16:02  meriac
+commit fb8c10c39ef42f92304da979276f9e473c629f6c
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat Jun 20 20:56:45 2009 +0000
 
-	* [r410] core/openbeacon/nRF24L01/nRF_CMD.c: removed unneccesary
-	  RAMFUNC declaration to save RAM
+    Add spi_force_transmit_pin()/spi_release_transmit_pin() to be used in bus exclusive mode to force the MOSI pin to a specific logic level regardless of the transmitted data values in transceive
 
-2009-02-24 14:22  meriac
+commit 33df554b6fcbd0a110badb7fe88a59e839ca57de
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat Jun 20 17:10:23 2009 +0000
 
-	* [r409] openbeacon-sniffer/application/proto.c,
-	  openbeacon-sniffer/application/xxtea.c,
-	  openbeacon-sniffer/application/xxtea.h: removed unnecessary
-	  RAMFUNC declaration
+    Implement multi-sector read optimiziation within a cluster, brings another ten or so percent; speed is now 0.598 MB/s
 
-2009-02-12 02:13  meriac
+commit ab3b7914567b5366ecca896456800f91da101977
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat Jun 20 11:17:40 2009 +0000
 
-	* [r408] openbeacon-openpicc2/application/main.c,
-	  openbeacon-openpicc2/application/sdcard.c: reformatting / add
-	  speed increase
+    Optimize CRC discard, slight performance increase (2%)
 
-2009-02-12 01:43  meriac
+commit 38afff08002f007f740221773a8726907746ae17
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat Jun 20 11:07:59 2009 +0000
 
-	* [r407] openbeacon-openpicc2/Makefile,
-	  openbeacon-openpicc2/application/README.LZO,
-	  openbeacon-openpicc2/application/dosfs.c,
-	  openbeacon-openpicc2/application/dosfs.h,
-	  openbeacon-openpicc2/application/lzo/README.LZO,
-	  openbeacon-openpicc2/application/main.c,
-	  openbeacon-openpicc2/application/sdcard.c,
-	  openbeacon-openpicc2/application/sdcard.h,
-	  openbeacon-openpicc2/doc/dosfs-example.c,
-	  openbeacon-openpicc2/doc/dosfs-readme.txt: added FAT32 support
-	  for SD card
+    Make sdcard_claim()/_release() nestable and bracket DFS_ReadSector() with a claim/release pair. This means that the SPI will only be put into bus exclusive once per call to DFS_ReadSector()
+    Obviously this will only really bring benefits when DFS_ReadSector() is called with a count > 1. Preliminary results show a speed-up of up to 10%
 
-2009-02-11 22:36  meriac
+commit 70e4ab680299eca8f602dcad2a1a7950a64b7c49
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Fri Jun 19 21:21:23 2009 +0000
 
-	* [r406] usb-id-list.txt: added txtr.mini usb id
+    Aggressively optimize the sdcard reading: decrease the clock divisor (to 4, leading to a SPI clock rate of about 11.98 megahertz) and increase the cutoff for blocking mode (thereby basically
+    eliminating the background mode calls). This brings the sdcard read speed up to 0.54 megabytes per second, but beware that this is potentially unsafe, leading to watchdog resets
 
-2009-02-11 22:36  meriac
+commit 75777f500a417d05bda6db3b2c7ee1a306b54bff
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Fri Jun 19 20:50:13 2009 +0000
 
-	* [r405] openbeacon-estimator/config/descriptors.h: fixed product
-	  ID and descriptor
+    Add a blocking mode to SPI, can only be invoked while the device is bus_exclusive
+    Fix spi_transceive for the bus_exclusive case (should reject new jobs until the bus is free again)
+    Convert sdcard code to use the blocking mode for short transfers, brings sdcard read speed to about 0.29 MB/s (up from 0.22 MB/s)
+    Fix sdcard.[ch] indentation
 
-2009-02-11 22:34  meriac
+commit 2b1e054644b9516a6700ee4275d9c653d17aa7b0
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Fri Jun 19 14:13:35 2009 +0000
 
-	* [r404] openbeacon-openpicc2/config/descriptors.h: fixed product
-	  ID
+    Add function to load from file into a data buffer
+    API change: fat_loadimage() is now fat_load_eink_image_buffer(), length parameter is now a pointer
 
-2009-02-11 22:32  meriac
+commit fced3c3639a07ca1fbfd94a96c8ead2dd130934a
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Fri Jun 19 00:27:46 2009 +0000
 
-	* [r403] openbeacon-blinkenlights/config/descriptors.h,
-	  openbeacon-network/config/descriptors.h,
-	  openbeacon-sniffer/config/descriptors.h,
-	  openbouncer/config/descriptors.h: fixed product id and
-	  description
+    Add fat_helper from erdgeist, allows to load directly from sdcard to an eink image_buffer
 
-2009-02-11 22:20  meriac
+commit 7b7f979d44e6192c146c00c3324150c3a5e2b6ff
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sun Jun 14 09:00:15 2009 +0000
 
-	* [r402] openbeacon-blinkenlights/config/descriptors.h,
-	  openbeacon-network/config/descriptors.h,
-	  openbeacon-sniffer/config/descriptors.h,
-	  openbouncer/config/descriptors.h: reverted to new descriptor type
+    Bla
 
-2009-02-11 22:15  meriac
+commit e96acdc7fedde474743724ea9032395fdae24027
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sun Jun 14 08:27:23 2009 +0000
 
-	* [r401] openbouncer/application/authentication.c,
-	  openbouncer/application/openbouncer.h: fixed types
+    Implement sleep (STANDBY) for the eInk controller. When the fixed PCBs are available (where the PLL will actually turn on reliably) the sleep mode may even be changed to SLEEP (PLL off).
 
-2009-02-11 22:14  meriac
+commit bcf77e28fd8660028ce83666c9b257726d54c6c5
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat Jun 13 15:28:38 2009 +0000
 
-	* [r400] core/openbeacon/env.c, core/openbeacon/env.h,
-	  core/openbeacon/sort.c, core/openbeacon/sort.h: removed ramfuncs
+    Add definitions for 8" display
 
-2009-01-29 15:57  meriac
+commit 37678f2db4fd970badb6a6f47e03d3af5bc46835
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat Jun 13 10:42:37 2009 +0000
 
-	* [r392] openbeacon-openpicc2/application/sdcard.c: added copyright
+    Only schedule updates after a command was executed
 
-2009-01-26 06:08  henryk
+commit 7a67885ccf64e2a6739f1217681c25f946b84faa
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Fri Jun 12 06:33:07 2009 +0000
 
-	* [r391] openbeacon-openpicc2/application/nfc/picc_emu.c: Move
-	  PN532 reset into the retry path
+    Reenable ADC (was off for debugging)
+    Add command to query power
 
-2009-01-24 11:46  meriac
+commit 59f70ab24e92b2961d246d79ec523a5b3295e6ff
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Thu Jun 11 15:21:09 2009 +0000
 
-	* [r390] openbeacon-openpicc2/application/main.c,
-	  openbeacon-openpicc2/application/sdcard.c: added sdcard benchmark
-	  code and increased clock
+    Forgot one reset_background
 
-2009-01-24 07:34  meriac
+commit a78e2505332f7cbe12c374503675e0647ae85b6e
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Thu Jun 11 15:18:41 2009 +0000
 
-	* [r389] openbeacon-openpicc2/application/sdcard.c: fixed comment
+    Add a kludgy hack to be able to paint black Direct Update on a grayscale background.
+    The trick is to first paint the grayscale image, then fill the update buffer with white and paint on that white.
+    Due to the bi-stable display technology the grayscale image will persist, but be overwritten by black pixel when a real update comes
 
-2009-01-24 07:17  meriac
+commit 77eb5b61c31fddf50ec1c52310f1b80bee06c334
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Thu Jun 11 14:01:43 2009 +0000
 
-	* [r388] openbeacon-openpicc2/application/main.c,
-	  openbeacon-openpicc2/application/sdcard.c,
-	  openbeacon-openpicc2/application/sdcard.h: added SDcard code
+    There was some strange output problem
 
-2009-01-23 12:09  henryk
+commit cae951fc82b61053b91c4bcdacf1629b0f4c639b
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Thu Jun 11 13:33:27 2009 +0000
 
-	* [r387] openbeacon-openpicc2/Makefile,
-	  openbeacon-openpicc2/application/main.c,
-	  openbeacon-openpicc2/application/nfc/picc_emu.c,
-	  openbeacon-openpicc2/application/nfc/picc_emu.h,
-	  openbeacon-openpicc2/application/nfc/pn532.c: PICC emulation
-	  wokring
+    Sanitize indentation
 
-2009-01-23 05:27  henryk
+commit 3df5ac3c2e7d23cde16f306e628e337de0d32ace
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Thu Jun 11 10:30:26 2009 +0000
 
-	* [r386] openbeacon-openpicc2/application/nfc/pn532.c,
-	  openbeacon-openpicc2/application/nfc/pn532.h,
-	  openbeacon-openpicc2/application/nfc/pn532_demo.c: Add wait_time
-	  parameter to pn532_recv_frame_queue()
+    Slight speedup in circle drawing
+    Reenable power-save
 
-2009-01-22 23:04  henryk
+commit 2d07509b0a297a26ad364e4b0a3408538c33f3c7
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Thu Jun 11 05:11:55 2009 +0000
 
-	* [r385] openbeacon-openpicc2/application/nfc/pn532.c,
-	  openbeacon-openpicc2/application/nfc/pn532_demo.c: PICC target
-	  demo working
+    Radically cleanup paint.c.
+    New feature: Modes (background=image, background=blank) can be switched with a command:  mode_blank for black/white drawing on white,  mode_background for grayscale drawing on a background image
 
-2009-01-21 19:21  henryk
+commit 52694783fd5daa8db870cd7dd48ed8b6aa093827
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Wed Jun 10 17:19:18 2009 +0000
 
-	* [r384] openbeacon-openpicc2/application/ebook/ebook.c,
-	  openbeacon-openpicc2/application/eink/eink_mgmt.c: Add erdgeists
-	  changes, fix horizontal swipe, naive implementation of
-	  eink_job_add_area_with_offset() (probably needs fixing for
-	  rotation)
+    Dramatically speed up filled circle code
 
-2009-01-21 18:48  henryk
+commit ac0dfe59c456dcd4cbd7700963f10c991215771c
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Wed Jun 10 16:08:11 2009 +0000
 
-	* [r383] openbeacon-openpicc2/application/nfc/pn532.c,
-	  openbeacon-openpicc2/application/nfc/pn532_demo.c: Theoretically
-	  start target, doesn't work
+    Fix circle shape
 
-2009-01-21 12:49  henryk
+commit 11ddb62f48a4492f3e069767d3a3074612cc3fa6
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Wed Jun 10 15:32:04 2009 +0000
 
-	* [r382] openbeacon-openpicc2/application/nfc/pn532.c,
-	  openbeacon-openpicc2/application/nfc/pn532_demo.c: Check return
-	  codes
+    Move stack to SRAM again, eliminates the crashes. Just don't stark too many/too big tasks. (with paint and eink activated about 26k of 32k SRAM are being used)
 
-2009-01-21 12:15  henryk
+commit a2e286cde95af03f5a29fd9c61cafb79f73b532c
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Wed Jun 10 15:30:37 2009 +0000
 
-	* [r381] openbeacon-openpicc2/application/nfc/pn532.c,
-	  openbeacon-openpicc2/application/nfc/pn532.h,
-	  openbeacon-openpicc2/application/nfc/pn532_demo.c: Get basic
-	  communication queues to work. API needs a little cleanup
+    Better (and concurrent) SDRAM test
 
-2009-01-21 09:06  henryk
+commit 3f5498e7627638671315402ad518612a71e73460
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Wed Jun 10 05:28:35 2009 +0000
 
-	* [r380] openbeacon-openpicc2/application/nfc/pn532.c,
-	  openbeacon-openpicc2/application/nfc/pn532.h,
-	  openbeacon-openpicc2/application/nfc/pn532_demo.c: Sending and
-	  receiving works in principle
+    Use inline ASM for faster (and bursty) SDRAM test.
+    Perform random SDRAM accesses in SDRAM test
 
-2009-01-20 14:24  henryk
+commit 2e746a02e4b66635820031f9b7b64d1087d7b197
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Wed Jun 10 03:29:24 2009 +0000
 
-	* [r379] openbeacon-openpicc2/application/ebook/ebook.c: Forgotten
-	  in the last commit
+    Increase all the wait times in the SDRAM initialization on a hint from Milosch. Still not working any better
 
-2009-01-20 14:12  henryk
+commit 529c0c2b35a5421615b0d7d9cdf381e6a2476333
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Jun 9 13:13:34 2009 +0000
 
-	* [r378] openbeacon-openpicc2/application/splash.h,
-	  openbeacon-openpicc2/generate_splash.c: Make pointers const,
-	  saves 5172 bytes of RAM!
+    Flash-script, execute with   sam7 < flash.txt
+    Will enable the power self-hold circuit, so you only need to have pressed power down at the beginning.
+    Also activates the LEDs: Red -> Still Flashing, Green -> Flash complete
 
-2009-01-14 13:58  meriac
+commit 5f5451691f6410392b1db2b85a0c223ff58d77f2
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Jun 9 10:20:38 2009 +0000
 
-	* [r376] core/Makefile.rules, core/openbeacon/led.h,
-	  core/openbeacon/syscalls.c,
-	  core/os/core/ARM7_AT91SAM7/AT91SAM7.h,
-	  core/os/core/ARM7_AT91SAM7/AT91SAM7SE512.h,
-	  core/os/core/ARM7_AT91SAM7/lib_AT91SAM7.h, core/os/usb/USB-CDC.c,
-	  core/os/usb/USB-CDC.h, openbeacon-openpicc2: moved Henryk
-	  Ploetz's modifications related to OpenPICC2 to mainline
+    (Hopefully) fix SDRAM Mode Register initialization
 
-2008-10-30 02:59  henryk
+commit 31be44a618c0f1aaaf64cefebc32e01b5f068578
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Mon Jun 8 12:02:17 2009 +0000
 
-	* [r159] ., core/Makefile.rules, core/openbeacon/led.c,
-	  core/openbeacon/led.h, openbeacon-blinkenlights/Makefile,
-	  openbeacon-blinkenlights/application/led.c,
-	  openbeacon-blinkenlights/application/led.h,
-	  openbeacon-blinkenlights/config/board.h,
-	  openbeacon-estimator/Makefile,
-	  openbeacon-estimator/application/led.c,
-	  openbeacon-estimator/application/led.h,
-	  openbeacon-estimator/config/board.h, openbeacon-network/Makefile,
-	  openbeacon-network/application/led.c,
-	  openbeacon-network/application/led.h,
-	  openbeacon-network/config/board.h, openbeacon-sniffer/Makefile,
-	  openbeacon-sniffer/application/led.c,
-	  openbeacon-sniffer/application/led.h,
-	  openbeacon-sniffer/config/board.h, openbouncer/Makefile,
-	  openbouncer/application/led.c, openbouncer/application/led.h,
-	  openbouncer/config/board.h: Merge r158 from openpicc2 branch to
-	  trunk:
-	  Consolidate LED support into the core
+    Flash green LED in case of Data Abort. Warning: overwrites registers 0 and 1
 
-2008-10-21 18:56  henryk
+commit 14bcd40a18ac3565843228e7d2b3b590965e7c1e
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Mon Jun 8 11:51:50 2009 +0000
 
-	* [r145] openbouncer/Makefile,
-	  openbouncer/application/authentication.c,
-	  openbouncer/application/main.c: Continue work on door
-	  authentication side
+    Disable watchdog in debug halt
 
-2008-10-04 21:22  meriac
+commit 1a789bceec771168fc1050a1cc53664673df699a
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Mon Jun 8 11:09:35 2009 +0000
 
-	* [r143] openbeacon-blinkenlights/application/main.h,
-	  openbeacon-blinkenlights/application/proto.c,
-	  openbeacon-blinkenlights/application/proto.h,
-	  openbeacon-blinkenlights/application/usbshell.c,
-	  openbeacon-blinkenlights/config/board.h,
-	  openbeacon-network/application/bprotocol.c,
-	  openbeacon-network/application/openbeacon.h,
-	  openbeacon-network/application/xxtea.c,
-	  openbeacon-network/config/board.h: upgraded blinkenlights
-	  specific code to latest blinkenlights SVN repository release 847
+    Disable ADC and AD7147
 
-2008-10-02 16:50  meriac
+commit 6255183f7d0899fdb0c75e0f57b899292939cdae
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Mon Jun 8 10:28:08 2009 +0000
 
-	* [r142] openbouncer/docs/protocol.pdf: added compiled pdf version
-	  of the protocol description
+    Print reset reason
 
-2008-09-29 14:43  meriac
+commit 4026cd8d0a3f245b97ab8159aaa72e6b5a1d0a4c
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Mon Jun 8 04:51:23 2009 +0000
 
-	* [r141] openbeacon-network/application/xxtea.c: latest changes
-	  from blinkenlights repository - revision 688
+    Somewhat working paint application. Still extremely crashy
 
-2008-09-29 14:41  meriac
+commit b4d6484157fc144c5f4e5fe20ed1cbbc9154c884
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sun Jun 7 05:57:28 2009 +0000
 
-	* [r140] core/openbeacon/crc32.c, core/openbeacon/crc32.h,
-	  core/openbeacon/rnd.c, core/openbeacon/rnd.h: latest changes from
-	  blinkenlights repository - revision 688
+    bla
 
-2008-09-29 14:40  meriac
+commit 3cde55d613e4948cad5d6f24e02f922d1ce02351
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sun Jun 7 00:43:57 2009 +0000
 
-	* [r139] core/openbeacon/env.h, core/openbeacon/nRF24L01/nRF_HW.h:
-	  latest changes from blinkenlights repository - revision 688
+    Continuous update
 
-2008-09-29 11:16  meriac
+commit 327f323cb3237537eb4fc72ade2c6b0f7e98de62
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat Jun 6 21:14:17 2009 +0000
 
-	* [r138] openbeacon-network/Makefile,
-	  openbeacon-network/application/bprotocol.c,
-	  openbeacon-network/application/bprotocol.h,
-	  openbeacon-network/application/debug_printf.c,
-	  openbeacon-network/application/debug_printf.h,
-	  openbeacon-network/application/led.c,
-	  openbeacon-network/application/lwipopts.h,
-	  openbeacon-network/application/main.c,
-	  openbeacon-network/application/network.c,
-	  openbeacon-network/application/proto.c,
-	  openbeacon-network/application/proto.h,
-	  openbeacon-network/application/usbshell.c,
-	  openbeacon-network/application/xxtea.c,
-	  openbeacon-network/config/board.h: latest changes from
-	  blinkenlights repository - revision 688
+    More photogenic ants
 
-2008-09-29 11:12  meriac
+commit 4cb65f7687d50a7d9f16d8554e45ccea4e813d4d
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat Jun 6 03:10:11 2009 +0000
 
-	* [r137] openbeacon-blinkenlights/Makefile,
-	  openbeacon-blinkenlights/application/dimmer.c,
-	  openbeacon-blinkenlights/application/dimmer.h,
-	  openbeacon-blinkenlights/application/main.c,
-	  openbeacon-blinkenlights/application/openbeacon.h,
-	  openbeacon-blinkenlights/application/proto.c,
-	  openbeacon-blinkenlights/application/proto.h,
-	  openbeacon-blinkenlights/application/update.c,
-	  openbeacon-blinkenlights/application/usbshell.c,
-	  openbeacon-blinkenlights/config/board.h: latest changes from
-	  blinkenlights repository - revision 688
+    Darkened by a hundred ants
 
-2008-09-16 18:35  henryk
+commit 9e7e4333f69d1713fdb35f0105be8e5eb832b1f0
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat Jun 6 02:27:21 2009 +0000
 
-	* [r136] openbouncer/application/authentication.c,
-	  openbouncer/application/openbouncer.h: Fix types
+    Fix image size computation
+    Revert wait state setting, doesn't seem to do much
 
-2008-09-16 18:09  meriac
+commit 5e718851d2058d9f8fcc58b646c5b17fab4afac4
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Fri Jun 5 06:21:00 2009 +0000
 
-	* [r135] openbouncer/application/authentication.c,
-	  openbouncer/application/authentication.h: added becontypes
+    Add a demonstration spinner
 
-2008-09-16 18:04  henryk
+commit 50ec6f5ec9b524cf06c4f73693224974ebe302a0
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Fri Jun 5 04:28:04 2009 +0000
 
-	* [r134] openbouncer/Makefile,
-	  openbouncer/application/authentication.c,
-	  openbouncer/application/authentication.h: Start authentication
-	  protocol implementation
+    Put the processor into Idle Mode when no task is running
+    Add ASM SDRAM write and speed test. Disabled since it takes a lot of power
 
-2008-09-16 16:17  henryk
+commit f1ac48ba4623b42f65203a9c4760581033f303be
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Fri Jun 5 03:04:06 2009 +0000
 
-	* [r133] at91flash/at91flash_automatic: Change at91flash_automatic
-	  to work without cut
+    Finally fix eink_job_add_area_with_offset functionality
 
-2008-09-14 18:39  meriac
+commit 6d152ba1e994580c6ab1421c3c4c7e95706bc617
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Thu Jun 4 03:49:17 2009 +0000
 
-	* [r131] openbeacon-estimator/Makefile,
-	  openbeacon-sniffer/Makefile, openbouncer/Makefile: added ARCH
-	  setting to Makefile
+    Add eink_burst_write_end to the diagram
 
-2008-09-14 18:22  meriac
+commit b7f88616d85bd2ea95f90bc4311fa30e7111b49f
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Thu Jun 4 03:14:14 2009 +0000
 
-	* [r130] openbeacon-network/application/bprotocol.c,
-	  openbeacon-network/application/bprotocol.h,
-	  openbeacon-network/application/debug_printf.c,
-	  openbeacon-network/application/debug_printf.h,
-	  openbeacon-network/application/led.c,
-	  openbeacon-network/application/network.c,
-	  openbeacon-network/application/proto.c,
-	  openbeacon-network/application/proto.h,
-	  openbeacon-network/application/usbshell.c,
-	  openbeacon-network/application/xxtea.c: minor reformatting
+    Use the optimized 40-byte transfer for most of the image downloads regardless of the regardless of the size or alignment of the buffer
 
-2008-09-14 17:42  meriac
+commit 6c629e446506e5b43e399b707b0a99bbb3056140
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Wed Jun 3 23:13:52 2009 +0000
 
-	* [r129] openbeacon-network/application/xxtea.c: sync from
-	  blinkenlights subversion
+    Solve the mystery of the unwhite white
 
-2008-09-14 17:41  meriac
+commit 5076d60f5566c277520e1eb8513549fedd8b1ae7
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Wed Jun 3 21:10:18 2009 +0000
 
-	* [r128] openbeacon-network/Makefile,
-	  openbeacon-network/application/bprotocol.c,
-	  openbeacon-network/application/bprotocol.h,
-	  openbeacon-network/application/debug_printf.c,
-	  openbeacon-network/application/debug_printf.h,
-	  openbeacon-network/application/lwipopts.h,
-	  openbeacon-network/application/main.c,
-	  openbeacon-network/application/network.c,
-	  openbeacon-network/application/network.h,
-	  openbeacon-network/application/openbeacon.h,
-	  openbeacon-network/application/proto.c,
-	  openbeacon-network/application/proto.h,
-	  openbeacon-network/application/usbshell.c,
-	  openbeacon-network/application/usbshell.h,
-	  openbeacon-network/application/xxtea.c,
-	  openbeacon-network/application/xxtea.h,
-	  openbeacon-network/config/board.h,
-	  openbeacon-network/network/port/arch/cc.h,
-	  openbeacon-network/network/port/emac/SAM7_EMAC.c,
-	  openbeacon-network/network/port/emac/SAM7_EMAC.h,
-	  openbeacon-network/network/src/core/ipv4/icmp.c,
-	  openbeacon-network/network/src/include/lwip/opt.h,
-	  openbeacon-network/network/src/netif/ethernetif.c: sync from
-	  blinkenlights subversion
+    Fix a lingering problem with the mutexes and their order
+    Add a new function eink_burst_write_end that must be called after eink_burst_write_begin and before any other register or memory actions and frees the mutexes that were taken by
+    eink_burst_write_begin again.
 
-2008-09-14 17:38  meriac
+commit 8684ee2bd5785152127ffbcfa2161d5d4f8afa90
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Wed Jun 3 08:20:57 2009 +0000
 
-	* [r127] openbeacon-network/network/src/api,
-	  openbeacon-network/network/src/core/tcp.c,
-	  openbeacon-network/network/src/core/tcp_in.c,
-	  openbeacon-network/network/src/core/tcp_out.c: sync from
-	  blinkenlights subversion
+    Remove some cruft
 
-2008-09-14 17:21  meriac
+commit a170ac15cc8b018073feb8dfcc3ef5aa04a3b02e
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Wed Jun 3 04:33:18 2009 +0000
 
-	* [r126] openbeacon-blinkenlights/Makefile,
-	  openbeacon-blinkenlights/TODO,
-	  openbeacon-blinkenlights/application/debug_print.c,
-	  openbeacon-blinkenlights/application/debug_print.h,
-	  openbeacon-blinkenlights/application/dimmer.c,
-	  openbeacon-blinkenlights/application/dimmer.h,
-	  openbeacon-blinkenlights/application/main.c,
-	  openbeacon-blinkenlights/application/openbeacon.h,
-	  openbeacon-blinkenlights/application/proto.c,
-	  openbeacon-blinkenlights/application/proto.h,
-	  openbeacon-blinkenlights/application/update,
-	  openbeacon-blinkenlights/application/update.c,
-	  openbeacon-blinkenlights/application/update.h,
-	  openbeacon-blinkenlights/application/update.s,
-	  openbeacon-blinkenlights/application/update/AT91SAM7S64-bootloader-orig.bin,
-	  openbeacon-blinkenlights/application/update/AT91SAM7S64-bootloader.bin,
-	  openbeacon-blinkenlights/application/usbshell.c,
-	  openbeacon-blinkenlights/application/usbshell.h,
-	  openbeacon-blinkenlights/application/xxtea.c,
-	  openbeacon-blinkenlights/application/xxtea.h,
-	  openbeacon-blinkenlights/config/atmel-rom.ld,
-	  openbeacon-blinkenlights/config/board.h,
-	  openbeacon-blinkenlights/config/descriptors.h: sync from
-	  blinkenlights subversion
+    Enable external reset button
 
-2008-09-14 17:03  meriac
+commit f608f92dd1a01511b8a1420254804f62cac4c12d
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Wed Jun 3 04:32:44 2009 +0000
 
-	* [r125] readme.txt: added revert-to-update for AT91SAM7X
+    Increase wait states again (is this more stable?), speed down to 8.96 MB/s
 
-2008-09-14 17:02  meriac
+commit 120ae1771af643853a93a8bf6ed7a3406d66ad6f
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Wed Jun 3 04:31:44 2009 +0000
 
-	* [r124] core/Makefile.rules, core/openbeacon/env.c,
-	  core/openbeacon/env.h, core/os/core/ARM7_AT91SAM7/AT91SAM7.h,
-	  core/os/core/ARM7_AT91SAM7/lib_AT91SAM7X.h,
-	  core/os/usb/USB-CDC.h: added revert-to-update for AT91SAM7X
+    Disable debug output
 
-2008-09-09 21:34  henryk
+commit 6360a313f3cc8850de366fe5464274386be5c45a
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Wed Jun 3 04:31:11 2009 +0000
 
-	* [r120] openbouncer/Makefile,
-	  openbouncer/application/openbouncer.h,
-	  openbouncer/application/proto.c, openbouncer/application/xxtea.c,
-	  openbouncer/application/xxtea.h: Add dummy protocol
-	  implementation to makefile
+    Increase stack size
 
-2008-09-09 21:29  meriac
+commit 0bd5fa868bc60de3aec49bd7ae3782d945b926cb
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Wed Jun 3 04:30:42 2009 +0000
 
-	* [r119] openbouncer/Makefile, openbouncer/application/xxtea.c:
-	  moved XXTEA to application
+    Set CPU Id
 
-2008-09-09 21:28  meriac
+commit 83f2b2f17ec003358256def2e7904c496f64ed23
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Jun 2 14:46:40 2009 +0000
 
-	* [r118] openbouncer/application/cmd/xxtea.c,
-	  openbouncer/application/cmd/xxtea.h,
-	  openbouncer/application/xxtea.c, openbouncer/application/xxtea.h:
-	  moved XXTEA to application
+    Add concurrent drawing of black rectangles for demonstration purposes
 
-2008-09-09 21:25  meriac
+commit 3045d313e25277e0648e268d30fe5d24085bd646
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Jun 2 14:42:18 2009 +0000
 
-	* [r117] openbouncer/application/cmd/xxtea.c,
-	  openbouncer/application/cmd/xxtea.h: initial XXTEA checkin
+    Add mutex protection for all eInk accesses
 
-2008-09-09 21:24  meriac
+commit fa9b52f6c0dd3c45996467e75d46f129e764b486
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Jun 2 14:41:28 2009 +0000
 
-	* [r116] openbouncer/application/cmd/xxtea.c,
-	  openbouncer/application/cmd/xxtea.h: initial XXTEA checkin
+    Bug fix for LUT assignment
 
-2008-09-09 21:24  henryk
+commit f46d3334068e54ca36e8764c376c12b276575dd2
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Jun 2 14:40:12 2009 +0000
 
-	* [r115] openbouncer/application/main.c,
-	  openbouncer/application/openbouncer.h,
-	  openbouncer/application/proto.c, openbouncer/application/proto.h:
-	  Dummy protocol implementation
+    Properly round up sizes
 
-2008-09-09 15:27  henryk
+commit e5f218dafae8cd090b26132ac7b28cbda53dc4bd
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Jun 2 14:39:05 2009 +0000
 
-	* [r106] openbouncer/docs/protocol.tex: Increase key length to 128
-	  bits
-	  Change random number generator
+    openocd configuration (not tested)
 
-2008-09-09 10:33  henryk
+commit a9a2a0181e964c720e92e3cd668382e5f80ffbca
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Jun 2 04:24:59 2009 +0000
 
-	* [r105] openbouncer/docs/protocol.tex: Different figure style
+    Relationships between the different controller memory access functions
 
-2008-09-09 04:17  henryk
+commit 8ac1187dfc89ffbaea4a29d4c81464511daadc8c
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Jun 2 04:21:03 2009 +0000
 
-	* [r104] openbouncer/docs/protocol.tex: Further protocol
-	  description
+    Add new UPDATE_MODE_PART_SPECIAL with additional semantics (this smells like a hack, not sure whether it will stay)
+    Implement (hopefully) correct LUT assignment
+    Protect memory access vs. update buffer synthesis with mutex. Probably still need mutexes for all the other eink_* functions
 
-2008-09-07 14:48  henryk
+commit 090599ca5f8f1bbad7701e06911c7a074c5b24f4
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Mon Jun 1 06:51:01 2009 +0000
 
-	* [r83] openbouncer/docs/protocol.tex: docs update
+    Accessor method to get BPP as enum eink_pack_mode
+    Convert ebook to image api
 
-2008-09-07 13:14  henryk
+commit b1579ad9054dd191d341bf4fb97b30f3aacff0f8
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Mon Jun 1 06:20:19 2009 +0000
 
-	* [r82] openbouncer/docs/protocol.tex: Fix counter/lastrnd lengths
+    Add method to create (or fill) an image_t with a solid color
 
-2008-09-07 13:11  henryk
+commit 5b26f5b3d5293ebf2cf392d6fd8879b91c8dd4d1
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Mon Jun 1 05:42:04 2009 +0000
 
-	* [r81] openbouncer/docs/protocol.tex: Clarifications, corrections
+    Refactor splash code to a newly created image module
+    Move paint.c to this new API (still need to convert ebook.c)
 
-2008-09-07 12:47  henryk
+commit 957db055122fa69a6588630f1359b8b2cac032f5
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Mon Jun 1 04:19:48 2009 +0000
 
-	* [r80] openbouncer/docs, openbouncer/docs/protocol.tex:
-	  Preliminary protocol description
+    Give the option of packing splash images with more than one pixel per byte. Reduces image size, dramatically reduces load time (e.g. half time for 4bpp, that's 49ms per full image)
 
-2008-09-07 10:04  henryk
+commit 360cfa79deb565492e7740fcb5fda5e56f657756
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sun May 31 04:18:15 2009 +0000
 
-	* [r79] openbouncer/application/BurgWaechter_TSE_3000/lock.c,
-	  openbouncer/application/BurgWaechter_TSE_3000/lock.h,
-	  openbouncer/application/cmd/cmd_key.c: Convert to interrupt based
-	  operation again
-	  Add return value to lock open routines
+    Properly calculate size for the monochrome images, reduces time for those images to 25%. Start time is now at 175ms (was at 397 with the latest assembler code, was at 1200 last morning before the
+    assembler code).
 
-2008-09-06 17:44  henryk
+commit 71d7186f937200f711b09037843091746f8182d7
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sun May 31 03:57:36 2009 +0000
 
-	* [r78] openbouncer/application/BurgWaechter_TSE_3000/lock.c:
-	  Working bit-banging manchester output code
+    Use Store Multiple instead of multiple stores, reduces times somewhat
+    Add 32-byte optimized code path. This path is now at 99ms per image (9.98 MB/s!).
 
-2008-09-06 14:27  henryk
+commit f9a39053182073896e8dda1618c71a905dfab533
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat May 30 11:28:23 2009 +0000
 
-	* [r77] openbouncer/application/BurgWaechter_TSE_3000/lock.c: Fix
-	  timer routines (works at least sometimes)
+    Better living through preprocessor defines
+    Also new case for 16-byte alignment, brings time per image down to 144 ms (that's 6.86 MB/s!)
 
-2008-08-09 20:57  meriac
+commit d7a1b91777b2a9c5d76c1de96cbb45a246c1149e
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat May 30 10:56:32 2009 +0000
 
-	* [r76] core/Makefile.rules: removed linker garbage collection
+    Complete optimized inline ASM for 8-byte case, is now 166 milliseconds per full image load (down from 243 ms this morning, yeah!)
 
-2008-08-09 20:48  meriac
+commit 75e1f91d745a2874bc6be285018c9fc1efe9f12b
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat May 30 10:12:48 2009 +0000
 
-	* [r75] at91flash/at91flash: added boot_from_flash for SAM7X
+    Speed up the 8-byte case by 17%
 
-2008-08-09 20:35  meriac
+commit 6e70b4db1ae066cfa256becb37229291a5b16b0f
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Fri May 29 15:50:34 2009 +0000
 
-	* [r74] openbeacon-network/application/lwipopts.h,
-	  openbeacon-network/application/network.c,
-	  openbeacon-network/network/src/netif/ethernetif.c.NEW,
-	  openbeacon-network/network/src/netif/ethernetif.c.old: arping to
-	  device IP address works
+    Separate the different optimized codepaths for easier analysis
 
-2008-08-09 20:08  meriac
+commit 94bd78324f640cc31ad9934ec3f58dc34d5cc334
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Fri May 29 15:20:39 2009 +0000
 
-	* [r73] openbeacon-network/network/src/include/lwip/opt.h: changed
-	  default header options
+    Optimized case for 8-byte alignment
 
-2008-08-09 20:07  meriac
+commit 9361016a3ad4e087dfa6e39ed2dd28c7cfd63a5a
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Fri May 29 15:14:08 2009 +0000
 
-	* [r72] openbeacon-network/network/port/emac/SAM7_EMAC.h: changed
-	  default IP address to 10.1.0.6/16 - gateway 10.1.0.1
+    Optimized loader code for the 32-bit aligned case
 
-2008-08-09 17:59  meriac
+commit ada7edce58b145d3145320dfc7401daeb807fb1c
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Fri May 29 13:46:42 2009 +0000
 
-	* [r71] openbeacon-network/application/network.c,
-	  openbeacon-network/network/port/arch/cc.h,
-	  openbeacon-network/network/src/include/lwip/debug.h,
-	  openbeacon-network/network/src/include/lwip/opt.h: network rx
-	  still broken
+    Better BG image
+    Move splash decompression to SDRAM
+    Have battery bar at the right edge
 
-2008-08-09 14:18  meriac
+commit 6eac48d9bea23816bcb5ea75e5219072b3dd31b1
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Thu May 28 20:33:54 2009 +0000
 
-	* [r70] openbeacon-network/application/network.c: removed stats
+    Add missing background image
 
-2008-08-09 13:23  meriac
+commit 5cdedd27c2ce709bda465c6884fadb26fe593d89
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Thu May 28 20:12:40 2009 +0000
 
-	* [r69] openbeacon-network/application/network.c,
-	  openbeacon-network/network/doc/snmp_agent.txt,
-	  openbeacon-network/network/src/core/init.c,
-	  openbeacon-network/network/src/core/ipv4/icmp.c,
-	  openbeacon-network/network/src/core/ipv4/ip.c,
-	  openbeacon-network/network/src/core/ipv4/ip_frag.c,
-	  openbeacon-network/network/src/core/netif.c,
-	  openbeacon-network/network/src/core/raw.c,
-	  openbeacon-network/network/src/core/tcp.c,
-	  openbeacon-network/network/src/core/tcp_in.c,
-	  openbeacon-network/network/src/core/tcp_out.c,
-	  openbeacon-network/network/src/core/udp.c,
-	  openbeacon-network/network/src/include/lwip/arch.h,
-	  openbeacon-network/network/src/include/lwip/netif.h,
-	  openbeacon-network/network/src/include/lwip/opt.h,
-	  openbeacon-network/network/src/netif/etharp.c,
-	  openbeacon-network/network/src/netif/ethernetif.c: removed SNMP
-	  code
+    Begin paint application
 
-2008-08-09 12:48  meriac
+commit 63605149c6ef81654c1b678a2d940b03b00c5b40
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Thu May 28 19:47:07 2009 +0000
 
-	* [r68] openbeacon-network/network/src/include/lwip/snmp.h,
-	  openbeacon-network/network/src/include/lwip/snmp_asn1.h,
-	  openbeacon-network/network/src/include/lwip/snmp_msg.h,
-	  openbeacon-network/network/src/include/lwip/snmp_structs.h:
-	  remove SNMP headers
+    bla
 
-2008-08-09 12:38  meriac
+commit be4a1ebeb00e326e296b6fb710d104cdbbf7f26d
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Thu May 28 19:19:54 2009 +0000
 
-	* [r67] openbeacon-network/application/debug_printf.c,
-	  openbeacon-network/application/lwipopts.h,
-	  openbeacon-network/application/main.c,
-	  openbeacon-network/application/network.c,
-	  openbeacon-network/config/board.h,
-	  openbeacon-network/network/port/arch/cc.h,
-	  openbeacon-network/network/port/emac/SAM7_EMAC.c,
-	  openbeacon-network/network/port/emac/SAM7_EMAC.h,
-	  openbeacon-network/network/port/sys_arch.c,
-	  openbeacon-network/network/src/api/api_lib.c,
-	  openbeacon-network/network/src/api/api_msg.c,
-	  openbeacon-network/network/src/api/netbuf.c,
-	  openbeacon-network/network/src/api/sockets.c,
-	  openbeacon-network/network/src/core/dhcp.c,
-	  openbeacon-network/network/src/core/ipv4/igmp.c,
-	  openbeacon-network/network/src/core/memp.c,
-	  openbeacon-network/network/src/core/pbuf.c,
-	  openbeacon-network/network/src/core/tcp_out.c,
-	  openbeacon-network/network/src/include/ipv4/lwip/icmp.h,
-	  openbeacon-network/network/src/include/ipv4/lwip/ip.h,
-	  openbeacon-network/network/src/include/ipv6/lwip/ip_addr.h,
-	  openbeacon-network/network/src/include/lwip/debug.h,
-	  openbeacon-network/network/src/include/lwip/tcp.h,
-	  openbeacon-network/network/src/netif/etharp.c,
-	  openbeacon-network/network/src/netif/loopif.c: fixed networking
-	  crash - network still broken
+    Measure SDRAM test time
 
-2008-08-09 12:06  henryk
+commit fcc2d9ff360826fb597e47f91ca8138fd3473871
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Thu May 28 19:19:34 2009 +0000
 
-	* [r66] core/os/boot/Cstartup_SAM7.c: Properly disable the watchdog
-	  when WATCHDOG_DISABLE is set (otherwise the watchdog will run
-	  with default values)
+    Lower waitstates (slightly increase interface speed)
 
-2008-08-09 11:08  cuccato
+commit fc3b7ef4d1de426c2472df6fd8a5dc26d5e13cab
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Thu May 28 11:26:42 2009 +0000
 
-	* [r65] openbouncer/Makefile,
-	  openbouncer/application/BurgWaechter_TSE_3000,
-	  openbouncer/application/BurgWaechter_TSE_3000/lock.c,
-	  openbouncer/application/BurgWaechter_TSE_3000/lock.h,
-	  openbouncer/application/cmd/cmd_key.c,
-	  openbouncer/application/cmd/cmd_key.h,
-	  openbouncer/application/led.h, openbouncer/application/main.c,
-	  openbouncer/config/board.h: add fisrt version of BurgWaechter TSE
-	  3000 open sequenze
+    9.7" display initializisation working, some buffer management problems remaining
 
-2008-08-09 09:14  meriac
+commit ea9fc684436687e8822b084d938a06387f92095f
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Thu May 28 11:22:40 2009 +0000
 
-	* [r64] openbeacon-estimator/application/main.c,
-	  openbeacon-sniffer/application/proto.c,
-	  openbeacon-sniffer/application/xxtea.c: fixed checkin mistake
+    bla
 
-2008-08-09 09:12  meriac
+commit e382df366693a1f408fe98ffe83301b53c6c78db
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Wed May 27 18:31:04 2009 +0000
 
-	* [r63] openbeacon-blinkenlights/config/atmel-rom.ld: added linker
-	  garbage collection
+    Whitespace?
 
-2008-08-09 09:05  meriac
+commit f753572b094206491b76d0fa8eda95e5b5a0619c
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Wed May 27 18:26:38 2009 +0000
 
-	* [r62] openbeacon-estimator/application/main.c,
-	  openbeacon-estimator/config/atmel-rom.ld,
-	  openbeacon-sniffer/application/proto.c,
-	  openbeacon-sniffer/application/xxtea.c,
-	  openbeacon-sniffer/config/atmel-rom.ld,
-	  openbouncer/config/atmel-rom.ld: added linker garbage collection
+    Fix previous change to the communications check code.
+    As it turns out, registers > 0x0100 can not be used before SYS_RUN has been issued
+    Move the comm check in the normal codepath behind the SYS_RUN
+    Add a simplified comm check in the flash codepath and just check whether the PLL settings were received correctly
 
-2008-08-09 09:02  meriac
+commit cfde79cf04cd1e86c146e30c591dbde0cbc49d77
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Wed May 20 20:29:31 2009 +0000
 
-	* [r61] core/Makefile.rules: added linker garbage collection
+    Add new linker file, puts the RAM that malloc() uses into SDRAM.
+    Warning: Do not call malloc (or a function that calls malloc) before initializing SDRAM
+    Warning: Does not run on BOARD_V0_1 anymore
 
-2008-08-09 09:01  meriac
+commit dd93ad7d1c4cae72cb006480be46c8cc53521d66
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Fri Apr 24 13:55:28 2009 +0000
 
-	* [r60] core/os/boot/Cstartup_SAM7.c: added switch to disable
-	  watchdog
+    Add new lowlevel function eink_controller_check_supported() which does revision check and communications check and use it in the flash_acquire code (otherwise it might be possible to enter
+    conditional_reflash with malfunctioning FPC cable)
 
-2008-08-09 08:58  meriac
+commit ab3bc36a92b9aa2aa76891b9459b67381906d2ca
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Wed Apr 15 22:24:22 2009 +0000
 
-	* [r59] openbeacon-network/Makefile,
-	  openbeacon-network/application/debug_printf.c,
-	  openbeacon-network/application/lwipopts.h,
-	  openbeacon-network/application/main.c,
-	  openbeacon-network/application/network.c,
-	  openbeacon-network/application/network.h,
-	  openbeacon-network/application/proto.c,
-	  openbeacon-network/application/proto.h,
-	  openbeacon-network/config/atmel-rom.ld,
-	  openbeacon-network/config/board.h, openbeacon-network/network,
-	  openbeacon-network/network/CHANGELOG,
-	  openbeacon-network/network/COPYING,
-	  openbeacon-network/network/FILES,
-	  openbeacon-network/network/README.lwip,
-	  openbeacon-network/network/doc,
-	  openbeacon-network/network/doc/FILES,
-	  openbeacon-network/network/doc/contrib.txt,
-	  openbeacon-network/network/doc/rawapi.txt,
-	  openbeacon-network/network/doc/savannah.txt,
-	  openbeacon-network/network/doc/snmp_agent.txt,
-	  openbeacon-network/network/doc/sys_arch.txt,
-	  openbeacon-network/network/port,
-	  openbeacon-network/network/port/arch,
-	  openbeacon-network/network/port/arch/cc.h,
-	  openbeacon-network/network/port/arch/cpu.h,
-	  openbeacon-network/network/port/arch/init.h,
-	  openbeacon-network/network/port/arch/lib.h,
-	  openbeacon-network/network/port/arch/perf.h,
-	  openbeacon-network/network/port/arch/sys_arch.h,
-	  openbeacon-network/network/port/emac,
-	  openbeacon-network/network/port/emac/Emac.h,
-	  openbeacon-network/network/port/emac/SAM7_EMAC.c,
-	  openbeacon-network/network/port/emac/SAM7_EMAC.h,
-	  openbeacon-network/network/port/emac/SAM7_EMAC_ISR.c,
-	  openbeacon-network/network/port/emac/mii.h,
-	  openbeacon-network/network/port/sys_arch.c,
-	  openbeacon-network/network/src,
-	  openbeacon-network/network/src/FILES,
-	  openbeacon-network/network/src/api,
-	  openbeacon-network/network/src/api/api_lib.c,
-	  openbeacon-network/network/src/api/api_msg.c,
-	  openbeacon-network/network/src/api/err.c,
-	  openbeacon-network/network/src/api/netbuf.c,
-	  openbeacon-network/network/src/api/netdb.c,
-	  openbeacon-network/network/src/api/netifapi.c,
-	  openbeacon-network/network/src/api/sockets.c,
-	  openbeacon-network/network/src/api/tcpip.c,
-	  openbeacon-network/network/src/core,
-	  openbeacon-network/network/src/core/dhcp.c,
-	  openbeacon-network/network/src/core/dns.c,
-	  openbeacon-network/network/src/core/init.c,
-	  openbeacon-network/network/src/core/ipv4,
-	  openbeacon-network/network/src/core/ipv4/autoip.c,
-	  openbeacon-network/network/src/core/ipv4/icmp.c,
-	  openbeacon-network/network/src/core/ipv4/igmp.c,
-	  openbeacon-network/network/src/core/ipv4/inet.c,
-	  openbeacon-network/network/src/core/ipv4/inet_chksum.c,
-	  openbeacon-network/network/src/core/ipv4/ip.c,
-	  openbeacon-network/network/src/core/ipv4/ip_addr.c,
-	  openbeacon-network/network/src/core/ipv4/ip_frag.c,
-	  openbeacon-network/network/src/core/ipv6,
-	  openbeacon-network/network/src/core/ipv6/README,
-	  openbeacon-network/network/src/core/ipv6/icmp6.c,
-	  openbeacon-network/network/src/core/ipv6/inet6.c,
-	  openbeacon-network/network/src/core/ipv6/ip6.c,
-	  openbeacon-network/network/src/core/ipv6/ip6_addr.c,
-	  openbeacon-network/network/src/core/mem.c,
-	  openbeacon-network/network/src/core/memp.c,
-	  openbeacon-network/network/src/core/netif.c,
-	  openbeacon-network/network/src/core/pbuf.c,
-	  openbeacon-network/network/src/core/raw.c,
-	  openbeacon-network/network/src/core/stats.c,
-	  openbeacon-network/network/src/core/sys.c,
-	  openbeacon-network/network/src/core/tcp.c,
-	  openbeacon-network/network/src/core/tcp_in.c,
-	  openbeacon-network/network/src/core/tcp_out.c,
-	  openbeacon-network/network/src/core/udp.c,
-	  openbeacon-network/network/src/include,
-	  openbeacon-network/network/src/include/ipv4,
-	  openbeacon-network/network/src/include/ipv4/lwip,
-	  openbeacon-network/network/src/include/ipv4/lwip/autoip.h,
-	  openbeacon-network/network/src/include/ipv4/lwip/icmp.h,
-	  openbeacon-network/network/src/include/ipv4/lwip/igmp.h,
-	  openbeacon-network/network/src/include/ipv4/lwip/inet.h,
-	  openbeacon-network/network/src/include/ipv4/lwip/inet_chksum.h,
-	  openbeacon-network/network/src/include/ipv4/lwip/ip.h,
-	  openbeacon-network/network/src/include/ipv4/lwip/ip_addr.h,
-	  openbeacon-network/network/src/include/ipv4/lwip/ip_frag.h,
-	  openbeacon-network/network/src/include/ipv6,
-	  openbeacon-network/network/src/include/ipv6/lwip,
-	  openbeacon-network/network/src/include/ipv6/lwip/icmp.h,
-	  openbeacon-network/network/src/include/ipv6/lwip/inet.h,
-	  openbeacon-network/network/src/include/ipv6/lwip/ip.h,
-	  openbeacon-network/network/src/include/ipv6/lwip/ip_addr.h,
-	  openbeacon-network/network/src/include/lwip,
-	  openbeacon-network/network/src/include/lwip/api.h,
-	  openbeacon-network/network/src/include/lwip/api_msg.h,
-	  openbeacon-network/network/src/include/lwip/arch.h,
-	  openbeacon-network/network/src/include/lwip/debug.h,
-	  openbeacon-network/network/src/include/lwip/def.h,
-	  openbeacon-network/network/src/include/lwip/dhcp.h,
-	  openbeacon-network/network/src/include/lwip/dns.h,
-	  openbeacon-network/network/src/include/lwip/err.h,
-	  openbeacon-network/network/src/include/lwip/init.h,
-	  openbeacon-network/network/src/include/lwip/mem.h,
-	  openbeacon-network/network/src/include/lwip/memp.h,
-	  openbeacon-network/network/src/include/lwip/memp_std.h,
-	  openbeacon-network/network/src/include/lwip/netbuf.h,
-	  openbeacon-network/network/src/include/lwip/netdb.h,
-	  openbeacon-network/network/src/include/lwip/netif.h,
-	  openbeacon-network/network/src/include/lwip/netifapi.h,
-	  openbeacon-network/network/src/include/lwip/opt.h,
-	  openbeacon-network/network/src/include/lwip/pbuf.h,
-	  openbeacon-network/network/src/include/lwip/raw.h,
-	  openbeacon-network/network/src/include/lwip/sio.h,
-	  openbeacon-network/network/src/include/lwip/snmp.h,
-	  openbeacon-network/network/src/include/lwip/snmp_asn1.h,
-	  openbeacon-network/network/src/include/lwip/snmp_msg.h,
-	  openbeacon-network/network/src/include/lwip/snmp_structs.h,
-	  openbeacon-network/network/src/include/lwip/sockets.h,
-	  openbeacon-network/network/src/include/lwip/stats.h,
-	  openbeacon-network/network/src/include/lwip/sys.h,
-	  openbeacon-network/network/src/include/lwip/tcp.h,
-	  openbeacon-network/network/src/include/lwip/tcpip.h,
-	  openbeacon-network/network/src/include/lwip/udp.h,
-	  openbeacon-network/network/src/include/netif,
-	  openbeacon-network/network/src/include/netif/etharp.h,
-	  openbeacon-network/network/src/include/netif/loopif.h,
-	  openbeacon-network/network/src/include/netif/ppp_oe.h,
-	  openbeacon-network/network/src/include/netif/slipif.h,
-	  openbeacon-network/network/src/netif,
-	  openbeacon-network/network/src/netif/FILES,
-	  openbeacon-network/network/src/netif/etharp.c,
-	  openbeacon-network/network/src/netif/ethernetif.c,
-	  openbeacon-network/network/src/netif/ethernetif.c.NEW,
-	  openbeacon-network/network/src/netif/ethernetif.c.old,
-	  openbeacon-network/network/src/netif/loopif.c: added intial IP
-	  stack / EMAC support (broken)
+    Add infrastructure for multiple board layouts
+    Add new board v0.2
 
-2008-08-08 23:30  meriac
+commit 483ee6e325d9b37a7c6a93ca996d7d798babbf83
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Apr 14 15:19:47 2009 +0000
 
-	* [r58] usb-id-list.txt: added sam7x support
+    libnfc performance test
 
-2008-08-08 23:30  meriac
+commit d71a72da3da4c61f1302f7ba2bfa3aeb3a719584
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Apr 14 15:19:01 2009 +0000
 
-	* [r57] openbeacon-network/Makefile,
-	  openbeacon-network/application,
-	  openbeacon-network/application/led.c,
-	  openbeacon-network/application/led.h,
-	  openbeacon-network/application/main.c,
-	  openbeacon-network/application/openbeacon.h,
-	  openbeacon-network/application/proto.c,
-	  openbeacon-network/application/proto.h,
-	  openbeacon-network/application/xxtea.c,
-	  openbeacon-network/application/xxtea.h,
-	  openbeacon-network/config,
-	  openbeacon-network/config/FreeRTOSConfig.h,
-	  openbeacon-network/config/atmel-rom.ld,
-	  openbeacon-network/config/board.h,
-	  openbeacon-network/config/descriptors.h: added sam7x support
+    Add possibility to add additional object files
 
-2008-08-08 23:24  meriac
+commit 6785a053795e914a58ca51f621af94f54babac5b
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Apr 14 15:18:02 2009 +0000
 
-	* [r56] core/openbeacon/nRF24L01/nRF_CMD.c: added sam7x support
+    Not used anymore, clash with libnfc
 
-2008-08-08 22:50  meriac
+commit ef5c687e6c0f506cbb057372d80ff3e74b5d96e0
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat Apr 11 16:37:55 2009 +0000
 
-	* [r55] core/openbeacon/nRF24L01/nRF_CMD.c: added sam7x support
+    Add demo for libnfc use (Warning: Lots of ugly print debugs, circumventing printf since it's crashing too often. hope that gets better when we have the additional RAM)
 
-2008-08-08 22:21  meriac
+commit b00211d39d3979f97cc1bae101505126142853c4
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat Apr 11 15:49:31 2009 +0000
 
-	* [r54] core/openbeacon/dbgu.c, core/openbeacon/env.c,
-	  core/os/core/ARM7_AT91SAM7/AT91SAM7X.h,
-	  core/os/core/ARM7_AT91SAM7/lib_AT91SAM7.c,
-	  core/os/core/ARM7_AT91SAM7/lib_AT91SAM7X.h, core/os/core/port.c:
-	  added sam7x support
+    Changed signedness
 
-2008-08-08 22:19  meriac
+commit 79c3352a77ec2bcf3c23dd52709ea8bc359220fd
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat Apr 11 12:46:55 2009 +0000
 
-	* [r53] core/openbeacon/nRF24L01/nRF_CMD.c: added sam7x support -
-	  default spi port
+    Move common linux/macos Makefile code to include file
 
-2008-08-08 16:37  meriac
+commit 86b1981c22e2c9b346334f1d4454b94585225fda
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat Apr 11 12:41:36 2009 +0000
 
-	* [r52] openbeacon-network: created new project directory for
-	  OpenBeacon Ethernet Reader
+    Move to new reader driver API, change linux Makefile accordingly
 
-2008-08-07 16:39  meriac
+commit 0f58779e9575c52d865f8a11176fd3d7bdd82fef
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat Apr 11 12:38:04 2009 +0000
 
-	* [r51] core/os/core/ARM7_AT91SAM7,
-	  core/os/core/ARM7_AT91SAM7/AT91SAM7.h,
-	  core/os/core/ARM7_AT91SAM7/AT91SAM7S.h,
-	  core/os/core/ARM7_AT91SAM7/AT91SAM7X.h,
-	  core/os/core/ARM7_AT91SAM7/lib_AT91SAM7.c,
-	  core/os/core/ARM7_AT91SAM7/lib_AT91SAM7.h,
-	  core/os/core/ARM7_AT91SAM7/lib_AT91SAM7X.h: restructuring
-	  directory to support ethernet version
+    Make GNU-Source, fixes compile error in libusb
 
-2008-08-06 16:50  meriac
+commit ebb9e6514e465f7af59fa3a9a58da0ace0ea77c1
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat Apr 11 12:35:26 2009 +0000
 
-	* [r50] core/Makefile.rules, core/os/core/ARM7_AT91SAM7S,
-	  core/os/core/include/portable.h, core/os/core/port.c,
-	  core/os/core/portISR.c, core/os/core/portmacro.h: restructuring
-	  directory to support ethernet version
+    Fix prototype
 
-2008-07-29 06:13  meriac
+commit e313e44dc31aa54ef7e0c13ccbe6ca14d080c977
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat Apr 11 12:30:38 2009 +0000
 
-	* [r49] openbeacon-blinkenlights/application/proto.c: updated
-	  dimming - up & down counting
+    Swap keywords, for more pedantic compile options
 
-2008-07-19 03:30  meriac
+commit 531c5fa61a3a79500264a464eee87c566599a3df
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat Apr 11 12:29:46 2009 +0000
 
-	* [r48] openbeacon-sniffer/application/proto.c: fixed crc problem
+    Sanitize line endings
 
-2008-07-15 19:40  meriac
+commit dd0bea493abe3a6049e185bb38a0555ac33471cc
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat Apr 11 12:20:13 2009 +0000
 
-	* [r47] openbeacon-blinkenlights/application/proto.c: simple stand
-	  alone dimming
+    Add and commit an unmodified libnfc 1.1.0 release from http://www.libnfc.org/ to add my own patches
 
-2008-07-11 01:47  meriac
+commit 614a793a822083fef20ebc40305f317d6873ab8b
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Wed Mar 11 12:51:39 2009 +0000
 
-	* [r46] openbeacon-blinkenlights/application/proto.c,
-	  openbeacon-blinkenlights/config/board.h: verified trimmer support
+    added support for resetting boot loader
 
-2008-07-07 00:27  meriac
+commit 60657adcd217e4481c12aad5360772dd3c2fc70e
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Wed Mar 11 12:51:00 2009 +0000
 
-	* [r45] openbeacon-blinkenlights/application/proto.c: changed
-	  default phototriac LED flash time to 250us
+    added USB detach code
 
-2008-07-07 00:10  meriac
+commit d36aa872bac87b4966e734148074a1ab5c2bae81
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri Mar 6 01:35:14 2009 +0000
 
-	* [r44] openbeacon-blinkenlights/application/proto.c: changed
-	  default dimmer value to 50% brightness
+    addedd bootloader code
 
-2008-07-06 23:30  meriac
+commit 50d795f0073cf8bec1a681546f9d1c5800429c05
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Mar 3 21:40:05 2009 +0000
 
-	* [r43] openbeacon-blinkenlights/application/led.c,
-	  openbeacon-blinkenlights/application/led.h,
-	  openbeacon-blinkenlights/application/proto.c,
-	  openbeacon-blinkenlights/config/FreeRTOSConfig.h,
-	  openbeacon-blinkenlights/config/board.h: added delayed
-	  trigger-on-edge code
+    indent
 
-2008-07-05 12:35  meriac
+commit a8edc664c3bd39aa41f20299312ccc38d0ddf8ed
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Mar 3 21:39:00 2009 +0000
 
-	* [r42] openbeacon-blinkenlights/config/atmel-rom.ld: Modified to
-	  support AT91SAM7S64
+    fixed ADC watchdog reset problem
 
-2008-07-05 12:34  meriac
+commit 607855ed47e0659f7da4519537134d7ab2aeb8a5
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Mar 3 19:31:20 2009 +0000
 
-	* [r41] openbeacon-blinkenlights/config/descriptors.h: modified USB
-	  product ID and description
+    Enable debugging messages
 
-2008-07-05 12:34  meriac
+commit ba3d55ea15565d6de5522ff80096a99f6e739ed2
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri Feb 27 18:16:23 2009 +0000
 
-	* [r40] openbouncer/config/descriptors.h: modified USB product ID
+    added Xon/Xoffsupport
 
-2008-07-05 12:33  meriac
+commit bede83e58566584c9dd274bac1341d36b1f9f31a
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri Feb 27 16:05:36 2009 +0000
 
-	* [r39] usb-id-list.txt: added list of USB IDs s spent
+    added intel HEX file parsing
 
-2008-07-05 12:27  meriac
+commit 8a38ec33af6a6133176a7096dc7e037ca0308510
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri Feb 27 14:31:24 2009 +0000
 
-	* [r38] openbeacon-estimator/config/descriptors.h: changed USB
-	  device id
+    initial boot loader console code checkin
 
-2008-07-05 12:20  meriac
+commit c411cb377fef55e824ed965eb3978561e06ef694
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Feb 24 20:21:28 2009 +0000
 
-	* [r37] openbeacon-blinkenlights,
-	  openbeacon-blinkenlights/Makefile,
-	  openbeacon-blinkenlights/application,
-	  openbeacon-blinkenlights/application/led.c,
-	  openbeacon-blinkenlights/application/led.h,
-	  openbeacon-blinkenlights/application/main.c,
-	  openbeacon-blinkenlights/application/openbeacon.h,
-	  openbeacon-blinkenlights/application/proto.c,
-	  openbeacon-blinkenlights/application/proto.h,
-	  openbeacon-blinkenlights/application/xxtea.c,
-	  openbeacon-blinkenlights/application/xxtea.h,
-	  openbeacon-blinkenlights/config,
-	  openbeacon-blinkenlights/config/FreeRTOSConfig.h,
-	  openbeacon-blinkenlights/config/atmel-rom.ld,
-	  openbeacon-blinkenlights/config/board.h,
-	  openbeacon-blinkenlights/config/descriptors.h: initial checkin of
-	  openbeacon blinkenlights code
+    added USB id for boot loader
 
-2008-06-11 10:11  meriac
+commit 8b82363e809c92b5955f2eb2bb4230b09facbf59
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Feb 24 20:20:32 2009 +0000
 
-	* [r36] openbouncer/config, openbouncer/config/FreeRTOSConfig.h,
-	  openbouncer/config/atmel-rom.ld, openbouncer/config/board.h,
-	  openbouncer/config/descriptors.h: minor changes to get it running
+    changed name of 'main' function to 'mainloop' to get rid of compiler warning
 
-2008-06-11 10:04  meriac
+commit 92106e5a017f4ae8465f9b4b73e8cdc44f0c1a42
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Feb 24 20:08:04 2009 +0000
 
-	* [r35] openbouncer/application/cmd/cmd.c,
-	  openbouncer/application/cmd/cmd.h, openbouncer/application/led.c,
-	  openbouncer/application/led.h, openbouncer/application/main.c:
-	  minor changes to get it running
+    only compile code if CE_PIN define is set
 
-2008-06-11 10:02  meriac
+commit e25571f73cd635069e53c9057297e1609366eba0
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Feb 24 19:56:47 2009 +0000
 
-	* [r34] openbouncer/Makefile, openbouncer/application/cmd,
-	  openbouncer/application/cmd/cmd_key.c,
-	  openbouncer/application/cmd/cmd_key.h,
-	  openbouncer/application/cmd/cmd_main.c,
-	  openbouncer/application/cmd/cmd_main.h,
-	  openbouncer/application/cmd/cmd_user.c,
-	  openbouncer/application/cmd/cmd_user.h,
-	  openbouncer/application/cmd/commandline.c,
-	  openbouncer/application/cmd/commandline.h,
-	  openbouncer/application/cmd/login.c,
-	  openbouncer/application/cmd/login.h,
-	  openbouncer/application/cmd/usbio.c,
-	  openbouncer/application/cmd/usbio.h,
-	  openbouncer/application/cmd/vsprintf.c,
-	  openbouncer/application/cmd/vsprintf.h,
-	  openbouncer/application/cmd/vt100.c,
-	  openbouncer/application/cmd/vt100.h,
-	  openbouncer/application/cmd_key.c,
-	  openbouncer/application/cmd_key.h,
-	  openbouncer/application/cmd_main.c,
-	  openbouncer/application/cmd_main.h,
-	  openbouncer/application/cmd_user.c,
-	  openbouncer/application/cmd_user.h,
-	  openbouncer/application/commandline.c,
-	  openbouncer/application/commandline.h,
-	  openbouncer/application/login.c, openbouncer/application/login.h,
-	  openbouncer/application/usbio.c, openbouncer/application/usbio.h,
-	  openbouncer/application/vsprintf.c,
-	  openbouncer/application/vsprintf.h,
-	  openbouncer/application/vt100.c, openbouncer/application/vt100.h:
-	  minor changes to get it running
+    changed name of 'main' function to 'mainloop' to get rid of compiler warning
 
-2008-06-11 09:12  meriac
+commit 5149d1d78ab61cba2287d6c9a90746c997f5b1dd
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Feb 24 16:37:30 2009 +0000
 
-	* [r33] openbouncer/Makefile: minor changes to make it compile
+    ran indent to reformat code
 
-2008-06-11 08:48  meriac
+commit aef9b3b50977dbffe2203aa1984148c98a0f90e0
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Feb 24 16:05:27 2009 +0000
 
-	* [r32] openbouncer/Makefile, openbouncer/application,
-	  openbouncer/application/cmd_key.c,
-	  openbouncer/application/cmd_key.h,
-	  openbouncer/application/cmd_main.c,
-	  openbouncer/application/cmd_main.h,
-	  openbouncer/application/cmd_user.c,
-	  openbouncer/application/cmd_user.h,
-	  openbouncer/application/commandline.c,
-	  openbouncer/application/commandline.h,
-	  openbouncer/application/login.c, openbouncer/application/login.h,
-	  openbouncer/application/usbio.c, openbouncer/application/usbio.h,
-	  openbouncer/application/vsprintf.c,
-	  openbouncer/application/vsprintf.h,
-	  openbouncer/application/vt100.c, openbouncer/application/vt100.h:
-	  initial checkin of Cookies code
+    fixed section garbage collection
 
-2008-06-02 00:22  meriac
+commit 82a6aff36abf7d0b01ccffb7e5d9d8144b298106
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Feb 24 16:02:43 2009 +0000
 
-	* [r31] drivers, drivers/OpenBeaconSniffer.inf: Added Microsoft
-	  Windows Vista (tm) driver for OpenBeacon
+    removed unneccesary RAMFUNC declaration to save RAM
 
-2008-06-01 22:57  meriac
+commit 56e20eaff01e7eb0ad2f35a8707bd65de6792635
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Feb 24 14:22:24 2009 +0000
 
-	* [r28] core/openbeacon/nRF24L01/nRF_CMD.c: fixed ack IRQ problem
+    removed unnecessary RAMFUNC declaration
 
-2008-06-01 22:56  meriac
+commit cc52f3bf8b9a673bd884696b9da4ce41d988ef93
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Thu Feb 12 02:13:50 2009 +0000
 
-	* [r27] openbeacon-estimator/application/led.c,
-	  openbeacon-sniffer/application/led.c: fixed led halt loop to
-	  support watchdog
+    reformatting / add speed increase
 
-2008-06-01 21:42  meriac
+commit 4aadafa2ebe04a9f819b81b72a80e6963f4164a8
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Thu Feb 12 01:43:31 2009 +0000
 
-	* [r26] openbeacon-sniffer, openbeacon-sniffer/Makefile,
-	  openbeacon-sniffer/application,
-	  openbeacon-sniffer/application/led.c,
-	  openbeacon-sniffer/application/led.h,
-	  openbeacon-sniffer/application/main.c,
-	  openbeacon-sniffer/application/openbeacon.h,
-	  openbeacon-sniffer/application/proto.c,
-	  openbeacon-sniffer/application/proto.h,
-	  openbeacon-sniffer/application/xxtea.c,
-	  openbeacon-sniffer/application/xxtea.h,
-	  openbeacon-sniffer/config,
-	  openbeacon-sniffer/config/FreeRTOSConfig.h,
-	  openbeacon-sniffer/config/atmel-rom.ld,
-	  openbeacon-sniffer/config/board.h,
-	  openbeacon-sniffer/config/descriptors.h: openbecon usb sniffer -
-	  initial check in
+    added FAT32 support for SD card
 
-2008-06-01 20:21  meriac
+commit 27883fd934df32590ef1f48bd0fd23dfbdbf876f
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Wed Feb 11 22:36:30 2009 +0000
 
-	* [r25] openbeacon-estimator, openbeacon-estimator/Makefile,
-	  openbeacon-estimator/application,
-	  openbeacon-estimator/application/cmd.c,
-	  openbeacon-estimator/application/cmd.h,
-	  openbeacon-estimator/application/led.c,
-	  openbeacon-estimator/application/led.h,
-	  openbeacon-estimator/application/main.c,
-	  openbeacon-estimator/application/openbeacon.h,
-	  openbeacon-estimator/application/proto.c,
-	  openbeacon-estimator/application/proto.h,
-	  openbeacon-estimator/application/xxtea.c,
-	  openbeacon-estimator/application/xxtea.h,
-	  openbeacon-estimator/config,
-	  openbeacon-estimator/config/FreeRTOSConfig.h,
-	  openbeacon-estimator/config/atmel-rom.ld,
-	  openbeacon-estimator/config/board.h,
-	  openbeacon-estimator/config/descriptors.h: moved openbeacon-usb
-	  to openbeacon-estimator
+    added txtr.mini usb id
 
-2008-06-01 20:21  meriac
+commit 97172405b7ba226713e75ca1c890896e151fd256
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Wed Feb 11 22:36:05 2009 +0000
 
-	* [r24] openbeacon-estimator: moved openbeacon-usb to
-	  openbeacon-estimator
+    fixed product ID and descriptor
 
-2008-06-01 20:20  meriac
+commit 05bef5e0604c0f670d5b294dc31ea62f8d73d4c3
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Wed Feb 11 22:34:25 2009 +0000
 
-	* [r23] openbeacon-estimator,
-	  openbeacon-estimator/application/xxtea.c,
-	  openbeacon-estimator/config/descriptors.h,
-	  openbeacon-estimator/obj: moved openbeacon-usb to
-	  openbeacon-estimator
+    fixed product ID
 
-2008-06-01 20:20  meriac
+commit 87e7b7c5d366084f4cf409c37e001fc1e58a95f9
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Wed Feb 11 22:32:20 2009 +0000
 
-	* [r22] openbeacon-usb: moved openbeacon-usb to
-	  openbeacon-estimator
+    fixed product id and description
 
-2008-05-31 03:22  henryk
+commit 63bfd680620c2d2cfe9aacfbe5817455bb505131
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Wed Feb 11 22:20:19 2009 +0000
 
-	* [r21] at91flash/at91flash_automatic: Add a short attention beep
-	  upon device detection to make it easier to notice when you have
-	  two at91flash_automatic instances running
+    reverted to new descriptor type
 
-2008-05-31 00:49  henryk
+commit e695d34b173b043adc6358703d33c381188f4cb6
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Wed Feb 11 22:15:29 2009 +0000
 
-	* [r20] at91flash/at91flash_automatic: Add automatic at91flash tool
+    fixed types
 
-2008-05-30 21:35  meriac
+commit 1e99b73fc99c543b4e95b9070370e78b4ed87274
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Wed Feb 11 22:14:49 2009 +0000
 
-	* [r19] openbeacon-usb/application/xxtea.c, readme.txt: changed
-	  encryption key to common dummy key
+    removed ramfuncs
 
-2008-05-30 20:05  meriac
+commit 7c87e2851bd70dd4844d27ba8840ce71a79273cd
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Thu Jan 29 15:57:24 2009 +0000
 
-	* [r18] openbeacon-usb/obj: deleted unused directory
+    added copyright
 
-2008-05-30 19:54  meriac
+commit d8e4f91d32f21202a469af61f660a7d581763799
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Mon Jan 26 06:08:53 2009 +0000
 
-	* [r17] core/os/usb/descriptors.h,
-	  openbeacon-usb/config/descriptors.h, openbouncer: moved usb
-	  descriptor to application specific directory
+    Move PN532 reset into the retry path
 
-2008-05-30 19:45  meriac
+commit 1e065f680e9e3db50567fbe3077fd7fbb72e6163
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Jan 24 11:46:48 2009 +0000
 
-	* [r16] openbeacon-usb/application/cmd.c: fixed check-in of update
-	  to FreeRTOS 5.0
+    added sdcard benchmark code and increased clock
 
-2008-05-30 19:40  meriac
+commit 5c225ad1bd6cc1c88be2bb61b4235180fd3febfc
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Jan 24 07:34:19 2009 +0000
 
-	* [r15] core/os/usb/descriptors.h,
-	  openbeacon-usb/application/cmd.c: fixed check-in of update to
-	  FreeRTOS 5.0
+    fixed comment
 
-2008-05-30 18:44  meriac
+commit 2d8a00c09a98b7cd41910cbc44c2f35223218a2d
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Jan 24 07:17:50 2009 +0000
 
-	* [r14] at91flash, at91flash/at91flash, core/Makefile.rules,
-	  core/openbeacon/nRF24L01/nRF_CMD.c,
-	  core/os/core/ARM7_AT91SAM7S/portmacro.h,
-	  core/os/core/include/FreeRTOS.h, core/os/core/include/blocktim.h,
-	  core/os/core/include/comtest.h, core/os/core/include/comtest2.h,
-	  core/os/core/include/crhook.h, core/os/core/include/croutine.h,
-	  core/os/core/include/death.h, core/os/core/include/dynamic.h,
-	  core/os/core/include/fileIO.h, core/os/core/include/list.h,
-	  core/os/core/include/mevents.h, core/os/core/include/print.h,
-	  core/os/core/include/projdefs.h, core/os/core/include/queue.h,
-	  core/os/core/include/semphr.h, core/os/core/include/serial.h,
-	  core/os/core/include/task.h, core/os/core/queue.c,
-	  core/os/core/tasks.c, core/os/usb/USB-CDC.c,
-	  core/os/usb/USBIsr.c, core/os/usb/descriptors.h,
-	  core/os/usb/usb.h: initial check-in of update to FreeRTOS 5.0
+    added SDcard code
 
-2008-05-30 16:39  meriac
+commit 07125370b23f795b8c5d8e3e7286fbb37f79d90f
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Fri Jan 23 12:09:26 2009 +0000
 
-	* [r13] openbouncer: create directory for OpenBouncer doorlock
-	  project
+    PICC emulation wokring
 
-2008-05-30 16:34  meriac
+commit d9253985138b521f51640a3cc6f9e6e5276dd20e
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Fri Jan 23 05:27:29 2009 +0000
 
-	* [r12] ., core, core/Makefile.rules, core/openbeacon,
-	  core/openbeacon/beacontypes.h, core/openbeacon/dbgu.c,
-	  core/openbeacon/dbgu.h, core/openbeacon/env.c,
-	  core/openbeacon/env.h, core/openbeacon/nRF24L01,
-	  core/openbeacon/nRF24L01/nRF_API.c,
-	  core/openbeacon/nRF24L01/nRF_API.h,
-	  core/openbeacon/nRF24L01/nRF_CMD.c,
-	  core/openbeacon/nRF24L01/nRF_CMD.h,
-	  core/openbeacon/nRF24L01/nRF_HW.h, core/openbeacon/sort.c,
-	  core/openbeacon/sort.h, core/os, core/os/boot,
-	  core/os/boot/Cstartup_SAM7.c, core/os/boot/boot.s, core/os/core,
-	  core/os/core/ARM7_AT91SAM7S,
-	  core/os/core/ARM7_AT91SAM7S/AT91SAM7.h,
-	  core/os/core/ARM7_AT91SAM7S/lib_AT91SAM7.c,
-	  core/os/core/ARM7_AT91SAM7S/lib_AT91SAM7.h,
-	  core/os/core/ARM7_AT91SAM7S/port.c,
-	  core/os/core/ARM7_AT91SAM7S/portISR.c,
-	  core/os/core/ARM7_AT91SAM7S/portmacro.h, core/os/core/MemMang,
-	  core/os/core/MemMang/heap_1.c, core/os/core/MemMang/heap_2.c,
-	  core/os/core/MemMang/heap_3.c, core/os/core/include,
-	  core/os/core/include/FreeRTOS.h, core/os/core/include/blocktim.h,
-	  core/os/core/include/comtest.h, core/os/core/include/comtest2.h,
-	  core/os/core/include/crhook.h, core/os/core/include/croutine.h,
-	  core/os/core/include/death.h, core/os/core/include/dynamic.h,
-	  core/os/core/include/fileIO.h, core/os/core/include/list.h,
-	  core/os/core/include/mevents.h, core/os/core/include/portable.h,
-	  core/os/core/include/print.h, core/os/core/include/projdefs.h,
-	  core/os/core/include/queue.h, core/os/core/include/semphr.h,
-	  core/os/core/include/serial.h, core/os/core/include/task.h,
-	  core/os/core/list.c, core/os/core/queue.c, core/os/core/tasks.c,
-	  core/os/license.txt, core/os/usb, core/os/usb/USB-CDC.c,
-	  core/os/usb/USB-CDC.h, core/os/usb/USBIsr.c,
-	  core/os/usb/descriptors.h, core/os/usb/usb.h, license.txt,
-	  openbeacon-usb, openbeacon-usb/Makefile,
-	  openbeacon-usb/application, openbeacon-usb/application/cmd.c,
-	  openbeacon-usb/application/cmd.h,
-	  openbeacon-usb/application/led.c,
-	  openbeacon-usb/application/led.h,
-	  openbeacon-usb/application/main.c,
-	  openbeacon-usb/application/openbeacon.h,
-	  openbeacon-usb/application/proto.c,
-	  openbeacon-usb/application/proto.h,
-	  openbeacon-usb/application/xxtea.c,
-	  openbeacon-usb/application/xxtea.h, openbeacon-usb/config,
-	  openbeacon-usb/config/FreeRTOSConfig.h,
-	  openbeacon-usb/config/atmel-rom.ld,
-	  openbeacon-usb/config/board.h, openbeacon-usb/obj, readme.txt:
-	  initial check-in of estimator.006 tree - splitted to support
-	  multiple application sharing the same source core
+    Add wait_time parameter to pn532_recv_frame_queue()
 
+commit d0149f13485a808b4458478c89d1bbdd00afc1f3
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Thu Jan 22 23:04:54 2009 +0000
+
+    PICC target demo working
+
+commit 16309cc6346a64d828a9c59a011295561483e24d
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Wed Jan 21 19:21:55 2009 +0000
+
+    Add erdgeists changes, fix horizontal swipe, naive implementation of eink_job_add_area_with_offset() (probably needs fixing for rotation)
+
+commit b98d196dacd3eaab84c957d3f380f53040fe95d4
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Wed Jan 21 18:48:06 2009 +0000
+
+    Theoretically start target, doesn't work
+
+commit 4c318626742e51919c020b8ac1f5b375e24c0f38
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Wed Jan 21 12:49:41 2009 +0000
+
+    Check return codes
+
+commit d3ab813ee462ea66410fcfbf70a1bada0d628354
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Wed Jan 21 12:15:53 2009 +0000
+
+    Get basic communication queues to work. API needs a little cleanup
+
+commit 60bb63296779103ffd2b158f8f030330d890609d
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Wed Jan 21 09:06:13 2009 +0000
+
+    Sending and receiving works in principle
+
+commit 62c044e21a461770b7cce7a84b025db8c9ae9613
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Jan 20 14:24:17 2009 +0000
+
+    Forgotten in the last commit
+
+commit 307981bab9213bac796405d5f899f12da923b88c
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Jan 20 14:12:30 2009 +0000
+
+    Make pointers const, saves 5172 bytes of RAM!
+
+commit 781a92257591906a09ea1e6a322068d1b15b8cc4
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Wed Jan 14 13:58:28 2009 +0000
+
+    moved Henryk Ploetz's modifications related to OpenPICC2 to mainline
+
+commit 62d516feee568d5c89ade245cf85ad030dd89a9b
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Thu Oct 30 02:59:45 2008 +0000
+
+    Merge r158 from openpicc2 branch to trunk:
+     Consolidate LED support into the core
+
+commit 9d329bd28fbcd604bcd33f8aac49827c80ca5431
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Oct 21 18:56:18 2008 +0000
+
+    Continue work on door authentication side
+
+commit 120cdd3a93be9ac020033cb52ec52481cd93b003
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Oct 4 21:22:41 2008 +0000
+
+    upgraded blinkenlights specific code to latest blinkenlights SVN repository release 847
+
+commit e4f0ee51e6cfb27efd7013a42e153824dfd13f16
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Thu Oct 2 16:50:25 2008 +0000
+
+    added compiled pdf version of the protocol description
+
+commit d791860545122b98a4546d43d1ee9da6fabdd1f4
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Sep 29 14:43:42 2008 +0000
+
+    latest changes from blinkenlights repository - revision 688
+
+commit 3a782a558eedceaea5546747c15a537247014fd9
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Sep 29 14:41:19 2008 +0000
+
+    latest changes from blinkenlights repository - revision 688
+
+commit 98d0aa362e0fac78c42bd4eec36f5fbfa982ce14
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Sep 29 14:40:38 2008 +0000
+
+    latest changes from blinkenlights repository - revision 688
+
+commit 701332aac0ac09aec779bf6be65acd38131234f5
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Sep 29 11:16:59 2008 +0000
+
+    latest changes from blinkenlights repository - revision 688
+
+commit efb344bbc2160c3391082cf8c9b553f4c80204b8
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Sep 29 11:12:47 2008 +0000
+
+    latest changes from blinkenlights repository - revision 688
+
+commit 83515fe862b6ba207be24cc579dd7155926fa624
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Sep 16 18:35:11 2008 +0000
+
+    Fix types
+
+commit 0a03e530c7960f0b1a1f3f2c8c5c0fdc5376654a
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Sep 16 18:09:24 2008 +0000
+
+    added becontypes
+
+commit 9cb82cf6fcd13a73194f6cb92e029fed9714f658
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Sep 16 18:04:10 2008 +0000
+
+    Start authentication protocol implementation
+
+commit bf56a88fdae167338e63e2b32d2b18f17bad3182
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Sep 16 16:17:42 2008 +0000
+
+    Change at91flash_automatic to work without cut
+
+commit fef091acc28a610192e8cf9ed4498f832913527f
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Sep 14 18:39:45 2008 +0000
+
+    added ARCH setting to Makefile
+
+commit 59623aa4f76ff1b10d63e63221e868a8f7920ecd
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Sep 14 18:22:06 2008 +0000
+
+    minor reformatting
+
+commit 1e4d72cf17226784544d368c83e35416ee58ce54
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Sep 14 17:42:39 2008 +0000
+
+    sync from blinkenlights subversion
+
+commit 767ad0ede90b3121c18db79e3fab9f4d20054c42
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Sep 14 17:41:49 2008 +0000
+
+    sync from blinkenlights subversion
+
+commit 6d6204b3e5ca43c3ba01dbd62cdd3e0479c38e5d
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Sep 14 17:38:57 2008 +0000
+
+    sync from blinkenlights subversion
+
+commit c44f6a11d94907e907ed507dc24ece0d751d18e7
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Sep 14 17:21:08 2008 +0000
+
+    sync from blinkenlights subversion
+
+commit 28f8337ef67804d99f1effc9020c189abd47922b
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Sep 14 17:03:58 2008 +0000
+
+    added revert-to-update for AT91SAM7X
+
+commit 874e1ea968cfc0a0b3ed9ea271f8209581e81e45
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Sep 14 17:02:45 2008 +0000
+
+    added revert-to-update for AT91SAM7X
+
+commit b60d0b58be4266f2a96806c7e1533f5ddca523c2
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Sep 9 21:34:53 2008 +0000
+
+    Add dummy protocol implementation to makefile
+
+commit d967b649f83ff586d32b765192d7de21afe7ba89
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Sep 9 21:29:43 2008 +0000
+
+    moved XXTEA to application
+
+commit 01fc5a3632f1f299d6d242d9053310fb79fb6ecb
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Sep 9 21:28:19 2008 +0000
+
+    moved XXTEA to application
+
+commit 39d9bc2c68d510543c845c49550c4789b793e91a
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Sep 9 21:25:26 2008 +0000
+
+    initial XXTEA checkin
+
+commit 1fbba32b93e157f45d482011497abeba965af806
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Sep 9 21:24:55 2008 +0000
+
+    initial XXTEA checkin
+
+commit a763d452fd6eb720b3c3b56044294bf3016a8f44
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Sep 9 21:24:18 2008 +0000
+
+    Dummy protocol implementation
+
+commit 11d254c9a7eb8972df18c68939095159590d58ac
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Sep 9 15:27:41 2008 +0000
+
+    Increase key length to 128 bits
+    Change random number generator
+
+commit 512744dcd43c014e6c6ea1f0004d82c3f1eab58f
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Sep 9 10:33:04 2008 +0000
+
+    Different figure style
+
+commit a887dc9b45c3bf38f5d684e14f9900478fff18cf
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Tue Sep 9 04:17:19 2008 +0000
+
+    Further protocol description
+
+commit 8025cf1db04a0025aab9a38c5a6f2baf4500c82b
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sun Sep 7 14:48:27 2008 +0000
+
+    docs update
+
+commit d68c23f2764e2dbb8e7bb1b684f8ecd96d1f8969
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sun Sep 7 13:14:55 2008 +0000
+
+    Fix counter/lastrnd lengths
+
+commit 147eb2376e1953739b057f4f531eda35db63ee59
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sun Sep 7 13:11:26 2008 +0000
+
+    Clarifications, corrections
+
+commit 61e464551accf5656a380dc8056f2053c369f76e
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sun Sep 7 12:47:47 2008 +0000
+
+    Preliminary protocol description
+
+commit d05d334887fe4f4a7180f1430621ea5a8c300f60
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sun Sep 7 10:04:08 2008 +0000
+
+    Convert to interrupt based operation again
+    Add return value to lock open routines
+
+commit 8a950a4686fe8bde998c415d3034992c39c26f7c
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat Sep 6 17:44:07 2008 +0000
+
+    Working bit-banging manchester output code
+
+commit e6eb81d49e11ad73f731673698aefd5e94130944
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat Sep 6 14:27:53 2008 +0000
+
+    Fix timer routines (works at least sometimes)
+
+commit 4698e755d2383c4468cdbb6b2f60788dfffd5c1c
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Aug 9 20:57:04 2008 +0000
+
+    removed linker garbage collection
+
+commit 12740edadaffa7365002acfa18b11767e53fc8d1
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Aug 9 20:48:58 2008 +0000
+
+    added boot_from_flash for SAM7X
+
+commit f9646c6c934ce4fe432744c41adba9e926f8d013
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Aug 9 20:35:23 2008 +0000
+
+    arping to device IP address works
+
+commit fcb75f8a0edf5e1ac08d36af4bbb86111f06aadc
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Aug 9 20:08:16 2008 +0000
+
+    changed default header options
+
+commit fb66a8293e7ef51767614aa0e3670e27d168b940
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Aug 9 20:07:22 2008 +0000
+
+    changed default IP address to 10.1.0.6/16 - gateway 10.1.0.1
+
+commit 9040f0d1ad33fefcff588a235ce5baffe299e22b
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Aug 9 17:59:31 2008 +0000
+
+    network rx still broken
+
+commit e2f76ce8d472289c3b6c047641e9e93efd30d78c
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Aug 9 14:18:41 2008 +0000
+
+    removed stats
+
+commit a81cd0cafe5574df78a693db2faac21dce62f264
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Aug 9 13:23:02 2008 +0000
+
+    removed SNMP code
+
+commit cfc63de2dabe71f13dfebaab07f506cba279b757
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Aug 9 12:48:24 2008 +0000
+
+    remove SNMP headers
+
+commit 19607c66a6c356f6e20715006a5b13fe3573a72d
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Aug 9 12:38:18 2008 +0000
+
+    fixed networking crash - network still broken
+
+commit 3241c26029b105dc74c1db9be93fd763034bc094
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat Aug 9 12:06:49 2008 +0000
+
+    Properly disable the watchdog when WATCHDOG_DISABLE is set (otherwise the watchdog will run with default values)
+
+commit 9180e584b3a0ad39a3281064452d81de241c5989
+Author: Angelo Cuccato <cuccato@users.sourceforge.net>
+Date:   Sat Aug 9 11:08:06 2008 +0000
+
+    add fisrt version of BurgWaechter TSE 3000 open sequenze
+
+commit 5d92c2c341af21e5a02e94e2c269a7cf2f6760a0
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Aug 9 09:14:36 2008 +0000
+
+    fixed checkin mistake
+
+commit cde8f44626eadca8a04d9e3e04c9d27ea649ac22
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Aug 9 09:12:34 2008 +0000
+
+    added linker garbage collection
+
+commit f9bf47ad58c74deed9ef0be942c3062cb06dc5cc
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Aug 9 09:05:49 2008 +0000
+
+    added linker garbage collection
+
+commit 44b05073ce5613e6cb4a356df0304a3d564c7a52
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Aug 9 09:02:29 2008 +0000
+
+    added linker garbage collection
+
+commit 9489ce78d4ada2047fcfafa786e251d447b7ae17
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Aug 9 09:01:42 2008 +0000
+
+    added switch to disable watchdog
+
+commit ee9d6c10b2a059bba93c0cb9b8b2f260d2de6316
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Aug 9 08:58:28 2008 +0000
+
+    added intial IP stack / EMAC support (broken)
+
+commit 26805618787e57ca088eb69adfde0e66acdbd4d8
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri Aug 8 23:30:59 2008 +0000
+
+    added sam7x support
+
+commit 40174b6a85ca90f9b4d0fe233ee1909776e145d7
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri Aug 8 23:30:09 2008 +0000
+
+    added sam7x support
+
+commit a876b421661804ee625167a787480ce94ecbb02b
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri Aug 8 23:24:09 2008 +0000
+
+    added sam7x support
+
+commit 2d29fb91738e5449fb0fa3f24db42c414c9ab647
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri Aug 8 22:50:52 2008 +0000
+
+    added sam7x support
+
+commit 756f4ede36cdf8229e4431724077e7d445307ea6
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri Aug 8 22:21:55 2008 +0000
+
+    added sam7x support
+
+commit 26691c8b7d8306b63cc354bd1b5b5c4bf13b242f
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri Aug 8 22:19:57 2008 +0000
+
+    added sam7x support - default spi port
+
+commit bafc2df45e8a5cb2553c98d333d2090f990b82eb
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Thu Aug 7 16:39:50 2008 +0000
+
+    restructuring directory to support ethernet version
+
+commit eb1c6f6d124c86cc2d9300986bf43c8846e45baf
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Wed Aug 6 16:50:23 2008 +0000
+
+    restructuring directory to support ethernet version
+
+commit 6b2bbcb1864cc67470caf6b3528ff397e7edd6c6
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jul 29 06:13:54 2008 +0000
+
+    updated dimming - up & down counting
+
+commit 7c742c456d86f30669a2ffd72ed761b8dee5b0b5
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Jul 19 03:30:41 2008 +0000
+
+    fixed crc problem
+
+commit 25f626883d44cb11360b2488fa3a132e9d4390a3
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Tue Jul 15 19:40:04 2008 +0000
+
+    simple stand alone dimming
+
+commit 92c11c8f623e3898ed3b806f7920a13dd4a93616
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri Jul 11 01:47:16 2008 +0000
+
+    verified trimmer support
+
+commit b7cf477cd62d46dab1376d5eefc32b10cb8d33f4
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Jul 7 00:27:28 2008 +0000
+
+    changed default phototriac LED flash time to 250us
+
+commit 006792dfd7363b03ca90a0343e7daabb61da41db
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Jul 7 00:10:06 2008 +0000
+
+    changed default dimmer value to 50% brightness
+
+commit 3f14f1a48077ef09a572384b52b65ea626049a34
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Jul 6 23:30:52 2008 +0000
+
+    added delayed trigger-on-edge code
+
+commit 2241be03319dbce18b01157a5a7b512edf9715ea
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Jul 5 12:35:24 2008 +0000
+
+    Modified to support AT91SAM7S64
+
+commit b2ee6d1fbb3b51d0bbab60d801dcfd2965f3481f
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Jul 5 12:34:44 2008 +0000
+
+    modified USB product ID and description
+
+commit b24dde496d12467c31b8e4f08199411b4921daa4
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Jul 5 12:34:23 2008 +0000
+
+    modified USB product ID
+
+commit f2129844b63d52f14197b926e3a0753904712792
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Jul 5 12:33:42 2008 +0000
+
+    added list of USB IDs s spent
+
+commit 0faef43df6c3126b652a33815147bcdc08440060
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Jul 5 12:27:50 2008 +0000
+
+    changed USB device id
+
+commit e9ff26382e31bf0dbff03d7a235a37bf3445b036
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sat Jul 5 12:20:03 2008 +0000
+
+    initial checkin of openbeacon blinkenlights code
+
+commit e0c84773083e5b1b02285b2270bbe324440e7a16
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Wed Jun 11 10:11:20 2008 +0000
+
+    minor changes to get it running
+
+commit 71c49542156e4af960e5d0e1787fea2cefd059d6
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Wed Jun 11 10:04:34 2008 +0000
+
+    minor changes to get it running
+
+commit 2b0ce01511eb4b40fb649bc8e2880bd3e627be01
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Wed Jun 11 10:02:55 2008 +0000
+
+    minor changes to get it running
+
+commit aa859259b295c8e4dc0a26b90ed678138089e817
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Wed Jun 11 09:12:59 2008 +0000
+
+    minor changes to make it compile
+
+commit 2d92dc3e35de6d66490aaa39d309bd33354d0a45
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Wed Jun 11 08:48:09 2008 +0000
+
+    initial checkin of Cookies code
+
+commit 70372a57b3e38b1054b34f116ed84127306b8c67
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Mon Jun 2 00:22:49 2008 +0000
+
+    Added Microsoft Windows Vista (tm) driver for OpenBeacon
+
+commit 97ea5797a94b9b4a1e56291933d6785f47c40278
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Jun 1 22:57:15 2008 +0000
+
+    fixed ack IRQ problem
+
+commit 3c01a6f5a89a6ab846f2275894ff0e3affd2fad8
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Jun 1 22:56:28 2008 +0000
+
+    fixed led halt loop to support watchdog
+
+commit c00302ed594e37484c30592bfe8a70367c564f21
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Jun 1 21:42:48 2008 +0000
+
+    openbecon usb sniffer - initial check in
+
+commit f58871c901df0c88cb36046eac89032e58cd2d4d
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Jun 1 20:21:58 2008 +0000
+
+    moved openbeacon-usb to openbeacon-estimator
+
+commit 7cd65127fc344ae6e6d90aaf0c772c72e1324c53
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Jun 1 20:21:14 2008 +0000
+
+    moved openbeacon-usb to openbeacon-estimator
+
+commit e5720826a5524d2db45af44888326591c3d34504
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Jun 1 20:20:40 2008 +0000
+
+    moved openbeacon-usb to openbeacon-estimator
+
+commit 37a0230515424a91cceceda3ab4757af424d4207
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Sun Jun 1 20:20:20 2008 +0000
+
+    moved openbeacon-usb to openbeacon-estimator
+
+commit fc3d369bb498095c0401820a7a272bad95dee216
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat May 31 03:22:00 2008 +0000
+
+    Add a short attention beep upon device detection to make it easier to notice when you have two at91flash_automatic instances running
+
+commit 4ba44ae3d0aee5c16b9422a8ea993fa18205eb98
+Author: Henryk Ploetz <henryk@ploetzli.ch>
+Date:   Sat May 31 00:49:25 2008 +0000
+
+    Add automatic at91flash tool
+
+commit 4c9cfcbf14d2534424368e1f8c16e0d212a3ffdd
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri May 30 21:35:29 2008 +0000
+
+    changed encryption key to common dummy key
+
+commit 31c750cd514e9e5ee6acde3491f9b05b7f348bce
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri May 30 19:54:25 2008 +0000
+
+    moved usb descriptor to application specific directory
+
+commit 3471d717103cf1559fe98478ca9495648acc6072
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri May 30 19:45:19 2008 +0000
+
+    fixed check-in of update to FreeRTOS 5.0
+
+commit eab3f1897600bf59650f01f298785218c9886e36
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri May 30 19:40:38 2008 +0000
+
+    fixed check-in of update to FreeRTOS 5.0
+
+commit 7110f399cd6a817a72dc8211f06f693546468357
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri May 30 18:44:39 2008 +0000
+
+    initial check-in of update to FreeRTOS 5.0
+
+commit 312d62cee0be06340ebcf71f02f283227da7ec0e
+Author: Milosch Meriac <meriac@openbeacon.de>
+Date:   Fri May 30 16:34:56 2008 +0000
+
+    initial check-in of estimator.006 tree - splitted to support multiple application sharing the same source core

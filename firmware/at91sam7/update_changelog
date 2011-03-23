@@ -1,5 +1,4 @@
 #!/bin/sh
 
-svn update
-svn2cl -i
-svn ci ChangeLog -m"updated ChangeLog"
+git pull
+git log . > ChangeLog
