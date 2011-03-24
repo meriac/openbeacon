@@ -31,6 +31,17 @@
 
 #define USB_VENDOR_ID 0x2366
 #define USB_PROD_ID 0x0003
-#define USB_DEVICE 1
+
+/* PN532 pin definitions */
+#define PN532_RESET_PORT 1
+#define PN532_RESET_PIN 11
+#define PN532_CS_PORT 0
+#define PN532_CS_PIN 2
+
+
+/* FreeRTOS configuration */
+#define ENABLE_FREERTOS
+#define TASK_RFID_STACK_SIZE 256
+#define TASK_RFID_PRIORITY (tskIDLE_PRIORITY + 2)
 
 #endif/*__CONFIG_H__*/
