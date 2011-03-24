@@ -40,8 +40,10 @@ int spi_txrx(spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
 	LPC_SSP->CPSR = (chipselect >> 8) & 0xFF;
 
 	/* activate chip select */
-	GPIOSetValue((uint8_t) (chipselect >> 24), (uint8_t) (chipselect >> 16),
-			chipselect & SPI_CS_MODE_INVERT_CS);
+	if ((chipselect & SPI_CS_MODE_SKIP_CS_ASSERT) == 0)
+		GPIOSetValue((uint8_t) (chipselect >> 24),
+				(uint8_t) (chipselect >> 16), chipselect
+						& SPI_CS_MODE_INVERT_CS);
 
 	/* calculate SPI transaction size */
 	xfered = total = (chipselect & SPI_CS_MODE_SKIP_TX) ? rxlen + txlen
@@ -87,8 +89,10 @@ int spi_txrx(spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
 	}
 
 	/* de-activate chip select */
-	GPIOSetValue((uint8_t) (chipselect >> 24), (uint8_t) (chipselect >> 16),
-			(chipselect & SPI_CS_MODE_INVERT_CS) ^ SPI_CS_MODE_INVERT_CS);
+	if ((chipselect & SPI_CS_MODE_SKIP_CS_DEASSERT) == 0)
+		GPIOSetValue((uint8_t) (chipselect >> 24),
+				(uint8_t) (chipselect >> 16), (chipselect
+						& SPI_CS_MODE_INVERT_CS) ^ SPI_CS_MODE_INVERT_CS);
 
 	return 0;
 }
