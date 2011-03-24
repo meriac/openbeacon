@@ -4,4 +4,8 @@
 *.elf
 *.map
 *~
+.cproject
+.project
+.settings
+Default
 ignore
