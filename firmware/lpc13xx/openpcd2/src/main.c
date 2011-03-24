@@ -21,27 +21,7 @@
 
  */
 #include <openbeacon.h>
-#include "hid.h"
 #include "rfid.h"
-
-static uint8_t hid_buffer[USB_HID_IN_REPORT_SIZE];
-
-void GetInReport(uint8_t src[], uint32_t length)
-{
-	(void) src;
-	(void) length;
-
-	if (length > USB_HID_IN_REPORT_SIZE)
-		length = USB_HID_IN_REPORT_SIZE;
-
-	memcpy(src, hid_buffer, length);
-}
-
-void SetOutReport(uint8_t dst[], uint32_t length)
-{
-	(void) dst;
-	(void) length;
-}
 
 static void rfid_hexdump(const void *buffer, int size)
 {
@@ -104,9 +84,6 @@ int main(void)
 	/* Set LED port pin to output */
 	GPIOSetDir(LED_PORT, LED_BIT, 1);
 
-	/* Init USB HID interface */
-	hid_init();
-
 	/* UART setup */
 	UARTInit(115200, 0);
 
@@ -141,15 +118,10 @@ int main(void)
 		data[1] = 0x01; /* MaxTg - maximum cards    */
 		data[2] = 0x00; /* BrTy - 106 kbps type A   */
 		if (((i = rfid_execute(&data, 3, sizeof(data))) >= 11) && (data[1]
-				== 0x01) && (data[2] == 0x01) && (data[6]
-				<= (USB_HID_IN_REPORT_SIZE - 2)))
+				== 0x01) && (data[2] == 0x01))
 		{
 			debug_printf("card id: ");
 			rfid_hexdump(&data[7], data[6]);
-			memset(hid_buffer, 0, sizeof(hid_buffer));
-			memcpy(&hid_buffer[2], &data[7], data[6]);
-			hid_buffer[1] = data[6];
-			hid_buffer[0] = counter++;
 		}
 		else
 			debug_printf("unknown response of %i bytes\n", i);
