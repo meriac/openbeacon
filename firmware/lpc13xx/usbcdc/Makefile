@@ -9,11 +9,6 @@ APP_LDFLAGS=-lm
 
 APP_SRC= \
   src/main.c \
-  src/cdcuser.c \
-  src/cdcusbdesc.c \
-  src/usbcore.c \
-  src/usbhw.c \
-  src/usbuser.c
 
 APP_SRC+=$(IMAGES_C)
 

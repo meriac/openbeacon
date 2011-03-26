@@ -3,13 +3,18 @@
 
 #define PACKED __attribute__((packed))
 
+#include <config.h>
+
 #ifdef  __LPC13xx__
 #include <LPC13xx.h>
+#include <stdint.h>
 #include <uart.h>
+#ifndef ENALBLE_USB_FULLFEATURED
 #include <usb.h>
 #include <usbdesc.h>
-#include <gpio.h>
 #include <rom_drivers.h>
+#endif/*ENALBLE_USB_FULLFEATURED*/
+#include <gpio.h>
 #ifdef  __LPC1343__
 #define LPC_RAM_SIZE (8*1024)
 #define LPC_FLASH_SIZE (32*1024)
@@ -27,8 +32,8 @@
 #define DEVICEID_LPC1342 0x3D01402BUL
 #define DEVICEID_LPC1343 0x3D00002BUL
 
-
-#include <config.h>
+#define TRUE 1
+#define FALSE 0
 
 #ifdef  ENABLE_FREERTOS
 #include <FreeRTOS.h>

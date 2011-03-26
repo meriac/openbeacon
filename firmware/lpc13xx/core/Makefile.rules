@@ -18,6 +18,7 @@ CFLAGS= \
 -I$(CORE)cmsis/inc \
 -I$(CORE)openbeacon/inc \
 -I$(CORE)peripherals/inc \
+-I$(CORE)peripherals/inc/usb \
 -I$(CORE)freertos/inc \
 -Wall \
 -Werror \
@@ -47,6 +48,11 @@ ARM_SRC= \
   $(CORE)startup/$(ARCH)xx.c \
   $(CORE)peripherals/src/uart.c \
   $(CORE)peripherals/src/gpio.c \
+  $(CORE)peripherals/src/usb/cdcusbdesc.c \
+  $(CORE)peripherals/src/usb/cdcuser.c \
+  $(CORE)peripherals/src/usb/usbcore.c \
+  $(CORE)peripherals/src/usb/usbhw.c \
+  $(CORE)peripherals/src/usb/usbuser.c \
   $(CORE)freertos/src/heap_2.c \
   $(CORE)freertos/src/list.c \
   $(CORE)freertos/src/port.c \
