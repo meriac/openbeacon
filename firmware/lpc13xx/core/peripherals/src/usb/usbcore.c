@@ -21,9 +21,9 @@
  *                Reworked Endpoint0
  *          V1.00 Initial Version
  *----------------------------------------------------------------------------*/
-#include <stdint.h>
+#include <openbeacon.h>
+#ifdef  ENALBLE_USB_FULLFEATURED
 
-#include "config.h"
 #include "cdcusb.h"
 #include "usbcfg.h"
 #include "usbhw.h"
@@ -1287,3 +1287,5 @@ USB_EndPoint0 (uint32_t event)
 
     }
 }
+
+#endif /*ENALBLE_USB_FULLFEATURED*/

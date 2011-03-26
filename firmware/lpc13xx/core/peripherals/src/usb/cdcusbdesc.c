@@ -19,12 +19,13 @@
  *          V1.20 Changed string descriptor handling
  *          V1.00 Initial Version
  *---------------------------------------------------------------------------*/
-#include <stdint.h>
+#include <openbeacon.h>
+#ifdef  ENALBLE_USB_FULLFEATURED
+
 #include "cdcusb.h"
 #include "cdc.h"
 #include "usbcfg.h"
 #include "cdcusbdesc.h"
-#include "config.h"
 
 
 /* USB Standard Device Descriptor */
@@ -199,3 +200,5 @@ const uint8_t USB_StringDescriptor[] = {
   'O', 0,
   'M', 0,
 };
+
+#endif/*ENALBLE_USB_FULLFEATURED*/

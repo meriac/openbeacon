@@ -19,7 +19,9 @@
  *          V1.20 Added USB_ClearEPBuf
  *          V1.00 Initial Version
  *----------------------------------------------------------------------------*/
-#include "LPC13xx.h"		/* LPC13xx definitions */
+#include <openbeacon.h>
+#ifdef  ENALBLE_USB_FULLFEATURED
+
 #include "cdcusb.h"
 #include "usbcfg.h"
 #include "usbreg.h"
@@ -629,3 +631,5 @@ USB_IRQHandler (void)
 isr_end:
   return;
 }
+
+#endif /*ENALBLE_USB_FULLFEATURED*/

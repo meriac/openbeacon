@@ -15,9 +15,9 @@
  *
  * Copyright (c) 2009 Keil - An ARM Company. All rights reserved.
  *---------------------------------------------------------------------------*/
-#include <stdint.h>
+#include <openbeacon.h>
+#ifdef  ENALBLE_USB_FULLFEATURED
 
-#include "config.h"
 #include "cdcusb.h"
 #include "usbcfg.h"
 #include "usbhw.h"
@@ -230,3 +230,5 @@ USB_EndPoint3 (uint32_t event)
       break;
     }
 }
+
+#endif /*ENALBLE_USB_FULLFEATURED*/

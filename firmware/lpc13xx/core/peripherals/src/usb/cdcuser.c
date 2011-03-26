@@ -16,9 +16,9 @@
  * Copyright (c) 2009 Keil - An ARM Company. All rights reserved.
  *---------------------------------------------------------------------------*/
 
-#include <stdint.h>
+#include <openbeacon.h>
+#ifdef  ENALBLE_USB_FULLFEATURED
 
-#include "config.h"
 #include "cdcusb.h"
 #include "usbhw.h"
 #include "usbcfg.h"
@@ -380,3 +380,5 @@ CDC_NotificationIn (void)
 
   USB_WriteEP (CDC_CEP_IN, &NotificationBuf[0], 10);	// send notification
 }
+
+#endif /*ENALBLE_USB_FULLFEATURED*/
