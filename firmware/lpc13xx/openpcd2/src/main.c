@@ -23,6 +23,23 @@
 #include <openbeacon.h>
 #include "rfid.h"
 
+static BOOL vTasksRunning = FALSE;
+
+/*
+ * overwrite default_putchar with USB CDC ACM
+ * output to enable USB support for debug_printf
+ */
+BOOL default_putchar(uint8_t data)
+{
+	if (vTasksRunning)
+		CDC_PutChar (data);
+
+	/* always send out over serial port as well */
+	UARTSendChar (data);
+
+	return TRUE;
+}
+
 int main(void)
 {
 	/* Initialize GPIO (sets up clock) */
@@ -30,6 +47,13 @@ int main(void)
 
 	/* Set LED port pin to output */
 	GPIOSetDir(LED_PORT, LED_BIT, LED_ON);
+
+	/* CDC Initialization */
+	CDC_Init();
+	/* USB Initialization */
+	USB_Init();
+	/* Connect to USB port */
+	USB_Connect(1);
 
 	/* UART setup */
 	UARTInit(115200, 0);
@@ -41,6 +65,7 @@ int main(void)
 	SystemCoreClockUpdate ();
 
 	/* Start the tasks running. */
+	vTasksRunning = TRUE;
 	vTaskStartScheduler();
 
 	return 0;

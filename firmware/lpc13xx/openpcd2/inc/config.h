@@ -44,7 +44,7 @@
 
 /* FreeRTOS configuration */
 #define ENABLE_FREERTOS
-#define TASK_RFID_STACK_SIZE 256
+#define TASK_RFID_STACK_SIZE 64
 #define TASK_RFID_PRIORITY (tskIDLE_PRIORITY + 2)
 
 #endif/*__CONFIG_H__*/

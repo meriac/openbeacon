@@ -292,7 +292,7 @@ void rfid_task(void *pvParameters)
 	while (1)
 	{
 		/* wait 100ms */
-		vTaskDelay( 100 / portTICK_RATE_MS);
+		vTaskDelay( 1000 / portTICK_RATE_MS);
 
 		/* detect cards in field */
 		GPIOSetValue(LED_PORT, LED_BIT, LED_ON);
