@@ -72,9 +72,14 @@ int rfid_read(void *data, unsigned char size)
 	int res;
 	unsigned char *p, c, pkt_size, crc, prev, t;
 
-	/* wait till PN532 response is ready */
+	/* wait 100ms max till PN532 response is ready */
+	t=0;
 	while ((rfid_status() & 1) == 0)
-		;
+	{
+		if(t++>10)
+			return -8;
+		vTaskDelay( 10 / portTICK_RATE_MS);
+	}
 
 	/* enable chip select */
 	rfid_cs(0);
@@ -291,8 +296,8 @@ void rfid_task(void *pvParameters)
 
 	while (1)
 	{
-		/* wait 100ms */
-		vTaskDelay( 1000 / portTICK_RATE_MS);
+		/* wait 500ms */
+		vTaskDelay( 500 / portTICK_RATE_MS);
 
 		/* detect cards in field */
 		GPIOSetValue(LED_PORT, LED_BIT, LED_ON);
