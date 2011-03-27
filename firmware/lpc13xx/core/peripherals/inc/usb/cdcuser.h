@@ -43,9 +43,9 @@ extern void CDC_BulkOut (void);
 
 /* FreeRTOS pipe management for CDC ACM */
 #ifdef  ENABLE_FREERTOS
-portBASE_TYPE vUSBSendByte (portCHAR cByte);
-portLONG vUSBRecvByte (portCHAR *cByte, portLONG size, portTickType xTicksToWait);
-void vUSBFlush(void);
+extern BOOL CDC_PutChar (uint8_t data);
+extern portLONG CDC_Recv (portCHAR *cByte, portLONG size, portTickType xTicksToWait);
+extern void CDC_Flush (void);
 #endif/*ENABLE_FREERTOS*/
 
 /* CDC Notification Callback Function */

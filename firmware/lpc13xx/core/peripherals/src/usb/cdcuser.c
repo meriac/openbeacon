@@ -271,21 +271,21 @@ CDC_BulkIn(void)
 }
 
 void
-vUSBFlush(void)
+CDC_Flush (void)
 {
 	if(CDC_DepInEmpty)
 		CDC_BulkIn_Handler (FALSE);
 }
 
-portBASE_TYPE
-vUSBSendByte(portCHAR cByte)
+BOOL
+CDC_PutChar(uint8_t cByte)
 {
-	portBASE_TYPE res;
+	BOOL res;
 
-	res = xQueueSend (g_QueueTxUSB, &cByte, 0);
+	res = xQueueSend (g_QueueTxUSB, &cByte, 0) ? TRUE : FALSE;
 
 	if(cByte == '\n')
-		vUSBFlush();
+		CDC_Flush ();
 
 	return res;
 }
@@ -319,7 +319,7 @@ void CDC_BulkOut(void)
 		taskYIELD ();
 }
 
-portLONG vUSBRecvByte (portCHAR *cByte, portLONG size, portTickType xTicksToWait)
+portLONG CDC_Recv (portCHAR *cByte, portLONG size, portTickType xTicksToWait)
 {
 	portLONG res;
 

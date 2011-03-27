@@ -32,9 +32,9 @@ static BOOL vTasksRunning = FALSE;
 BOOL default_putchar(uint8_t data)
 {
 	if (vTasksRunning)
-		vUSBSendByte(data);
+		CDC_PutChar (data);
 	/* always send out over serial port as well */
-	UARTSendChar(data);
+	UARTSendChar (data);
 
 	return TRUE;
 }
@@ -57,7 +57,7 @@ static void serial_task(void *handle)
 		vTaskDelay(10 / portTICK_RATE_MS);
 		GPIOSetValue(LED_PORT, LED_BIT, LED_OFF);
 
-		while (vUSBRecvByte(&data, sizeof(data), 990))
+		while (CDC_Recv(&data, sizeof(data), 990))
 			UARTSendChar(data);
 	}
 }
