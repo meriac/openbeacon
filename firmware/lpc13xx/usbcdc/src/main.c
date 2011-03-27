@@ -23,16 +23,6 @@
 
 #include <openbeacon.h>
 
-#include "cdcusb.h"
-#include "usbcfg.h"
-#include "usbhw.h"
-#include "usbcore.h"
-#include "cdc.h"
-#include "cdcuser.h"
-#include "gpio.h"
-#include "uart.h"
-#include "debug_printf.h"
-
 static BOOL vTasksRunning = FALSE;
 
 /*

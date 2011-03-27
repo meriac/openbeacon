@@ -15,11 +15,24 @@ typedef uint8_t BOOL;
 /* this definition is linked weakly against UARTSendChar */
 extern BOOL default_putchar (uint8_t data);
 
+#ifdef  ENABLE_FREERTOS
+#include <FreeRTOS.h>
+#include <task.h>
+#include <semphr.h>
+#endif/*ENABLE_FREERTOS*/
+
 #ifdef  __LPC13xx__
 
 #include <LPC13xx.h>
 #include <uart.h>
-#ifndef ENALBLE_USB_FULLFEATURED
+#ifdef ENALBLE_USB_FULLFEATURED
+#include <cdcusb.h>
+#include <usbcfg.h>
+#include <usbhw.h>
+#include <usbcore.h>
+#include <cdc.h>
+#include <cdcuser.h>
+#else /*ENALBLE_USB_FULLFEATURED*/
 #include <usb.h>
 #include <usbdesc.h>
 #include <rom_drivers.h>
@@ -62,12 +75,6 @@ extern BOOL default_putchar (uint8_t data);
 #define DEVICEID_LPC1313 0x2C40102BUL
 #define DEVICEID_LPC1342 0x3D01402BUL
 #define DEVICEID_LPC1343 0x3D00002BUL
-
-#ifdef  ENABLE_FREERTOS
-#include <FreeRTOS.h>
-#include <task.h>
-#include <semphr.h>
-#endif/*ENABLE_FREERTOS*/
 
 #include <debug_printf.h>
 #include <string.h>
