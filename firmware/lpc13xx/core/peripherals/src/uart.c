@@ -8,17 +8,20 @@
  *   2008.08.21  ver 1.00    Preliminary version, first Release
  *
 ******************************************************************************/
-#include "LPC13xx.h"
+#include <openbeacon.h>
 #ifndef UART_DISABLE
 #include "uart.h"
 
-// CodeRed - change for CMSIS 1.3
+/* CodeRed - change for CMSIS 1.3 */
 #define SystemFrequency SystemCoreClock
 
 volatile uint32_t UARTStatus;
 volatile uint8_t UARTTxEmpty = 1;
 volatile uint8_t UARTBuffer[BUFSIZE];
 volatile uint32_t UARTCount = 0;
+
+/* allow to override default putchar output from serial to something else */
+BOOL default_putchar (uint8_t data) ALIAS(UARTSendChar);
 
 /*****************************************************************************
 ** Function name:		UART_IRQHandler
@@ -143,11 +146,12 @@ void UARTInit(uint32_t baudrate, uint8_t rtscts)
     return;
 }
 
-
-void UARTSendChar(uint8_t data)
+BOOL UARTSendChar(uint8_t data)
 {
 	while (!(LPC_UART->LSR & LSR_THRE));
 	LPC_UART->THR = data;
+
+	return TRUE;
 }
 
 /*****************************************************************************

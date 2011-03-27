@@ -1,14 +1,23 @@
 #ifndef __OPENBEACON_H__
 #define __OPENBEACON_H__
 
-#define PACKED __attribute__((packed))
+typedef unsigned int BOOL;
+#define TRUE 1
+#define FALSE 0
 
+#define PACKED __attribute__((packed))
+#define WEAK __attribute__ ((weak))
+#define ALIAS(f) __attribute__ ((weak, alias (#f)))
+
+#include <stdint.h>
 #include <config.h>
+
+/* this definition is linked weakly against UARTSendChar */
+extern BOOL default_putchar (uint8_t data);
 
 #ifdef  __LPC13xx__
 
 #include <LPC13xx.h>
-#include <stdint.h>
 #include <uart.h>
 #ifndef ENALBLE_USB_FULLFEATURED
 #include <usb.h>
@@ -53,9 +62,6 @@
 #define DEVICEID_LPC1313 0x2C40102BUL
 #define DEVICEID_LPC1342 0x3D01402BUL
 #define DEVICEID_LPC1343 0x3D00002BUL
-
-#define TRUE 1
-#define FALSE 0
 
 #ifdef  ENABLE_FREERTOS
 #include <FreeRTOS.h>

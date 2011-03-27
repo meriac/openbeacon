@@ -9,7 +9,7 @@
  * Wirzenius wrote this portably, Torvalds fucked it up :-)
  */
 
-#include <LPC13xx.h>
+#include <openbeacon.h>
 #ifndef UART_DISABLE
 #include <ctype.h>
 #include <uart.h>
@@ -136,18 +136,18 @@ number (long num, unsigned int base, int size, int precision,
   size -= precision;
   if (!(type & (ZEROPAD + LEFT)))
     while (size-- > 0)
-      UARTSendChar(' ');
+      default_putchar(' ');
   if (sign)
-    UARTSendChar(sign);
+    default_putchar(sign);
   if (!(type & LEFT))
     while (size-- > 0)
-      UARTSendChar(c);
+      default_putchar(c);
   while (i < precision--)
-    UARTSendChar('0');
+    default_putchar('0');
   while (i-- > 0)
-    UARTSendChar(tmp[i]);
+    default_putchar(tmp[i]);
   while (size-- > 0)
-    UARTSendChar(' ');
+    default_putchar(' ');
 }
 
 static void
@@ -170,8 +170,8 @@ tiny_vsprintf (const char *fmt, va_list args)
       if (*fmt != '%')
 	{
 	  if(*fmt=='\n')
-	    UARTSendChar('\r');
-	  UARTSendChar(*fmt);
+	    default_putchar('\r');
+	  default_putchar(*fmt);
 	  continue;
 	}
 
@@ -250,10 +250,10 @@ tiny_vsprintf (const char *fmt, va_list args)
 	case 'c':
 	  if (!(flags & LEFT))
 	    while (--field_width > 0)
-	      UARTSendChar(' ');
-	  UARTSendChar((unsigned char) va_arg (args, int));
+	      default_putchar(' ');
+	  default_putchar((unsigned char) va_arg (args, int));
 	  while (--field_width > 0)
-	    UARTSendChar(' ');
+	    default_putchar(' ');
 	  continue;
 
 	case 's':
@@ -265,15 +265,15 @@ tiny_vsprintf (const char *fmt, va_list args)
 
 	  if (!(flags & LEFT))
 	    while (len < field_width--)
-	      UARTSendChar(' ');
+	      default_putchar(' ');
 	  for (i = 0; i < len; ++i)
-	    UARTSendChar(*s++);
+	    default_putchar(*s++);
 	  while (len < field_width--)
-	    UARTSendChar(' ');
+	    default_putchar(' ');
 	  continue;
 
 	case '%':
-	  UARTSendChar('%');
+	  default_putchar('%');
 	  continue;
 
 	  /* integer number formats - set up the flags and "break" */
@@ -294,9 +294,9 @@ tiny_vsprintf (const char *fmt, va_list args)
 	  break;
 
 	default:
-	  UARTSendChar('%');
+	  default_putchar('%');
 	  if (*fmt)
-	    UARTSendChar(*fmt);
+	    default_putchar(*fmt);
 	  else
 	    --fmt;
 	  continue;

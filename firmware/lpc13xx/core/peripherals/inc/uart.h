@@ -47,7 +47,7 @@
 
 extern void UARTInit (uint32_t Baudrate,uint8_t rtscts);
 extern void UART_IRQHandler (void);
-extern void UARTSendChar (uint8_t data);
+extern BOOL UARTSendChar (uint8_t data);
 extern void UARTSend (const uint8_t * BufferPtr, uint32_t Length);
 
 extern volatile uint32_t UARTCount;
