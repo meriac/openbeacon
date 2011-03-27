@@ -34,7 +34,6 @@
 #define USB_VENDOR_ID	0x2366
 #define USB_PROD_ID	0x0003
 #define USB_DEVICE	0x0100
-#define USB_CDC_QUEUE_SIZE 256
 
 /* FreeRTOS configuration */
 #define ENABLE_FREERTOS

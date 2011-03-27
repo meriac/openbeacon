@@ -19,12 +19,6 @@
 #ifndef __CDCUSER_H__
 #define __CDCUSER_H__
 
-/* CDC buffer handling */
-extern int CDC_RdOutBuf (char *buffer, const int *length);
-extern int CDC_WrOutBuf (const char *buffer, int *length);
-extern int CDC_OutBufAvailChar (int *availChar);
-
-
 /* CDC Data In/Out Endpoint Address */
 #define CDC_DEP_IN       0x83
 #define CDC_DEP_OUT      0x03
@@ -51,6 +45,7 @@ extern void CDC_BulkOut (void);
 #ifdef  ENABLE_FREERTOS
 portBASE_TYPE vUSBSendByte (portCHAR cByte);
 portLONG vUSBRecvByte (portCHAR *cByte, portLONG size, portTickType xTicksToWait);
+void vUSBFlush(void);
 #endif/*ENABLE_FREERTOS*/
 
 /* CDC Notification Callback Function */

@@ -481,7 +481,7 @@ USB_ReadEP (uint32_t EPNum, uint8_t * pData)
   
   while(cnt>=sizeof(uint32_t))
   {
-  	*((uint32_t*)pData) = USB_ReadEP_Block ();
+	*((uint32_t __attribute__ ((packed)) *) pData) = USB_ReadEP_Block ();
   	pData += sizeof(uint32_t);
   	cnt-=sizeof(uint32_t);
   }
@@ -539,7 +539,7 @@ USB_WriteEP (uint32_t EPNum, uint8_t * pData, uint32_t cnt)
   for (n = 0; n < (cnt + 3) / 4; n++)
     {
 	  USB_WriteEP_Block (*((uint32_t __attribute__ ((packed)) *) pData));
-      pData += 4;
+      pData += sizeof(uint32_t);
     }
 
   USB_WriteEP_Terminate (EPNum);

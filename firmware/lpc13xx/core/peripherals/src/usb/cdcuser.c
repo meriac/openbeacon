@@ -26,10 +26,10 @@
 #include "cdc.h"
 #include "cdcuser.h"
 
-CDC_LINE_CODING CDC_LineCoding = { 115200, 0, 0, 8 };
+static CDC_LINE_CODING CDC_LineCoding = { 115200, 0, 0, 8 };
 
-unsigned short CDC_SerialState = 0x0000;
-BOOL CDC_DepInEmpty;	// Data IN EP is empty
+static unsigned short CDC_SerialState = 0x0000;
+static BOOL CDC_DepInEmpty;	// Data IN EP is empty
 
 #ifdef  ENABLE_FREERTOS
 static xQueueHandle g_QueueRxUSB = NULL;
@@ -47,12 +47,13 @@ CDC_Init (void)
 {
   USBIOClkConfig();
 
+  CDC_DepInEmpty = TRUE;
   CDC_SerialState = CDC_GetSerialState ();
 
 #ifdef  ENABLE_FREERTOS
   /* Create the queues used to hold Rx and Tx characters. */
-  g_QueueRxUSB = xQueueCreate (USB_CDC_QUEUE_SIZE, sizeof (uint8_t));
-  g_QueueTxUSB = xQueueCreate (USB_CDC_QUEUE_SIZE, sizeof (uint8_t));
+  g_QueueRxUSB = xQueueCreate (USB_CDC_BUFSIZE*2, sizeof (uint8_t));
+  g_QueueTxUSB = xQueueCreate (USB_CDC_BUFSIZE*2, sizeof (uint8_t));
 #endif/*ENABLE_FREERTOS*/
 }
 
@@ -205,17 +206,25 @@ CDC_SendBreak (unsigned short wDurationOfBreak)
 
 #ifdef  ENABLE_FREERTOS
 /*----------------------------------------------------------------------------
-  CDC_BulkIn call on DataIn Request
-  Parameters:   none
+  CDC_BulkIn_Handler call on DataIn Request
+  Parameters:   from_isr - set true if called from ISR
   Return Value: none
  *---------------------------------------------------------------------------*/
-void CDC_BulkIn(void)
+static void
+CDC_BulkIn_Handler(BOOL from_isr)
 {
 	uint8_t* p;
 	uint32_t data, bs;
 	int count;
+	portBASE_TYPE xTaskWoken = pdFALSE;
 
-	count = uxQueueMessagesWaiting(g_QueueTxUSB);
+	if(!from_isr)
+		vPortEnterCritical ();
+
+	count = uxQueueMessagesWaitingFromISR(g_QueueTxUSB);
+	if(count>USB_CDC_BUFSIZE)
+		count = USB_CDC_BUFSIZE;
+
 	if(!count)
 		CDC_DepInEmpty = 1;
 	else
@@ -223,33 +232,60 @@ void CDC_BulkIn(void)
 		USB_WriteEP_Count (CDC_DEP_IN, count);
 		while(count>0)
 		{
-			if(count>=(int)sizeof(data))
+			if(count>(int)sizeof(data))
+			{
 				bs = sizeof(data);
+				count -= sizeof(data);
+			}
 			else
 			{
 				bs = count;
-				data = 0;
+				data = count = 0;
 			}
-
 			p = (uint8_t*) &data;
 			while(bs--)
-			{
-				xQueueReceive (g_QueueTxUSB,p++, 0);
-				count--;
-			}
+				xQueueReceiveFromISR (g_QueueTxUSB,p++, &xTaskWoken);
+
 			USB_WriteEP_Block (data);
 
 		}
 		USB_WriteEP_Terminate (CDC_DEP_IN);
+
+		if(from_isr && xTaskWoken)
+			taskYIELD ();
 	}
+
+	if(!from_isr)
+		vPortExitCritical ();
 }
 
-portBASE_TYPE vUSBSendByte(portCHAR cByte)
+/*----------------------------------------------------------------------------
+  CDC_BulkIn call on DataIn Request
+  Parameters:   none
+  Return Value: none
+ *---------------------------------------------------------------------------*/
+void
+CDC_BulkIn(void)
+{
+	CDC_BulkIn_Handler(TRUE);
+}
+
+void
+vUSBFlush(void)
+{
+	if(CDC_DepInEmpty)
+		CDC_BulkIn_Handler (FALSE);
+}
+
+portBASE_TYPE
+vUSBSendByte(portCHAR cByte)
 {
 	portBASE_TYPE res;
 
-	if ((res = xQueueSend (g_QueueTxUSB, &cByte, 0))>0)
-		CDC_BulkIn();
+	res = xQueueSend (g_QueueTxUSB, &cByte, 0);
+
+	if(cByte == '\n')
+		vUSBFlush();
 
 	return res;
 }
@@ -264,20 +300,23 @@ void CDC_BulkOut(void)
 	int count, bs;
 	uint32_t data;
 	uint8_t* p;
+	portBASE_TYPE xTaskWoken = pdFALSE;
 
 	count = USB_ReadEP_Count(CDC_DEP_OUT);
+
 	while (count > 0)
 	{
 		data = USB_ReadEP_Block();
-		bs = count > 4 ? 4 : count;
+		bs = count > (int)sizeof(data) ? (int)sizeof(data) : count;
+		count -= bs;
 		p = (uint8_t*) &data;
 		while (bs--)
-		{
-			xQueueSend (g_QueueRxUSB,p++, 0);
-			count--;
-		}
+			xQueueSendFromISR (g_QueueRxUSB,p++, &xTaskWoken);
 	}
 	USB_ReadEP_Terminate(CDC_DEP_OUT);
+
+	if(xTaskWoken)
+		taskYIELD ();
 }
 
 portLONG vUSBRecvByte (portCHAR *cByte, portLONG size, portTickType xTicksToWait)
