@@ -421,6 +421,48 @@ USB_ClearEPBuf (uint32_t EPNum)
 
 
 /*
+ *  Read USB Endpoint Size
+ *    Parameters:      EPNum: Endpoint Number
+ *                       EPNum.0..3: Address
+ *                       EPNum.7:    Dir
+ *    Return Value:    Number of bytes read
+ */
+
+uint32_t
+USB_ReadEP_Count (uint32_t EPNum)
+{
+  uint32_t cnt;
+
+  LPC_USB->Ctrl = ((EPNum & 0x0F) << 2) | CTRL_RD_EN;
+  /* 3 clock cycles to fetch the packet length from RAM. */
+  delay (5);
+
+  while(((cnt = LPC_USB->RxPLen) & PKT_DV) == 0);
+
+  return cnt & PKT_LNGTH_MASK;
+}
+
+
+/*
+ *  Read USB Endpoint Data: Finalize Read 
+ *    Parameters:      EPNum: Endpoint Number
+ *                       EPNum.0..3: Address
+ *                       EPNum.7:    Dir
+ *    Return Value:    Number of bytes read
+ *
+ *
+ */
+
+void
+USB_ReadEP_Terminate (uint32_t EPNum)
+{
+  LPC_USB->Ctrl = 0;
+
+  WrCmdEP (EPNum, CMD_CLR_BUF);
+}
+
+
+/*
  *  Read USB Endpoint Data
  *    Parameters:      EPNum: Endpoint Number
  *                       EPNum.0..3: Address
@@ -432,33 +474,47 @@ USB_ClearEPBuf (uint32_t EPNum)
 uint32_t
 USB_ReadEP (uint32_t EPNum, uint8_t * pData)
 {
-  uint32_t cnt, n;
+  uint32_t res, cnt, data;
+  uint8_t* p;
 
-  LPC_USB->Ctrl = ((EPNum & 0x0F) << 2) | CTRL_RD_EN;
+  res = cnt = USB_ReadEP_Count (EPNum);
+  
+  while(cnt>=sizeof(uint32_t))
+  {
+  	*((uint32_t*)pData) = USB_ReadEP_Block ();
+  	pData += sizeof(uint32_t);
+  }
+  
+  if(cnt>0)
+  {
+  	data = USB_ReadEP_Block ();
+  	p = (uint8_t*)&data;
+  	while(cnt--)
+  		*pData++ = *p++;
+  }
+  
+  USB_ReadEP_Terminate (EPNum);
+
+  return res;
+}
+
+
+void
+USB_WriteEP_Count (uint32_t EPNum, uint32_t cnt)
+{
+  LPC_USB->Ctrl = ((EPNum & 0x0F) << 2) | CTRL_WR_EN;
   /* 3 clock cycles to fetch the packet length from RAM. */
   delay (5);
+  LPC_USB->TxPLen = cnt;
+}
 
-  do
-    {
-      cnt = LPC_USB->RxPLen;
-    }
-  while ((cnt & PKT_DV) == 0);
-  cnt &= PKT_LNGTH_MASK;
 
-  for (n = 0; n < (cnt + 3) / 4; n++)
-    {
-      *((uint32_t __attribute__ ((packed)) *) pData) = LPC_USB->RxData;
-      pData += 4;
-    }
-
+void
+USB_WriteEP_Terminate (uint32_t EPNum)
+{
   LPC_USB->Ctrl = 0;
 
-  if ((EPNum & 0x80) != 0x04)
-    {				/* Non-Isochronous Endpoint */
-      WrCmdEP (EPNum, CMD_CLR_BUF);
-    }
-
-  return (cnt);
+  WrCmdEP (EPNum, CMD_VALID_BUF);
 }
 
 
@@ -477,22 +533,17 @@ USB_WriteEP (uint32_t EPNum, uint8_t * pData, uint32_t cnt)
 {
   uint32_t n;
 
-  LPC_USB->Ctrl = ((EPNum & 0x0F) << 2) | CTRL_WR_EN;
-  /* 3 clock cycles to fetch the packet length from RAM. */
-  delay (5);
-  LPC_USB->TxPLen = cnt;
+  USB_WriteEP_Count (EPNum, cnt);
 
   for (n = 0; n < (cnt + 3) / 4; n++)
     {
-      LPC_USB->TxData = *((uint32_t __attribute__ ((packed)) *) pData);
+	  USB_WriteEP_Block (*((uint32_t __attribute__ ((packed)) *) pData));
       pData += 4;
     }
 
-  LPC_USB->Ctrl = 0;
+  USB_WriteEP_Terminate (EPNum);
 
-  WrCmdEP (EPNum, CMD_VALID_BUF);
-
-  return (cnt);
+  return cnt;
 }
 
 /*

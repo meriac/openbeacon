@@ -54,9 +54,42 @@ extern void USB_SetStallEP (uint32_t EPNum);
 extern void USB_ClrStallEP (uint32_t EPNum);
 extern void USB_ClearEPBuf (uint32_t EPNum);
 extern uint32_t USB_ReadEP (uint32_t EPNum, uint8_t * pData);
+extern void USB_ReadEP_Terminate (uint32_t EPNum);
+extern uint32_t USB_ReadEP_Count (uint32_t EPNum);
 extern uint32_t USB_WriteEP (uint32_t EPNum, uint8_t * pData, uint32_t cnt);
+extern void USB_WriteEP_Terminate (uint32_t EPNum);
+extern void USB_WriteEP_Count (uint32_t EPNum, uint32_t cnt);
 extern uint32_t USB_GetFrame (void);
 extern void USB_IRQHandler (void);
 
+/*
+ *  Read USB Endpoint Data
+ *    Parameters:      none
+ *    Return Value:    current block data
+ *
+ *  Use USB_ReadEPCount to switch Endpoint and get block count
+ *
+ */
+
+static inline uint32_t
+USB_ReadEP_Block (void)
+{
+    return LPC_USB->RxData;
+}
+
+/*
+ *  Write USB Endpoint Data
+ *    Parameters:      data: transmit block data
+ *    Return Value:    none
+ *
+ *  Use USB_ReadEPCount to switch Endpoint and get block count
+ *
+ */
+
+static inline void
+USB_WriteEP_Block (uint32_t data)
+{
+	LPC_USB->TxData = data;
+}
 
 #endif /* __USBHW_H__ */
