@@ -483,6 +483,7 @@ USB_ReadEP (uint32_t EPNum, uint8_t * pData)
   {
   	*((uint32_t*)pData) = USB_ReadEP_Block ();
   	pData += sizeof(uint32_t);
+  	cnt-=sizeof(uint32_t);
   }
   
   if(cnt>0)

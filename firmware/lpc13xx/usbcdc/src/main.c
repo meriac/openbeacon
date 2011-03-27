@@ -1,23 +1,28 @@
-/*----------------------------------------------------------------------------
- *      Name:    vcomdemo.c
- *      Purpose: USB virtual COM port Demo
- *      Version: V1.02
- *----------------------------------------------------------------------------
- *      This software is supplied "AS IS" without any warranties, express,
- *      implied or statutory, including but not limited to the implied
- *      warranties of fitness for purpose, satisfactory quality and
- *      noninfringement. Keil extends you a royalty-free right to reproduce
- *      and distribute executable files created using this software for use
- *      on NXP Semiconductors LPC microcontroller devices only. Nothing else 
- *      gives you the right to use this software.
+/***************************************************************
  *
- * Copyright (c) 2009 Keil - An ARM Company. All rights reserved.
- *---------------------------------------------------------------------------*/
+ * OpenBeacon.org - USB CDC + FreeRTOS Pipes Demo
+ *
+ * Copyright 2011 Milosch Meriac <meriac@openbeacon.de>
+ *
+ ***************************************************************
 
-#include <LPC13xx.h>
-#include <stdint.h>
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; version 2.
 
-#include "config.h"
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License along
+ with this program; if not, write to the Free Software Foundation, Inc.,
+ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ */
+
+#include <openbeacon.h>
+
 #include "cdcusb.h"
 #include "usbcfg.h"
 #include "usbhw.h"
@@ -27,120 +32,81 @@
 #include "gpio.h"
 #include "uart.h"
 #include "debug_printf.h"
-#include "vcomdemo.h"
 
-#define     EN_TIMER32_1    (1<<10)
-#define     EN_IOCON        (1<<16)
-#define     EN_USBREG       (1<<14)
+static BOOL vTasksRunning = FALSE;
 
-/*----------------------------------------------------------------------------
- Initializes the VCOM port.
- Call this function before using VCOM_putchar or VCOM_getchar
- *---------------------------------------------------------------------------*/
-void
-VCOM_Init (void)
+/*
+ * overwrite default_putchar with USB CDC ACM
+ * output to enable USB support for debug_printf
+ */
+BOOL default_putchar(uint8_t data)
 {
-  CDC_Init ();
+	if (vTasksRunning)
+		vUSBSendByte(data);
+	/* always send out over serial port as well */
+	UARTSendChar(data);
+
+	return TRUE;
 }
 
-
-/*----------------------------------------------------------------------------
-  Reads character from serial port buffer and writes to USB buffer
- *---------------------------------------------------------------------------*/
-void
-VCOM_Serial2Usb (void)
+static void serial_task(void *handle)
 {
-  int numBytesRead;
+	int i;
+	(void) handle;
+	portCHAR data;
 
-  if (UARTCount > 0)
-    {
-      if (CDC_DepInEmpty)
+	vTasksRunning = TRUE;
+
+	i = 0;
+	for (;;)
 	{
-	  numBytesRead =
-	    (UARTCount < USB_CDC_BUFSIZE) ? UARTCount : USB_CDC_BUFSIZE;
+		debug_printf("%04i: Hello Task! (%04i bytes free heap memory)\n", i++,
+				xPortGetFreeHeapSize());
 
-	  CDC_DepInEmpty = 0;
-	  USB_WriteEP (CDC_DEP_IN, (uint8_t *) & UARTBuffer, numBytesRead);
-	  UARTCount = 0;
+		GPIOSetValue(LED_PORT, LED_BIT, LED_ON);
+		vTaskDelay(10 / portTICK_RATE_MS);
+		GPIOSetValue(LED_PORT, LED_BIT, LED_OFF);
+
+		while (vUSBRecvByte(&data, sizeof(data), 990))
+			UARTSendChar(data);
 	}
-    }
 }
 
-/*----------------------------------------------------------------------------
-  Reads character from USB buffer and writes to serial port buffer
- *---------------------------------------------------------------------------*/
-void
-VCOM_Usb2Serial (void)
+int main(void)
 {
-  static char serBuf[32];
-  int numBytesToRead, numBytesRead, numAvailByte;
+	/* Enable CT32B1 Timer, IOCON, and USB */
+	LPC_SYSCON->SYSAHBCLKCTRL |= (EN_CT32B1 | EN_USB_REG | EN_IOCON);
 
-  CDC_OutBufAvailChar (&numAvailByte);
-  if (numAvailByte > 0)
-    {
-      numBytesToRead = numAvailByte > 32 ? 32 : numAvailByte;
-      numBytesRead = CDC_RdOutBuf (&serBuf[0], &numBytesToRead);
-      UARTSend ((uint8_t*)&serBuf, numBytesRead);
-    }
+	/* Initialize GPIO */
+	GPIOInit();
+	/* Set LED port pin to output */
+	GPIOSetDir(LED_PORT, LED_BIT, 1);
+	GPIOSetValue(LED_PORT, LED_BIT, 0);
+
+	/* CDC Initialization */
+	CDC_Init();
+	/* USB Initialization */
+	USB_Init();
+	/* Connect to USB port */
+	USB_Connect(1);
+
+	/* Update System Core Clock Value */
+	SystemCoreClockUpdate();
+
+	/* NVIC is installed inside UARTInit file. */
+	UARTInit(115200, 0);
+
+	/* the following text is printed on the serial port as vTasksRunning
+	 * is not yet set to TRUE in serial_task - which will redirect
+	 * debug output to the CDC ACM USB serial device.
+	 */
+	debug_printf("Hello World!\n");
+
+	/* Create CDC ACM task */
+	xTaskCreate(serial_task, (const signed char*) "Serial", TASK_SERIAL_STACK_SIZE, NULL, TASK_SERIAL_PRIORITY, NULL);
+
+	/* Start the tasks running. */
+	vTaskStartScheduler();
+
+	return 0;
 }
-
-/*----------------------------------------------------------------------------
-  checks the serial state and initiates notification
- *---------------------------------------------------------------------------*/
-void
-VCOM_CheckSerialState (void)
-{
-  unsigned short temp;
-  static unsigned short serialState;
-
-  temp = CDC_GetSerialState ();
-  if (serialState != temp)
-    {
-      serialState = temp;
-      CDC_NotificationIn ();	// send SERIAL_STATE notification
-    }
-}
-
-/*----------------------------------------------------------------------------
-  Main Program
- *---------------------------------------------------------------------------*/
-int
-main (void)
-{
-  volatile int i;
-
-  /* Basic chip initialization is taken care of in SystemInit() called
-   * from the startup code. SystemInit() and chip settings are defined
-   * in the CMSIS system_<part family>.c file.
-   */
-
-  /* Enable Timer32_1, IOCON, and USB blocks */
-  LPC_SYSCON->SYSAHBCLKCTRL |= (EN_TIMER32_1 | EN_IOCON | EN_USBREG);
-
-  /* Initialize GPIO (sets up clock) */
-  GPIOInit ();
-  /* Set LED port pin to output */
-  GPIOSetDir (LED_PORT, LED_BIT, 1);
-  GPIOSetValue (LED_PORT, LED_BIT, 0);
-
-  USBIOClkConfig ();
-  VCOM_Init ();			// VCOM Initialization
-  USB_Init ();			// USB Initialization
-  USB_Connect (1);		// USB Connect
-
-  /* NVIC is installed inside UARTInit file. */
-  SystemCoreClockUpdate ();
-  UARTInit (115200, 0);
-  debug_printf("Hello World!\n");
-
-  i=0;
-  while (1)
-    {				// Loop forever
-      VCOM_Serial2Usb ();	// read serial port and initiate USB event
-      VCOM_CheckSerialState ();
-      VCOM_Usb2Serial ();
-				// toggle LED
-      GPIOSetValue (LED_PORT, LED_BIT, i++ & 1);
-      i++;
-    }				// end while
-}				// end main ()

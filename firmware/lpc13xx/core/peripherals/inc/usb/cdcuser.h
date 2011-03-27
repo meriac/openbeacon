@@ -47,6 +47,12 @@ extern uint32_t CDC_SendBreak (unsigned short wDurationOfBreak);
 extern void CDC_BulkIn (void);
 extern void CDC_BulkOut (void);
 
+/* FreeRTOS pipe management for CDC ACM */
+#ifdef  ENABLE_FREERTOS
+portBASE_TYPE vUSBSendByte (portCHAR cByte);
+portLONG vUSBRecvByte (portCHAR *cByte, portLONG size, portTickType xTicksToWait);
+#endif/*ENABLE_FREERTOS*/
+
 /* CDC Notification Callback Function */
 extern void CDC_NotificationIn (void);
 
@@ -55,8 +61,5 @@ extern void CDC_Init (void);
 
 /* CDC prepare the SERAIAL_STATE */
 extern unsigned short CDC_GetSerialState (void);
-
-/* flow control */
-extern unsigned short CDC_DepInEmpty;	// DataEndPoint IN empty
 
 #endif /* __CDCUSER_H__ */

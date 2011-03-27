@@ -1,48 +1,44 @@
-/*****************************************************************************
- *   config.h:  config file for usbcdc example for NXP LPC13xx Family
- *   Microprocessors
+/***************************************************************
  *
- *   Copyright(C) 2008, NXP Semiconductor
- *   All rights reserved.
+ * OpenBeacon.org - config file
  *
- *   History
- *   2008.07.19  ver 1.00    Preliminary version, first Release
+ * Copyright 2010 Milosch Meriac <meriac@openbeacon.de>
  *
-******************************************************************************/
+ ***************************************************************
 
-/*
-Overview:
-	This example shows how to use the USB driver to implement a CDC class USB peripheral.
-	To run this example, you must attach a USB cable to the board. See
-	the "Getting Started Guide" appendix for details.
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; version 2.
 
-How to use:
-   Click the debug toolbar button.
-   Click the go button.
-   Plug the LPCXpresso's target side into a PC using a USB cable retrofit
-   or a 3rd party base board.
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
 
-   * You should be able to see a new COM port on your PC.
-*/
+ You should have received a copy of the GNU General Public License along
+ with this program; if not, write to the Free Software Foundation, Inc.,
+ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-#define NXP_VID		  0x1FC9
-#define MY_VID	  	  0x????
+ */
 
-/* USB device stack enabled */
+#ifndef __CONFIG_H__
+#define __CONFIG_H__
+
+#define LED_PORT 1	/* Port for led                      */
+#define LED_BIT 9	/* Bit on port for led               */
+#define LED_ON 1	/* Level to set port to turn on led  */
+#define LED_OFF 0	/* Level to set port to turn off led */
+
+/* USB device settings */
 #define ENALBLE_USB_FULLFEATURED
-#define USB_VENDOR_ID NXP_VID	// Vendor ID
-#define USB_PROD_ID   0x0003	// Product ID
-#define USB_DEVICE    0x0100	// Device ID
+#define USB_VENDOR_ID	0x2366
+#define USB_PROD_ID	0x0003
+#define USB_DEVICE	0x0100
+#define USB_CDC_QUEUE_SIZE 256
 
-#define LED_PORT 1		// Port for led
-#define LED_BIT 9		// Bit on port for led
+/* FreeRTOS configuration */
+#define ENABLE_FREERTOS
+#define TASK_SERIAL_STACK_SIZE 64
+#define TASK_SERIAL_PRIORITY (tskIDLE_PRIORITY + 2)
 
-#define TRUE 1
-#define FALSE 0
-#ifndef NULL
-#define NULL 0
-#endif/*NULL*/
-
-/*********************************************************************************
-**                            End Of File
-*********************************************************************************/
+#endif/*__CONFIG_H__*/

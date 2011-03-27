@@ -29,8 +29,11 @@
 #define LED_ON 1	/* Level to set port to turn on led  */
 #define LED_OFF 0	/* Level to set port to turn off led */
 
-#define USB_VENDOR_ID 0x2366
-#define USB_PROD_ID 0x0003
+/* USB device settings */
+#define ENALBLE_USB_FULLFEATURED
+#define USB_VENDOR_ID	0x2366
+#define USB_PROD_ID	0x0003
+#define USB_DEVICE	0x0100
 
 /* PN532 pin definitions */
 #define PN532_RESET_PORT 1

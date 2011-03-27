@@ -1,16 +1,16 @@
 #ifndef __OPENBEACON_H__
 #define __OPENBEACON_H__
 
-typedef unsigned int BOOL;
-#define TRUE 1
-#define FALSE 0
+#include <stdint.h>
+#include <config.h>
 
 #define PACKED __attribute__((packed))
 #define WEAK __attribute__ ((weak))
 #define ALIAS(f) __attribute__ ((weak, alias (#f)))
 
-#include <stdint.h>
-#include <config.h>
+typedef uint8_t BOOL;
+#define TRUE 1
+#define FALSE 0
 
 /* this definition is linked weakly against UARTSendChar */
 extern BOOL default_putchar (uint8_t data);

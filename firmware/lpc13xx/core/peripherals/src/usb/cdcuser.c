@@ -29,7 +29,12 @@
 CDC_LINE_CODING CDC_LineCoding = { 115200, 0, 0, 8 };
 
 unsigned short CDC_SerialState = 0x0000;
-unsigned short CDC_DepInEmpty = 1;	// Data IN EP is empty
+BOOL CDC_DepInEmpty;	// Data IN EP is empty
+
+#ifdef  ENABLE_FREERTOS
+static xQueueHandle g_QueueRxUSB = NULL;
+static xQueueHandle g_QueueTxUSB = NULL;
+#endif/*ENABLE_FREERTOS*/
 
 /*----------------------------------------------------------------------------
   CDC Initialisation
@@ -40,8 +45,15 @@ unsigned short CDC_DepInEmpty = 1;	// Data IN EP is empty
 void
 CDC_Init (void)
 {
-  CDC_DepInEmpty = 1;
+  USBIOClkConfig();
+
   CDC_SerialState = CDC_GetSerialState ();
+
+#ifdef  ENABLE_FREERTOS
+  /* Create the queues used to hold Rx and Tx characters. */
+  g_QueueRxUSB = xQueueCreate (USB_CDC_QUEUE_SIZE, sizeof (uint8_t));
+  g_QueueTxUSB = xQueueCreate (USB_CDC_QUEUE_SIZE, sizeof (uint8_t));
+#endif/*ENABLE_FREERTOS*/
 }
 
 
@@ -189,6 +201,99 @@ CDC_SendBreak (unsigned short wDurationOfBreak)
   /* ... add code to handle request */
   return (TRUE);
 }
+
+
+#ifdef  ENABLE_FREERTOS
+/*----------------------------------------------------------------------------
+  CDC_BulkIn call on DataIn Request
+  Parameters:   none
+  Return Value: none
+ *---------------------------------------------------------------------------*/
+void CDC_BulkIn(void)
+{
+	uint8_t* p;
+	uint32_t data, bs;
+	int count;
+
+	count = uxQueueMessagesWaiting(g_QueueTxUSB);
+	if(!count)
+		CDC_DepInEmpty = 1;
+	else
+	{
+		USB_WriteEP_Count (CDC_DEP_IN, count);
+		while(count>0)
+		{
+			if(count>=(int)sizeof(data))
+				bs = sizeof(data);
+			else
+			{
+				bs = count;
+				data = 0;
+			}
+
+			p = (uint8_t*) &data;
+			while(bs--)
+			{
+				xQueueReceive (g_QueueTxUSB,p++, 0);
+				count--;
+			}
+			USB_WriteEP_Block (data);
+
+		}
+		USB_WriteEP_Terminate (CDC_DEP_IN);
+	}
+}
+
+portBASE_TYPE vUSBSendByte(portCHAR cByte)
+{
+	portBASE_TYPE res;
+
+	if ((res = xQueueSend (g_QueueTxUSB, &cByte, 0))>0)
+		CDC_BulkIn();
+
+	return res;
+}
+
+/*----------------------------------------------------------------------------
+  CDC_BulkOut call on DataOut Request
+  Parameters:   none
+  Return Value: none
+ *---------------------------------------------------------------------------*/
+void CDC_BulkOut(void)
+{
+	int count, bs;
+	uint32_t data;
+	uint8_t* p;
+
+	count = USB_ReadEP_Count(CDC_DEP_OUT);
+	while (count > 0)
+	{
+		data = USB_ReadEP_Block();
+		bs = count > 4 ? 4 : count;
+		p = (uint8_t*) &data;
+		while (bs--)
+		{
+			xQueueSend (g_QueueRxUSB,p++, 0);
+			count--;
+		}
+	}
+	USB_ReadEP_Terminate(CDC_DEP_OUT);
+}
+
+portLONG vUSBRecvByte (portCHAR *cByte, portLONG size, portTickType xTicksToWait)
+{
+	portLONG res;
+
+	if (size <= 0 || !cByte || !g_QueueRxUSB)
+		return 0;
+
+	res = 0;
+	while (size-- && xQueueReceive(g_QueueRxUSB, cByte++, xTicksToWait))
+		res++;
+
+	return res;
+}
+#endif/*ENABLE_FREERTOS*/
 
 
 /*----------------------------------------------------------------------------
