@@ -226,7 +226,7 @@ int samba_init( void )
       printf( "unknown sam7se flash size %d\n", samba_chip_info.nvpsiz );
       return -1;
   }
-  } else if( samba_chip_info.arch == AT91_ARCH_AT91SAM7Xxx ) {
+  } else if( (samba_chip_info.arch == AT91_ARCH_AT91SAM7Xxx) || (samba_chip_info.arch == AT91_ARCH_AT91SAM7XC) ) {
 
     switch( samba_chip_info.nvpsiz ) {
     case 128*K:

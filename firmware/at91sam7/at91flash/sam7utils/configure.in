@@ -22,8 +22,8 @@ case "${host}" in
        IOTYPE="win32"
      ;;	    
      * )
-       AC_CHECK_LIB(usb,usb_init,IOTYPE="libusb";LIBS="$LIBS -lusb",IOTYPE="posix")
-       
+#      AC_CHECK_LIB(usb,usb_init,IOTYPE="libusb";LIBS="$LIBS -lusb",IOTYPE="posix")
+       IOTYPE="posix"
      ;;
 esac
 
