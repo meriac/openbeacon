@@ -2,6 +2,7 @@
 #define __OPENBEACON_H__
 
 #include <stdint.h>
+#include <stdlib.h>
 #include <config.h>
 
 #define PACKED __attribute__((packed))
@@ -38,6 +39,20 @@ extern BOOL default_putchar (uint8_t data);
 #include <rom_drivers.h>
 #endif/*ENALBLE_USB_FULLFEATURED*/
 #include <gpio.h>
+
+/* PDSLEEPCFG, PDAWAKECFG, PDRUNCFG */
+#define IRCOUT_PD           (1<< 0)
+#define IRC_PD              (1<< 1)
+#define FLASH_PD            (1<< 2)
+#define BOD_PD              (1<< 3)
+#define ADC_PD              (1<< 4)
+#define SYSOSC_PD           (1<< 5)
+#define WDTOSC_PD           (1<< 6)
+#define SYSPLL_PD           (1<< 7)
+#define USBPLL_PD           (1<< 8)
+#define RESERVED1_PD        (1<< 9)
+#define USBPAD_PD           (1<<10)
+#define RESERVED2_PD        (1<<11)
 
 /* LPC_SYSCON->SYSAHBCLKCTRL bits */
 #define EN_SYS              (1<< 0)
