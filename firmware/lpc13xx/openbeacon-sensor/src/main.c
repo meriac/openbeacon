@@ -23,11 +23,13 @@
 #include <openbeacon.h>
 #include "3d_acceleration.h"
 #include "sound.h"
+#include "xxtea.h"
 #include "pmu.h"
 #include "iap.h"
 #include "spi.h"
 #include "nRF_API.h"
 #include "nRF_CMD.h"
+#include "openbeacon-proto.h"
 
 uint32_t g_sysahbclkctrl;
 
@@ -45,15 +47,21 @@ typedef struct {
 static uint16_t tag_id;
 static TDeviceUID device_uuid;
 
+/* OpenBeacon packet */
+static TBeaconEnvelope g_Beacon;
+
+/* Default TEA encryption key of the tag - MUST CHANGE ! */
+static const uint32_t xxtea_key[4] = { 0x00112233, 0x44556677, 0x8899AABB, 0xCCDDEEFF };
+
 /* set nRF24L01 broadcast mac */
 static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 1, 2, 3, 2, 1 };
-
-/* OpenBeacon packet */
-static char g_Beacon[16];
 
 static void
 nRF_tx (uint8_t power)
 {
+  /* encrypt data */
+  xxtea_encode(g_Beacon.block, XXTEA_BLOCK_COUNT, xxtea_key);
+
   /* set TX power */
   nRFAPI_SetTxPower (power & 0x3);
 
@@ -84,24 +92,6 @@ nrf_off (void)
 
 }
 
-void
-int2str (uint32_t value, uint8_t digits, uint8_t base, char* string)
-{
-  uint8_t digit;
-  while(digits)
-  {
-    digit = value % base;
-    value/= base;
-
-    if(digit<=9)
-	digit+='0';
-    else
-	digit='A'+(digit-0xA);
-
-    string[--digits]=digit;
-  }
-}
-
 int
 main (void)
 {
@@ -110,6 +100,7 @@ main (void)
   TFifoEntry fifo_buf[FIFO_DEPTH];
   int fifo_pos;
   TFifoEntry *fifo;
+  uint32_t seq;
 
   volatile int i;
   int x, y, z, firstrun, tamper, moving;
@@ -262,14 +253,28 @@ main (void)
   bzero(&fifo_buf,sizeof(fifo_buf));
   bzero(&acc_lowpass,sizeof(acc_lowpass));
 
-  firstrun = tamper = moving = 0;
+  seq = firstrun = tamper = moving = 0;
   while (1)
     {
       /* read acceleration sensor */
+      nRFAPI_SetRxMode(0);
       acc_power (1);
       pmu_sleep_ms (20);
       acc_xyz_read (&x, &y, &z);
       acc_power (0);
+
+      /* prepare packet */
+      bzero (&g_Beacon, sizeof (g_Beacon));
+      g_Beacon.pkt.proto = RFBPROTO_BEACONTRACKER;
+      g_Beacon.pkt.oid = htons (tag_id);
+      g_Beacon.pkt.p.tracker.strength = 5;
+      g_Beacon.pkt.p.tracker.seq = htonl (seq++);
+      g_Beacon.pkt.p.tracker.reserved = moving;
+      g_Beacon.pkt.crc = htons(crc16 (g_Beacon.byte, sizeof (g_Beacon) - sizeof (g_Beacon.pkt.crc)));
+      /* transmit packet */
+      nRF_tx (g_Beacon.pkt.p.tracker.strength);
+      /* powering down */
+      nRFAPI_PowerDown ();
 
       /* add new accelerometer values to lowpass */
       fifo = &fifo_buf[fifo_pos];
@@ -335,28 +340,6 @@ main (void)
 	  pmu_sleep_ms (5000);
 	  moving = 0;
 	}
-
-      /* power up */
-      nRFAPI_SetRxMode(0);
-      /* wait for ocillator clock to settle */
-      pmu_wait_ms (10);
-      /* prepare packet */
-      bzero (&g_Beacon, sizeof (g_Beacon));
-      g_Beacon[ 0]='T';
-      g_Beacon[ 1]='{';
-      int2str (tag_id,6,10,&g_Beacon[2]);
-      g_Beacon[ 7]=',';
-      int2str (moving,2,10,&g_Beacon[8]);
-      g_Beacon[10]=',';
-      g_Beacon[11]='P';
-      g_Beacon[12]='I';
-      g_Beacon[13]='N';
-      g_Beacon[14]='G';
-      g_Beacon[15]='}';
-      /* transmit packet */
-      nRF_tx (5);
-      /* powering down */
-      nRFAPI_PowerDown ();
     }
 
   return 0;
