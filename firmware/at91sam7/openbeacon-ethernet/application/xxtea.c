@@ -34,7 +34,6 @@
 #include "xxtea.h"
 #include "proto.h"
 
-//const long tea_key[4] = { 0xab94ec75, 0x160869c5, 0xfbf908da, 0x60bedc73 };
 const long tea_key[4] = { 0x00112233, 0x44556677, 0x8899AABB, 0xCCDDEEFF };
 
 unsigned long z, y, sum, tmp, mx;
