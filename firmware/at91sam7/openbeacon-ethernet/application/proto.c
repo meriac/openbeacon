@@ -54,6 +54,18 @@ static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] =
 
 TBeaconEnvelopeLog g_Beacon;
 
+typedef struct
+{
+  portTickType time;
+  u_int32_t id;
+} TVisibleTagList;
+
+/**********************************************************************/
+#define MAX_TAGS 32
+#define MAX_TAG_TRACKING_TIME 20
+static TVisibleTagList g_rf_tag_list[MAX_TAGS];
+/**********************************************************************/
+
 /**********************************************************************/
 void
 PtSetDebugLevel (int Level)
@@ -152,12 +164,29 @@ swaplong (unsigned long src)
 }
 
 /**********************************************************************/
+static char
+put_hex_char (u_int8_t hexnum)
+{
+  return (hexnum <= 9) ? hexnum + '0' : ((hexnum & 0xF) - 0xA) + 'A';
+}
+
+/**********************************************************************/
+static void
+put_hex_oid (char *hex, u_int16_t oid)
+{
+  hex[0] = put_hex_char ((oid >> 12) & 0xF);
+  hex[1] = put_hex_char ((oid >> 8) & 0xF);
+  hex[2] = put_hex_char ((oid >> 4) & 0xF);
+  hex[3] = put_hex_char ((oid >> 0) & 0xF);
+}
+
+/**********************************************************************/
 static void
 vnRFtaskRxTx (void *parameter)
 {
-  u_int8_t status;
-  u_int16_t crc, oid;
-  u_int8_t strength, t;
+  int i, first_free;
+  u_int8_t status, found;
+  u_int16_t crc, oid, id;
   unsigned int delta_t_ms;
   portTickType time, time_old, seconds_since_boot;
 
@@ -182,12 +211,35 @@ vnRFtaskRxTx (void *parameter)
       /* gather statistics */
       time = xTaskGetTickCount () * portTICK_RATE_MS;
       delta_t_ms = time - time_old;
+      seconds_since_boot = time / 1000;
 
       if (delta_t_ms > 1000)
 	{
 	  time_old = time;
 	  rf_pkt_per_sec = (rf_rec - rf_rec_old) * 1000 / delta_t_ms;
 	  rf_rec_old = rf_rec;
+
+	  /* throw out stuff after MAX_TAG_TRACKING_TIME seconds passed */
+	  for (i = 0; i < MAX_TAGS; i++)
+	    {
+	      id = g_rf_tag_list[i].id;
+
+	      if (id
+		  && ((seconds_since_boot - g_rf_tag_list[i].time) >=
+		      MAX_TAG_TRACKING_TIME))
+		{
+		  if (pt_debug_level)
+		    debug_printf (" * removed tag %u from list[%u]\n", id, i);
+		  memset (&g_rf_tag_list[i], 0, sizeof (g_rf_tag_list[0]));
+
+		  memset (&g_Beacon.log, 0, sizeof (g_Beacon.log));
+		  strcat ((char *) &g_Beacon.log, "TAG_RMV=");
+		  put_hex_oid ((char *) &g_Beacon.log.byte[0x8], id);
+		  g_Beacon.log.byte[0xC] = ';';
+		  g_Beacon.log.byte[0xD] = '\n';
+		  vNetworkSendBeaconToServer ();
+		}
+	    }
 	}
 
       /* check if TX strength changed */
@@ -225,79 +277,77 @@ vnRFtaskRxTx (void *parameter)
 	      rf_rec++;
 
 	      // posting packet to log file queue
-	      xQueueSend (xLogfile, &g_Beacon, 0);
+//            xQueueSend (xLogfile, &g_Beacon, 0);
 
 	      // post packet to network via UDP
-	      vNetworkSendBeaconToServer ();
+//            vNetworkSendBeaconToServer ();
 
-	      if (pt_debug_level)
+	      // adjust byte order and decode
+	      shuffle_tx_byteorder ();
+	      xxtea_decode ();
+	      shuffle_tx_byteorder ();
+
+	      rf_decrypt++;
+
+	      // verify the crc checksum
+	      crc =
+		env_crc16 (g_Beacon.log.byte,
+			   sizeof (g_Beacon.log) - sizeof (u_int16_t));
+
+	      if (swapshort (g_Beacon.log.pkt.crc) != crc)
+		rf_crc_err++;
+	      else
 		{
-		  // adjust byte order and decode
-		  shuffle_tx_byteorder ();
-		  xxtea_decode ();
-		  shuffle_tx_byteorder ();
+		  rf_crc_ok++;
 
-		  rf_decrypt++;
-
-		  // verify the crc checksum
-		  crc =
-		    env_crc16 (g_Beacon.log.byte,
-			       sizeof (g_Beacon.log) - sizeof (u_int16_t));
-
-		  if (swapshort (g_Beacon.log.pkt.crc) != crc)
-		    rf_crc_err++;
-		  else
+		  if (g_Beacon.log.pkt.proto == RFBPROTO_BEACONTRACKER)
 		    {
-		      rf_crc_ok++;
-
-		      seconds_since_boot = time / 1000;
-
 		      oid = swapshort (g_Beacon.log.pkt.oid);
-		      if (g_Beacon.log.pkt.flags & RFBFLAGS_SENSOR)
+		      if ((pt_debug_level)
+			  && (g_Beacon.log.pkt.flags & RFBFLAGS_SENSOR))
 			debug_printf ("@%07u BUTTON: %u\n",
 				      seconds_since_boot, oid);
 
-		      switch (g_Beacon.log.pkt.proto)
+		      found = 0;
+		      first_free = -1;
+		      for (i = 0; i < MAX_TAGS; i++)
 			{
-			case RFBPROTO_BEACONTRACKER:
-			  debug_printf ("@%07u RX: %u,0x%08X,%u,0x%02X\n",
-					seconds_since_boot,
-					swapshort (g_Beacon.log.pkt.oid),
-					swaplong (g_Beacon.log.pkt.p.tracker.
-						  seq),
-					g_Beacon.log.pkt.p.tracker.strength,
-					g_Beacon.log.pkt.flags);
-			  strength = g_Beacon.log.pkt.p.tracker.strength;
-			  break;
+			  id = g_rf_tag_list[i].id;
 
-			case RFBPROTO_PROXREPORT:
-			  for (t = 0; t < PROX_MAX; t++)
+			  if (oid == id)
 			    {
-			      crc =
-				(swapshort
-				 (g_Beacon.log.pkt.p.prox.oid_prox[t]));
-			      if (crc)
-				debug_printf ("@%07u PX: %u={%u,%u,%u}\n",
-					      seconds_since_boot,
-					      oid,
-					      (crc >> 0) & 0x7FF,
-					      (crc >> 14) & 0x3,
-					      (crc >> 11) & 0x7);
-			      else
-				debug_printf
-				  ("@%07u RX: %u,          ,3,0x%02X\n",
-				   seconds_since_boot,
-				   swapshort (g_Beacon.log.pkt.oid),
-				   g_Beacon.log.pkt.flags);
+			      g_rf_tag_list[i].time = seconds_since_boot;
+			      found = 1;
+			      memset (&g_Beacon.log, 0,
+				      sizeof (g_Beacon.log));
+			      strcat ((char *) &g_Beacon.log, "TAG_PNG=");
+			      put_hex_oid ((char *) &g_Beacon.log.byte[0x8],
+					   id);
+			      g_Beacon.log.byte[0xC] = ';';
+			      g_Beacon.log.byte[0xD] = '\n';
+			      vNetworkSendBeaconToServer ();
+			      break;
 			    }
-			  strength = 3;
-			  break;
+			  else if (!id)
+			    {
+			      if (first_free < 0)
+				first_free = i;
+			    }
+			}
+		      if (!found && (first_free >= 0))
+			{
+			  if (pt_debug_level)
+			    debug_printf (" * added Tag [%u] to list[%u]\n",
+					  oid, first_free);
+			  g_rf_tag_list[first_free].id = oid;
+			  g_rf_tag_list[first_free].time = seconds_since_boot;
 
-			default:
-			  strength = 0xFF;
-			  debug_printf ("@%07u Uknown Protocol: %u\n",
-					seconds_since_boot,
-					g_Beacon.log.pkt.proto);
+			  memset (&g_Beacon.log, 0, sizeof (g_Beacon.log));
+			  strcat ((char *) &g_Beacon.log, "TAG_ADD=");
+			  put_hex_oid ((char *) &g_Beacon.log.byte[0x8], oid);
+			  g_Beacon.log.byte[0xC] = ';';
+			  g_Beacon.log.byte[0xD] = '\n';
+			  vNetworkSendBeaconToServer ();
 			}
 		    }
 		}
@@ -310,6 +360,7 @@ vnRFtaskRxTx (void *parameter)
 
       /* did I already mention this paranoid world thing? */
       nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
+
 
     }
 }
@@ -425,6 +476,7 @@ PtInitProtocol (void)
 
   rf_rec = rf_rec_old = rf_decrypt = 0;
   rf_crc_ok = rf_crc_err = rf_pkt_per_sec = 0;
+  memset (&g_rf_tag_list, 0, sizeof (g_rf_tag_list));
 
   xLogfile =
     xQueueCreate ((SECTOR_BUFFER_SIZE * 2) / sizeof (g_Beacon),
