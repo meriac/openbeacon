@@ -267,7 +267,7 @@ main (void)
       bzero (&g_Beacon, sizeof (g_Beacon));
       g_Beacon.pkt.proto = RFBPROTO_BEACONTRACKER;
       g_Beacon.pkt.oid = htons (tag_id);
-      g_Beacon.pkt.p.tracker.strength = 5;
+      g_Beacon.pkt.p.tracker.strength = 0;
       g_Beacon.pkt.p.tracker.seq = htonl (seq++);
       g_Beacon.pkt.p.tracker.reserved = moving;
       g_Beacon.pkt.crc = htons(crc16 (g_Beacon.byte, sizeof (g_Beacon) - sizeof (g_Beacon.pkt.crc)));
