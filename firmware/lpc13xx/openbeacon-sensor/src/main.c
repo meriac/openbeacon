@@ -318,20 +318,14 @@ main (void)
 
       if (tamper)
 	{
-	  pmu_sleep_ms (750);
+	  pmu_sleep_ms (500);
 	  tamper--;
 	  if (moving < ACC_MOVING_TRESHOLD)
 	    moving++;
 	  else
 	    {
-	      snd_tone (22);
-	      GPIOSetValue (1, 3, 1);
-	      pmu_wait_ms (20);
-	      GPIOSetValue (1, 3, 0);
-	      snd_tone (23);
-	      pmu_wait_ms (50);
 	      snd_tone (24);
-	      pmu_wait_ms (30);
+	      pmu_wait_ms (500);
 	      snd_tone (0);
 	    }
 	}
