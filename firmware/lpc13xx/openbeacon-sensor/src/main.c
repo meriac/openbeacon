@@ -270,7 +270,10 @@ main (void)
       else
       {
         nRFAPI_FlushTX ();
-	packetloss++;
+        if(packetloss<PACKETLOSS_TRESHOLD)
+	    packetloss++;
+	else
+	    tamper = 5;
       }
       nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
       /* powering down */
