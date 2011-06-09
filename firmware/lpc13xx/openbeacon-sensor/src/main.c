@@ -78,19 +78,6 @@ nRF_tx (uint8_t power)
   nRFCMD_CE (0);
 }
 
-void
-nrf_off (void)
-{
-  /* disable RX mode */
-  nRFCMD_CE (0);
-
-  /* wait till RX is done */
-  pmu_sleep_ms (5);
-
-  /* switch to TX mode */
-  nRFAPI_SetRxMode (0);
-}
-
 int
 main (void)
 {
