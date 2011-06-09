@@ -244,7 +244,7 @@ main (void)
   bzero(&fifo_buf,sizeof(fifo_buf));
   bzero(&acc_lowpass,sizeof(acc_lowpass));
 
-  seq = firstrun = tamper = moving = 0;
+  seq = firstrun = tamper = moving = packetloss = 0;
   while (1)
     {
       /* read acceleration sensor */
