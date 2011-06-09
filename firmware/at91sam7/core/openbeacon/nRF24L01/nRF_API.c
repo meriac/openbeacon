@@ -146,8 +146,8 @@ void nRFAPI_TxRetries(unsigned char count)
 	if(count>15)
 		count=15;
 
-	// setup delay of 500us+86us
-	nRFCMD_RegWriteStatusRead(SETUP_RETR | WRITE_REG,0x10 | count);
+	// setup delay of 250us
+	nRFCMD_RegWriteStatusRead (SETUP_RETR | WRITE_REG, count);
 }
 
 void nRFAPI_PipesEnable(unsigned char mask)

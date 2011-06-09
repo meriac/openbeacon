@@ -54,7 +54,7 @@ static TBeaconEnvelope g_Beacon;
 static const uint32_t xxtea_key[4] = { 0x00112233, 0x44556677, 0x8899AABB, 0xCCDDEEFF };
 
 /* set nRF24L01 broadcast mac */
-static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 1, 2, 3, 2, 1 };
+static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 0xDE, 0xAD, 0xBE, 0xEF, 42 };
 
 static void
 nRF_tx (uint8_t power)
@@ -89,7 +89,6 @@ nrf_off (void)
 
   /* switch to TX mode */
   nRFAPI_SetRxMode (0);
-
 }
 
 int
@@ -101,6 +100,7 @@ main (void)
   int fifo_pos;
   TFifoEntry *fifo;
   uint32_t seq;
+  uint8_t packetloss;
 
   volatile int i;
   int x, y, z, firstrun, tamper, moving;
@@ -240,6 +240,10 @@ main (void)
 	GPIOSetValue (1, 3, 0);
 	pmu_sleep_ms (400);
       }
+  /* set retries to zero */
+  nRFAPI_TxRetries (0);
+  /* enable ACK */
+  nRFAPI_PipesAck (ERX_P0);
   /* set tx power power to high */
   nRFCMD_Power (1);
 
@@ -273,6 +277,15 @@ main (void)
       g_Beacon.pkt.crc = htons(crc16 (g_Beacon.byte, sizeof (g_Beacon) - sizeof (g_Beacon.pkt.crc)));
       /* transmit packet */
       nRF_tx (g_Beacon.pkt.p.tracker.strength);
+      /* get FIFO status */
+      if(nRFAPI_GetFifoStatus () & FIFO_TX_EMPTY)
+	tamper = moving = packetloss = 0;
+      else
+      {
+        nRFAPI_FlushTX ();
+	packetloss++;
+      }
+      nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
       /* powering down */
       nRFAPI_PowerDown ();
 

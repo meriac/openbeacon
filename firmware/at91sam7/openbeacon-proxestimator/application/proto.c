@@ -54,7 +54,7 @@ typedef struct
 } __attribute__ ((packed)) TBeaconCache;
 
 // set broadcast mac
-const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 1, 2, 3, 2, 1 };
+const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 0xDE, 0xAD, 0xBE, 0xEF, 42 };
 
 TBeaconCache g_BeaconCache[FIFO_DEPTH];
 int g_BeaconSortSize;
@@ -97,6 +97,7 @@ PtInitNRF (void)
 
   nRFAPI_SetPipeSizeRX (0, 16);
   nRFAPI_SetTxPower (ANNOUNCEMENT_TX_POWER);
+  nRFAPI_PipesAck (ERX_P0);
   nRFAPI_SetRxMode (1);
 
   nRFCMD_CE (1);

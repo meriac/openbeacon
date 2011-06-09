@@ -26,7 +26,7 @@
 
 /* Treshold for detecting 3D accelerometer movement */
 #define ACC_TRESHOLD 3
-#define ACC_MOVING_TRESHOLD 20
+#define ACC_MOVING_TRESHOLD 5
 
 /* Clock Definition */
 #define SYSTEM_CRYSTAL_CLOCK 12000000
