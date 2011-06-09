@@ -92,7 +92,7 @@ shuffle_tx_byteorder (void)
 static inline s_int8_t
 PtInitNRF (void)
 {
-  if (!nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0))
+  if (!nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), FEATURE_EN_ACK_PAY|FEATURE_EN_DYN_ACK|FEATURE_EN_DPL))
     return 0;
 
   nRFAPI_SetPipeSizeRX (0, 16);

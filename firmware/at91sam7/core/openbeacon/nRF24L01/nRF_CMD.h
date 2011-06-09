@@ -1,7 +1,7 @@
 /***************************************************************
  *
  * OpenBeacon.org - midlevel access function defines for
- * issuing raw commands to the nRF24L01 2.4Ghz frontend
+ * issuing raw commands to the nRF24L01+ 2.4Ghz frontend
  *
  * Copyright 2007 Milosch Meriac <meriac@openbeacon.de>
  *

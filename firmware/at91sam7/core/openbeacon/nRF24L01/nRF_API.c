@@ -1,6 +1,6 @@
 /***************************************************************
  *
- * OpenBeacon.org - high level nRF24L01 access functions
+ * OpenBeacon.org - high level nRF24L01+ access functions
  *
  * Copyright 2007 Milosch Meriac <meriac@openbeacon.de>
  *
@@ -293,8 +293,10 @@ unsigned char nRFAPI_CarrierDetect(void)
 
 void nRFAPI_SetFeatures(unsigned char features)
 {
+#ifdef  __NRF24L01__
 	unsigned const char ACTIVATE_SEQUENCE[] = {ACTIVATE, 0x73};
 	unsigned char dummy_buffer[sizeof(ACTIVATE_SEQUENCE)] = {0,0};
 	nRFCMD_ReadWriteBuffer(ACTIVATE_SEQUENCE, dummy_buffer, sizeof(ACTIVATE_SEQUENCE));
+#endif/*__NRF24L01__*/
 	nRFCMD_RegWriteStatusRead(FEATURE, features);
 }

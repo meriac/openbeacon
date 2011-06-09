@@ -219,7 +219,7 @@ main (void)
   tag_id = crc16 ((uint8_t *) & device_uuid, sizeof (device_uuid));
 
   /* Initialize OpenBeacon nRF24L01 interface */
-  if (!nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0))
+  if (!nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), FEATURE_EN_ACK_PAY|FEATURE_EN_DYN_ACK|FEATURE_EN_DPL))
     for (;;)
       {
 	GPIOSetValue (1, 3, 1);
