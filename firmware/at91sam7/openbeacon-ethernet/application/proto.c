@@ -93,7 +93,7 @@ PtInitNRF (void)
 {
   if (!nRFAPI_Init (DEFAULT_CHANNEL, broadcast_mac,
 		    sizeof (broadcast_mac),
-		    (FEATURE_EN_ACK_PAY|FEATURE_EN_DYN_ACK|FEATURE_EN_DPL)))
+		    (FEATURE_EN_ACK_PAY|FEATURE_EN_DYN_ACK)))
     return 0;
 
   nrf_powerlevel_last = nrf_powerlevel_current = -1;
