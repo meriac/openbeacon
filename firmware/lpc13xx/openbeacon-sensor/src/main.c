@@ -46,6 +46,7 @@ typedef struct {
 /* device UUID */
 static uint16_t tag_id;
 static TDeviceUID device_uuid;
+static uint32_t random_seed;
 
 /* OpenBeacon packet */
 static TBeaconEnvelope g_Beacon;
@@ -78,6 +79,17 @@ nRF_tx (uint8_t power)
   nRFCMD_CE (0);
 }
 
+uint32_t
+random (uint32_t range)
+{
+  static uint32_t v1 = 0x52f7d319;
+  static uint32_t v2 = 0x6e28014a;
+
+  /* MWC generator, period length 1014595583
+     according to George Marsaglia */
+  return ((((v1 = 36969 * (v1 & 0xffff) + (v1 >> 16)) << 16) ^ (v2 = 30963 * (v2 & 0xffff) + (v2 >> 16)))^random_seed) % range;
+}
+
 int
 main (void)
 {
@@ -87,7 +99,7 @@ main (void)
   int fifo_pos;
   TFifoEntry *fifo;
   uint32_t seq;
-  uint8_t packetloss;
+  uint8_t packetloss, alarm_triggered, alarm_disabled;
 
   volatile int i;
   int x, y, z, firstrun, tamper, moving;
@@ -217,6 +229,7 @@ main (void)
   bzero (&device_uuid, sizeof (device_uuid));
   iap_read_uid (&device_uuid);
   tag_id = crc16 ((uint8_t *) & device_uuid, sizeof (device_uuid));
+  random_seed = device_uuid[0]^device_uuid[1]^device_uuid[2]^device_uuid[3];
 
   /* Initialize OpenBeacon nRF24L01 interface */
   if (!nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), FEATURE_EN_ACK_PAY|FEATURE_EN_DYN_ACK))
@@ -244,7 +257,7 @@ main (void)
   bzero(&fifo_buf,sizeof(fifo_buf));
   bzero(&acc_lowpass,sizeof(acc_lowpass));
 
-  seq = firstrun = tamper = moving = packetloss = 0;
+  seq = firstrun = tamper = moving = packetloss = alarm_triggered = alarm_disabled = 0;
   while (1)
     {
       /* read acceleration sensor */
@@ -266,14 +279,18 @@ main (void)
       nRF_tx (g_Beacon.pkt.p.tracker.strength);
       /* get FIFO status */
       if(nRFAPI_GetFifoStatus () & FIFO_TX_EMPTY)
-	tamper = moving = packetloss = 0;
+	tamper = moving = packetloss = alarm_disabled = alarm_triggered = 0;
       else
       {
         nRFAPI_FlushTX ();
         if(packetloss<PACKETLOSS_TRESHOLD)
 	    packetloss++;
 	else
+	{
 	    tamper = 5;
+	    /* reseed */
+	    random_seed += seq;
+	}
       }
       nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
       /* powering down */
@@ -297,7 +314,7 @@ main (void)
       {
         if(fifo_pos)
         {
-	    pmu_sleep_ms (500);
+	    pmu_sleep_ms (400 + random(200));
 	    continue;
 	}
 	else
@@ -319,9 +336,9 @@ main (void)
 	    (abs (acc_lowpass.z/FIFO_DEPTH - z) >= ACC_TRESHOLD))
 	tamper = 5;
 
-      if (tamper)
+      if (tamper && !alarm_disabled)
 	{
-	  pmu_sleep_ms (500);
+	  pmu_sleep_ms (400 + random(200));
 	  tamper--;
 	  if (moving < ACC_MOVING_TRESHOLD)
 	    moving++;
@@ -330,11 +347,19 @@ main (void)
 	      snd_tone (24);
 	      pmu_wait_ms (500);
 	      snd_tone (0);
+
+	      /* reseed */
+	      random_seed += seq;
+
+	      if(alarm_triggered>=ALARM_TOTAL_BEEPS)
+	        alarm_disabled = 1;
+	      else
+		alarm_triggered ++;
 	    }
 	}
       else
 	{
-	  pmu_sleep_ms (5000);
+	  pmu_sleep_ms (4000 + random(2000));
 	  moving = 0;
 	}
     }
