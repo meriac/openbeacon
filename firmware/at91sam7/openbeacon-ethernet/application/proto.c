@@ -49,8 +49,7 @@ static unsigned int rf_rec, rf_decrypt, rf_crc_ok;
 static unsigned int rf_crc_err, rf_pkt_per_sec, rf_rec_old;
 static int pt_debug_level = 0;
 static unsigned char nrf_powerlevel_current, nrf_powerlevel_last;
-static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] =
-  { 1, 2, 3, 2, 1 };
+static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 0xDE, 0xAD, 0xBE, 0xEF, 42 };
 
 TBeaconEnvelopeLog g_Beacon;
 
@@ -93,13 +92,16 @@ static inline s_int8_t
 PtInitNRF (void)
 {
   if (!nRFAPI_Init (DEFAULT_CHANNEL, broadcast_mac,
-		    sizeof (broadcast_mac), 0))
+		    sizeof (broadcast_mac),
+		    (FEATURE_EN_ACK_PAY|FEATURE_EN_DYN_ACK|FEATURE_EN_DPL)))
     return 0;
 
   nrf_powerlevel_last = nrf_powerlevel_current = -1;
 
   nRFAPI_SetPipeSizeRX (0, 16);
-  PtSetRfPowerLevel (NRF_POWERLEVEL_MAX);
+  PtSetRfPowerLevel (0);
+  nRFAPI_SetTxPower (0);
+  nRFAPI_PipesAck (ERX_P0);
   nRFAPI_SetRxMode (1);
 
   nRFCMD_CE (1);
