@@ -54,7 +54,7 @@ typedef struct
 } __attribute__ ((packed)) TBeaconCache;
 
 // set broadcast mac
-const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 0xDE, 0xAD, 0xBE, 0xEF, 42 };
+const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 0x8B, 0xAD, 0xF0, 0x0D, 23 };
 
 TBeaconCache g_BeaconCache[FIFO_DEPTH];
 int g_BeaconSortSize;
@@ -92,7 +92,7 @@ shuffle_tx_byteorder (void)
 static inline s_int8_t
 PtInitNRF (void)
 {
-  if (!nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), FEATURE_EN_ACK_PAY|FEATURE_EN_DYN_ACK|FEATURE_EN_DPL))
+  if (!nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0 ))
     return 0;
 
   nRFAPI_SetPipeSizeRX (0, 16);
@@ -114,8 +114,7 @@ swapshort (unsigned short src)
 static inline unsigned long
 swaplong (unsigned long src)
 {
-  return (src >> 24) | (src << 24) | ((src >> 8) & 0x0000FF00) | ((src << 8) &
-								  0x00FF0000);
+  return (src >> 24) | (src << 24) | ((src >> 8) & 0x0000FF00) | ((src << 8) & 0x00FF0000);
 }
 
 void RAMFUNC

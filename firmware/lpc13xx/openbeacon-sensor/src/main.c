@@ -34,8 +34,9 @@
 uint32_t g_sysahbclkctrl;
 
 #define FIFO_DEPTH 10
-typedef struct {
-    int x,y,z;
+typedef struct
+{
+  int x, y, z;
 } TFifoEntry;
 
 #define MAINCLKSEL_IRC 0
@@ -63,13 +64,13 @@ static void
 nRF_tx (uint8_t power)
 {
   /* encrypt data */
-  xxtea_encode(g_Beacon.block, XXTEA_BLOCK_COUNT, xxtea_key);
+  xxtea_encode (g_Beacon.block, XXTEA_BLOCK_COUNT, xxtea_key);
 
   /* set TX power */
   nRFAPI_SetTxPower (power & 0x3);
 
   /* upload data to nRF24L01 */
-  nRFAPI_TX ((uint8_t*)&g_Beacon, sizeof(g_Beacon));
+  nRFAPI_TX ((uint8_t *) & g_Beacon, sizeof (g_Beacon));
 
   /* transmit data */
   nRFCMD_CE (1);
@@ -89,7 +90,8 @@ random (uint32_t range)
 
   /* MWC generator, period length 1014595583
      according to George Marsaglia */
-  return ((((v1 = 36969 * (v1 & 0xffff) + (v1 >> 16)) << 16) ^ (v2 = 30963 * (v2 & 0xffff) + (v2 >> 16)))^random_seed) % range;
+  return ((((v1 = 36969 * (v1 & 0xffff) + (v1 >> 16)) << 16) ^
+	   (v2 = 30963 * (v2 & 0xffff) + (v2 >> 16))) ^ random_seed) % range;
 }
 
 int
@@ -100,11 +102,11 @@ main (void)
   TFifoEntry fifo_buf[FIFO_DEPTH];
   int fifo_pos;
   TFifoEntry *fifo;
-  uint32_t seq;
-  uint8_t packetloss, alarm_triggered, alarm_disabled;
+  uint32_t seq, alarm_triggered;
+  uint8_t packetloss, alarm_disabled;
 
   volatile int i;
-  int x, y, z, firstrun, tamper, moving;
+  int x, y, z, firstrun_done, tamper, moving;
 
   /* wait on boot - debounce */
   for (i = 0; i < 2000000; i++);
@@ -231,7 +233,11 @@ main (void)
   bzero (&device_uuid, sizeof (device_uuid));
   iap_read_uid (&device_uuid);
   tag_id = crc16 ((uint8_t *) & device_uuid, sizeof (device_uuid));
-  random_seed = device_uuid[0]^device_uuid[1]^device_uuid[2]^device_uuid[3];
+  random_seed =
+    device_uuid[0] ^
+    device_uuid[1] ^
+    device_uuid[2] ^
+    device_uuid[3];
 
   /* Initialize OpenBeacon nRF24L01 interface */
   if (!nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0))
@@ -245,9 +251,9 @@ main (void)
   /* set retries to zero */
   nRFAPI_TxRetries (0);
   /* enable ACK */
-  nRFAPI_PipesAck (ERX_P0|ERX_P1);
+  nRFAPI_PipesAck (ERX_P0 | ERX_P1);
   nRFAPI_SetRxMAC (alarm_mac, NRF_MAX_MAC_SIZE, 1);
-  nRFAPI_PipesEnable (ERX_P0|ERX_P1);
+  nRFAPI_PipesEnable (ERX_P0 | ERX_P1);
   /* set tx power power to high */
   nRFCMD_Power (1);
 
@@ -259,89 +265,97 @@ main (void)
   snd_tone (0);
 
   /* reset fifo */
-  fifo_pos=0;
-  bzero(&fifo_buf,sizeof(fifo_buf));
-  bzero(&acc_lowpass,sizeof(acc_lowpass));
+  fifo_pos = 0;
+  bzero (&fifo_buf, sizeof (fifo_buf));
+  bzero (&acc_lowpass, sizeof (acc_lowpass));
 
-  seq = firstrun = tamper = moving = packetloss = alarm_triggered = alarm_disabled = 0;
+  seq = firstrun_done = tamper = moving = packetloss = 0;
+  /* start with disabled alarm */
+  alarm_triggered = alarm_disabled = 1;
   while (1)
     {
       /* read acceleration sensor */
-      nRFAPI_SetRxMode(0);
+      nRFAPI_SetRxMode (0);
       acc_power (1);
       pmu_sleep_ms (20);
       acc_xyz_read (&x, &y, &z);
       acc_power (0);
 
-      /* prepare packet */
-      bzero (&g_Beacon, sizeof (g_Beacon));
-      g_Beacon.pkt.proto = RFBPROTO_BEACONTRACKER;
-      g_Beacon.pkt.oid = htons (tag_id);
-      g_Beacon.pkt.p.tracker.strength = 0;
-      g_Beacon.pkt.p.tracker.seq = htonl (seq++);
-      g_Beacon.pkt.p.tracker.reserved = moving;
-      g_Beacon.pkt.crc = htons(crc16 (g_Beacon.byte, sizeof (g_Beacon) - sizeof (g_Beacon.pkt.crc)));
-
-      /* if alarm case, then tx to two different MACs, second mac */
-      if(alarm_triggered)
-	nRFAPI_SetTxMAC ((seq & 1) ? alarm_mac : broadcast_mac , NRF_MAX_MAC_SIZE);
-      /* transmit packet */
-      nRF_tx (g_Beacon.pkt.p.tracker.strength);
-      /* get FIFO status */
-      if(nRFAPI_GetFifoStatus () & FIFO_TX_EMPTY)
-      {
-	/* if ACK from alarm_mac, disable alarm */
-	if(alarm_triggered)
+      if (firstrun_done)
 	{
-	    if(seq & 1)
+	  /* prepare packet */
+	  bzero (&g_Beacon, sizeof (g_Beacon));
+	  g_Beacon.pkt.proto = RFBPROTO_BEACONTRACKER;
+	  g_Beacon.pkt.oid = htons (tag_id);
+	  g_Beacon.pkt.p.tracker.strength = 0;
+	  g_Beacon.pkt.p.tracker.seq = htonl (seq++);
+	  g_Beacon.pkt.p.tracker.reserved = moving;
+	  g_Beacon.pkt.crc = htons (crc16(g_Beacon.byte, sizeof (g_Beacon) - sizeof (g_Beacon.pkt.crc)));
+
+	  /* if alarm case, then tx to two different MACs, second mac */
+	  if (alarm_triggered)
+	    nRFAPI_SetTxMAC (
+		(seq & 1) ? alarm_mac : broadcast_mac,
+		NRF_MAX_MAC_SIZE);
+
+	  /* transmit packet */
+	  nRF_tx (g_Beacon.pkt.p.tracker.strength);
+	  /* get FIFO status */
+	  if (nRFAPI_GetFifoStatus () & FIFO_TX_EMPTY)
 	    {
-		for(i=24;i>10;i--)
+	      /* if ACK from alarm_mac, disable alarm */
+	      if (alarm_triggered)
 		{
-		    snd_tone (i);
-		    pmu_wait_ms (50);
+		  if (seq & 1)
+		    {
+		      for (i = 24; i > 10; i--)
+			{
+			  snd_tone (i);
+			  pmu_wait_ms (50);
+			}
+		      alarm_disabled = 1;
+		    }
+		  else
+		    {
+		      for (i = 10; i < 24; i++)
+			{
+			  snd_tone (i);
+			  pmu_wait_ms (50);
+			}
+		    }
+		  snd_tone (0);
+		  alarm_triggered = 0;
+		  /* set tx address back to broadcast mac */
+		  nRFAPI_SetTxMAC (broadcast_mac, NRF_MAX_MAC_SIZE);
 		}
-		alarm_disabled = 1;
+	      tamper = moving = packetloss = alarm_disabled = 0;
 	    }
-	    else
+	  else
 	    {
-		for(i=10;i<24;i++)
+	      nRFAPI_FlushTX ();
+	      if (!alarm_disabled)
 		{
-		    snd_tone (i);
-		    pmu_wait_ms (50);
+		  if (packetloss < PACKETLOSS_TRESHOLD)
+		    packetloss++;
+		  else
+		    {
+		      tamper = 5;
+		      /* reseed */
+		      random_seed += seq;
+		    }
 		}
 	    }
-	    snd_tone (0);
-	    alarm_triggered = 0;
-	    /* set tx address back to broadcast mac */
-	    nRFAPI_SetTxMAC (broadcast_mac, NRF_MAX_MAC_SIZE);
+	  nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
+	  /* powering down */
+	  nRFAPI_PowerDown ();
 	}
-	tamper = moving = packetloss = alarm_disabled = 0;
-      }
-      else
-      {
-        nRFAPI_FlushTX ();
-        if(!alarm_disabled)
-        {
-	    if(packetloss<PACKETLOSS_TRESHOLD)
-		packetloss++;
-	    else
-	    {
-		tamper = 5;
-		/* reseed */
-		random_seed += seq;
-	    }
-	}
-      }
-      nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
-      /* powering down */
-      nRFAPI_PowerDown ();
 
       /* add new accelerometer values to lowpass */
       fifo = &fifo_buf[fifo_pos];
-      if(fifo_pos>=(FIFO_DEPTH-1))
-        fifo_pos=0;
+      if (fifo_pos >= (FIFO_DEPTH - 1))
+	fifo_pos = 0;
       else
-        fifo_pos++;
+	fifo_pos++;
 
       acc_lowpass.x += x - fifo->x;
       fifo->x = x;
@@ -350,39 +364,42 @@ main (void)
       acc_lowpass.z += z - fifo->z;
       fifo->z = z;
 
-      if (!firstrun)
-      {
-        if(fifo_pos)
-        {
-	    pmu_sleep_ms (400 + random(200));
-	    continue;
+      if (firstrun_done)
+	{
+	  if ((abs (acc_lowpass.x / FIFO_DEPTH - x) >= ACC_TRESHOLD) ||
+	      (abs (acc_lowpass.y / FIFO_DEPTH - y) >= ACC_TRESHOLD) ||
+	      (abs (acc_lowpass.z / FIFO_DEPTH - z) >= ACC_TRESHOLD))
+	  tamper = 5;
 	}
 	else
 	{
-	    /* confirm finalized initialization by double-blink/beep */
-	    firstrun = 1;
-	    snd_tone (23);
-	    GPIOSetValue (1, 3, 1);
-	    pmu_wait_ms (100);
-	    GPIOSetValue (1, 3, 0);
-	    snd_tone (0);
-	    pmu_sleep_ms (300);
-	    snd_tone (24);
-	    GPIOSetValue (1, 3, 1);
-	    pmu_wait_ms (100);
-	    GPIOSetValue (1, 3, 0);
-	    snd_tone (0);
+	  if (fifo_pos)
+	    {
+	      pmu_sleep_ms (400 + random (200));
+	      continue;
+	    }
+	  else
+	    {
+	      /* confirm finalized initialization by double-blink/beep */
+	      firstrun_done = 1;
+
+	      snd_tone (23);
+	      GPIOSetValue (1, 3, 1);
+	      pmu_wait_ms (100);
+	      GPIOSetValue (1, 3, 0);
+	      snd_tone (0);
+	      pmu_sleep_ms (300);
+	      snd_tone (24);
+	      GPIOSetValue (1, 3, 1);
+	      pmu_wait_ms (100);
+	      GPIOSetValue (1, 3, 0);
+	      snd_tone (0);
+	    }
 	}
-      }
-      else
-	if ((abs (acc_lowpass.x/FIFO_DEPTH - x) >= ACC_TRESHOLD) ||
-	    (abs (acc_lowpass.y/FIFO_DEPTH - y) >= ACC_TRESHOLD) ||
-	    (abs (acc_lowpass.z/FIFO_DEPTH - z) >= ACC_TRESHOLD))
-	tamper = 5;
 
       if (tamper && !alarm_disabled)
 	{
-	  pmu_sleep_ms (400 + random(200));
+	  pmu_sleep_ms (400 + random (200));
 	  tamper--;
 	  if (moving < ACC_MOVING_TRESHOLD)
 	    moving++;
@@ -395,15 +412,19 @@ main (void)
 	      /* reseed */
 	      random_seed += seq;
 
-	      if(alarm_triggered<=ALARM_TOTAL_BEEPS)
-		alarm_triggered ++;
+	      if (alarm_triggered <= ALARM_TOTAL_BEEPS)
+		alarm_triggered++;
 	      else
-	        alarm_disabled = 1;
+		alarm_disabled = 1;
 	    }
 	}
       else
 	{
-	  pmu_sleep_ms (packetloss ? 900 + random (200) : 4000 + random(2000));
+	  pmu_sleep_ms (
+	    (packetloss && !alarm_disabled) ?
+	    900  + random ( 200) :
+	    4000 + random (2000)
+	  );
 	  moving = 0;
 	}
     }
