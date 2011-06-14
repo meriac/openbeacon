@@ -331,7 +331,7 @@ main (void)
 		}
 	      else
 		{
-		  if (alarm_disabled)
+		  if (alarm_disabled || alarm_triggered)
 		  {
 		    for (i = 10; i < 24; i++)
 			{
@@ -339,9 +339,8 @@ main (void)
 			    pmu_wait_ms (50);
 			}
 		    snd_tone (0);
-		    alarm_disabled = 0;
+		    alarm_triggered = alarm_disabled = 0;
 		  }
-		  alarm_triggered = 0;
 		}
 
 	      tamper = moving = packetloss = 0;
@@ -415,12 +414,15 @@ main (void)
 
       if (tamper && !alarm_disabled)
 	{
-	  pmu_sleep_ms (400 + random (200));
 	  tamper--;
 	  if (moving < ACC_MOVING_TRESHOLD)
+	  {
+	    pmu_sleep_ms (1900 + random (200));
 	    moving++;
+	  }
 	  else
 	    {
+	      pmu_sleep_ms (490 + random (20));
 	      snd_tone (24);
 	      pmu_wait_ms (500);
 	      snd_tone (0);
@@ -438,7 +440,7 @@ main (void)
 	{
 	  pmu_sleep_ms (
 	    (packetloss && !alarm_disabled) ?
-	    900  + random ( 200) :
+	     900 + random ( 200) :
 	    4000 + random (2000)
 	  );
 	  moving = 0;
