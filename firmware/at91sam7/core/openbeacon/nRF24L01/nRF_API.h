@@ -31,6 +31,7 @@ extern unsigned char nRFAPI_Init(unsigned char channel,const unsigned char *mac,
 extern void nRFAPI_SetTxPower(unsigned char power);
 extern void nRFAPI_TxRetries(unsigned char count);
 extern void nRFAPI_SetRxMode(unsigned char receive);
+extern void nRFAPI_DynpdEnable(unsigned char receive);
 extern void nRFAPI_PipesEnable(unsigned char mask);
 extern void nRFAPI_PipesAck(unsigned char mask);
 extern unsigned char nRFAPI_GetSizeMac(void);

@@ -45,12 +45,15 @@ unsigned char nRFAPI_DetectChip(void)
 	// blank read
 	nRFAPI_GetStatus();
 
+	// set TX mode
+	nRFAPI_SetRxMode (0);
+
 	// set dummy MAC size
-	nRFAPI_SetSizeMac(NRF_MIN_MAC_SIZE);	
+	nRFAPI_SetSizeMac(NRF_MIN_MAC_SIZE);
 
 	// verify dummy MAC size
 	if(nRFAPI_GetSizeMac()!=NRF_MIN_MAC_SIZE)
-		return 0;	
+		return 0;
 	
 	// set dummy MAC size
 	nRFAPI_SetSizeMac(NRF_MAX_MAC_SIZE);
@@ -107,10 +110,11 @@ unsigned char nRFAPI_Init(
 	nRFAPI_SetRxMAC(mac,mac_size,0);
 	nRFAPI_PipesEnable(ERX_P0);
 	nRFAPI_PipesAck(0);
-	
+	nRFAPI_DynpdEnable(0);
+
 	// set payload sizes
 	for(i=0;i<=5;i++)
-		nRFAPI_SetPipeSizeRX(i,2);
+		nRFAPI_SetPipeSizeRX(i,i?0:mac_size);
 	
 	// set TX retry count
 	nRFAPI_TxRetries(0);
@@ -124,13 +128,11 @@ unsigned char nRFAPI_Init(
 	// flush FIFOs
 	nRFAPI_FlushRX();
 	nRFAPI_FlushTX();
-	
+
 	nRFAPI_SetRxMode(0);
 
-	if(features != 0)
-		nRFAPI_SetFeatures(features);
-	
-	return 1;	
+	nRFAPI_SetFeatures(features);
+	return 1;
 }
 
 void nRFAPI_SetTxPower(unsigned char power)
@@ -148,6 +150,12 @@ void nRFAPI_TxRetries(unsigned char count)
 
 	// setup delay of 250us
 	nRFCMD_RegWriteStatusRead (SETUP_RETR | WRITE_REG, count);
+}
+
+void
+nRFAPI_DynpdEnable (unsigned char mask)
+{
+  nRFCMD_RegWriteStatusRead (DYNPD | WRITE_REG, mask & 0x3F);
 }
 
 void nRFAPI_PipesEnable(unsigned char mask)

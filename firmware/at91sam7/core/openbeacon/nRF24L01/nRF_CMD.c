@@ -152,8 +152,8 @@ unsigned char nRFCMD_GetRegSize(unsigned char reg)
     unsigned char res;
 	
     if(reg>0x17)
-	res=0;
-    else		
+	res=(reg==0x1C)?1:0;
+    else
 	switch(reg)
 	{
 	    case RX_ADDR_P0:
@@ -242,7 +242,7 @@ unsigned char nRFCMD_WaitRx(unsigned int ticks)
 unsigned char nRFCMD_Init(void)
 {
     volatile int dummy;
-    const int SCBR = ((int)(MCK / 8e6) + 1)&0xFF;
+    const int SCBR = ((int)(MCK / 4e6) + 1)&0xFF;
 
     nRFCMD_Macro=nRFCMD_MacroResult=NULL;
 
@@ -260,8 +260,8 @@ unsigned char nRFCMD_Init(void)
     AT91F_PIO_CfgPeriph(CSN_PIN_PIO, CSN_PIN, 0);
 #endif/*CSN_PIN_PIO*/
     AT91F_PIO_CfgInput(AT91C_BASE_PIOA, IRQ_PIN);
-    AT91F_PIO_ClearOutput(AT91C_BASE_PIOA, CE_PIN);
     AT91F_PIO_CfgOutput(AT91C_BASE_PIOA, CE_PIN);
+    AT91F_PIO_ClearOutput(AT91C_BASE_PIOA, CE_PIN);
 
     portENTER_CRITICAL();
 
