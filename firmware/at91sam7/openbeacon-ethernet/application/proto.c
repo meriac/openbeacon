@@ -43,8 +43,6 @@
 /**********************************************************************/
 #define SECTOR_BUFFER_SIZE 1024
 /**********************************************************************/
-static xQueueHandle xLogfile;
-/**********************************************************************/
 static unsigned int rf_rec, rf_decrypt, rf_crc_ok;
 static unsigned int rf_crc_err, rf_pkt_per_sec, rf_rec_old;
 static int pt_debug_level = 0;
@@ -99,8 +97,8 @@ PtInitNRF (void)
   nrf_powerlevel_last = nrf_powerlevel_current = -1;
 
   nRFAPI_SetPipeSizeRX (0, 16);
-  PtSetRfPowerLevel (0);
-  nRFAPI_SetTxPower (0);
+  PtSetRfPowerLevel (3);
+  nRFAPI_SetTxPower (3);
   nRFAPI_PipesAck (ERX_P0);
   nRFAPI_SetRxMode (1);
 
@@ -418,90 +416,6 @@ PtStatusRxTx (void)
   debug_printf ("\n");
 }
 
-
-/**********************************************************************/
-static void
-vnRFLogFileFileTask (void *parameter)
-{
-  UINT written;
-  FRESULT res;
-  static TBeaconEnvelopeLog data;
-  static FIL fil;
-  static FATFS fatfs;
-  static FILINFO filinfo;
-  static char logfile[] = "LOGFILE_.BIN";
-  portTickType time, time_old;
-
-  /* delay SD card init by 5 seconds */
-  vTaskDelay (5000 / portTICK_RATE_MS);
-
-  /* never fails - data init */
-  memset (&fatfs, 0, sizeof (fatfs));
-  f_mount (0, &fatfs);
-
-  for (logfile[7] = 'A'; logfile[7] < 'Z'; logfile[7]++)
-    switch (res = f_stat (logfile, &filinfo))
-      {
-
-      case FR_OK:
-	/* found existing logfile, advancing to next possible one */
-	debug_printf ("Skipping existing logfile '%s'\n", logfile);
-	break;
-
-      case FR_NO_FILE:
-      case FR_INVALID_NAME:
-	/* opening new file for write access */
-	debug_printf ("\nCreating logfile (%s).\n", logfile);
-	if (f_open (&fil, logfile, FA_WRITE | FA_CREATE_ALWAYS))
-	  debug_printf ("\nfailed to create file\n");
-	else
-	  {
-	    /* Enable Debug output as we were able to open the log file */
-	    debug_printf ("OpenBeacon firmware version %s\nreader_id=%i.\n",
-			  VERSION, env.e.reader_id);
-
-	    /* Storing clock ticks for flushing cache action */
-	    time_old = xTaskGetTickCount ();
-
-	    for (;;)
-	      {
-		/* query queue for new data with a 500ms timeout */
-		if (xQueueReceive (xLogfile, &data, 500 * portTICK_RATE_MS))
-		  {
-		    if (f_write
-			(&fil, &data, sizeof (data), &written)
-			|| written != sizeof (data))
-		      debug_printf ("\nfailed to write to logfile\n");
-		  }
-
-		/* flush file every 10 seconds */
-		time = xTaskGetTickCount ();
-		if ((time - time_old) >= (10000 * portTICK_RATE_MS))
-		  {
-		    time_old = time;
-		    if (f_sync (&fil))
-		      debug_printf ("\nfailed to flush to logfile\n");
-		  }
-	      }
-	  }
-	break;
-
-      default:
-	debug_printf ("Error (%i) while searching for logfile '%s'\n", res,
-		      logfile);
-      }
-
-  // error blinking
-  while (1)
-    {
-      led_set_red (1);
-      vTaskDelay (250 / portTICK_RATE_MS);
-
-      led_set_red (0);
-      vTaskDelay (250 / portTICK_RATE_MS);
-    }
-}
-
 /**********************************************************************/
 void
 PtInitProtocol (void)
@@ -514,13 +428,6 @@ PtInitProtocol (void)
   rf_crc_ok = rf_crc_err = rf_pkt_per_sec = 0;
   memset (&g_rf_tag_list, 0, sizeof (g_rf_tag_list));
 
-  xLogfile =
-    xQueueCreate ((SECTOR_BUFFER_SIZE * 2) / sizeof (g_Beacon),
-		  sizeof (g_Beacon));
-
   xTaskCreate (vnRFtaskRxTx, (signed portCHAR *) "nRF_RxTx", TASK_NRF_STACK,
 	       NULL, TASK_NRF_PRIORITY, NULL);
-
-  xTaskCreate (vnRFLogFileFileTask, (signed portCHAR *) "nRF_Logfile",
-	       TASK_FILE_STACK, NULL, TASK_FILE_PRIORITY, NULL);
 }

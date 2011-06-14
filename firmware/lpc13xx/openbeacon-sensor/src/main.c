@@ -244,13 +244,13 @@ main (void)
 	pmu_sleep_ms (400);
       }
   /* set retries to zero */
-  nRFAPI_TxRetries (0);
+  nRFAPI_TxRetries (1);
   /* enable ACK */
   nRFAPI_SetPipeSizeRX (0, NRF_MAX_MAC_SIZE);
   nRFAPI_PipesAck (ERX_P0);
   nRFAPI_PipesEnable (ERX_P0);
   /* set tx power power to high */
-  nRFAPI_SetTxPower (0);
+  nRFAPI_SetTxPower (1);
   nRFCMD_Power (1);
 
   /* blink LED for 1s to show readyness */
@@ -417,7 +417,7 @@ main (void)
 	  tamper--;
 	  if (moving < ACC_MOVING_TRESHOLD)
 	  {
-	    pmu_sleep_ms (1900 + random (200));
+	    pmu_sleep_ms (400 + random (200));
 	    moving++;
 	  }
 	  else
@@ -440,7 +440,7 @@ main (void)
 	{
 	  pmu_sleep_ms (
 	    (packetloss && !alarm_disabled) ?
-	     900 + random ( 200) :
+	     400 + random ( 200) :
 	    4000 + random (2000)
 	  );
 	  moving = 0;
