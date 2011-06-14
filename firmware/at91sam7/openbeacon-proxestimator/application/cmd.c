@@ -144,58 +144,12 @@ prvExecCommand (u_int32_t cmd, portCHAR * args)
       env_store ();
       DumpStringToUSB (" * Stored environment variables\n\r");
       break;
-    case 'FIFO':
-      i = PtSetFifoLifetimeSeconds (atoiEx (args));
-      if (i < 0)
-	DumpStringToUSB (" * Invalid FIFO cache lifetime parameter\n\r");
-      else
-	{
-	  DumpStringToUSB ("FIFO lifetime set to ");
-	  DumpUIntToUSB (i);
-	  DumpStringToUSB ("\n\r");
-	}
-      break;
-    case 'RST':
-      i = atoiEx (args);
-      DumpStringToUSB ("Resetting remote reader ");
-      switch (i)
-	{
-	case READER_CMD_RESET:
-	  DumpStringToUSB ("CPU");
-	  break;
-	case READER_CMD_RESET_CONFIG:
-	  DumpStringToUSB ("config");
-	  break;
-	case READER_CMD_RESET_FACTORY:
-	  DumpStringToUSB ("factory defaults");
-	  break;
-	case READER_CMD_RESET_WIFI:
-	  DumpStringToUSB ("wifi module");
-	  break;
-	default:
-	  i = 0;
-	  DumpStringToUSB ("[NOP]");
-	  break;
-	}
-      DumpStringToUSB ("\n\r");
-      wifi_tx_reader_command (last_reader_oid, i, 0, 0);
-      break;
     case 'N':
       i = atoiEx (args);
       env.e.reader_id = i;
       DumpStringToUSB ("Node ID set to ");
       DumpUIntToUSB (env.e.reader_id);
       DumpStringToUSB ("\n\r");
-      break;
-    case 'I':
-      i = atoiEx (args);
-      DumpStringToUSB ("Changed reader ID from [");
-      DumpUIntToUSB (last_reader_oid);
-      DumpStringToUSB ("] set to [");
-      DumpUIntToUSB (i);
-      DumpStringToUSB ("]\n\r");
-
-      wifi_tx_reader_command (last_reader_oid, READER_CMD_SET_OID, i, 0);
       break;
     case 'R':
       i = atoiEx (args);
@@ -232,9 +186,6 @@ prvExecCommand (u_int32_t cmd, portCHAR * args)
       DumpStringToUSB (" * The channel is ");
       DumpUIntToUSB (nRFAPI_GetChannel ());
       DumpStringToUSB ("\n\r");
-      DumpStringToUSB (" * The FIFO cache lifetime is ");
-      DumpUIntToUSB (PtGetFifoLifetimeSeconds ());
-      DumpStringToUSB ("s\n\r");
       DumpStringToUSB (" *\n\r"
 		       " *****************************************************\n\r");
       break;
@@ -248,9 +199,6 @@ prvExecCommand (u_int32_t cmd, portCHAR * args)
 	 " * S          - store transmitter settings\n\r"
 	 " * C          - print configuration\n\r"
 	 " * N [id]     - set node id\n\r"
-	 " * R [id]     - set reader address\n\r"
-	 " * I [id]     - set reader ID\n\r"
-	 " * FIFO [sec] - set FIFO cache lifetime in seconds\n\r"
 	 " * 0          - receive only mode\n\r"
 	 " * 1..4       - automatic transmit at selected power levels\n\r"
 	 " * ?,H        - display this help screen\n\r" " *\n\r"
