@@ -57,26 +57,21 @@ static const uint32_t xxtea_key[4] = { 0x00112233, 0x44556677, 0x8899AABB, 0xCCD
 
 /* set nRF24L01 broadcast mac */
 static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 0xDE, 0xAD, 0xBE, 0xEF, 42 };
-/* set nRF24L01 alarm mac */
-static const unsigned char alarm_mac[NRF_MAX_MAC_SIZE] = { 0x8B, 0xAD, 0xF0, 0x0D, 23 };
 
 static void
-nRF_tx (uint8_t power)
+nRF_tx (uint8_t * data, uint8_t size)
 {
-  /* encrypt data */
-  xxtea_encode (g_Beacon.block, XXTEA_BLOCK_COUNT, xxtea_key);
-
-  /* set TX power */
-  nRFAPI_SetTxPower (power & 0x3);
+  /* set RX queue size */
+//  nRFAPI_SetPipeSizeRX (0, size);
 
   /* upload data to nRF24L01 */
-  nRFAPI_TX ((uint8_t *) & g_Beacon, sizeof (g_Beacon));
+  nRFAPI_TX (data, size);
 
   /* transmit data */
   nRFCMD_CE (1);
 
   /* wait for packet to be transmitted */
-  pmu_sleep_ms (10);
+  pmu_sleep_ms (50);
 
   /* transmit data */
   nRFCMD_CE (0);
@@ -103,7 +98,7 @@ main (void)
   int fifo_pos;
   TFifoEntry *fifo;
   uint32_t seq, alarm_triggered;
-  uint8_t packetloss, alarm_disabled;
+  uint8_t packetloss, alarm_disabled, remote_control;
 
   volatile int i;
   int x, y, z, firstrun_done, tamper, moving;
@@ -251,10 +246,11 @@ main (void)
   /* set retries to zero */
   nRFAPI_TxRetries (0);
   /* enable ACK */
-  nRFAPI_PipesAck (ERX_P0 | ERX_P1);
-  nRFAPI_SetRxMAC (alarm_mac, NRF_MAX_MAC_SIZE, 1);
-  nRFAPI_PipesEnable (ERX_P0 | ERX_P1);
+  nRFAPI_SetPipeSizeRX (0, NRF_MAX_MAC_SIZE);
+  nRFAPI_PipesAck (ERX_P0);
+  nRFAPI_PipesEnable (ERX_P0);
   /* set tx power power to high */
+  nRFAPI_SetTxPower (0);
   nRFCMD_Power (1);
 
   /* blink LED for 1s to show readyness */
@@ -269,9 +265,10 @@ main (void)
   bzero (&fifo_buf, sizeof (fifo_buf));
   bzero (&acc_lowpass, sizeof (acc_lowpass));
 
-  seq = firstrun_done = tamper = moving = packetloss = 0;
+  seq = firstrun_done = tamper = moving = packetloss = remote_control = 0;
   /* start with disabled alarm */
   alarm_triggered = alarm_disabled = 1;
+
   while (1)
     {
       /* read acceleration sensor */
@@ -283,30 +280,45 @@ main (void)
 
       if (firstrun_done)
 	{
-	  /* prepare packet */
-	  bzero (&g_Beacon, sizeof (g_Beacon));
-	  g_Beacon.pkt.proto = RFBPROTO_BEACONTRACKER;
-	  g_Beacon.pkt.oid = htons (tag_id);
-	  g_Beacon.pkt.p.tracker.strength = 0;
-	  g_Beacon.pkt.p.tracker.seq = htonl (seq++);
-	  g_Beacon.pkt.p.tracker.reserved = moving;
-	  g_Beacon.pkt.crc = htons (crc16(g_Beacon.byte, sizeof (g_Beacon) - sizeof (g_Beacon.pkt.crc)));
-
-	  /* if alarm case, then tx to two different MACs, second mac */
-	  if (alarm_triggered)
-	    nRFAPI_SetTxMAC (
-		(seq & 1) ? alarm_mac : broadcast_mac,
-		NRF_MAX_MAC_SIZE);
+	  /* increment sequence counter */
+	  seq++;
 
 	  /* transmit packet */
-	  nRF_tx (g_Beacon.pkt.p.tracker.strength);
+	  if (!alarm_disabled && alarm_triggered && (seq & 1))
+	    {
+	      remote_control = 1;
+
+	      nRF_tx ((uint8_t *) & broadcast_mac, NRF_MAX_MAC_SIZE);
+	    }
+	  else
+	    {
+	      remote_control = 0;
+
+	      /* prepare packet */
+	      bzero (&g_Beacon, sizeof (g_Beacon));
+	      g_Beacon.pkt.proto = RFBPROTO_BEACONTRACKER;
+	      g_Beacon.pkt.oid = htons (tag_id);
+	      g_Beacon.pkt.p.tracker.strength = 0;
+	      g_Beacon.pkt.p.tracker.seq = htonl (seq);
+	      g_Beacon.pkt.p.tracker.reserved = moving;
+	      g_Beacon.pkt.crc =
+		htons (crc16
+		       (g_Beacon.byte,
+			sizeof (g_Beacon) - sizeof (g_Beacon.pkt.crc)));
+
+	      /* encrypt data */
+	      xxtea_encode (g_Beacon.block, XXTEA_BLOCK_COUNT, xxtea_key);
+
+	      nRF_tx ((uint8_t *) & g_Beacon, sizeof (g_Beacon));
+	    }
+
 	  /* get FIFO status */
 	  if (nRFAPI_GetFifoStatus () & FIFO_TX_EMPTY)
 	    {
 	      /* if ACK from alarm_mac, disable alarm */
-	      if (alarm_triggered)
+	      if (remote_control)
 		{
-		  if (seq & 1)
+		  if (!alarm_disabled)
 		    {
 		      for (i = 24; i > 10; i--)
 			{
@@ -314,21 +326,25 @@ main (void)
 			  pmu_wait_ms (50);
 			}
 		      alarm_disabled = 1;
+		      snd_tone (0);
 		    }
-		  else
-		    {
-		      for (i = 10; i < 24; i++)
-			{
-			  snd_tone (i);
-			  pmu_wait_ms (50);
-			}
-		    }
-		  snd_tone (0);
-		  alarm_triggered = 0;
-		  /* set tx address back to broadcast mac */
-		  nRFAPI_SetTxMAC (broadcast_mac, NRF_MAX_MAC_SIZE);
 		}
-	      tamper = moving = packetloss = alarm_disabled = 0;
+	      else
+		{
+		  if (alarm_disabled)
+		  {
+		    for (i = 10; i < 24; i++)
+			{
+			    snd_tone (i);
+			    pmu_wait_ms (50);
+			}
+		    snd_tone (0);
+		    alarm_disabled = 0;
+		  }
+		  alarm_triggered = 0;
+		}
+
+	      tamper = moving = packetloss = 0;
 	    }
 	  else
 	    {
@@ -369,9 +385,9 @@ main (void)
 	  if ((abs (acc_lowpass.x / FIFO_DEPTH - x) >= ACC_TRESHOLD) ||
 	      (abs (acc_lowpass.y / FIFO_DEPTH - y) >= ACC_TRESHOLD) ||
 	      (abs (acc_lowpass.z / FIFO_DEPTH - z) >= ACC_TRESHOLD))
-	  tamper = 5;
+	    tamper = 5;
 	}
-	else
+      else
 	{
 	  if (fifo_pos)
 	    {

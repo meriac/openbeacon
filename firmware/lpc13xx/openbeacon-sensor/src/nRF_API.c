@@ -111,10 +111,11 @@ nRFAPI_Init (uint8_t channel,
   nRFAPI_SetRxMAC (mac, mac_size, 0);
   nRFAPI_PipesEnable (ERX_P0);
   nRFAPI_PipesAck (0);
+  nRFAPI_DynpdEnable (0);
 
   // set payload sizes
   for (i = 0; i <= 5; i++)
-    nRFAPI_SetPipeSizeRX (i, 16);
+    nRFAPI_SetPipeSizeRX (i, i?0:16);
 
   // set TX retry count
   nRFAPI_TxRetries (0);
@@ -129,8 +130,8 @@ nRFAPI_Init (uint8_t channel,
   nRFAPI_FlushRX ();
   nRFAPI_FlushTX ();
 
-  if (features != 0)
-    nRFAPI_SetFeatures (features);
+  // set features */
+  nRFAPI_SetFeatures (features);
 
   return 1;
 }
@@ -153,6 +154,12 @@ nRFAPI_TxRetries (uint8_t count)
 
   // setup delay of 250us
   nRFCMD_RegWriteStatusRead (SETUP_RETR | WRITE_REG, count);
+}
+
+void
+nRFAPI_DynpdEnable (uint8_t mask)
+{
+  nRFCMD_RegWriteStatusRead (DYNPD | WRITE_REG, mask & 0x3F);
 }
 
 void

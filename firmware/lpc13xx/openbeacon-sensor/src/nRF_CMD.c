@@ -134,7 +134,7 @@ nRFCMD_GetRegSize (uint8_t reg)
   uint8_t res;
 
   if (reg > 0x17)
-    res = 0;
+    res = (reg==0x1C)?1:0;
   else
     switch (reg)
       {
