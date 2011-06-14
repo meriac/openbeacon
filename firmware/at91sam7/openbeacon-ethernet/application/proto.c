@@ -368,6 +368,38 @@ vnRFtaskRxTx (void *parameter)
 }
 
 /**********************************************************************/
+static inline void
+PtDumpNrfRegisters (void)
+{
+  unsigned int size;
+  unsigned char reg, buf[32], *p;
+
+  debug_printf ("\n\rnRF24L01+ register dump:\n\r");
+  reg = 0;
+  while (reg <= 0x1C)
+    {
+      size = nRFCMD_GetRegSize (reg);
+      if(size)
+      {
+	if (size > sizeof (buf))
+	    size = sizeof (buf);
+
+	nRFCMD_RegReadBuf (reg, buf, size);
+	p = buf;
+
+	// dump single register
+	debug_printf("  R 0x%02X: ",reg);
+	while (size--)
+	    debug_printf(" 0x%02X",*p++);
+	debug_printf("\n\r");
+      }
+      reg++;
+    }
+    debug_printf("\n\r  ");
+}
+
+
+/**********************************************************************/
 void
 PtStatusRxTx (void)
 {
@@ -380,6 +412,8 @@ PtStatusRxTx (void)
       debug_printf ("\tdecrypted   = %u\n", rf_decrypt);
       debug_printf ("\tpkt crc ok  = %u\n", rf_crc_ok);
       debug_printf ("\tpkt crc err = %u\n", rf_crc_err);
+
+      PtDumpNrfRegisters ();
     }
   debug_printf ("\n");
 }
