@@ -50,8 +50,14 @@ APP_SRC= \
 
 all: $(TARGET).bin
 
+publish: clean $(TARGET).bin
+	rm -f $(TARGET).zip
+	zip $(TARGET).zip $(TARGET).bin
+	scp $(TARGET).zip $(TARGET).bin meri@bitmanufaktur.net:/home/wwwrun/open.bitmanufaktur.com/web/www/people/milosch/artcom/
+
 app_clean:
 	find application network config -name '*.o' -exec rm \{\} \;
 	find application network config -name '*~'  -exec rm \{\} \;
 
 include ../core/Makefile.rules
+

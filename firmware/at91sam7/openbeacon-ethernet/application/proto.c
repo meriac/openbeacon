@@ -59,7 +59,7 @@ typedef struct
 
 /**********************************************************************/
 #define MAX_TAGS 32
-#define MAX_TAG_TRACKING_TIME 20
+#define MAX_TAG_TRACKING_TIME 10
 static TVisibleTagList g_rf_tag_list[MAX_TAGS];
 /**********************************************************************/
 

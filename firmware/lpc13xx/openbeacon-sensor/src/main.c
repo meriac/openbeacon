@@ -348,7 +348,7 @@ main (void)
 	  else
 	    {
 	      nRFAPI_FlushTX ();
-	      if (!alarm_disabled)
+	      if (!alarm_disabled && moving)
 		{
 		  if (packetloss < PACKETLOSS_TRESHOLD)
 		    packetloss++;

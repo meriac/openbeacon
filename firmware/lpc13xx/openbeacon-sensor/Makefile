@@ -21,9 +21,9 @@ all: $(TARGET).bin
 
 publish: clean $(TARGET).bin
 	rm -f $(TARGET).zip
-	../lpc-flash/src/lpc-flash $(TARGET).bin firmware.bin
-	zip $(TARGET).zip firmware.bin
-	scp $(TARGET).zip firmware.bin meri@bitmanufaktur.net:/home/wwwrun/open.bitmanufaktur.com/web/www/people/milosch/usb2tag/
+	../lpc-flash/src/lpc-flash $(TARGET).bin $(TARGET)-tag.bin
+	zip $(TARGET)-tag.zip $(TARGET)-tag.bin
+	scp $(TARGET)-tag.zip $(TARGET)-tag.bin meri@bitmanufaktur.net:/home/wwwrun/open.bitmanufaktur.com/web/www/people/milosch/artcom/
 
 app_clean:
 	rm -f $(TARGET).zip $(TARGET)-firmware.bin
