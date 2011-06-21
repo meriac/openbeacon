@@ -22,8 +22,6 @@
 
 */
 
-#define OPENBEACON_ENABLEENCODE
-
 #include <htc.h>
 #include <stdlib.h>
 #include "config.h"
@@ -37,7 +35,7 @@ __CONFIG (0x03d4);
 void
 main (void)
 {
-  unsigned char i;
+  unsigned char i,data[NRF_MAC_SIZE];
 
   /* configure CPU peripherals */
   OPTION_REG = CONFIG_CPU_OPTION;
@@ -50,7 +48,7 @@ main (void)
 
   timer_init ();
 
-  for (i = 0; i <= 40; i++)
+  for (i = 0; i <= 10; i++)
     {
       CONFIG_PIN_LED = (i & 1) ? 1 : 0;
       sleep_jiffies (JIFFIES_PER_MS (50));
@@ -59,6 +57,8 @@ main (void)
   /* enable RX mode */
   nRFCMD_Init ();
   CONFIG_PIN_CE = 1;
+  /* turn on LED */
+  CONFIG_PIN_LED = 1;
 
   IOCA = IOCA | (1 << 0);
 
@@ -66,17 +66,33 @@ main (void)
     {
 	if(!CONFIG_PIN_IRQ)
 	{
-	  /* turn on LED */
-	  CONFIG_PIN_LED = 1;
+	  /* disable RX */
+	  CONFIG_PIN_CE = 0;
 
-	  /* clear RX fifo */
-	  nRFCMD_RegExec (FLUSH_RX);
+	  /* turn off LED */
+	  CONFIG_PIN_LED = 0;
+
+	  /* wait for 2ms to power down RX */
+	  sleep_jiffies (JIFFIES_PER_MS (2));
+
+	  nRFCMD_Stop ();
+
+	  while ((nRFCMD_GetFifoStatus () & FIFO_RX_EMPTY) == 0)
+	    nRFCMD_RegRead (RD_RX_PLOAD, &data, sizeof (data));
+
+	  sleep_jiffies (JIFFIES_PER_MS (25));
 
 	  /* clear status */
 	  nRFCMD_ClearIRQ (MASK_IRQ_FLAGS);
 
-	  /* turn off LED */
-	  CONFIG_PIN_LED = 0;
+	  /* Start RX again */
+	  nRFCMD_Start ();
+
+	  /* turn on LED */
+	  CONFIG_PIN_LED = 1;
+
+	  /* enable RX */
+	  CONFIG_PIN_CE = 1;
 	}
     }
 }

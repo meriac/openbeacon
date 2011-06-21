@@ -25,8 +25,8 @@
 #ifndef NRF_CMD_H
 #define NRF_CMD_H
 
-// LNA, RF output -18dBm, 2Mbps
-#define NRF_RFOPTIONS 0x09
+// LNA, RF output 0dBm, 2Mbps
+#define NRF_RFOPTIONS 0x0C
 
 #define NRF_MAC_SIZE 5
 
@@ -37,9 +37,9 @@ extern unsigned char nRFCMD_RegWrite (unsigned char reg,
 extern unsigned char nRFCMD_RegRead (unsigned char reg, unsigned char *buf,
 				     unsigned char count);
 extern void nRFCMD_Macro (const unsigned char *macro);
-extern void nRFCMD_Execute (void);
 extern unsigned char nRFCMD_GetFifoStatus (void);
 extern unsigned char nRFCMD_ClearIRQ (unsigned char status);
+extern void nRFCMD_Start (void);
 extern void nRFCMD_Stop (void);
 extern unsigned char nRFCMD_RegExec (unsigned char reg);
 extern unsigned char nRFCMD_RegReadWrite (unsigned char reg,

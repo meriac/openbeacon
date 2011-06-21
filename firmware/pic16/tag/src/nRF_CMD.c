@@ -30,12 +30,12 @@
 
 #assert NRF_MAC_SIZE==5
 
-#define NRF_CONFIG_BYTE (NRF_CONFIG_EN_CRC|NRF_CONFIG_PRIM_RX)
+#define NRF_CONFIG_BYTE (NRF_CONFIG_EN_CRC)
 
 // first byte payload size+1, second byte register, 3..n-th byte payload
 const unsigned char g_MacroInitialization[] = {
   0x01, OP_NOP,
-  0x02, NRF_REG_CONFIG     | WRITE_REG, 0x00,				// stop nRF
+  0x02, NRF_REG_CONFIG     | WRITE_REG, NRF_CONFIG_PWR_UP,		// stop nRF
   0x02, NRF_REG_EN_AA      | WRITE_REG, 0x01,				// enable Acknowledge for Pipe 0
   0x02, NRF_REG_EN_RXADDR  | WRITE_REG, 0x01,				// enable RX pipe address 0
   0x02, NRF_REG_SETUP_AW   | WRITE_REG, NRF_MAC_SIZE - 2,		// setup MAC address width to NRF_MAC_SIZE
@@ -45,20 +45,20 @@ const unsigned char g_MacroInitialization[] = {
   0x06, NRF_REG_RX_ADDR_P0 | WRITE_REG, 0xDE, 0xAD, 0xBE, 0xEF, 42,	// set RX_ADDR_P0 to "DEADBEEF42"
   0x06, NRF_REG_TX_ADDR    | WRITE_REG, 0xDE, 0xAD, 0xBE, 0xEF, 42,	// set TX_ADDR    to "DEADBEEF42"
   0x02, NRF_REG_RX_PW_P0   | WRITE_REG, NRF_MAC_SIZE,			// set payload width of pipe 0 to sizeof(TRfBroadcast)
-  0x02, NRF_REG_CONFIG     | WRITE_REG, NRF_CONFIG_BYTE | NRF_CONFIG_PWR_UP,
+  0x02, NRF_REG_CONFIG     | WRITE_REG, NRF_CONFIG_BYTE | NRF_CONFIG_PRIM_RX | NRF_CONFIG_PWR_UP,
   0x00									// termination
 };
 
 // first byte payload size+1, second byte register, 3..n-th byte payload
 const unsigned char g_MacroStart[] = {
-  0x02, NRF_REG_CONFIG | WRITE_REG, NRF_CONFIG_BYTE | NRF_CONFIG_PWR_UP,
+  0x02, NRF_REG_CONFIG | WRITE_REG, NRF_CONFIG_BYTE | NRF_CONFIG_PWR_UP | NRF_CONFIG_PRIM_RX,
   0x02, NRF_REG_STATUS | WRITE_REG, 0x70,	// reset status
   0x00
 };
 
 // first byte payload size+1, second byte register, 3..n-th byte payload
 const unsigned char g_MacroStop[] = {
-  0x02, NRF_REG_CONFIG | WRITE_REG, NRF_CONFIG_BYTE,
+  0x02, NRF_REG_CONFIG | WRITE_REG, NRF_CONFIG_BYTE | NRF_CONFIG_PWR_UP,
   0x02, NRF_REG_STATUS | WRITE_REG, 0x70,	// reset status
   0x00
 };
@@ -125,20 +125,15 @@ nRFCMD_Macro (const unsigned char *macro)
 }
 
 void
-nRFCMD_Stop (void)
+nRFCMD_Start (void)
 {
-  nRFCMD_Macro (g_MacroStop);
+  nRFCMD_Macro (g_MacroStart);
 }
 
 void
-nRFCMD_Execute (void)
+nRFCMD_Stop (void)
 {
-  nRFCMD_Macro (g_MacroStart);
-  sleep_2ms ();
-  CONFIG_PIN_CE = 1;
-  sleep_2ms ();
-  CONFIG_PIN_CE = 0;
-  nRFCMD_Stop ();
+  nRFCMD_Macro (g_MacroStop);
 }
 
 unsigned char
