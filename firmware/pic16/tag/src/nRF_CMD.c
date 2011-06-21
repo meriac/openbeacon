@@ -30,22 +30,23 @@
 
 #assert NRF_MAC_SIZE==5
 
-#define NRF_CONFIG_BYTE (NRF_CONFIG_EN_CRC)
+#define NRF_CONFIG_BYTE (NRF_CONFIG_EN_CRC|NRF_CONFIG_PRIM_RX)
 
 // first byte payload size+1, second byte register, 3..n-th byte payload
 const unsigned char g_MacroInitialization[] = {
   0x01, OP_NOP,
-  0x02, NRF_REG_CONFIG     | WRITE_REG, 0x00,	// stop nRF
-  0x02, NRF_REG_EN_AA      | WRITE_REG, 0x00,	// disable ShockBurst(tm)
-  0x02, NRF_REG_EN_RXADDR  | WRITE_REG, 0x01,	// enable RX pipe address 0
-  0x02, NRF_REG_SETUP_AW   | WRITE_REG, NRF_MAC_SIZE - 2,	// setup MAC address width to NRF_MAC_SIZE
-  0x02, NRF_REG_RF_CH      | WRITE_REG, CONFIG_DEFAULT_CHANNEL,	// set channel to 2480MHz
-  0x02, NRF_REG_RF_SETUP   | WRITE_REG, NRF_RFOPTIONS,	// update RF options
-  0x02, NRF_REG_STATUS     | WRITE_REG, 0x78,	// reset status register
-  0x06, NRF_REG_RX_ADDR_P0 | WRITE_REG, 'O', 'C', 'A', 'E', 'B',	// set RX_ADDR_P0 to "BEACO"
-  0x06, NRF_REG_TX_ADDR    | WRITE_REG, 0x01, 0x02, 0x03, 0x02, 0x01,	// set TX_ADDR
-  0x02, NRF_REG_RX_PW_P0   | WRITE_REG, 16,	// set payload width of pipe 0 to sizeof(TRfBroadcast)
-  0x00					// termination
+  0x02, NRF_REG_CONFIG     | WRITE_REG, 0x00,				// stop nRF
+  0x02, NRF_REG_EN_AA      | WRITE_REG, 0x01,				// enable Acknowledge for Pipe 0
+  0x02, NRF_REG_EN_RXADDR  | WRITE_REG, 0x01,				// enable RX pipe address 0
+  0x02, NRF_REG_SETUP_AW   | WRITE_REG, NRF_MAC_SIZE - 2,		// setup MAC address width to NRF_MAC_SIZE
+  0x02, NRF_REG_RF_CH      | WRITE_REG, CONFIG_DEFAULT_CHANNEL,		// set channel to 2480MHz
+  0x02, NRF_REG_RF_SETUP   | WRITE_REG, NRF_RFOPTIONS,			// update RF options
+  0x02, NRF_REG_STATUS     | WRITE_REG, 0x78,				// reset status register
+  0x06, NRF_REG_RX_ADDR_P0 | WRITE_REG, 0xDE, 0xAD, 0xBE, 0xEF, 42,	// set RX_ADDR_P0 to "DEADBEEF42"
+  0x06, NRF_REG_TX_ADDR    | WRITE_REG, 0xDE, 0xAD, 0xBE, 0xEF, 42,	// set TX_ADDR    to "DEADBEEF42"
+  0x02, NRF_REG_RX_PW_P0   | WRITE_REG, NRF_MAC_SIZE,			// set payload width of pipe 0 to sizeof(TRfBroadcast)
+  0x02, NRF_REG_CONFIG     | WRITE_REG, NRF_CONFIG_BYTE | NRF_CONFIG_PWR_UP,
+  0x00									// termination
 };
 
 // first byte payload size+1, second byte register, 3..n-th byte payload
@@ -150,6 +151,32 @@ nRFCMD_RegExec (unsigned char reg)
   CONFIG_PIN_CSN = 1;
 
   return res;
+}
+
+unsigned char
+nRFCMD_GetFifoStatus (void)
+{
+ unsigned char res;
+
+ CONFIG_PIN_CSN = 0;
+ nRFCMD_XcieveByte (NRF_REG_FIFO_STATUS);
+ res = nRFCMD_XcieveByte (0);
+ CONFIG_PIN_CSN = 1;
+
+ return res;
+}
+
+unsigned char
+nRFCMD_ClearIRQ (unsigned char status)
+{
+ unsigned char res;
+
+ CONFIG_PIN_CSN = 0;
+ res = nRFCMD_XcieveByte (STATUS | WRITE_REG);
+ nRFCMD_XcieveByte (status & MASK_IRQ_FLAGS);
+ CONFIG_PIN_CSN = 1;
+
+ return res;
 }
 
 unsigned char
