@@ -44,6 +44,8 @@ typedef struct
 #define MAINCLKSEL_WDT 2
 #define MAINCLKSEL_SYSPLL_OUT 3
 
+#define TONE_HIGH 23
+
 /* device UUID */
 static uint16_t tag_id;
 static TDeviceUID device_uuid;
@@ -320,29 +322,28 @@ main (void)
 		{
 		  if (!alarm_disabled)
 		    {
-		      for (i = 24; i > 10; i--)
-			{
-			  snd_tone (i);
-			  pmu_wait_ms (50);
-			}
-		      alarm_disabled = 1;
+		      snd_tone (TONE_HIGH);
+		      pmu_wait_ms (75);
 		      snd_tone (0);
+		      pmu_wait_ms (120);
+		      snd_tone (TONE_HIGH-7);
+		      pmu_wait_ms (75);
+		      snd_tone (0);
+		      alarm_disabled = 1;
 		    }
 		}
 	      else
-		{
 		  if (alarm_disabled || alarm_triggered)
 		  {
-		    for (i = 10; i < 24; i++)
-			{
-			    snd_tone (i);
-			    pmu_wait_ms (50);
-			}
+		    snd_tone (TONE_HIGH);
+		    pmu_wait_ms (75);
+		    snd_tone (0);
+		    pmu_wait_ms (120);
+		    snd_tone (TONE_HIGH);
+		    pmu_wait_ms (75);
 		    snd_tone (0);
 		    alarm_triggered = alarm_disabled = 0;
 		  }
-		}
-
 	      tamper = moving = packetloss = 0;
 	    }
 	  else
