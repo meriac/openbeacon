@@ -1,7 +1,7 @@
 /***************************************************************
  *
  * OpenBeacon.org - midlevel access functions for
- * issuing raw commands to the nRF24L01 2.4Ghz frontend
+ * issuing raw commands to the nRF24L01+ 2.4Ghz frontend
  *
  * Copyright 2007 Milosch Meriac <meriac@openbeacon.de>
  *
@@ -134,7 +134,7 @@ nRFCMD_GetRegSize (uint8_t reg)
   uint8_t res;
 
   if (reg > 0x17)
-    res = 0;
+    res = (reg==0x1C)?1:0;
   else
     switch (reg)
       {

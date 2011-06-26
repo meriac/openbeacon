@@ -1,6 +1,6 @@
 /***************************************************************
  *
- * OpenBeacon.org - opcode & register definitions for nRF24L01
+ * OpenBeacon.org - opcode & register definitions for nRF24L01+
  *
  * Copyright 2007 Milosch Meriac <meriac@openbeacon.de>
  *
@@ -36,7 +36,9 @@
 #define FLUSH_RX        0xE2	// Define flush RX register command
 #define REUSE_TX_PL     0xE3	// Define reuse TX payload register command
 #define OP_NOP          0xFF	// Define No Operation, might be used to read status register
+#ifdef  __NRF24L01__
 #define ACTIVATE        0x50	// ACTIVATE additional features
+#endif/*__NRF24L01__*/
 #define R_RX_PL_WID     0x60	// Define Read RX-payload width command
 #define W_ACK_PAYLOAD   0xA8	// Write payload to be used in ACK packet on pipe PPP
 #define W_TX_PAYLOAD_NOACK 0xB0	// Used in TX mode, Disable AUTOACK on this specific packet
@@ -68,6 +70,7 @@
 #define RX_PW_P4        0x15	// 'RX payload width, pipe4' register address
 #define RX_PW_P5        0x16	// 'RX payload width, pipe5' register address
 #define FIFO_STATUS     0x17	// 'FIFO Status Register' register address
+#define DYNPD           0x1C	// 'Enable dynamic payload length' register address
 #define FEATURE         0x1D	// Additional features register, needed to enable the additional commands
 
 //********************************************************************************************************************//
@@ -90,7 +93,6 @@
 #define NRF_CONFIG_MASK_RX_DR   0x40
 #define NRF_CONFIG_MASK_IRQS    (NRF_CONFIG_MASK_MAX_RT|NRF_CONFIG_MASK_TX_DS|NRF_CONFIG_MASK_RX_DR)
 
-
 #define MASK_RX_DR_FLAG		0x40
 #define MASK_TX_DS_FLAG		0x20
 #define MASK_MAX_RT_FLAG	0x10
@@ -101,6 +103,11 @@
 #define FIFO_TX_EMPTY		0x10
 #define FIFO_TX_FULL		0x20
 #define FIFO_TX_REUSE		0x40
+
+#define FEATURE_EN_DYN_ACK	0x01
+#define FEATURE_EN_ACK_PAY	0x02
+#define FEATURE_EN_DPL		0x04
+#define FEATURE_MASK		(FEATURE_EN_DYN_ACK|FEATURE_EN_ACK_PAY|FEATURE_EN_DPL)
 
 #define NRF_MIN_MAC_SIZE 3
 #define NRF_MAX_MAC_SIZE 5
