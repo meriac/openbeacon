@@ -251,6 +251,7 @@ main_menue (uint8_t cmd)
 		    " *****************************************************\n"
 		    " * H,?          - this help screen\n"
 		    " * S            - Show device status\n"
+		    " * E            - Reset Logfile\n"
 		    " *****************************************************\n"
 		    "\n");
       break;
@@ -266,6 +267,12 @@ main_menue (uint8_t cmd)
       debug_printf (" *****************************************************\n"
 		    "\n");
       break;
+
+    case 'E':
+      debug_printf ("\nErasing Storage...\n\n");
+      storage_erase ();
+      break;
+
     default:
       debug_printf ("Unknown command '%c' - please press 'H' for help \n",
 		    cmd);
@@ -307,6 +314,9 @@ main (void)
   /* Plugged to computer upon reset ? */
   if(GPIOGetValue (0,3))
   {
+    /* wait some time till Bluetooth is off */
+    for (t = 0; t < 2000000; t++);
+
     /* Init 3D acceleration sensor */
     acc_init (1);
     /* Init Flash Storage */

@@ -30,6 +30,13 @@ void spi_init_pin(spi_cs chipselect)
 	GPIOSetDir((uint8_t) (chipselect >> 24), (uint8_t) (chipselect >> 16), 1);
 }
 
+void spi_txrx_done(spi_cs chipselect)
+{
+	GPIOSetValue((uint8_t) (chipselect >> 24),
+		(uint8_t) (chipselect >> 16), (chipselect
+		& SPI_CS_MODE_INVERT_CS) ^ SPI_CS_MODE_INVERT_CS);
+}
+
 int spi_txrx(spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
 		uint16_t rxlen)
 {
@@ -90,10 +97,7 @@ int spi_txrx(spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
 
 	/* de-activate chip select */
 	if ((chipselect & SPI_CS_MODE_SKIP_CS_DEASSERT) == 0)
-		GPIOSetValue((uint8_t) (chipselect >> 24),
-				(uint8_t) (chipselect >> 16), (chipselect
-						& SPI_CS_MODE_INVERT_CS) ^ SPI_CS_MODE_INVERT_CS);
-
+		spi_txrx_done (chipselect);
 	return 0;
 }
 

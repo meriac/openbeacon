@@ -29,6 +29,93 @@
 
 #define LOGFILE_STORAGE_SIZE (4*1024*1024)
 
+#ifdef  ENABLE_FLASH
+uint8_t
+storage_flags (void)
+{
+  static const uint8_t cmd_read_status = 0x05;
+  uint8_t status;
+
+  spi_txrx (SPI_CS_FLASH, &cmd_read_status, sizeof (cmd_read_status), &status, sizeof(status));
+
+  return status;
+}
+
+void
+storage_erase (void)
+{
+  static const uint8_t tx = 0x60;
+  spi_txrx (SPI_CS_FLASH, &tx, 1, NULL, 0);
+
+  while(storage_flags() & 1);
+}
+
+void
+storage_read (uint32_t offset, uint32_t length, void *dst)
+{
+  uint8_t tx[4];
+
+  tx[0]=0x03; /* 25MHz Read */
+  tx[1]=(uint8_t)(offset>>16);
+  tx[2]=(uint8_t)(offset>> 8);
+  tx[3]=(uint8_t)(offset);
+
+  spi_txrx (SPI_CS_FLASH, tx, sizeof(tx), dst, length);
+}
+
+void
+storage_write (uint32_t offset, uint32_t length, const void *src)
+{
+  uint8_t tx[6];
+  const uint8_t *p;
+
+  if(length<2)
+    return;
+
+  p = (const uint8_t*) src;
+
+  tx[0]=0x06; /* Write Enable */
+  spi_txrx (SPI_CS_FLASH, tx, 1, NULL, 0);
+
+  /* write first block including address */
+  tx[0]=0xAD; /* AAI Word Program */
+  tx[1]=(uint8_t)(offset>>16);
+  tx[2]=(uint8_t)(offset>> 8);
+  tx[3]=(uint8_t)(offset);
+  tx[4]=*p++;
+  tx[5]=*p++;
+  length-=2;
+  spi_txrx (SPI_CS_FLASH, tx, sizeof(tx), NULL, 0);
+
+  while(length>2)
+  {
+    /* wait while busy */
+    while(storage_flags() & 1);
+
+    tx[1]=*p++;
+    tx[2]=*p++;
+    length-=2;
+
+    spi_txrx (SPI_CS_FLASH, tx, 3, NULL, 0);
+  }
+
+  /* wait while busy */
+  while(storage_flags() & 1);
+
+  tx[0]=0x04; /* Write Disable */
+  spi_txrx (SPI_CS_FLASH, tx, 1, NULL, 0);
+}
+
+static void
+storage_logfile_read_raw (uint32_t offset, uint32_t length, const void *src,
+			  uint8_t * dst)
+{
+  (void) src;
+
+  storage_read (offset, length, dst);
+}
+#endif/*ENABLE_FLASH*/
+
 void
 storage_status (void)
 {
@@ -38,28 +125,10 @@ storage_status (void)
   spi_txrx (SPI_CS_FLASH, &cmd_jedec_read_id, sizeof (cmd_jedec_read_id), rx,
 	    sizeof (rx));
   /* Show FLASH ID */
-  debug_printf (" * FLASH: ID:%02X-%02X-%02X\n", rx[0], rx[1], rx[2]);
+  debug_printf (" * FLASH:    ID=%02X-%02X-%02X\n", rx[0], rx[1], rx[2]);
+  debug_printf (" *       Status=%02X\n", storage_flags());
 #endif/*ENABLE_FLASH*/
 }
-
-#ifdef  ENABLE_FLASH
-static void
-storage_logfile_read_raw (uint32_t offset, uint32_t length, const void *src,
-			  uint8_t * dst)
-{
-  (void) src;
-
-  uint8_t tx[5];
-
-  tx[0]=0x03; /* 25MHz Read */
-  tx[1]=(uint8_t)(offset>>16);
-  tx[2]=(uint8_t)(offset>> 8);
-  tx[3]=(uint8_t)(offset);
-  tx[4]=0x00;
-
-  spi_txrx (SPI_CS_FLASH, tx, sizeof(tx), dst, length);
-}
-#endif/*ENABLE_FLASH*/
 
 void
 storage_init (uint16_t device_id)

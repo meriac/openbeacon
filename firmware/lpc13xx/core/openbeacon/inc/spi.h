@@ -38,6 +38,7 @@ extern void spi_init (void);
 extern void spi_close (void);
 extern void spi_status (void);
 extern void spi_init_pin (spi_cs chipselect);
+extern void spi_txrx_done (spi_cs chipselect);
 extern int spi_txrx (spi_cs chipselect, const void *tx, uint16_t txlen,
 		     void *rx, uint16_t rxlen);
 
