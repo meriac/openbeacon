@@ -13,7 +13,7 @@
 #define __GPIO_H
 
 extern void GPIOInit (void);
-extern LPC_GPIO_TypeDef (*const LPC_GPIO[4]);
+extern LPC_GPIO_TypeDef (*const volatile LPC_GPIO[4]);
 
 /*****************************************************************************
 ** Function name:		GPIOSetValue

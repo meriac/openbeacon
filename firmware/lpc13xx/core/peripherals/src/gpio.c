@@ -12,7 +12,7 @@
 #include "LPC13xx.h"		/* LPC13xx Peripheral Registers */
 #include "gpio.h"
 
-LPC_GPIO_TypeDef (*const LPC_GPIO[4]) = {
+LPC_GPIO_TypeDef (*const volatile LPC_GPIO[4]) = {
     LPC_GPIO0,
     LPC_GPIO1,
     LPC_GPIO2,
