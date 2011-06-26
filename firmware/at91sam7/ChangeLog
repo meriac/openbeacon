@@ -1,3 +1,33 @@
+commit 4c6fcba38095b1614b1375fe40fabcd2bda09b77
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Sun Jun 26 17:39:05 2011 +0200
+
+    added nRF24L01+ ACK support
+
+commit ff31986cf5a8b25134b9dfc095f6e28c041b13ca
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Sun Jun 26 16:59:47 2011 +0200
+
+    added support for flashing ethernet readers - added incrementing counter for reader IDs
+
+commit 5d6f69a73b84df94ce9f77f1070e5ddc53d5b80b
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Sun Jun 26 16:56:30 2011 +0200
+
+    turned openbeacon sniffer into decrypting hexdumper
+
+commit 1621b72efebe8d38cbdc049b9a3d8e136b3fc821
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Tue Mar 29 17:19:45 2011 +0200
+
+    temporery removed libusb support and added AT91SAM7XC support
+
+commit c797358b7b2aa0e804782d6cbdaea10fef479f85
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Wed Mar 23 20:16:53 2011 +0100
+
+    update_changelog now supports git
+
 commit 5d941121a47fc3006b21eeecda89e572d9264274
 Author: Milosch Meriac <meriac@bitmanufaktur.de>
 Date:   Wed Mar 23 19:42:21 2011 +0100
