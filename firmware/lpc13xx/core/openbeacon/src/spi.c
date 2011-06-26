@@ -126,3 +126,27 @@ void spi_init(void)
 	LPC_SSP->CR0 = 0x0007;
 	LPC_SSP->CR1 = 0x0002;
 }
+
+void spi_close(void)
+{
+	/* Disable SSP clock */
+	LPC_SYSCON->SYSAHBCLKCTRL &= ~(1 << 11);
+
+	/* Disable SSP PCLK */
+	LPC_SYSCON->SSPCLKDIV = 0x00;
+
+	/* Enable SSP peripheral MISO, Pulldown */
+	LPC_IOCON->PIO0_8 = 0x00;
+	GPIOSetDir   (0, 8, 1); // OUT
+	GPIOSetValue (0, 8, 0);
+
+	/* MOSI */
+	LPC_IOCON->PIO0_9 = 0x00;
+	GPIOSetDir   (0, 9, 1); // OUT
+	GPIOSetValue (0, 9, 0);
+
+	/* SCK */
+	LPC_IOCON->JTAG_TCK_PIO0_10 = 0x01;
+	GPIOSetDir   (0, 10, 1); // OUT
+	GPIOSetValue (0, 10, 0);
+}
