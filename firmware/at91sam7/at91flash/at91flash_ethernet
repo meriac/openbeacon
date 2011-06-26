@@ -1,0 +1,46 @@
+#!/bin/bash
+# (C) Milosch Meriac <meriac@bitmanufaktur.de> 2011
+
+READER_ID=903
+UART='/dev/ttyACM0'
+SAM7='/usr/local/bin/sam7'
+FILE='openbeacon-ethernet.bin'
+
+    echo "1.  please unplug the USB cable and insert the SAM-BA jumper (Pin 1+2)"
+    echo "2.  attach the USB cable"
+    echo "3.  wait ten seconds"
+    echo "4.  unplug the USB cable"
+    echo "5.  remove the SAM-BA jumper"
+    echo "6.  attach the USB cable"
+    echo "7.  wait several seconds to allow the device to be detected by Linux"
+
+while true; do
+
+    echo -e "\n\n8. press [ENTER] to start flashing"
+    read
+
+if [[ -a $FILE ]]; then
+    echo -e "9.  flashing '$FILE'...\n"
+    $SAM7 -l$UART<< ENDOFMYTEXT
+set_clock
+unlock_regions
+flash $FILE
+boot_from_flash
+ENDOFMYTEXT
+    echo '10. done!'
+
+    IP_H=$(( READER_ID / 256 ))
+    IP_L=$((READER_ID % 256 ))
+    if [ "$IP_L" -gt 0 ]; then
+        if [ "$IP_L" -lt 255 ]; then
+	  echo -e "\n\n11. Reader [$READER_ID]"
+	  echo "    IP=10.254.$IP_H.$IP_L"
+	fi
+    fi
+    READER_ID=$(( READER_ID + 1 ))
+
+else
+    echo "can't open flash image file '$FILE'"
+fi
+
+done
