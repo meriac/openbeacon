@@ -32,6 +32,7 @@
 extern uint8_t nRFAPI_Init (uint8_t channel,
 			    const uint8_t * mac,
 			    uint8_t mac_size, uint8_t features);
+extern void nRFCMD_Shutdown (void);
 extern void nRFAPI_SetTxPower (uint8_t power);
 extern void nRFAPI_TxRetries (uint8_t count);
 extern void nRFAPI_SetRxMode (uint8_t receive);

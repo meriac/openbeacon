@@ -57,7 +57,8 @@ typedef struct
 {
   uint8_t strength;
   uint16_t oid_last_seen;
-  uint16_t powerup_count;
+  uint8_t seen_low;
+  uint8_t seen_high;
   uint8_t reserved;
   uint32_t seq;
 } PACKED TBeaconTracker;

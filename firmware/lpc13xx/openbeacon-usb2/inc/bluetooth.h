@@ -24,6 +24,8 @@
 #ifndef __BLUETOOTH_H__
 #define __BLUETOOTH_H__
 
-extern void bt_init (uint8_t enabled);
+#ifdef  ENABLE_BLUETOOTH
+extern void bt_init (uint8_t enabled, uint16_t device_id);
+#endif/*ENABLE_BLUETOOTH*/
 
 #endif/*__BLUETOOTH_H__*/

@@ -24,10 +24,6 @@
 #include "3d_acceleration.h"
 #include "spi.h"
 
-/* IO definitions */
-#define ACC_INT_PORT 1
-#define ACC_INT_PIN 11
-
 static void
 acc_reg_write (uint8_t addr, uint8_t data)
 {
@@ -78,23 +74,38 @@ acc_status (void)
 }
 
 void
+acc_power (uint8_t enabled)
+{
+  /* switch to input if enabled */
+  if(enabled)
+    GPIOSetDir (1, 11, 0);
+
+  /* dummy read - FIXME */
+  acc_reg_read (0);
+  /* set 3D acceleration sensor active, 2g - FIXME power saving */
+  acc_reg_write (0x16, enabled ? (0x01 | 0x01 << 2) : 0x00);
+
+  /* switch to output after shutting down */
+  if(!enabled)
+  {
+    GPIOSetDir (1, 11, 1);
+    GPIOSetValue (1, 11, 0);
+  }
+}
+
+void
 acc_init (uint8_t enabled)
 {
   /* PIO, PIO0_4 in standard IO functionality */
   LPC_IOCON->PIO0_4 = 1 << 8;
 
-  /* PIO, Inactive Pull, Digital Mode */
-  LPC_IOCON->PIO1_11 = (1<<7)|(2<<3);
-
   /* setup SPI chipselect pin */
   spi_init_pin (SPI_CS_ACC3D);
 
-  /* Set ACC_INT port to input */
-  GPIOSetDir (ACC_INT_PORT, ACC_INT_PIN, 0);
+  /* PIO, Inactive Pull, Digital Mode */
+  LPC_IOCON->PIO1_11 = 0x80;
+  GPIOSetDir (1, 11, 0);
 
-  /* dummy read - FIXME */
-  acc_reg_read (0);
-
-  /* set 3D acceleration sensor active, 2g - FIXME power saving */
-  acc_reg_write (0x16, enabled ? (0x01 | 0x01 << 2) : 0x00);
+  /* propagate power settings */
+  acc_power (enabled);
 }

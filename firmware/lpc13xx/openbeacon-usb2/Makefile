@@ -9,13 +9,12 @@ APP_LDFLAGS=-lm
 
 APP_SRC= \
   src/main.c \
+  src/pmu.c \
   src/nRF_CMD.c \
   src/nRF_API.c \
+  src/storage.c \
   src/bluetooth.c \
-  src/pin.c \
-  src/pmu.c \
-  src/3d_acceleration.c \
-  src/storage.c
+  src/3d_acceleration.c
 
 APP_SRC+=$(IMAGES_C)
 
@@ -23,9 +22,9 @@ all: $(TARGET).bin
 
 publish: clean $(TARGET).bin
 	rm -f $(TARGET).zip
-	../lpc-flash/src/lpc-flash $(TARGET).bin firmware.bin
-	zip $(TARGET).zip firmware.bin
-	scp $(TARGET).zip firmware.bin meri@bitmanufaktur.net:/home/wwwrun/open.bitmanufaktur.com/web/www/people/milosch/usb2tag/
+	../lpc-flash/src/lpc-flash $(TARGET).bin $(TARGET)-firmware.bin
+	zip $(TARGET).zip $(TARGET)-firmware.bin
+	scp $(TARGET).zip $(TARGET)-firmware.bin meri@bitmanufaktur.net:/home/wwwrun/open.bitmanufaktur.com/web/www/people/milosch/usb2tag/
 
 app_clean:
 	rm -f $(TARGET).zip $(TARGET)-firmware.bin

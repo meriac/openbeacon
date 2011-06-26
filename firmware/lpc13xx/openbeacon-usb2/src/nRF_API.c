@@ -25,6 +25,7 @@
 
 */
 #include <openbeacon.h>
+#include "pmu.h"
 #include "nRF_HW.h"
 #include "nRF_CMD.h"
 #include "nRF_API.h"
@@ -83,6 +84,7 @@ nRFAPI_SetRxMode (uint8_t receive)
 void
 nRFAPI_PowerDown (void)
 {
+  /* power don nRF24L01 */
   nRFCMD_RegWriteStatusRead (CONFIG | WRITE_REG, 0x00);
 }
 
@@ -96,7 +98,7 @@ nRFAPI_Init (uint8_t channel,
   nRFCMD_Init ();
 
   /* wait for nRF to boot */
-  vTaskDelay(10 / portTICK_RATE_MS);
+  pmu_sleep_ms(10);
 
   // check validity
   if (mac_size < 3 || mac_size > 5 || !nRFAPI_DetectChip ())

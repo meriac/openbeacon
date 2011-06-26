@@ -24,24 +24,32 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
-/* enable USB disk support */
+#define ENABLE_FLASH
+#define ENABLE_BLUETOOTH
 #define USB_DISK_SUPPORT
+
+/* enable USB disk support */
+#ifdef  USB_DISK_SUPPORT
 #define USB_VENDOR_ID 0x2366
 #define USB_PROD_ID 0x0003
 #define USB_DEVICE 1
+#endif/*USB_DISK_SUPPORT*/
+
+/* Treshold for detecting 3D accelerometer movement */
+#define ACC_TRESHOLD 3
+#define ACC_MOVING_TRESHOLD 20
+
+/* Clock Definition */
+#define SYSTEM_CRYSTAL_CLOCK 12000000
+#define SYSTEM_CORE_CLOCK (SYSTEM_CRYSTAL_CLOCK*6)
 
 /* SPI_CS(io_port, io_pin, CPSDVSR frequency, mode) */
-#define SPI_CS_FLASH SPI_CS( 1, 8, 2, SPI_CS_MODE_SKIP_TX ) /* 24.0MHz */
-#define SPI_CS_NRF   SPI_CS( 1,10, 5, SPI_CS_MODE_NORMAL  ) /*  9.6MHz */
-#define SPI_CS_ACC3D SPI_CS( 0, 4, 6, SPI_CS_MODE_NORMAL  ) /*  8.0MHz */
+#ifdef  ENABLE_FLASH
+#define SPI_CS_FLASH SPI_CS( 1, 8, 2, SPI_CS_MODE_NORMAL )	/*  6.0MHz */
+#endif/*ENABLE_FLASH*/
+#define SPI_CS_NRF   SPI_CS( 1,10, 2, SPI_CS_MODE_NORMAL )	/*  6.0MHz */
+#define SPI_CS_ACC3D SPI_CS( 0, 4, 2, SPI_CS_MODE_NORMAL )	/*  6.0MHz */
 
 #define NRF_MAX_MAC_SIZE 5
-
-/* FreeRTOS configuration */
-#define ENABLE_FREERTOS
-#define TASK_NRF_STACK_SIZE 256
-#define TASK_NRF_PRIORITY (tskIDLE_PRIORITY + 2)
-
-#define UPDATE_INTERVAL_MS 250
 
 #endif/*__CONFIG_H__*/

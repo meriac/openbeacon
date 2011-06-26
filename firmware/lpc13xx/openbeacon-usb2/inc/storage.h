@@ -26,7 +26,7 @@
 
 #include "msd.h"
 
-extern void storage_init (void);
+extern void storage_init (uint16_t device_id);
 extern void storage_status (void);
 
 #endif/*__STORAGE_H__*/

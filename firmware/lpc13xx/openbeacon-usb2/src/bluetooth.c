@@ -22,6 +22,7 @@
 */
 #include <openbeacon.h>
 #include "bluetooth.h"
+#ifdef  ENABLE_BLUETOOTH
 
 #define CPU_WAKEUP_BLT_PORT 1
 #define CPU_WAKEUP_BLT_PIN 3
@@ -30,9 +31,11 @@
 #define CPU_ON_OFF_BLT_PORT 1
 #define CPU_ON_OFF_BLT_PIN 0
 
+static char bt_device_id_string[]="SLN=19,OpenBeacon Tag 0000";
+
 static const char *bt_init_strings[] = {
   "SEC=3,2,2,04,0000",
-  "SLN=17,OpenBeacon USB II",
+  bt_device_id_string,
   "RLS=1101,13,Debug Console,01,000000",
   "DIS=3",
   "AAC=1",
@@ -40,9 +43,10 @@ static const char *bt_init_strings[] = {
 };
 
 #define BT_INIT_STRINGS_COUNT ((int)(sizeof(bt_init_strings)/sizeof(bt_init_strings[0])))
+#define BT_ID_POS (sizeof(bt_device_id_string)-5)
 
 void
-bt_init (uint8_t enabled)
+bt_init (uint8_t enabled, uint16_t device_id)
 {
   int bt_init_pos = 0;
 
@@ -50,11 +54,12 @@ bt_init (uint8_t enabled)
   UARTInit (115200, 0);
 
   /* fake CTS for now */
+  LPC_IOCON->PIO1_5 = 0;
   GPIOSetDir (1, 5, 1);
   GPIOSetValue (1, 5, 0);
 
   /* Set CPU_WAKEUP_BLT port pin to output */
-  LPC_IOCON->ARM_SWDIO_PIO1_3 = 1;
+  LPC_IOCON->ARM_SWDIO_PIO1_3 = 0x81;
   GPIOSetDir (CPU_WAKEUP_BLT_PORT, CPU_WAKEUP_BLT_PIN, 1);
   GPIOSetValue (CPU_WAKEUP_BLT_PORT, CPU_WAKEUP_BLT_PIN, enabled ? 1 : 0);
 
@@ -64,9 +69,15 @@ bt_init (uint8_t enabled)
   GPIOSetValue (CPU_BLT_WAKEUP_PORT, CPU_BLT_WAKEUP_PIN, 0);
 
   /* Set CPU_ON-OFF_BLT port pin to output */
-  LPC_IOCON->JTAG_TMS_PIO1_0 = 1;
+  LPC_IOCON->JTAG_TMS_PIO1_0 = 0x81;
   GPIOSetDir (CPU_ON_OFF_BLT_PORT, CPU_ON_OFF_BLT_PIN, 1);
   GPIOSetValue (CPU_ON_OFF_BLT_PORT, CPU_ON_OFF_BLT_PIN, enabled ? 1 : 0);
+
+  /* update string device id */
+  bt_device_id_string[BT_ID_POS+0] = hex_char ( device_id >> 12 );
+  bt_device_id_string[BT_ID_POS+1] = hex_char ( device_id >>  8 );
+  bt_device_id_string[BT_ID_POS+2] = hex_char ( device_id >>  4 );
+  bt_device_id_string[BT_ID_POS+3] = hex_char ( device_id >>  0 );
 
   /* iterate through all bt_init_strings if activated */
   if (enabled)
@@ -85,3 +96,4 @@ bt_init (uint8_t enabled)
 	    }
       }
 }
+#endif/*ENABLE_BLUETOOTH*/
