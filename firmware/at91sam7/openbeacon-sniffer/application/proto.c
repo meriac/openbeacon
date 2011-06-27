@@ -143,6 +143,8 @@ vnRFtaskRx (void *parameter)
   if (!PtInitNRF ())
     return;
 
+  vLedSetGreen (1);
+
   for (;;)
     {
       if (nRFCMD_WaitRx (10))
@@ -166,6 +168,8 @@ vnRFtaskRx (void *parameter)
 		       sizeof (g_Beacon) - sizeof (g_Beacon.pkt.crc));
 	      if ((swapshort (g_Beacon.pkt.crc) == crc))
 		hex_dump((u_int8_t*)&g_Beacon,0,sizeof(g_Beacon));
+	      else
+		debug_printf("RX: CRC error or wrong encryption key\n");
 	    }
 	  while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
 
