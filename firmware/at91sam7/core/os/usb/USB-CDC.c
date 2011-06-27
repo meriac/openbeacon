@@ -564,14 +564,10 @@ prvGetStandardDeviceDescriptor (xUSB_REQUEST * pxRequest)
 			  pdTRUE);
       break;
 
-    case usbDESCRIPTOR_TYPE_CONFIGURATION: {
-        /* The index to the configuration descriptor is the lower byte. */
-        unsigned int config = pxRequest->usValue & 0xff;
-        if(config > sizeof(pxConfigDescriptorList)/sizeof(pxConfigDescriptorList[0])) config = sizeof(pxConfigDescriptorList)/sizeof(pxConfigDescriptorList[0]); 
-      prvSendControlData ((unsigned portCHAR*) pxConfigDescriptorList[config],
-			  pxRequest->usLength, pxConfigDescriptorSizes[config],
-			  pdTRUE);
-      }
+    case usbDESCRIPTOR_TYPE_CONFIGURATION:
+	prvSendControlData ((unsigned portCHAR *) &pxConfigDescriptor,
+			    pxRequest->usLength, sizeof (pxConfigDescriptor),
+			    pdTRUE);
       break;
 
     case usbDESCRIPTOR_TYPE_STRING:
@@ -699,6 +695,11 @@ prvHandleClassInterfaceRequest (xUSB_REQUEST * pxRequest)
       /* D0: 1=DTR, 0=No DTR,  D1: 1=Activate Carrier, 0=Deactivate carrier (RTS, half-duplex) */
       prvSendZLP ();
       ucControlState = pxRequest->usValue;
+      break;
+
+    /* ignore break requests */
+    case usbSEND_BREAK:
+      prvSendZLP ();
       break;
 
     default:
