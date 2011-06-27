@@ -32,7 +32,6 @@
 	with commercial development and support options.
 	***************************************************************************
 */
-
 /*
 	- DESCRIPTOR DEFINITIONS -
 */
@@ -66,16 +65,16 @@ const portCHAR pxManufacturerStringDescriptor[] = {
 const portCHAR pxProductStringDescriptor[] = {
   40,
   usbDESCRIPTOR_TYPE_STRING,
-  
+
   'O', 0x00, 'p', 0x00, 'e', 0x00, 'n', 0x00,
   'B', 0x00, 'e', 0x00, 'a', 0x00, 'c', 0x00,
   'o', 0x00, 'n', 0x00, ' ', 0x00, 'W', 0x00,
-  'L', 0x00, 'A', 0x00, 'N', 0x00, ' ', 0x00,
-  'v', 0x00, '0', 0x00, '1', 0x00, 0x00, 0x00, /* FIXME: Doesn't work without these four additional zeroes */
+  'L', 0x00, 'A', 0x00, 'N', 0x00, '0', 0x00,
+  '1', 0x00, '-', 0x00, 'E', 0x00, 'X', 0x00,
   0x00, 0x00
 };
 
-const char pxConfigDescriptor1[] = {
+const char pxConfigDescriptor[] = {
 
   /* Configuration 1 descriptor
      Here we define two interfaces (0 and 1) and a total of 3 endpoints.
@@ -88,102 +87,7 @@ const char pxConfigDescriptor1[] = {
   0x43, 0x00,			/* CwTotalLength 2 EP + Control            */
   0x02,				/* CbNumInterfaces                         */
   0x01,				/* CbConfigurationValue                    */
-  usbCONFIGURATION_STRING,	/* CiConfiguration                         */
-  usbBUS_POWERED,		/* CbmAttributes Bus powered + Remote Wakeup */
-  0xFA,				/* CMaxPower: 500mA                        */
-
-  /* Communication Class Interface Descriptor Requirement                  */
-  0x09,				/* bLength                                 */
-  0x04,				/* bDescriptorType                         */
-  0x00,				/* bInterfaceNumber                        */
-  0x00,				/* bAlternateSetting                       */
-  0x01,				/* bNumEndpoints                           */
-  0x02,				/* bInterfaceClass: Comm Interface Class   */
-  0x02,				/* bInterfaceSubclass: Abstract Control Model */
-  0x01,				/* bInterfaceProtocol                      */
-  usbINTERFACE_STRING,		/* iInterface                              */
-
-  /* Header Functional Descriptor                                          */
-  0x05,				/* bLength                                 */
-  0x24,				/* bDescriptor type: CS_INTERFACE          */
-  0x00,				/* bDescriptor subtype: Header Func Desc   */
-  0x10, 0x01,			/* bcdCDC:1.1                              */
-
-  /* ACM Functional Descriptor                                             */
-  0x04,				/* bFunctionLength                         */
-  0x24,				/* bDescriptor type: CS_INTERFACE          */
-  0x02,				/* bDescriptor subtype: ACM Func Desc      */
-  0x00,				/* bmCapabilities: We don't support squat  */
-
-  /* Union Functional Descriptor                                           */
-  0x05,				/* bFunctionLength                         */
-  0x24,				/* bDescriptor type: CS_INTERFACE          */
-  0x06,				/* bDescriptor subtype: Union Func Desc    */
-  0x00,				/* bMasterInterface: CDC Interface         */
-  0x01,				/* bSlaveInterface0: Data Class Interface  */
-
-  /* Call Management Functional Descriptor
-     0 in D1 and D0 indicates that device does not handle call management  */
-  0x05,				/* bFunctionLength                         */
-  0x24,				/* bDescriptor type: CS_INTERFACE          */
-  0x01,				/* bDescriptor subtype: Call Management Func */
-  0x00,				/* bmCapabilities: D1 + D0                 */
-  0x01,				/* bDataInterface: Data Class Interface 1  */
-
-  /* CDC Control - Endpoint 3 descriptor
-     This endpoint serves as a notification element.                       */
-
-  0x07,				/* bLength                                 */
-  0x05,				/* bDescriptorType                         */
-  0x83,				/* bEndpointAddress, Endpoint 03 - IN      */
-  0x03,				/* bmAttributes   INT                      */
-  0x08, 0x00,			/* wMaxPacketSize: 8 bytes                 */
-  0xFF,				/* bInterval                               */
-
-  /* Data Class Interface Descriptor Requirement                           */
-  0x09,				/* bLength                                 */
-  0x04,				/* bDescriptorType                         */
-  0x01,				/* bInterfaceNumber                        */
-  0x00,				/* bAlternateSetting                       */
-  0x02,				/* bNumEndPoints                           */
-  0x0A,				/* bInterfaceClass                         */
-  0x00,				/* bInterfaceSubclass                      */
-  0x00,				/* bInterfaceProtocol                      */
-  0x00,				/* iInterface                              */
-
-  /* CDC Data - Endpoint 1 descriptor */
-  0x07,				/* bLenght                                 */
-  0x05,				/* bDescriptorType                         */
-  0x01,				/* bEndPointAddress, Endpoint 01 - OUT     */
-  0x02,				/* bmAttributes BULK                       */
-  64,				/* wMaxPacketSize                          */
-  0x00,
-  0x00,				/* bInterval                               */
-
-  /* CDC Data - Endpoint 2 descriptor */
-  0x07,				/* bLength                                 */
-  0x05,				/* bDescriptorType                         */
-  0x82,				/* bEndPointAddress, Endpoint 02 - IN      */
-  0x02,				/* bmAttributes BULK                       */
-  64,				/* wMaxPacketSize                          */
-  0x00,
-  0x00				/* bInterval                               */
-};
-
-const char pxConfigDescriptor2[] = {
-
-  /* Configuration 2 descriptor
-     Here we define two interfaces (0 and 1) and a total of 3 endpoints.
-     Interface 0 is a CDC Abstract Control Model interface with one interrupt-in endpoint.
-     Interface 1 is a CDC Data Interface class, with a bulk-in and bulk-out endpoint.
-     Endpoint 0 gets used as the CDC management element.
-   */
-  0x09,				/* CbLength                    	           */
-  0x02,				/* CbDescriptorType                        */
-  0x43, 0x00,			/* CwTotalLength 2 EP + Control            */
-  0x02,				/* CbNumInterfaces                         */
-  0x02,				/* CbConfigurationValue                    */
-  usbCONFIGURATION_STRING,	/* CiConfiguration                         */
+  0x00,				/* CiConfiguration                         */
   usbBUS_POWERED,		/* CbmAttributes Bus powered + Remote Wakeup */
   0x32,				/* CMaxPower: 100mA                        */
 
@@ -195,8 +99,8 @@ const char pxConfigDescriptor2[] = {
   0x01,				/* bNumEndpoints                           */
   0x02,				/* bInterfaceClass: Comm Interface Class   */
   0x02,				/* bInterfaceSubclass: Abstract Control Model */
-  0x01,				/* bInterfaceProtocol                      */
-  usbINTERFACE_STRING,		/* iInterface                              */
+  0x01,				/* bInterfaceProtocol: V.25ter             */
+  0x00,				/* iInterface                              */
 
   /* Header Functional Descriptor                                          */
   0x05,				/* bLength                                 */
@@ -208,7 +112,7 @@ const char pxConfigDescriptor2[] = {
   0x04,				/* bFunctionLength                         */
   0x24,				/* bDescriptor type: CS_INTERFACE          */
   0x02,				/* bDescriptor subtype: ACM Func Desc      */
-  0x00,				/* bmCapabilities: We don't support squat  */
+  0x06,				/* bmCapabilities                          */
 
   /* Union Functional Descriptor                                           */
   0x05,				/* bFunctionLength                         */
@@ -217,17 +121,8 @@ const char pxConfigDescriptor2[] = {
   0x00,				/* bMasterInterface: CDC Interface         */
   0x01,				/* bSlaveInterface0: Data Class Interface  */
 
-  /* Call Management Functional Descriptor
-     0 in D1 and D0 indicates that device does not handle call management  */
-  0x05,				/* bFunctionLength                         */
-  0x24,				/* bDescriptor type: CS_INTERFACE          */
-  0x01,				/* bDescriptor subtype: Call Management Func */
-  0x00,				/* bmCapabilities: D1 + D0                 */
-  0x01,				/* bDataInterface: Data Class Interface 1  */
-
   /* CDC Control - Endpoint 3 descriptor
      This endpoint serves as a notification element.                       */
-
   0x07,				/* bLength                                 */
   0x05,				/* bDescriptorType                         */
   0x83,				/* bEndpointAddress, Endpoint 03 - IN      */
@@ -265,17 +160,6 @@ const char pxConfigDescriptor2[] = {
   0x00				/* bInterval                               */
 };
 
-const char *pxConfigDescriptorList[] = {
-		pxConfigDescriptor1,
-		pxConfigDescriptor2,
-};
-
-const int pxConfigDescriptorSizes[] = {
-		sizeof(pxConfigDescriptor1),
-		sizeof(pxConfigDescriptor2),
-};
-
-/* Device should properly be 0x134A:0x9001, using 0x05F9:0xFFFF for Linux testing */
 const char pxDeviceDescriptor[] = {
   /* Device descriptor */
   0x12,				/* bLength                      */
@@ -285,12 +169,11 @@ const char pxDeviceDescriptor[] = {
   0x00,				/* bDeviceSubclass:             */
   0x00,				/* bDeviceProtocol:             */
   0x08,				/* bMaxPacketSize0              */
-  0xC0, 0x16,			/* idVendorL                    */
-  0xB1, 0x08,			/* idProductL                   */
-  0x10, 0x01,			/* bcdDeviceL                   */
+  0x66, 0x23,			/* idVendorL                    */
+  0x08, 0x00,			/* idProductL                   */
+  0x00, 0x00,			/* bcdDeviceL                   */
   usbMANUFACTURER_STRING,	/* iManufacturer                */
   usbPRODUCT_STRING,		/* iProduct                     */
   0x00,				/* SerialNumber                 */
-  sizeof(pxConfigDescriptorList)/sizeof(pxConfigDescriptorList[0])				/* bNumConfigs                  */
+  0x01				/* bNumConfigs                  */
 };
-
