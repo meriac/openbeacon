@@ -115,6 +115,9 @@ $(TARGET).elf : $(ARM_OBJ) $(CRT0) $(BOOTLOADER) $(APP_ADDITIONAL) Makefile conf
 $(ARM_OBJ) : %.o : %.c $(LDSCRIPT) Makefile config/FreeRTOSConfig.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
+upload_firmware : $(TARGET).bin
+	scp $(TARGET).bin bitmanufaktur.net:/home/wwwrun/open.bitmanufaktur.com/web/www/people/milosch/firmware/at91sam7/$(TARGET)-sam7firmware.bin
+
 flash : $(TARGET).bin
 	../at91flash/at91flash $(TARGET).bin
 

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+MY_PATH=$PWD
+
+find -type d -iname 'openbeacon-*' | while read DIR; do
+    echo "processing $DIR..."
+    cd $DIR
+    make clean all > /dev/null
+    make upload_firmware
+    make clean > /dev/null
+    cd $MY_PATH
+    echo -e "DONE\n"
+done
