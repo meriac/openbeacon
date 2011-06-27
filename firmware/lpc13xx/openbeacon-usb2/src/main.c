@@ -341,7 +341,12 @@ main (void)
 	/* blink LED1 upon Bluetooth command */
 	GPIOSetValue (1, 1, 1);
 	/* execute menue command with last character received */
-	main_menue(UARTBuffer[UARTCount - 1]);
+
+	/* main_menue(UARTBuffer[UARTCount - 1]); */
+
+	/* Send back everything we receive */
+	UARTSend ((uint8_t *) UARTBuffer, UARTCount);
+
 	/* reset UART buffer */
 	UARTCount = 0;
 	/* un-blink LED1 */
