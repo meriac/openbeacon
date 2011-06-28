@@ -29,6 +29,7 @@
 #include <USB-CDC.h>
 #include "led.h"
 #include "xxtea.h"
+#include "debug_printf.h"
 #include "proto.h"
 #include "nRF24L01/nRF_HW.h"
 #include "nRF24L01/nRF_CMD.h"
@@ -142,6 +143,8 @@ vnRFtaskRx (void *parameter)
   if (!PtInitNRF ())
     return;
 
+  vLedSetGreen (1);
+
   for (;;)
     {
       if (nRFCMD_WaitRx (10))
@@ -164,17 +167,9 @@ vnRFtaskRx (void *parameter)
 		crc16 (g_Beacon.datab,
 		       sizeof (g_Beacon) - sizeof (g_Beacon.pkt.crc));
 	      if ((swapshort (g_Beacon.pkt.crc) == crc))
-		{
-		  DumpStringToUSB ("RX: ");
-		  DumpUIntToUSB (swaplong (g_Beacon.pkt.oid));
-		  DumpStringToUSB (",");
-		  DumpUIntToUSB (swaplong (g_Beacon.pkt.seq));
-		  DumpStringToUSB (",");
-		  DumpUIntToUSB (g_Beacon.pkt.strength);
-		  DumpStringToUSB (",");
-		  DumpUIntToUSB (g_Beacon.pkt.flags);
-		  DumpStringToUSB ("\n\r");
-		}
+		hex_dump((u_int8_t*)&g_Beacon,0,sizeof(g_Beacon));
+	      else
+		debug_printf("RX: CRC error or wrong encryption key\n");
 	    }
 	  while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
 
