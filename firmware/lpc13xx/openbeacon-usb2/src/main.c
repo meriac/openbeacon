@@ -285,7 +285,8 @@ main (void)
 {
   uint32_t SSPdiv;
   uint16_t crc, oid_last_seen;
-  uint8_t status, seen_low, seen_high;
+  uint8_t status, seen_low, seen_high, cmd_buffer[64], cmd_pos,*cmd,c;
+  uint8_t volatile *uart;
   volatile int t;
   int i;
 
@@ -328,6 +329,10 @@ main (void)
     GPIOSetValue (1, 1, 0);
     GPIOSetValue (1, 2, 1);
 
+    /* set command buffer to empty */
+    cmd_pos=0;
+    cmd = cmd_buffer;
+
     /* spin in loop */
     while(1)
     {
@@ -342,10 +347,31 @@ main (void)
 	GPIOSetValue (1, 1, 1);
 	/* execute menue command with last character received */
 
-	/* main_menue(UARTBuffer[UARTCount - 1]); */
+	/* scan through whole UART buffer */
+	uart = UARTBuffer;
+	for( i=UARTCount ; i>0 ; i--)
+	{
+	    UARTCount--;
+	    c=*uart++;
+	    if((c<' ') && cmd_pos)
+	    {
+		/* if one-character command - execute */
+		if(cmd_pos==1)
+		    main_menue(cmd_buffer[0]);
+		else
+		{
+		    cmd_buffer[cmd_pos]=0;
+		    debug_printf("Unknown command '%s' - please press H+[Enter] for help\n# ",cmd_buffer);
+		}
 
-	/* Send back everything we receive */
-	UARTSend ((uint8_t *) UARTBuffer, UARTCount);
+		/* set command buffer to empty */
+		cmd_pos=0;
+		cmd = cmd_buffer;
+	    }
+	    else
+		if(cmd_pos<(sizeof(cmd_buffer)-2))
+		    cmd_buffer[cmd_pos++]=c;
+	}
 
 	/* reset UART buffer */
 	UARTCount = 0;
