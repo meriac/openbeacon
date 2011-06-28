@@ -61,6 +61,7 @@
 #define usbSET_LINE_CODING				( 0x20 )
 #define usbGET_LINE_CODING				( 0x21 )
 #define usbSET_CONTROL_LINE_STATE			( 0x22 )
+#define usbSEND_BREAK					( 0x23 )
 
 /* Misc USB definitions. */
 #define usbDEVICE_CLASS_VENDOR_SPECIFIC			( 0xFF )
