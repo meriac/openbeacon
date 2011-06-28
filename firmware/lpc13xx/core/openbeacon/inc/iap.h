@@ -24,7 +24,8 @@
 #ifndef __IAP_H__
 #define __IAP_H__
 
-typedef uint32_t TDeviceUID[4];
+#define DEVICE_UID_MEMBERS 4
+typedef uint32_t TDeviceUID[DEVICE_UID_MEMBERS];
 
 extern void iap_read_uid (TDeviceUID * uid);
 extern void iap_invoke_isp (void);

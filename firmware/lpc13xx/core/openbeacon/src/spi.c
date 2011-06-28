@@ -30,6 +30,13 @@ void spi_init_pin(spi_cs chipselect)
 	GPIOSetDir((uint8_t) (chipselect >> 24), (uint8_t) (chipselect >> 16), 1);
 }
 
+void spi_txrx_done(spi_cs chipselect)
+{
+	GPIOSetValue((uint8_t) (chipselect >> 24),
+		(uint8_t) (chipselect >> 16), (chipselect
+		& SPI_CS_MODE_INVERT_CS) ^ SPI_CS_MODE_INVERT_CS);
+}
+
 int spi_txrx(spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
 		uint16_t rxlen)
 {
@@ -90,10 +97,7 @@ int spi_txrx(spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
 
 	/* de-activate chip select */
 	if ((chipselect & SPI_CS_MODE_SKIP_CS_DEASSERT) == 0)
-		GPIOSetValue((uint8_t) (chipselect >> 24),
-				(uint8_t) (chipselect >> 16), (chipselect
-						& SPI_CS_MODE_INVERT_CS) ^ SPI_CS_MODE_INVERT_CS);
-
+		spi_txrx_done (chipselect);
 	return 0;
 }
 
@@ -125,4 +129,28 @@ void spi_init(void)
 	/* 8 bit, SPI, SCR=0 */
 	LPC_SSP->CR0 = 0x0007;
 	LPC_SSP->CR1 = 0x0002;
+}
+
+void spi_close(void)
+{
+	/* Disable SSP clock */
+	LPC_SYSCON->SYSAHBCLKCTRL &= ~(1 << 11);
+
+	/* Disable SSP PCLK */
+	LPC_SYSCON->SSPCLKDIV = 0x00;
+
+	/* Enable SSP peripheral MISO, Pulldown */
+	LPC_IOCON->PIO0_8 = 0x00;
+	GPIOSetDir   (0, 8, 1); // OUT
+	GPIOSetValue (0, 8, 0);
+
+	/* MOSI */
+	LPC_IOCON->PIO0_9 = 0x00;
+	GPIOSetDir   (0, 9, 1); // OUT
+	GPIOSetValue (0, 9, 0);
+
+	/* SCK */
+	LPC_IOCON->JTAG_TCK_PIO0_10 = 0x01;
+	GPIOSetDir   (0, 10, 1); // OUT
+	GPIOSetValue (0, 10, 0);
 }

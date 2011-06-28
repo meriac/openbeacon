@@ -334,6 +334,13 @@ debug_printf (const char *fmt, ...)
   va_end (args);
 }
 
+char
+hex_char (unsigned char hex)
+{
+  hex &= 0xF;
+  return (hex<0xA)? (hex + '0') : ((hex-0xA)+'A');
+}
+
 void hex_dump (const unsigned char *buf, unsigned int addr, unsigned int len)
 {
         unsigned int start, i, j;
