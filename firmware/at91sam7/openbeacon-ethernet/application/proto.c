@@ -55,11 +55,13 @@ typedef struct
 {
   portTickType time;
   u_int32_t id;
+  u_int32_t moving;
 } TVisibleTagList;
 
 /**********************************************************************/
 #define MAX_TAGS 32
 #define MAX_TAG_TRACKING_TIME 15
+#define MAX_TAG_TRACKING_TIME_LONG 60
 static TVisibleTagList g_rf_tag_list[MAX_TAGS];
 /**********************************************************************/
 
@@ -224,9 +226,10 @@ vnRFtaskRxTx (void *parameter)
 	    {
 	      id = g_rf_tag_list[i].id;
 
+	      /* if previous tag RX was not moving, wait twice the time */
 	      if (id
 		  && ((seconds_since_boot - g_rf_tag_list[i].time) >=
-		      MAX_TAG_TRACKING_TIME))
+		      (g_rf_tag_list[i].moving?MAX_TAG_TRACKING_TIME:MAX_TAG_TRACKING_TIME_LONG)))
 		{
 		  if (pt_debug_level)
 		    debug_printf (" * removed tag %u from list[%u]\n", id, i);
@@ -316,7 +319,9 @@ vnRFtaskRxTx (void *parameter)
 
 			  if (oid == id)
 			    {
+			      /* if Tag is not moving - wait twice the tracking time */
 			      g_rf_tag_list[i].time = seconds_since_boot;
+			      g_rf_tag_list[i].moving = g_Beacon.log.pkt.p.tracker.reserved;
 			      found = 1;
 			      memset (&g_Beacon.log, 0,
 				      sizeof (g_Beacon.log));
