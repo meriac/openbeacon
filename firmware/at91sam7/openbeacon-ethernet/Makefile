@@ -56,6 +56,7 @@ publish: clean $(TARGET).bin
 	scp $(TARGET).zip $(TARGET).bin meri@bitmanufaktur.net:/home/wwwrun/open.bitmanufaktur.com/web/www/people/milosch/artcom/
 
 app_clean:
+	rm -f $(TARGET).zip
 	find application network config -name '*.o' -exec rm \{\} \;
 	find application network config -name '*~'  -exec rm \{\} \;
 
