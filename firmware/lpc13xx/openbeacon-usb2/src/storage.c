@@ -27,8 +27,6 @@
 #if DISK_SIZE>0
 #include "spi.h"
 
-#define LOGFILE_STORAGE_SIZE (4*1024*1024)
-
 #ifdef  ENABLE_FLASH
 uint8_t
 storage_flags (void)
@@ -46,6 +44,9 @@ storage_erase (void)
 {
   uint8_t tx[2];
 
+  tx[0]=0x04; /* Write Disable */
+  spi_txrx (SPI_CS_FLASH, tx, 1, NULL, 0);
+
   /* allow write */
   tx[0] = 0x06;
   spi_txrx (SPI_CS_FLASH, &tx, 1, NULL, 0);
@@ -54,6 +55,10 @@ storage_erase (void)
   tx[0] = 0x01;
   tx[1] = 0x00;
   spi_txrx (SPI_CS_FLASH, &tx, 2, NULL, 0);
+
+  /* allow write */
+  tx[0] = 0x06;
+  spi_txrx (SPI_CS_FLASH, &tx, 1, NULL, 0);
 
   /* erase flash */
   tx[0] = 0x60;
@@ -99,7 +104,7 @@ storage_write (uint32_t offset, uint32_t length, const void *src)
   length-=2;
   spi_txrx (SPI_CS_FLASH, tx, sizeof(tx), NULL, 0);
 
-  while(length>2)
+  while(length>=2)
   {
     /* wait while busy */
     while(storage_flags() & 1);

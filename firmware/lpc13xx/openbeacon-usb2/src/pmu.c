@@ -71,7 +71,7 @@ pmu_cancel_timer (void)
 void
 pmu_sleep_ms (uint16_t ms)
 {
-  if (ms < 1)
+  if (ms < 2)
     ms = 1;
 
   /* set PMU to low power mode */

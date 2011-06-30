@@ -26,6 +26,8 @@
 
 #include "msd.h"
 
+#define LOGFILE_STORAGE_SIZE (4*1024*1024)
+
 extern void storage_init (uint16_t device_id);
 extern void storage_read (uint32_t offset, uint32_t length, void *dst);
 extern void storage_write (uint32_t offset, uint32_t length, const void *src);

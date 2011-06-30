@@ -251,9 +251,11 @@ main_menue (uint8_t cmd)
 		    " *****************************************************\n"
 		    " * H,?          - this help screen\n"
 		    " * S            - Show device status\n"
+		    " *\n"
 		    " * E            - Erase Storage\n"
 		    " * W            - Test Write Storage\n"
 		    " * R            - Test Read Storage\n"
+		    " * F            - Test WriteFill Storage\n"
 		    " *****************************************************\n"
 		    "\n");
       break;
@@ -291,6 +293,18 @@ main_menue (uint8_t cmd)
         hex_dump (buffer, 0, sizeof(buffer));
       }
       break;
+
+    case 'F':
+      {
+        uint32_t counter;
+	debug_printf ("\nErasing Storage...\n\n");
+	storage_erase ();
+        debug_printf("\nFilling Storage...\n");
+        for(counter=0;counter<(LOGFILE_STORAGE_SIZE/sizeof(counter));counter++)
+	  storage_write (counter*4,sizeof(counter),&counter);
+        debug_printf("\n[DONE]\n");
+        break;
+      }
 
     default:
       debug_printf ("Unknown command '%c' - please press 'H' for help \n",
