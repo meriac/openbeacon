@@ -53,6 +53,10 @@
 #define READ_RES__DENIED		0x01
 #define READ_RES__UNKNOWN_CMD		0xFF
 
+#define LOGFILETYPE_EMPTY 0xFF
+#define LOGFILETYPE_RESERVED 0x00
+#define LOGFILETYPE_BEACONPACKET 0x01
+
 typedef struct
 {
   uint8_t strength;
@@ -106,5 +110,13 @@ typedef union
   uint32_t block[XXTEA_BLOCK_COUNT];
   uint8_t byte[XXTEA_BLOCK_COUNT * 4];
 } PACKED TBeaconEnvelope;
+
+typedef struct
+{
+  uint8_t type;
+  uint8_t size;
+  uint32_t time;
+  TBeaconEnvelope e;
+} PACKED TLogfileBeaconPacket;
 
 #endif/*__OPENBEACON_PROTO_H__*/
