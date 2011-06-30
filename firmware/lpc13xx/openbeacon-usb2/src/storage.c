@@ -44,8 +44,20 @@ storage_flags (void)
 void
 storage_erase (void)
 {
-  static const uint8_t tx = 0x60;
+  uint8_t tx[2];
+
+  /* allow write */
+  tx[0] = 0x06;
   spi_txrx (SPI_CS_FLASH, &tx, 1, NULL, 0);
+
+  /* disable block protection */
+  tx[0] = 0x01;
+  tx[1] = 0x00;
+  spi_txrx (SPI_CS_FLASH, &tx, 2, NULL, 0);
+
+  /* erase flash */
+  tx[0] = 0x60;
+  spi_txrx (SPI_CS_FLASH, &tx, sizeof(tx[0]), NULL, 0);
 
   while(storage_flags() & 1);
 }

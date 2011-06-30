@@ -251,7 +251,9 @@ main_menue (uint8_t cmd)
 		    " *****************************************************\n"
 		    " * H,?          - this help screen\n"
 		    " * S            - Show device status\n"
-		    " * E            - Reset Logfile\n"
+		    " * E            - Erase Storage\n"
+		    " * W            - Test Write Storage\n"
+		    " * R            - Test Read Storage\n"
 		    " *****************************************************\n"
 		    "\n");
       break;
@@ -271,6 +273,23 @@ main_menue (uint8_t cmd)
     case 'E':
       debug_printf ("\nErasing Storage...\n\n");
       storage_erase ();
+      break;
+
+    case 'W':
+      {
+        const char hello[]="Hello World!";
+        debug_printf("\n * writing '%s' (%i bytes)\n",hello,sizeof(hello));
+        storage_write (0,sizeof(hello),&hello);
+      }
+      break;
+
+    case 'R':
+      {
+        const uint8_t buffer[32];
+        debug_printf("\n * reading %i bytes\n",sizeof(buffer));
+        storage_read (0,sizeof(buffer),&buffer);
+        hex_dump (buffer, 0, sizeof(buffer));
+      }
       break;
 
     default:
