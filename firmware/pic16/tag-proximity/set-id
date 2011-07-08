@@ -1,0 +1,21 @@
+#!/bin/bash
+#
+# Copyright 2010 Milosch Meriac <meriac@openbeacon.de>
+#
+PROJECT=openbeacontag
+
+if [ ! -f obj/$PROJECT.hex ]; then
+    make clean $PROJECT.hex
+fi
+
+echo -en "\nEnter one tag id per line and press enter: "
+
+while read TAG_ID; do
+    echo $TAG_ID > firmware_counter
+    ./create_counted_firmware.php
+    if [ -d "$1" ]; then
+	cp $PROJECT.hex $1
+	echo "copied $PROJECT.hex to '$1'"
+    fi
+    echo -en "\nenter next tag id: "
+done

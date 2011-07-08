@@ -1,0 +1,3 @@
+#!/bin/bash
+
+make MAIN=main-ISI-original.c clean counted
