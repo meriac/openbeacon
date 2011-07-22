@@ -208,7 +208,6 @@ static int cmd_send_file( int argc, char *argv[] )
 {
   unsigned long int offset;
   unsigned long int len;
-  unsigned long int addr;
   char *endp;
   uint8_t *data;
   int fd;
@@ -217,7 +216,7 @@ static int cmd_send_file( int argc, char *argv[] )
     return CMD_E_WRONG_NUM_ARGS;
   }
 
-  addr = strtoul( argv[1], &endp, 0 );
+  strtoul( argv[1], &endp, 0 );
   if( endp == argv[1] ||
       *endp != '\0' ) {
     return CMD_E_INVAL_ARG;
