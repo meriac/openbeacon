@@ -2,7 +2,7 @@
 
 MY_PATH=$PWD
 
-find -type d -iname 'openbeacon-*' | while read DIR; do
+find -type d -iname 'openbeacon-*' | sort | while read DIR; do
     echo "processing $DIR..."
     cd $DIR
     make clean all > /dev/null
