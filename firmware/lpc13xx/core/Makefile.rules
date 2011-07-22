@@ -87,7 +87,7 @@ $(ARM_OBJ) : %.o : %.c $(LDSCRIPT) Makefile
 	$(CC) -c $(CFLAGS) $< -o $@
 
 flash : $(TARGET).bin
-	../lpc-flash/src/lpc-flash $(TARGET).bin /media/CRP\ DISABLD/firmware.bin
+	lpc-flash $(TARGET).bin /media/CRP\ DISABLD/firmware.bin
 
 clean : app_clean
 	find $(CORE) -name '*.o' -exec rm \{\} \;
