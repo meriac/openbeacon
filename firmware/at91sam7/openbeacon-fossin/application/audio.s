@@ -28,5 +28,5 @@
          .align 0
 
 audio_start:
-         .incbin "../audio.raw";
+         .incbin "audio.raw";
 audio_end:
