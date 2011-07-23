@@ -1,4 +1,4 @@
-CROSS=arm-none-eabi-
+CROSS=arm-cortexm3-eabi-
 CC=$(CROSS)gcc
 LD=$(CROSS)ld
 OBJCOPY=$(CROSS)objcopy
@@ -87,7 +87,7 @@ $(ARM_OBJ) : %.o : %.c $(LDSCRIPT) Makefile
 	$(CC) -c $(CFLAGS) $< -o $@
 
 flash : $(TARGET).bin
-	../lpc-flash/src/lpc-flash $(TARGET).bin /media/CRP\ DISABLD/firmware.bin
+	lpc-flash $(TARGET).bin /media/CRP\ DISABLD/firmware.bin
 
 clean : app_clean
 	find $(CORE) -name '*.o' -exec rm \{\} \;
