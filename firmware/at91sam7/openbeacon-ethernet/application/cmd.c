@@ -43,6 +43,7 @@ vCmdHelp (void)
 		"\t'b' - boot again\n"
 		"\t'c' - show configuration\n"
 		"\t'd' - enable debug output ('d[disable=0,enable=1]')\n"
+		"\t'e' - erase packet loss stats\n"
 		"\t'g' - set gateway ip\n"
 		"\t'h' - show help\n"
 		"\t'i' - set reader id ('i123')\n"
@@ -152,6 +153,11 @@ vCmdProcess (const char *cmdline)
       else
 	debug_printf
 	  ("usage: 'd' - set debug level ('d[disable=0, lowest=1]')\n");
+      break;
+
+    case 'E':
+      PtResetStats();
+      debug_printf("erased packet loss stats\n");
       break;
 
     case 'G':

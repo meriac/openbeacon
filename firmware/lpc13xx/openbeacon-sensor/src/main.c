@@ -439,11 +439,7 @@ main (void)
 	}
       else
 	{
-	  pmu_sleep_ms (
-	    (packetloss && !alarm_disabled) ?
-	     400 + random ( 200) :
-	    4000 + random (2000)
-	  );
+	  pmu_sleep_ms ( 400 + random ( 200) );
 	  moving = 0;
 	}
     }

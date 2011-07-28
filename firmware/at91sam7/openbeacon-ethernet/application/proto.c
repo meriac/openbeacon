@@ -56,6 +56,8 @@ typedef struct
   portTickType time;
   u_int32_t id;
   u_int32_t moving;
+  u_int32_t rxed, lost;
+  u_int32_t seq;
 } TVisibleTagList;
 
 /**********************************************************************/
@@ -189,6 +191,7 @@ vnRFtaskRxTx (void *parameter)
   int i, first_free;
   u_int8_t status, found;
   u_int16_t crc, oid, id;
+  u_int32_t l;
   unsigned int delta_t_ms;
   portTickType time, time_old, seconds_since_boot;
 
@@ -222,9 +225,18 @@ vnRFtaskRxTx (void *parameter)
 	  rf_rec_old = rf_rec;
 
 	  /* throw out stuff after MAX_TAG_TRACKING_TIME seconds passed */
+	  if(pt_debug_level)
+	    debug_printf("\n");
+
 	  for (i = 0; i < MAX_TAGS; i++)
 	    {
 	      id = g_rf_tag_list[i].id;
+
+	      if(pt_debug_level && id)
+	      {
+		l = g_rf_tag_list[i].rxed+g_rf_tag_list[i].lost;
+		debug_printf("TAG_ID[%04X]: rxed:%06u lost:%06u(%02u%%) total=%06u\n",id,g_rf_tag_list[i].rxed,g_rf_tag_list[i].lost,((100*g_rf_tag_list[i].lost)/l),l);
+	      }
 
 	      /* if previous tag RX was not moving, wait twice the time */
 	      if (id
@@ -232,7 +244,7 @@ vnRFtaskRxTx (void *parameter)
 		      (g_rf_tag_list[i].moving?MAX_TAG_TRACKING_TIME:MAX_TAG_TRACKING_TIME_LONG)))
 		{
 		  if (pt_debug_level)
-		    debug_printf (" * removed tag %u from list[%u]\n", id, i);
+		    debug_printf (" * removed TAG_ID[%04X] from list[%u]\n", id, i);
 		  memset (&g_rf_tag_list[i], 0, sizeof (g_rf_tag_list[0]));
 
 		  memset (&g_Beacon.log, 0, sizeof (g_Beacon.log));
@@ -243,6 +255,8 @@ vnRFtaskRxTx (void *parameter)
 		  vNetworkSendBeaconToServer ();
 		}
 	    }
+	  if(pt_debug_level)
+	    debug_printf("\n");
 	}
 
       /* check if TX strength changed */
@@ -322,6 +336,15 @@ vnRFtaskRxTx (void *parameter)
 			      /* if Tag is not moving - wait twice the tracking time */
 			      g_rf_tag_list[i].time = seconds_since_boot;
 			      g_rf_tag_list[i].moving = g_Beacon.log.pkt.p.tracker.reserved;
+			      g_rf_tag_list[i].rxed ++;
+
+			      l = swaplong(g_Beacon.log.pkt.p.tracker.seq);
+			      if(l>g_rf_tag_list[i].seq)
+			      {
+			        if(g_rf_tag_list[i].seq)
+				    g_rf_tag_list[i].lost += (l - g_rf_tag_list[i].seq)-1;
+				g_rf_tag_list[i].seq = l;
+			      }
 			      found = 1;
 			      memset (&g_Beacon.log, 0,
 				      sizeof (g_Beacon.log));
@@ -342,7 +365,7 @@ vnRFtaskRxTx (void *parameter)
 		      if (!found && (first_free >= 0))
 			{
 			  if (pt_debug_level)
-			    debug_printf (" * added Tag [%u] to list[%u]\n",
+			    debug_printf (" * added TAG_ID[%04X] to list[%u]\n",
 					  oid, first_free);
 			  g_rf_tag_list[first_free].id = oid;
 			  g_rf_tag_list[first_free].time = seconds_since_boot;
@@ -365,9 +388,14 @@ vnRFtaskRxTx (void *parameter)
 
       /* did I already mention this paranoid world thing? */
       nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
-
-
     }
+}
+
+/**********************************************************************/
+void
+PtResetStats (void)
+{
+  memset (&g_rf_tag_list, 0, sizeof (g_rf_tag_list));
 }
 
 /**********************************************************************/
