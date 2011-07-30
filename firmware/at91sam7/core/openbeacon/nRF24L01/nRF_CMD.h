@@ -27,16 +27,27 @@
 #ifndef NRF_CMD_H
 #define NRF_CMD_H
 
-extern void nRFCMD_CE(unsigned char enable);
-extern void nRFCMD_ExecMacro(const unsigned char *macro, unsigned char *rx_data);
+#define NRFCMD_DEV0 0
+#define NRFCMD_DEV1 1
+
+#ifndef DEFAULT_DEV
+#define DEFAULT_DEV NRFCMD_DEV0
+#endif/*DEFAULT_DEV*/
+
+#define NRFCMD_DEV_MAX NRFCMD_DEV1
+#define NRFCMD_DEVICES (NRFCMD_DEV_MAX+1)
+
 extern unsigned char nRFCMD_Init(void);
-extern unsigned char nRFCMD_ReadWriteBuffer(const unsigned char *tx_data, unsigned char *rx_data, unsigned int len);
-extern unsigned char nRFCMD_CmdExec(unsigned char reg);
-extern unsigned char nRFCMD_RegRead(unsigned char reg);
-extern unsigned char nRFCMD_RegWriteStatusRead(unsigned char reg,unsigned char value);
-extern unsigned char nRFCMD_RegWriteBuf(unsigned char reg,const unsigned char *buf,unsigned char count);
-extern unsigned char nRFCMD_RegReadBuf(unsigned char reg,unsigned char *buf,unsigned char count);
 extern unsigned char nRFCMD_GetRegSize(unsigned char reg);
 extern unsigned char nRFCMD_WaitRx(unsigned int ticks);
+
+extern void nRFCMD_CE(unsigned char device, unsigned char enable);
+extern void nRFCMD_ExecMacro(unsigned char device, const unsigned char *macro, unsigned char *rx_data);
+extern unsigned char nRFCMD_ReadWriteBuffer(unsigned char device, const unsigned char *tx_data, unsigned char *rx_data, unsigned int len);
+extern unsigned char nRFCMD_CmdExec(unsigned char device, unsigned char reg);
+extern unsigned char nRFCMD_RegRead(unsigned char device, unsigned char reg);
+extern unsigned char nRFCMD_RegWriteStatusRead(unsigned char device, unsigned char reg,unsigned char value);
+extern unsigned char nRFCMD_RegWriteBuf(unsigned char device, unsigned char reg,const unsigned char *buf,unsigned char count);
+extern unsigned char nRFCMD_RegReadBuf(unsigned char device, unsigned char reg,unsigned char *buf,unsigned char count);
 
 #endif/*NRF_CMD_H*/
