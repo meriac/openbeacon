@@ -64,30 +64,30 @@ PtUpdateWmcuId (unsigned char id)
 {
   /* update WMCU id for response channel */
   wmcu_mac[sizeof (wmcu_mac) - 1] = id;
-  nRFAPI_SetTxMAC (wmcu_mac, sizeof (wmcu_mac));
+  nRFAPI_SetTxMAC (DEFAULT_DEV, wmcu_mac, sizeof (wmcu_mac));
 
   /* update jamming data channel id */
   jam_mac[sizeof (jam_mac) - 1] = id;
-  nRFAPI_SetRxMAC (jam_mac, sizeof (jam_mac), 1);
+  nRFAPI_SetRxMAC (DEFAULT_DEV, jam_mac, sizeof (jam_mac), 1);
 }
 
 static inline s_int8_t
 PtInitNRF (void)
 {
-  if (!nRFAPI_Init (DEFAULT_CHANNEL, broadcast_mac,
+  if (!nRFAPI_Init (DEFAULT_DEV, DEFAULT_CHANNEL, broadcast_mac,
 		    sizeof (broadcast_mac), ENABLED_NRF_FEATURES))
     return 0;
 
-  nRFAPI_SetSizeMac (sizeof (wmcu_mac));
-  nRFAPI_SetPipeSizeRX (0, sizeof (pkg));
-  nRFAPI_SetPipeSizeRX (1, sizeof (pkg));
-  nRFAPI_PipesEnable (ERX_P0 | ERX_P1);
+  nRFAPI_SetSizeMac (DEFAULT_DEV, sizeof (wmcu_mac));
+  nRFAPI_SetPipeSizeRX (DEFAULT_DEV, 0, sizeof (pkg));
+  nRFAPI_SetPipeSizeRX (DEFAULT_DEV, 1, sizeof (pkg));
+  nRFAPI_PipesEnable (DEFAULT_DEV, ERX_P0 | ERX_P1);
 
   PtUpdateWmcuId (env.e.wmcu_id);
 
-  nRFAPI_SetTxPower (3);
-  nRFAPI_SetRxMode (1);
-  nRFCMD_CE (1);
+  nRFAPI_SetTxPower (DEFAULT_DEV, 3);
+  nRFAPI_SetRxMode (DEFAULT_DEV, 1);
+  nRFCMD_CE (DEFAULT_DEV, 1);
 
   return 1;
 }
@@ -117,7 +117,7 @@ PtInternalDumpNrfRegisters (void)
       if (size > sizeof (buf))
 	size = sizeof (buf);
 
-      nRFCMD_RegReadBuf (reg, buf, size);
+      nRFCMD_RegReadBuf (DEFAULT_DEV, reg, buf, size);
       p = buf;
 
       // dump single register
@@ -191,24 +191,24 @@ PtSendReply (void)
   shuffle_tx_byteorder ((unsigned long *) &pkg, sizeof (pkg) / sizeof (long));
 
   /* disable RX mode */
-  nRFCMD_CE (0);
+  nRFCMD_CE (DEFAULT_DEV, 0);
 
   vTaskDelay (3 / portTICK_RATE_MS);
 
   /* switch to TX mode */
-  nRFAPI_SetRxMode (0);
+  nRFAPI_SetRxMode (DEFAULT_DEV, 0);
 
   /* upload data to nRF24L01 */
-  nRFAPI_TX ((unsigned char *) &pkg, sizeof (pkg));
+  nRFAPI_TX (DEFAULT_DEV, (unsigned char *) &pkg, sizeof (pkg));
 
   /* transmit data */
-  nRFCMD_CE (1);
+  nRFCMD_CE (DEFAULT_DEV, 1);
 
   /* wait until packet is transmitted */
   vTaskDelay (3 / portTICK_RATE_MS);
 
   /* switch to RX mode again */
-  nRFAPI_SetRxMode (1);
+  nRFAPI_SetRxMode (DEFAULT_DEV, 1);
 }
 
 static inline void
@@ -425,16 +425,16 @@ vnRFtaskRxTx (void *parameter)
       /* reset RF interface if needed */
       if (pt_reset_type)
 	{
-	  nRFCMD_CE (0);
+	  nRFCMD_CE (DEFAULT_DEV, 0);
 	  vLedSetGreen (1);
 	  vTaskDelay (10 / portTICK_RATE_MS);
 	  switch (pt_reset_type)
 	    {
 	    case PTINITNRFFRONTEND_RESETFIFO:
-	      nRFAPI_FlushRX ();
-	      nRFAPI_FlushTX ();
-	      nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
-	      nRFAPI_SetRxMode (1);
+	      nRFAPI_FlushRX (DEFAULT_DEV);
+	      nRFAPI_FlushTX (DEFAULT_DEV);
+	      nRFAPI_ClearIRQ (DEFAULT_DEV, MASK_IRQ_FLAGS);
+	      nRFAPI_SetRxMode (DEFAULT_DEV, 1);
 	      break;
 
 	    case PTINITNRFFRONTEND_INIT:
@@ -443,7 +443,7 @@ vnRFtaskRxTx (void *parameter)
 
 	    }
 	  vTaskDelay (10 / portTICK_RATE_MS);
-	  nRFCMD_CE (1);
+	  nRFCMD_CE (DEFAULT_DEV, 1);
 	  vLedSetGreen (0);
 	  pt_reset_type = 0;
 	}
@@ -454,19 +454,19 @@ vnRFtaskRxTx (void *parameter)
 	  PtInternalDumpNrfRegisters ();
 	  pt_dump_registers = pdFALSE;
 	}
-      status = nRFAPI_GetFifoStatus ();
+      status = nRFAPI_GetFifoStatus (DEFAULT_DEV);
       /* living in a paranoid world ;-) */
       if (status & FIFO_TX_FULL)
-	nRFAPI_FlushTX ();
+	nRFAPI_FlushTX (DEFAULT_DEV);
 
       if ((status & FIFO_RX_FULL) || nRFCMD_WaitRx (10))
 	do
 	  {
 	    /* find out which pipe got the packet */
-	    pipe = (nRFAPI_GetStatus () >> 1) & 0x07;
+	    pipe = (nRFAPI_GetStatus (DEFAULT_DEV) >> 1) & 0x07;
 
 	    /* read packet from nRF chip */
-	    nRFCMD_RegReadBuf (RD_RX_PLOAD, (unsigned char *) &pkg,
+	    nRFCMD_RegReadBuf (DEFAULT_DEV, RD_RX_PLOAD, (unsigned char *) &pkg,
 			       sizeof (pkg));
 
 	    /* adjust byte order and decode */
@@ -500,10 +500,10 @@ vnRFtaskRxTx (void *parameter)
 		DumpStringToUSB ("\n");
 	      }
 	  }
-	while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
+	while ((nRFAPI_GetFifoStatus (DEFAULT_DEV) & FIFO_RX_EMPTY) == 0);
 
       /* did I already mention the paranoid world thing? */
-      nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
+      nRFAPI_ClearIRQ (DEFAULT_DEV, MASK_IRQ_FLAGS);
 
       if (DidBlink && ((xTaskGetTickCount () - Ticks) > BLINK_INTERVAL_MS))
 	{

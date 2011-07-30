@@ -57,16 +57,16 @@ PtUpdateWmcuId (unsigned char broadcast)
 {
   /* update jamming data channel id */
   if (broadcast)
-    nRFAPI_SetTxMAC (broadcast_mac, sizeof (broadcast_mac));
+    nRFAPI_SetTxMAC (DEFAULT_DEV, broadcast_mac, sizeof (broadcast_mac));
   else
     {
       jam_mac[sizeof (jam_mac) - 1] = env.e.mcu_id;
-      nRFAPI_SetTxMAC (jam_mac, sizeof (jam_mac));
+      nRFAPI_SetTxMAC (DEFAULT_DEV, jam_mac, sizeof (jam_mac));
     }
 
   /* update WMCU id for response channel */
   wmcu_mac[sizeof (wmcu_mac) - 1] = env.e.mcu_id;
-  nRFAPI_SetRxMAC (wmcu_mac, sizeof (wmcu_mac), 1);
+  nRFAPI_SetRxMAC (DEFAULT_DEV, wmcu_mac, sizeof (wmcu_mac), 1);
 }
 
 void
@@ -85,7 +85,7 @@ PtGetRfPowerLevel (void)
 static inline s_int8_t
 PtInitNRF (void)
 {
-  if (!nRFAPI_Init (DEFAULT_CHANNEL, broadcast_mac,
+  if (!nRFAPI_Init (DEFAULT_DEV, DEFAULT_CHANNEL, broadcast_mac,
 		    sizeof (broadcast_mac), ENABLED_NRF_FEATURES))
     return 0;
 
@@ -94,14 +94,14 @@ PtInitNRF (void)
   nrf_powerlevel_last = nrf_powerlevel_current = -1;
   PtSetRfPowerLevel (NRF_POWERLEVEL_MAX);
 
-  nRFAPI_SetSizeMac (sizeof (wmcu_mac));
-  nRFAPI_SetPipeSizeRX (0, sizeof (rfpkg));
-  nRFAPI_SetPipeSizeRX (1, sizeof (rfpkg));
-  nRFAPI_PipesEnable (ERX_P0 | ERX_P1);
+  nRFAPI_SetSizeMac (DEFAULT_DEV, sizeof (wmcu_mac));
+  nRFAPI_SetPipeSizeRX (DEFAULT_DEV, 0, sizeof (rfpkg));
+  nRFAPI_SetPipeSizeRX (DEFAULT_DEV, 1, sizeof (rfpkg));
+  nRFAPI_PipesEnable (DEFAULT_DEV, ERX_P0 | ERX_P1);
   PtUpdateWmcuId (env.e.mcu_id == 0);
 
-  nRFAPI_SetRxMode (0);
-  nRFCMD_CE (0);
+  nRFAPI_SetRxMode (DEFAULT_DEV, 0);
+  nRFCMD_CE (DEFAULT_DEV, 0);
 
   return 1;
 }
@@ -127,13 +127,13 @@ PtInternalTransmit (BRFPacket * pkg)
   vLedSetRed (1);
 
   /* disable receive mode */
-  nRFCMD_CE (0);
+  nRFCMD_CE (DEFAULT_DEV, 0);
 
   /* wait in case a packet is currently received */
   vTaskDelay (3 / portTICK_RATE_MS);
 
   /* set TX mode */
-  nRFAPI_SetRxMode (0);
+  nRFAPI_SetRxMode (DEFAULT_DEV, 0);
 
   if (pkg->mac == 0xffff)
     rf_sent_broadcast++;
@@ -154,16 +154,16 @@ PtInternalTransmit (BRFPacket * pkg)
 
   /* upload data to nRF24L01 */
   //hex_dump((unsigned char *) pkg, 0, sizeof(*pkg));
-  nRFAPI_TX ((unsigned char *) pkg, sizeof (*pkg));
+  nRFAPI_TX (DEFAULT_DEV, (unsigned char *) pkg, sizeof (*pkg));
 
   /* transmit data */
-  nRFCMD_CE (1);
+  nRFCMD_CE (DEFAULT_DEV, 1);
 
   /* wait till packet is transmitted */
   vTaskDelay (3 / portTICK_RATE_MS);
 
   /* switch to RX mode again */
-  nRFAPI_SetRxMode (1);
+  nRFAPI_SetRxMode (DEFAULT_DEV, 1);
 
   /* turn off red TX indication LED */
   vLedSetRed (0);
@@ -223,14 +223,14 @@ vnRFtaskRxTx (void *parameter)
       /* check if TX strength changed */
       if (nrf_powerlevel_current != nrf_powerlevel_last)
 	{
-	  nRFAPI_SetTxPower (nrf_powerlevel_current);
+	  nRFAPI_SetTxPower (DEFAULT_DEV, nrf_powerlevel_current);
 	  nrf_powerlevel_last = nrf_powerlevel_current;
 	}
 
-      status = nRFAPI_GetFifoStatus ();
+      status = nRFAPI_GetFifoStatus (DEFAULT_DEV);
       /* living in a paranoid world ;-) */
       if (status & FIFO_TX_FULL)
-	nRFAPI_FlushTX ();
+	nRFAPI_FlushTX (DEFAULT_DEV);
 
       /* check for received packets */
       if ((status & FIFO_RX_FULL) || nRFCMD_WaitRx (0))
@@ -240,7 +240,7 @@ vnRFtaskRxTx (void *parameter)
 	  do
 	    {
 	      /* read packet from nRF chip */
-	      nRFCMD_RegReadBuf (RD_RX_PLOAD, (unsigned char *) &rfpkg,
+	      nRFCMD_RegReadBuf (DEFAULT_DEV, RD_RX_PLOAD, (unsigned char *) &rfpkg,
 				 sizeof (rfpkg));
 
 	      /* adjust byte order and decode */
@@ -264,7 +264,7 @@ vnRFtaskRxTx (void *parameter)
 		  rf_rec++;
 		}
 	    }
-	  while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
+	  while ((nRFAPI_GetFifoStatus (DEFAULT_DEV) & FIFO_RX_EMPTY) == 0);
 
 	  vLedSetGreen (1);
 	}
@@ -294,7 +294,7 @@ vnRFtaskRxTx (void *parameter)
       vTaskDelay (5 / portTICK_RATE_MS);
 
       /* did I already mention the paranoid world thing? */
-      nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
+      nRFAPI_ClearIRQ (DEFAULT_DEV, MASK_IRQ_FLAGS);
     }
 }
 

@@ -86,15 +86,15 @@ void RAMFUNC shuffle_tx_byteorder (void)
 
 static inline s_int8_t PtInitNRF(void)
 {
-    if(!nRFAPI_Init(DEFAULT_CHANNEL,broadcast_mac,sizeof(broadcast_mac),ENABLED_NRF_FEATURES))
+    if(!nRFAPI_Init(DEFAULT_DEV, DEFAULT_CHANNEL,broadcast_mac,sizeof(broadcast_mac),ENABLED_NRF_FEATURES))
 	return 0;
 	
-    nRFAPI_SetPipeSizeRX(0,16);
-    nRFAPI_SetTxPower(ANNOUNCEMENT_TX_POWER);
-    nRFAPI_SetRxMode(1);
+    nRFAPI_SetPipeSizeRX(DEFAULT_DEV, 0,16);
+    nRFAPI_SetTxPower(DEFAULT_DEV, ANNOUNCEMENT_TX_POWER);
+    nRFAPI_SetRxMode(DEFAULT_DEV, 1);
 
-    nRFCMD_CE(1);
-    
+    nRFCMD_CE(DEFAULT_DEV, 1);
+
     return 1;
 }
 
@@ -115,11 +115,11 @@ void RAMFUNC vnRFUpdateRating(void)
     unsigned int *bs,*bss,t;
     TBeaconCache *pcache;
     TBeaconSort *sorted;
-    
+
     bs=g_BeaconSortTmp;
     pcache=g_BeaconCache;
     ticks=xTaskGetTickCount();
-    
+
     count=0;
     for(i=0;i<FIFO_DEPTH;i++,pcache++)
 	if(pcache->bcflags & BCFLAGS_VALIDENTRY)
@@ -132,7 +132,7 @@ void RAMFUNC vnRFUpdateRating(void)
 		count++;
 	    }
 	}
-	
+
     if(count>1)
     {
 	sort(g_BeaconSortTmp,count);
@@ -156,16 +156,16 @@ void RAMFUNC vnRFUpdateRating(void)
 	    else
 		j++;
 	}
-	
+
 	count=t;
 	sort(g_BeaconSortTmp,count);
 	
 	bs=g_BeaconSortTmp;
 	for(i=0;i<(count-1);i++)
 	{
-	    oid=(*bs++)&TAG_ID_MASK;    
+	    oid=(*bs++)&TAG_ID_MASK;
 	    if(oid)
-	    {	    
+	    {
 		bss=bs;
 		for(j=(count-i);j>0;j--)
 		{
@@ -221,9 +221,9 @@ int vnRFCopyRating(TBeaconSort* Sort,int Items)
     {
 	if(Items>g_BeaconSortSize)
 	    Items=g_BeaconSortSize;
-	    
+
 	memcpy(Sort,g_BeaconSort,sizeof(*Sort)*Items);
-	    
+
 	xSemaphoreGive(PtSemaphore);
 	return Items;
     }
@@ -238,7 +238,7 @@ void vnRFtaskRxTx(void *parameter)
     u_int32_t oid;
     portTickType LastUpdateTicks,Ticks;
     (void)parameter;
-    
+
     if(!PtInitNRF())
 	return;
 
@@ -249,10 +249,10 @@ void vnRFtaskRxTx(void *parameter)
 	if(nRFCMD_WaitRx(10))
         {
 	    vLedSetRed(1);
-	    
+
 	    do {
 		// read packet from nRF chip
-		nRFCMD_RegReadBuf(RD_RX_PLOAD,g_Beacon.datab,sizeof(g_Beacon));
+		nRFCMD_RegReadBuf(DEFAULT_DEV, RD_RX_PLOAD,g_Beacon.datab,sizeof(g_Beacon));
 
 		// adjust byte order and decode
 		shuffle_tx_byteorder();
@@ -277,31 +277,31 @@ void vnRFtaskRxTx(void *parameter)
 		    if(g_BeaconCacheHead>=FIFO_DEPTH)
 			g_BeaconCacheHead=0;
     		}
-	    } while((nRFAPI_GetFifoStatus() & FIFO_RX_EMPTY)==0);        
+	    } while((nRFAPI_GetFifoStatus(DEFAULT_DEV) & FIFO_RX_EMPTY)==0);
 
-	    vLedSetRed(0);	    
+	    vLedSetRed(0);
 	}
-        nRFAPI_ClearIRQ(MASK_IRQ_FLAGS);	
+        nRFAPI_ClearIRQ(DEFAULT_DEV, MASK_IRQ_FLAGS);
 
         // update regularly
         if( ((Ticks=xTaskGetTickCount())-LastUpdateTicks)>UPDATE_INTERVAL_MS )
         {
             LastUpdateTicks=Ticks;
-    	    vnRFUpdateRating();
+	    vnRFUpdateRating();
         }
-    }    
+    }
 }
 
 void vnRFtaskRating(void *parameter)
 {
     int count,i;
     (void)parameter;
-    
+
     for( ; ; )
     {
 	vLedSetGreen(1);
 	DumpStringToUSB("RX:");
-	
+
 	count=vnRFCopyRating(g_BeaconSortPrint,SORT_PRINT_DEPTH);
 	if(count>0)
 	{
@@ -318,7 +318,7 @@ void vnRFtaskRating(void *parameter)
 
 	DumpStringToUSB("\n\r");
 	vLedSetGreen(0);
-	
+
 	vTaskDelay(portTICK_RATE_MS * 950);
     }
 }
@@ -326,10 +326,10 @@ void vnRFtaskRating(void *parameter)
 void vInitProtocolLayer(void)
 {
     PtSetFifoLifetimeSeconds(10);
-    
+
     g_BeaconCacheHead=0;
     memset(&g_Beacon,0,sizeof(g_Beacon));
-    
+
     PtSemaphore=NULL;
     vSemaphoreCreateBinary( PtSemaphore );
 

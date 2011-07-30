@@ -92,14 +92,14 @@ shuffle_tx_byteorder (void)
 static inline s_int8_t
 PtInitNRF (void)
 {
-  if (!nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0))
+  if (!nRFAPI_Init (DEFAULT_DEV, 81, broadcast_mac, sizeof (broadcast_mac), 0))
     return 0;
 
-  nRFAPI_SetPipeSizeRX (0, 16);
-  nRFAPI_SetTxPower (ANNOUNCEMENT_TX_POWER);
-  nRFAPI_SetRxMode (1);
+  nRFAPI_SetPipeSizeRX (DEFAULT_DEV, 0, 16);
+  nRFAPI_SetTxPower (DEFAULT_DEV, ANNOUNCEMENT_TX_POWER);
+  nRFAPI_SetRxMode (DEFAULT_DEV, 1);
 
-  nRFCMD_CE (1);
+  nRFCMD_CE (DEFAULT_DEV, 1);
 
   return 1;
 }
@@ -259,31 +259,34 @@ wifi_tx (unsigned char power)
   xxtea_encode ();
   shuffle_tx_byteorder ();
 
-  vLedSetGreen (1);
+  vLedSetGreen (0);
 
   /* disable RX mode */
-  nRFCMD_CE (0);
+  nRFCMD_CE (DEFAULT_DEV, 0);
   vTaskDelay (2 / portTICK_RATE_MS);
 
   /* switch to TX mode */
-  nRFAPI_SetRxMode (0);
+  nRFAPI_SetRxMode (DEFAULT_DEV, 0);
 
   /* set TX power */
-  nRFAPI_SetTxPower (power);
+  nRFAPI_SetTxPower (DEFAULT_DEV, power);
 
   /* upload data to nRF24L01 */
-  nRFAPI_TX (g_Beacon.byte, sizeof (g_Beacon));
+  nRFAPI_TX (DEFAULT_DEV, g_Beacon.byte, sizeof (g_Beacon));
 
   /* transmit data */
-  nRFCMD_CE (1);
+  nRFCMD_CE (DEFAULT_DEV, 1);
 
   /* wait until packet is transmitted */
   vTaskDelay (2 / portTICK_RATE_MS);
 
   /* switch to RX mode again */
-  nRFAPI_SetRxMode (1);
+  nRFAPI_SetRxMode (DEFAULT_DEV, 1);
 
-  vLedSetGreen (0);
+  /* blink LED longer */
+  vTaskDelay (20 / portTICK_RATE_MS);
+
+  vLedSetGreen (1);
 }
 
 void
@@ -319,7 +322,7 @@ vnRFtaskRxTx (void *parameter)
 	  do
 	    {
 	      // read packet from nRF chip
-	      nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.byte, sizeof (g_Beacon));
+	      nRFCMD_RegReadBuf (DEFAULT_DEV, RD_RX_PLOAD, g_Beacon.byte, sizeof (g_Beacon));
 
 	      // adjust byte order and decode
 	      shuffle_tx_byteorder ();
@@ -391,11 +394,11 @@ vnRFtaskRxTx (void *parameter)
 		    }
 		}
 	    }
-	  while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
+	  while ((nRFAPI_GetFifoStatus (DEFAULT_DEV) & FIFO_RX_EMPTY) == 0);
 
 	  vLedSetRed (0);
 	}
-      nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
+      nRFAPI_ClearIRQ (DEFAULT_DEV, MASK_IRQ_FLAGS);
 
       if (reader_command.opcode)
 	{

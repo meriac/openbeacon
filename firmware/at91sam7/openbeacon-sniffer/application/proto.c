@@ -63,14 +63,14 @@ static inline s_int8_t
 PtInitNRF (void)
 {
   if (!nRFAPI_Init
-      (DEFAULT_CHANNEL, broadcast_mac, sizeof (broadcast_mac),
+      (DEFAULT_DEV, DEFAULT_CHANNEL, broadcast_mac, sizeof (broadcast_mac),
        ENABLED_NRF_FEATURES))
     return 0;
 
-  nRFAPI_SetPipeSizeRX (0, 16);
-  nRFAPI_SetTxPower (3);
-  nRFAPI_SetRxMode (1);
-  nRFCMD_CE (1);
+  nRFAPI_SetPipeSizeRX (DEFAULT_DEV, 0, 16);
+  nRFAPI_SetTxPower (DEFAULT_DEV, 3);
+  nRFAPI_SetRxMode (DEFAULT_DEV, 1);
+  nRFCMD_CE (DEFAULT_DEV, 1);
 
   return 1;
 }
@@ -154,7 +154,7 @@ vnRFtaskRx (void *parameter)
 	  do
 	    {
 	      // read packet from nRF chip
-	      nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.datab,
+	      nRFCMD_RegReadBuf (DEFAULT_DEV, RD_RX_PLOAD, g_Beacon.datab,
 				 sizeof (g_Beacon));
 
 	      // adjust byte order and decode
@@ -171,12 +171,12 @@ vnRFtaskRx (void *parameter)
 	      else
 		debug_printf("RX: CRC error or wrong encryption key\n");
 	    }
-	  while ((nRFAPI_GetFifoStatus () & FIFO_RX_EMPTY) == 0);
+	  while ((nRFAPI_GetFifoStatus (DEFAULT_DEV) & FIFO_RX_EMPTY) == 0);
 
 	  vLedSetRed (0);
-	  nRFAPI_GetFifoStatus ();
+	  nRFAPI_GetFifoStatus (DEFAULT_DEV);
 	}
-      nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
+      nRFAPI_ClearIRQ (DEFAULT_DEV, MASK_IRQ_FLAGS);
     }
 }
 

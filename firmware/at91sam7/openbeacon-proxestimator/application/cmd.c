@@ -230,7 +230,7 @@ prvExecCommand (u_int32_t cmd, portCHAR * args)
       DumpUIntToUSB (env.e.mode);
       DumpStringToUSB ("\n\r");
       DumpStringToUSB (" * The channel is ");
-      DumpUIntToUSB (nRFAPI_GetChannel ());
+      DumpUIntToUSB (nRFAPI_GetChannel (DEFAULT_DEV));
       DumpStringToUSB ("\n\r");
       DumpStringToUSB (" * The FIFO cache lifetime is ");
       DumpUIntToUSB (PtGetFifoLifetimeSeconds ());
