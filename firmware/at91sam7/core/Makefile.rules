@@ -115,6 +115,10 @@ $(TARGET).elf : $(ARM_OBJ) $(CRT0) $(BOOTLOADER) $(APP_ADDITIONAL) Makefile conf
 $(ARM_OBJ) : %.o : %.c $(LDSCRIPT) Makefile config/FreeRTOSConfig.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
+rsync_firmware : $(TARGET).bin
+	cp $(TARGET).bin ../upload/$(TARGET)-sam7firmware.bin
+	chmod 644 ../upload/$(TARGET)-sam7firmware.bin
+
 upload_firmware : $(TARGET).bin
 	scp $(TARGET).bin bitmanufaktur.net:/home/wwwrun/open.bitmanufaktur.com/web/www/people/milosch/firmware/at91sam7/$(TARGET)-sam7firmware.bin
 
