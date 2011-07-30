@@ -221,13 +221,16 @@ vnRF_ProcessDevice (u_int8_t device)
 	  crc = env_crc16 (g_Beacon.log.byte,
 			   sizeof (g_Beacon.log) - sizeof (u_int16_t));
 
+	  seconds_since_boot = xTaskGetTickCount () / 1000;
+
 	  if (swapshort (g_Beacon.log.pkt.crc) != crc)
+	  {
 	    rf_crc_err[device]++;
+	    debug_printf ("@%07u[%u] CRC error\n", seconds_since_boot, device);
+	  }
 	  else
 	    {
 	      rf_crc_ok[device]++;
-
-	      seconds_since_boot = xTaskGetTickCount () / 1000;
 
 	      oid = swapshort (g_Beacon.log.pkt.oid);
 	      if (g_Beacon.log.pkt.flags & RFBFLAGS_SENSOR)

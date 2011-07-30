@@ -17,7 +17,6 @@ if [[ -a $1 ]]; then
     read
     echo -e "9. flashing '$1'...\n"
     $SAM7 -l$UART<< ENDOFMYTEXT
-set_clock
 unlock_regions
 flash $1
 boot_from_flash
