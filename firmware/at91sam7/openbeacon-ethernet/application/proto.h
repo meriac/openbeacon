@@ -27,12 +27,6 @@
 
 #define NRF_POWERLEVEL_MAX 3
 
-typedef struct
-{
-  u_int8_t device;
-  TBeaconEnvelope log;
-} PACKED TBeaconEnvelopeLog;
-
 extern TBeaconEnvelopeLog g_Beacon;
 
 static inline unsigned short

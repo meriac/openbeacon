@@ -114,4 +114,11 @@ typedef union
   u_int8_t byte[XXTEA_BLOCK_COUNT * 4];
 } PACKED TBeaconEnvelope;
 
+typedef struct
+{
+  TBeaconEnvelope log;
+  u_int32_t reader_id;
+  u_int8_t device;
+} PACKED TBeaconEnvelopeLog;
+
 #endif/*__OPENBEACON_H__*/

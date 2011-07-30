@@ -203,6 +203,7 @@ vnRF_ProcessDevice (u_int8_t device)
 
       // posting packet to log file queue
       g_Beacon.device = device;
+      g_Beacon.reader_id = swaplong(env.e.reader_id);
       xQueueSend (xLogfile, &g_Beacon, 0);
 
       // post packet to network via UDP
