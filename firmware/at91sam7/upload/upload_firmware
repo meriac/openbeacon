@@ -2,12 +2,16 @@
 
 MY_PATH=$PWD
 
-find -type d -iname 'openbeacon-*' | sort | while read DIR; do
+rm -f *-sam7firmware.bin
+
+find .. -type d -iname 'openbeacon-*' | sort | while read DIR; do
     echo "processing $DIR..."
     cd $DIR
     make clean all > /dev/null
-    make upload_firmware
+    make rsync_firmware
     make clean > /dev/null
     cd $MY_PATH
     echo -e "DONE\n"
 done
+
+rsync --delete -av *-sam7firmware.bin bitmanufaktur.net:/home/wwwrun/open.bitmanufaktur.com/web/www/people/milosch/firmware/at91sam7/
