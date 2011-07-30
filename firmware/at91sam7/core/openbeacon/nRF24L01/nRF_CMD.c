@@ -34,6 +34,52 @@
 #include <board.h>
 #include <beacontypes.h>
 
+#ifdef  CSN_ID
+#define OB0_CSN_ID CSN_ID
+#endif/*CSN_ID*/
+
+#ifdef  CSN_PIN
+#define OB0_CSN_PIN CSN_PIN
+#endif/*CSN_PIN*/
+
+#ifdef  MISO_PIN
+#define OB0_MISO_PIN MISO_PIN
+#endif/*MISO_PIN*/
+
+#ifdef  MOSI_PIN
+#define OB0_MOSI_PIN MOSI_PIN
+#endif/*MOSI_PIN*/
+
+#ifdef  SCK_PIN
+#define OB0_SCK_PIN SCK_PIN
+#endif/*SCK_PIN*/
+
+#ifdef  IRQ_PIN
+#define OB0_IRQ_PIN IRQ_PIN
+#endif/*IRQ_PIN*/
+
+#ifdef  CE_PIN
+#define OB0_CE_PIN CE_PIN
+#endif/*CE_PIN*/
+
+#ifdef  OB1_IRQ_PIN
+#define OB_IRQ_PINS (OB0_IRQ_PIN|OB1_IRQ_PIN)
+#else
+#define OB_IRQ_PINS (OB0_IRQ_PIN)
+#endif/*OB1_IRQ_PIN*/
+
+#ifdef  OB1_CE_PIN
+#define OB_CE_PINS (OB0_CE_PIN|OB1_CE_PIN)
+#else
+#define OB_CE_PINS (OB0_CE_PIN)
+#endif/*OB1_CE_PIN*/
+
+#ifdef  OB1_CSN_PIN
+#define OB_CSN_PINS (OB0_CSN_PIN|OB1_CSN_PIN)
+#else
+#define OB_CSN_PINS (OB0_CSN_PIN)
+#endif/*OB1_CSN_PIN*/
+
 #ifdef  OB0_CE_PIN
 
 #ifndef OB0_CSN_ID
@@ -46,7 +92,11 @@
 #define NRF_SPI_MR (AT91C_SPI_MSTR | AT91C_SPI_PS_FIXED | AT91C_SPI_PCS)
 
 #ifndef CSN_PIN_PIO
+#ifdef  OB1_CSN_PIN
 #define NRF_SPI_PINS (OB0_CSN_PIN|OB1_CSN_PIN|MOSI_PIN|SCK_PIN|MISO_PIN)
+#else
+#define NRF_SPI_PINS (OB0_CSN_PIN|MOSI_PIN|SCK_PIN|MISO_PIN)
+#endif/*OB1_CSN_PIN*/
 #else
 #define NRF_SPI_PINS (MOSI_PIN|SCK_PIN|MISO_PIN)
 #endif/*CSN_PIN_PIO*/
@@ -91,22 +141,26 @@ void nRFCMD_CE(
 	  AT91F_PIO_ClearOutput(AT91C_BASE_PIOA,OB1_CE_PIN);
     }
     else
-    {
+#else /*OB1_CE_PIN*/
+    if(!device)
 #endif/*OB1_CE_PIN*/
+    {
 	if(enable)
 	  AT91F_PIO_SetOutput(AT91C_BASE_PIOA,OB0_CE_PIN);
 	else
 	  AT91F_PIO_ClearOutput(AT91C_BASE_PIOA,OB0_CE_PIN);
-#ifdef  OB1_CE_PIN
     }
-#endif/*OB1_CE_PIN*/
 }
 
 static void nRFCMD_UpdateDevice(
 	unsigned char device)
 {
     AT91C_BASE_SPI->SPI_MR = ( device ?
+#ifdef  OB1_CSN_ID
 	NRF_SPI_MR ^ (1<<(16+OB1_CSN_ID)) :
+#else
+	0 :
+#endif/*OB1_CSN_ID*/
 	NRF_SPI_MR ^ (1<<(16+OB0_CSN_ID))
 	);
 }
@@ -274,8 +328,8 @@ void nRFCMD_ISR_ACK_Handler(void)
 {
     portBASE_TYPE xTaskWokenACK = pdFALSE;
 
-    if( ( AT91C_BASE_PIOA->PIO_ISR & (OB0_IRQ_PIN|OB1_IRQ_PIN) ) &&
-	((AT91F_PIO_GetInput(AT91C_BASE_PIOA)&(OB0_IRQ_PIN|OB1_IRQ_PIN))!=(OB0_IRQ_PIN|OB1_IRQ_PIN))
+    if( ( AT91C_BASE_PIOA->PIO_ISR & OB_IRQ_PINS ) &&
+	((AT91F_PIO_GetInput(AT91C_BASE_PIOA)&OB_IRQ_PINS)!=OB_IRQ_PINS)
 	)
 	xTaskWokenACK = xSemaphoreGiveFromISR( xnRF_SemaphoreACK, &xTaskWokenACK );
 
@@ -337,12 +391,12 @@ unsigned char nRFCMD_Init(void)
     AT91F_PIO_CfgPeriph(AT91C_BASE_PIOA, NRF_SPI_PINS_PERIPHERAL_A, NRF_SPI_PINS_PERIPHERAL_B);
 
 #ifdef  CSN_PIN_PIO
-    AT91F_PIO_CfgPeriph(CSN_PIN_PIO, OB0_CSN_PIN|OB1_CSN_PIN, 0);
+    AT91F_PIO_CfgPeriph(CSN_PIN_PIO, OB_CSN_PINS, 0);
 #endif/*CSN_PIN_PIO*/
 
-    AT91F_PIO_CfgInput(AT91C_BASE_PIOA, OB0_IRQ_PIN|OB1_IRQ_PIN);
-    AT91F_PIO_CfgOutput(AT91C_BASE_PIOA, OB0_CE_PIN|OB1_CE_PIN);
-    AT91F_PIO_ClearOutput(AT91C_BASE_PIOA, OB0_CE_PIN|OB1_CE_PIN);
+    AT91F_PIO_CfgInput(AT91C_BASE_PIOA, OB_IRQ_PINS);
+    AT91F_PIO_CfgOutput(AT91C_BASE_PIOA, OB_CE_PINS);
+    AT91F_PIO_ClearOutput(AT91C_BASE_PIOA, OB_CE_PINS);
 
     portENTER_CRITICAL();
 
@@ -360,7 +414,7 @@ unsigned char nRFCMD_Init(void)
     AT91F_AIC_ConfigureIt(AT91C_ID_PIOA, 3, AT91C_AIC_SRCTYPE_HIGH_LEVEL, nRFCMD_ISR_ACK );
     /* reset IRQ status */
     dummy = AT91C_BASE_PIOA->PIO_ISR;
-    AT91C_BASE_PIOA->PIO_IER = OB0_IRQ_PIN|OB1_IRQ_PIN;
+    AT91C_BASE_PIOA->PIO_IER = OB_IRQ_PINS;
 
     AT91C_BASE_AIC->AIC_IECR = (0x1 << AT91C_ID_SPI) | (0x1 << AT91C_ID_PIOA) ;
 
