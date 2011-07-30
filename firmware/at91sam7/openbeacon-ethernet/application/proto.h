@@ -29,7 +29,7 @@
 
 typedef struct
 {
-  u_int32_t time;
+  u_int8_t device;
   TBeaconEnvelope log;
 } PACKED TBeaconEnvelopeLog;
 

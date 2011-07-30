@@ -27,32 +27,32 @@
 #ifndef NRF_API_H
 #define NRF_API_H
 
-extern unsigned char nRFAPI_Init(unsigned char channel,const unsigned char *mac,unsigned char mac_size, unsigned char features);
-extern void nRFAPI_SetTxPower(unsigned char power);
-extern void nRFAPI_TxRetries(unsigned char count);
-extern void nRFAPI_SetRxMode(unsigned char receive);
-extern void nRFAPI_DynpdEnable(unsigned char receive);
-extern void nRFAPI_PipesEnable(unsigned char mask);
-extern void nRFAPI_PipesAck(unsigned char mask);
-extern unsigned char nRFAPI_GetSizeMac(void);
-extern unsigned char nRFAPI_SetSizeMac(unsigned char addr_size);
-extern void nRFAPI_GetTxMAC(unsigned char *addr,unsigned char addr_size);
-extern void nRFAPI_SetTxMAC(const unsigned char *addr,unsigned char addr_size);
-extern void nRFAPI_SetRxMAC(const unsigned char *addr,unsigned char addr_size,unsigned char pipe);
-extern void nRFAPI_SetChannel(unsigned char channel);
-extern unsigned char nRFAPI_GetChannel(void);
-extern unsigned char nRFAPI_ClearIRQ(unsigned char status);
-extern void nRFAPI_TX(unsigned char *buf,unsigned char count);
-extern unsigned char nRFAPI_GetStatus(void);
-extern unsigned char nRFAPI_GetPipeSizeRX(unsigned char pipe);
-extern void nRFAPI_SetPipeSizeRX(unsigned char pipe,unsigned char size);
-extern unsigned char nRFAPI_GetPipeCurrent(void);
-extern unsigned char nRFAPI_RX(unsigned char *buf,unsigned char count);
-extern void nRFAPI_FlushRX(void);
-extern void nRFAPI_FlushTX(void);
-extern void nRFAPI_ReuseTX(void);
-extern unsigned char nRFAPI_GetFifoStatus(void);
-extern unsigned char nRFAPI_CarrierDetect(void);
-extern void nRFAPI_SetFeatures(unsigned char features);
+extern unsigned char nRFAPI_Init(unsigned char device,unsigned char rf_channel,const unsigned char *mac,unsigned char mac_size, unsigned char features);
+extern void nRFAPI_SetTxPower(unsigned char device,unsigned char power);
+extern void nRFAPI_TxRetries(unsigned char device,unsigned char count);
+extern void nRFAPI_SetRxMode(unsigned char device,unsigned char receive);
+extern void nRFAPI_DynpdEnable(unsigned char device,unsigned char receive);
+extern void nRFAPI_PipesEnable(unsigned char device,unsigned char mask);
+extern void nRFAPI_PipesAck(unsigned char device,unsigned char mask);
+extern unsigned char nRFAPI_GetSizeMac(unsigned char device);
+extern unsigned char nRFAPI_SetSizeMac(unsigned char device,unsigned char addr_size);
+extern void nRFAPI_GetTxMAC(unsigned char device,unsigned char *addr,unsigned char addr_size);
+extern void nRFAPI_SetTxMAC(unsigned char device,const unsigned char *addr,unsigned char addr_size);
+extern void nRFAPI_SetRxMAC(unsigned char device,const unsigned char *addr,unsigned char addr_size,unsigned char pipe);
+extern void nRFAPI_SetChannel(unsigned char device,unsigned char channel);
+extern unsigned char nRFAPI_GetChannel(unsigned char device);
+extern unsigned char nRFAPI_ClearIRQ(unsigned char device,unsigned char status);
+extern void nRFAPI_TX(unsigned char device,unsigned char *buf,unsigned char count);
+extern unsigned char nRFAPI_GetStatus(unsigned char device);
+extern unsigned char nRFAPI_GetPipeSizeRX(unsigned char device,unsigned char pipe);
+extern void nRFAPI_SetPipeSizeRX(unsigned char device,unsigned char pipe,unsigned char size);
+extern unsigned char nRFAPI_GetPipeCurrent(unsigned char device);
+extern unsigned char nRFAPI_RX(unsigned char device,unsigned char *buf,unsigned char count);
+extern void nRFAPI_FlushRX(unsigned char device);
+extern void nRFAPI_FlushTX(unsigned char device);
+extern void nRFAPI_ReuseTX(unsigned char device);
+extern unsigned char nRFAPI_GetFifoStatus(unsigned char device);
+extern unsigned char nRFAPI_CarrierDetect(unsigned char device);
+extern void nRFAPI_SetFeatures(unsigned char device,unsigned char features);
 
 #endif/*NRF_API_H*/
