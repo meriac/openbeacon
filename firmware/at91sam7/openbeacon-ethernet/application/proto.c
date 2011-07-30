@@ -296,7 +296,6 @@ vnRFtaskRxTx (void *parameter)
 {
   unsigned int delta_t_ms;
   portTickType time, time_old;
-  u_int8_t device;
 
   if (!PtInitNRF ())
     while (1)
@@ -328,11 +327,11 @@ vnRFtaskRxTx (void *parameter)
 	{
 	  time_old = time;
 
-	  for(device=0; device<=NRFCMD_DEV_MAX; device++)
-	  {
-	    rf_pkt_per_sec[device] = (rf_rec[device] - rf_rec_old[device]) * 1000 / delta_t_ms;
-	    rf_rec_old[device] = rf_rec[device];
-	  }
+	  rf_pkt_per_sec[0] = (rf_rec[0] - rf_rec_old[0]) * 1000 / delta_t_ms;
+	  rf_rec_old[0] = rf_rec[0];
+
+	  rf_pkt_per_sec[1] = (rf_rec[1] - rf_rec_old[1]) * 1000 / delta_t_ms;
+	  rf_rec_old[1] = rf_rec[1];
 	}
 
       /* check if TX strength changed */
@@ -343,8 +342,8 @@ vnRFtaskRxTx (void *parameter)
 	  nrf_powerlevel_last = nrf_powerlevel_current;
 	}
 
-      for(device=0; device<=NRFCMD_DEV_MAX; device++)
-	vnRF_ProcessDevice(device);
+      if(!(vnRF_ProcessDevice(NRFCMD_DEV0) || vnRF_ProcessDevice(NRFCMD_DEV1)))
+	nRFCMD_WaitRx(200);
   }
 }
 
