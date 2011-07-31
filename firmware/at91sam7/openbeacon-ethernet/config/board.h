@@ -70,34 +70,25 @@
 
 #define DEFAULT_CHANNEL 81
 
-#if 1
+#define OB0_CSN_ID      	0
+#define OB0_IRQ_PIN     	(1L<<14)
+#define OB0_CE_PIN      	(1L<<19)
+#define OB0_CSN_PIN     	(1L<<21)
+#define OB0_LED_BEACON_GREEN	(1L<<6)
+#define OB0_LED_BEACON_RED	(1L<<7)
 
-#define CSN_ID          	3
-#define IRQ_PIN         	(1L<<30)
-#define CE_PIN          	(1L<<20)
-#define CSN_PIN         	(1L<<29)
-
-#define LED_BEACON_GREEN	(1L<<9)
-#define LED_BEACON_RED		(1L<<8)
-
-#else
-
-#define CSN_ID          	0
-#define IRQ_PIN         	(1L<<14)
-#define CE_PIN          	(1L<<19)
-#define CSN_PIN         	(1L<<21)
-
-#define LED_BEACON_GREEN	(1L<<6)
-#define LED_BEACON_RED		(1L<<7)
-
-#endif
-
+#define OB1_CSN_ID      	3
+#define OB1_IRQ_PIN     	(1L<<30)
+#define OB1_CE_PIN      	(1L<<20)
+#define OB1_CSN_PIN     	(1L<<29)
+#define OB1_LED_BEACON_GREEN	(1L<<9)
+#define OB1_LED_BEACON_RED	(1L<<8)
 #define SCK_PIN         	(1L<<22)
 #define MOSI_PIN        	(1L<<23)
 #define MISO_PIN        	(1L<<24)
 
 #define LED_BEACON_PIO		AT91C_BASE_PIOA
-#define LED_BEACON_MASK		(LED_BEACON_GREEN|LED_BEACON_RED)
+#define LED_BEACON_MASK		(OB0_LED_BEACON_GREEN|OB0_LED_BEACON_RED|OB1_LED_BEACON_GREEN|OB1_LED_BEACON_RED)
 
 /*-------------------------------*/
 /* External Button               */

@@ -47,6 +47,7 @@ vCmdHelp (void)
 		"\t'g' - set gateway ip\n"
 		"\t'h' - show help\n"
 		"\t'i' - set reader id ('i123')\n"
+		"\t'k' - dump nRF registers\n"
 		"\t'l' - red LED ('l[enable=0, disable=1]')\n"
 		"\t'm' - netmask config ('m255.255.0.0')\n"
 		"\t'n' - network config ('a[static_ip=0, reader_id=1, dhcp=2]')\n"
@@ -181,6 +182,10 @@ vCmdProcess (const char *cmdline)
 	    }
 	}
       debug_printf ("reader_id=%i\n", env.e.reader_id);
+      break;
+
+    case 'K':
+      PtDumpNrfRegisters();
       break;
 
     case 'L':
