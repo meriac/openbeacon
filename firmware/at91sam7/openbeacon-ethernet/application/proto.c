@@ -49,8 +49,8 @@ static unsigned int rf_crc_err[NRFCMD_DEVICES],
 static unsigned int rf_rec[NRFCMD_DEVICES], rf_rec_old[NRFCMD_DEVICES];
 static int pt_debug_level = 0;
 static unsigned char nrf_powerlevel_current, nrf_powerlevel_last;
-static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] =
-  { 0xDE, 0xAD, 0xBE, 0xEF, 42 };
+static const unsigned char default_mac[NRF_MAX_MAC_SIZE]   = { 0x01, 0x02, 0x03, 0x02, 0x01 };
+static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 42, 0xDE, 0xAD, 0xBE, 0xEF };
 
 TBeaconEnvelopeLog g_Beacon;
 
@@ -96,22 +96,18 @@ PtGetRfPowerLevel (void)
 static s_int8_t
 PtInitChannel (u_int8_t device)
 {
-  unsigned char mac[NRF_MAX_MAC_SIZE];
+  unsigned char c;
 
-  if (!nRFAPI_Init (device, DEFAULT_CHANNEL, broadcast_mac,
-		    sizeof (broadcast_mac),
-		    (FEATURE_EN_ACK_PAY | FEATURE_EN_DYN_ACK)))
+  if (!nRFAPI_Init (device, DEFAULT_CHANNEL, default_mac, NRF_MAX_MAC_SIZE,0))
     return 0;
 
-  /* custom ACK MAC per RF interface */
-  memcpy (mac, broadcast_mac, NRF_MAX_MAC_SIZE);
-  mac[NRF_MAX_MAC_SIZE - 1] += (device + 1);
-  nRFAPI_SetRxMAC (device, mac, NRF_MAX_MAC_SIZE, 1);
-
-  nRFAPI_PipesEnable (device, ERX_P0 | ERX_P1);
-  nRFAPI_PipesAck (device, ERX_P1);
-  nRFAPI_SetPipeSizeRX (device, 0, sizeof (g_Beacon.log));
-  nRFAPI_SetPipeSizeRX (device, 1, sizeof (g_Beacon.log));
+  nRFAPI_SetRxMAC (device, broadcast_mac, NRF_MAX_MAC_SIZE, 1);
+  c = broadcast_mac[0]+1+device;
+  nRFAPI_SetRxMAC (device, &c, sizeof(c), 2);
+  nRFAPI_PipesEnable (device, ERX_P1 | ERX_P2);
+  nRFAPI_PipesAck (device, ERX_P1 | ERX_P2);
+  for(c=0; c<3; c++)
+    nRFAPI_SetPipeSizeRX (device, c, sizeof (g_Beacon.log));
 
   nRFAPI_SetTxPower (device, 3);
   nRFAPI_SetRxMode (device, 1);
@@ -458,9 +454,7 @@ vnRFtaskRxTx (void *parameter)
 	  nrf_powerlevel_last = nrf_powerlevel_current;
 	}
 
-      if (!
-	  (vnRF_ProcessDevice (NRFCMD_DEV0)
-	   || vnRF_ProcessDevice (NRFCMD_DEV1)))
+      if ((vnRF_ProcessDevice(NRFCMD_DEV0)+vnRF_ProcessDevice(NRFCMD_DEV1))==0)
 	nRFCMD_WaitRx (200);
     }
 }
