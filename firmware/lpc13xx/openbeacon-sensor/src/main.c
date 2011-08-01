@@ -33,7 +33,7 @@
 
 uint32_t g_sysahbclkctrl;
 
-#define FIFO_DEPTH 10
+#define FIFO_DEPTH 32
 typedef struct
 {
   int x, y, z;
@@ -58,14 +58,11 @@ static TBeaconEnvelope g_Beacon;
 static const uint32_t xxtea_key[4] = { 0x00112233, 0x44556677, 0x8899AABB, 0xCCDDEEFF };
 
 /* set nRF24L01 broadcast mac */
-static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 0xDE, 0xAD, 0xBE, 0xEF, 42 };
+static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 42, 0xDE, 0xAD, 0xBE, 0xEF };
 
 static void
 nRF_tx (uint8_t * data, uint8_t size)
 {
-  /* set RX queue size */
-//  nRFAPI_SetPipeSizeRX (0, size);
-
   /* upload data to nRF24L01 */
   nRFAPI_TX (data, size);
 
@@ -73,13 +70,13 @@ nRF_tx (uint8_t * data, uint8_t size)
   nRFCMD_CE (1);
 
   /* wait for packet to be transmitted */
-  pmu_sleep_ms (50);
+  pmu_sleep_ms (10);
 
   /* transmit data */
   nRFCMD_CE (0);
 }
 
-uint32_t
+static uint32_t
 random (uint32_t range)
 {
   static uint32_t v1 = 0x52f7d319;
@@ -89,6 +86,24 @@ random (uint32_t range)
      according to George Marsaglia */
   return ((((v1 = 36969 * (v1 & 0xffff) + (v1 >> 16)) << 16) ^
 	   (v2 = 30963 * (v2 & 0xffff) + (v2 >> 16))) ^ random_seed) % range;
+}
+
+static void
+set_mac (uint8_t mac_offset)
+{
+  static int prev_mac_offset = -1;
+  uint8_t mac[NRF_MAX_MAC_SIZE];
+
+  if(mac_offset!=prev_mac_offset)
+  {
+    prev_mac_offset=mac_offset;
+
+    memcpy(&mac,&broadcast_mac,NRF_MAX_MAC_SIZE);
+    mac[0]+=mac_offset;
+
+    nRFAPI_SetTxMAC(mac,NRF_MAX_MAC_SIZE);
+    nRFAPI_SetRxMAC(mac,NRF_MAX_MAC_SIZE,0);
+  }
 }
 
 int
@@ -245,7 +260,7 @@ main (void)
 	GPIOSetValue (1, 3, 0);
 	pmu_sleep_ms (400);
       }
-  /* set retries to zero */
+  /* set retries to one */
   nRFAPI_TxRetries (1);
   /* enable ACK */
   nRFAPI_SetPipeSizeRX (0, NRF_MAX_MAC_SIZE);
@@ -273,12 +288,16 @@ main (void)
 
   while (1)
     {
+      GPIOSetValue (1, 3, 1);
+
       /* read acceleration sensor */
-      nRFAPI_SetRxMode (0);
+      nRFAPI_SetRxMode (0);/*FIXME?*/
       acc_power (1);
-      pmu_sleep_ms (20);
+      pmu_sleep_ms (10);
       acc_xyz_read (&x, &y, &z);
       acc_power (0);
+
+      GPIOSetValue (1, 3, 0);
 
       if (firstrun_done)
 	{
@@ -288,6 +307,7 @@ main (void)
 	  /* transmit packet */
 	  if (!alarm_disabled && alarm_triggered && (seq & 1))
 	    {
+	      set_mac(0);
 	      remote_control = 1;
 
 	      nRF_tx ((uint8_t *) & broadcast_mac, NRF_MAX_MAC_SIZE);
@@ -303,10 +323,8 @@ main (void)
 	      g_Beacon.pkt.p.tracker.strength = 0;
 	      g_Beacon.pkt.p.tracker.seq = htonl (seq);
 	      g_Beacon.pkt.p.tracker.reserved = moving;
-	      g_Beacon.pkt.crc =
-		htons (crc16
-		       (g_Beacon.byte,
-			sizeof (g_Beacon) - sizeof (g_Beacon.pkt.crc)));
+	      g_Beacon.pkt.crc = htons (crc16(g_Beacon.byte,
+		sizeof (g_Beacon) - sizeof (g_Beacon.pkt.crc)));
 
 	      /* encrypt data */
 	      xxtea_encode (g_Beacon.block, XXTEA_BLOCK_COUNT, xxtea_key);
@@ -418,7 +436,7 @@ main (void)
 	  tamper--;
 	  if (moving < ACC_MOVING_TRESHOLD)
 	  {
-	    pmu_sleep_ms (400 + random (200));
+	    pmu_sleep_ms (900 + random (200));
 	    moving++;
 	  }
 	  else
@@ -439,7 +457,7 @@ main (void)
 	}
       else
 	{
-	  pmu_sleep_ms ( 400 + random ( 200) );
+	  pmu_sleep_ms ( 900 + random ( 200) );
 	  moving = 0;
 	}
     }
