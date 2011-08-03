@@ -39,34 +39,25 @@ void rfid_hexdump(const void *buffer, int size)
 	debug_printf(" [size=%02i]\n", size);
 }
 
-static
-int rfid_execute(void *data, unsigned int isize, unsigned int osize)
+static void halt_error(const char* message, int res)
 {
-	int res;
-	if (rfid_write(data, isize))
+	debug_printf("\nError: %s [res=%i]\n",message,res);
+	while(1)
 	{
-		debug_printf("getting result\n");
-		res = rfid_read(data, osize);
-		if (res > 0)
-			rfid_hexdump(data, res);
-		else
-			debug_printf("error: res=%i\n", res);
+	    pmu_wait_ms( 500 );
+	    GPIOSetValue(LED_PORT, LED_BIT, LED_ON);
+	    pmu_wait_ms( 500 );
+	    GPIOSetValue(LED_PORT, LED_BIT, LED_OFF);
 	}
-	else
-	{
-		debug_printf("->NACK!\n");
-		res = -1;
-	}
-	return res;
 }
 
 static
 void loop_rfid(void)
 {
-	int i;
+	int res;
 	static unsigned char data[80];
 
-	/* touch unused Parameter */
+	rfid_reset(0);
 	/* release reset line after 400ms */
 	pmu_wait_ms( 400 );
 	rfid_reset(1);
@@ -76,7 +67,16 @@ void loop_rfid(void)
 	/* read firmware revision */
 	debug_printf("\nreading firmware version...\n");
 	data[0] = PN532_CMD_GetFirmwareVersion;
-	rfid_execute(&data, 1, sizeof(data));
+	if((res=rfid_execute(&data, 1, sizeof(data)))<0)
+	    halt_error("Reading Firmware Version",res);
+	else
+	{
+	    debug_printf("PN532 Firmware Version: ");
+	    if(data[1]!=0x32)
+		rfid_hexdump(&data[1],data[0]);
+	    else
+		debug_printf("v%i.%i\n",data[2],data[3]);
+	}
 
 	/* enable debug output */
 	debug_printf("\nenabling debug output...\n");
@@ -97,14 +97,14 @@ void loop_rfid(void)
 		data[0] = PN532_CMD_InListPassiveTarget;
 		data[1] = 0x01; /* MaxTg - maximum cards    */
 		data[2] = 0x00; /* BrTy - 106 kbps type A   */
-		if (((i = rfid_execute(&data, 3, sizeof(data))) >= 11) && (data[1]
+		if (((res = rfid_execute(&data, 3, sizeof(data))) >= 11) && (data[1]
 				== 0x01) && (data[2] == 0x01))
 		{
 			debug_printf("card id: ");
 			rfid_hexdump(&data[7], data[6]);
 		}
 		else
-			debug_printf("unknown response of %i bytes\n", i);
+			debug_printf("PN532 error res=%i\n", res);
 		GPIOSetValue(LED_PORT, LED_BIT, LED_OFF);
 
 		/* turning field off */
