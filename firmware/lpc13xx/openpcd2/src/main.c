@@ -86,13 +86,13 @@ void loop_rfid(void)
 	// select test bus type
 	rfid_write_register (0x6322, 0x07);
 
+	GPIOSetValue(LED_PORT, LED_BIT, LED_OFF);
 	while (1)
 	{
-		/* wait 500ms */
-		pmu_wait_ms ( 500 );
+		/* wait 10ms */
+		pmu_wait_ms ( 10 );
 
 		/* detect cards in field */
-		GPIOSetValue(LED_PORT, LED_BIT, LED_ON);
 		debug_printf("\nchecking for cards...\n");
 		data[0] = PN532_CMD_InListPassiveTarget;
 		data[1] = 0x01; /* MaxTg - maximum cards    */
@@ -102,10 +102,14 @@ void loop_rfid(void)
 		{
 			debug_printf("card id: ");
 			rfid_hexdump(&data[7], data[6]);
+
+			GPIOSetValue(LED_PORT, LED_BIT, LED_OFF);
+			pmu_wait_ms ( 50 );
+			GPIOSetValue(LED_PORT, LED_BIT, LED_ON);
 		}
 		else
 			debug_printf("PN532 error res=%i\n", res);
-		GPIOSetValue(LED_PORT, LED_BIT, LED_OFF);
+
 
 		/* turning field off */
 		debug_printf("\nturning field off again...\n");
