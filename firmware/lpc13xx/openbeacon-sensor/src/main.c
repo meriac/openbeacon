@@ -61,10 +61,13 @@ static const uint32_t xxtea_key[4] = { 0x00112233, 0x44556677, 0x8899AABB, 0xCCD
 static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = { 42, 0xDE, 0xAD, 0xBE, 0xEF };
 
 static void
-nRF_tx (uint8_t * data, uint8_t size)
+nRF_tx (uint8_t * data, uint8_t size, uint8_t ack)
 {
   /* upload data to nRF24L01 */
-  nRFAPI_TX (data, size);
+  if(ack)
+    nRFAPI_TX (data, size);
+  else
+    nRFAPI_TX_NoACK (data, size);
 
   /* transmit data */
   nRFCMD_CE (1);
@@ -252,7 +255,7 @@ main (void)
     device_uuid[3];
 
   /* Initialize OpenBeacon nRF24L01 interface */
-  if (!nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0))
+  if (!nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), FEATURE_EN_DYN_ACK))
     for (;;)
       {
 	GPIOSetValue (1, 3, 1);
@@ -307,10 +310,11 @@ main (void)
 	  /* transmit packet */
 	  if (!alarm_disabled && alarm_triggered && (seq & 1))
 	    {
-	      set_mac(0);
 	      remote_control = 1;
 
-	      nRF_tx ((uint8_t *) & broadcast_mac, NRF_MAX_MAC_SIZE);
+	      /* transmit to first interface of PoE reader */
+	      set_mac(0);
+	      nRF_tx ((uint8_t *) & broadcast_mac, NRF_MAX_MAC_SIZE, 1);
 	    }
 	  else
 	    {
@@ -329,7 +333,28 @@ main (void)
 	      /* encrypt data */
 	      xxtea_encode (g_Beacon.block, XXTEA_BLOCK_COUNT, xxtea_key);
 
-	      nRF_tx ((uint8_t *) & g_Beacon, sizeof (g_Beacon));
+	      /* once every ten seconds check for reader */
+	      if(moving || ((seq % 10)==0))
+	      {
+		/* transmit to first interface of PoE reader with ACK */
+		set_mac(1);
+		nRF_tx ((uint8_t *) & g_Beacon, sizeof (g_Beacon), 1);
+
+		if ((nRFAPI_GetFifoStatus () & FIFO_TX_EMPTY)==0)
+		{
+		    /* clear TX fifo */
+		    nRFAPI_FlushTX ();
+		    /* transmit to second interface of PoE reader with ACK */
+		    set_mac(2);
+		    nRF_tx ((uint8_t *) & g_Beacon, sizeof (g_Beacon), 1);
+		}
+	      }
+	      else
+	      {
+		/* transmit to both interfaces without ACK */
+		set_mac(0);
+		nRF_tx ((uint8_t *) & g_Beacon, sizeof (g_Beacon), 0);
+	      }
 	    }
 
 	  /* get FIFO status */

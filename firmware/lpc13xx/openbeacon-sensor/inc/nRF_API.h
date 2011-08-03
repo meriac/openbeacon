@@ -45,6 +45,7 @@ extern void nRFAPI_SetChannel (uint8_t channel);
 extern uint8_t nRFAPI_GetChannel (void);
 extern uint8_t nRFAPI_ClearIRQ (uint8_t status);
 extern void nRFAPI_TX (uint8_t * buf, uint8_t count);
+extern void nRFAPI_TX_NoACK (uint8_t * buf, uint8_t count);
 extern uint8_t nRFAPI_GetStatus (void);
 extern uint8_t nRFAPI_GetPipeSizeRX (uint8_t pipe);
 extern void nRFAPI_SetPipeSizeRX (uint8_t pipe, uint8_t size);

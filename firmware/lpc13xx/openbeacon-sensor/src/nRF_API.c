@@ -244,6 +244,12 @@ nRFAPI_TX (uint8_t * buf, uint8_t count)
   nRFCMD_RegWriteBuf (WR_TX_PLOAD, buf, count);
 }
 
+void
+nRFAPI_TX_NoACK (uint8_t * buf, uint8_t count)
+{
+  nRFCMD_RegWriteBuf (W_TX_PAYLOAD_NOACK, buf, count);
+}
+
 uint8_t
 nRFAPI_GetStatus (void)
 {
