@@ -210,7 +210,7 @@ static unsigned char
 vnRF_ProcessDevice (u_int8_t device)
 {
   int i, first_free;
-  u_int8_t status, found;
+  u_int8_t status, found, pipe;
   u_int16_t crc, oid, id;
   u_int32_t l, seconds_since_boot;
 
@@ -238,6 +238,9 @@ vnRF_ProcessDevice (u_int8_t device)
 
       // storing timestamp into log file queue item
       g_Beacon.time = swaplong ((u_int32_t) xTaskGetTickCount ());
+
+      // get pipe number of next packet
+      pipe = (nRFAPI_GetStatus (device) >> 1) & 7;
 
       // read packet from nRF chip
       nRFCMD_RegReadBuf (device, RD_RX_PLOAD, g_Beacon.log.byte,
@@ -269,8 +272,8 @@ vnRF_ProcessDevice (u_int8_t device)
 	{
 	  rf_crc_err[device]++;
 	  if (pt_debug_level)
-	    debug_printf ("@%07u[%u] CRC error\n", seconds_since_boot,
-			  device);
+	    debug_printf ("@%07u[%u.%u] CRC error\n", seconds_since_boot,
+			  device, pipe);
 	}
       else
 	{
@@ -279,13 +282,22 @@ vnRF_ProcessDevice (u_int8_t device)
 	  if (g_Beacon.log.pkt.proto == RFBPROTO_BEACONTRACKER)
 	    {
 	      oid = swapshort (g_Beacon.log.pkt.oid);
-	      if ((pt_debug_level)
-		  && (g_Beacon.log.pkt.flags & RFBFLAGS_SENSOR))
-		debug_printf ("@%07u[%u] BUTTON: %u\n", seconds_since_boot,
-			      device, oid);
+	      l = swaplong (g_Beacon.log.pkt.p.tracker.seq);
+
+	      if (pt_debug_level)
+	      {
+		if(g_Beacon.log.pkt.flags & RFBFLAGS_SENSOR)
+		    debug_printf ("@%07u[%u.%u] BUTTON: %u\n", seconds_since_boot,
+		    device, pipe, oid);
+
+		debug_printf ("\t[%u.%u] ID[%04X]:SEQ[%07u]\n",
+			device, pipe, oid, l);
+		
+	      }
 
 	      found = 0;
 	      first_free = -1;
+
 	      for (i = 0; i < MAX_TAGS; i++)
 		{
 		  id = g_rf_tag_list[i].id;
@@ -294,11 +306,9 @@ vnRF_ProcessDevice (u_int8_t device)
 		    {
 		      /* if Tag is not moving - wait twice the tracking time */
 		      g_rf_tag_list[i].time = seconds_since_boot;
-		      g_rf_tag_list[i].moving =
-			g_Beacon.log.pkt.p.tracker.reserved;
+		      g_rf_tag_list[i].moving = g_Beacon.log.pkt.p.tracker.reserved;
 		      g_rf_tag_list[i].rxed++;
 
-		      l = swaplong (g_Beacon.log.pkt.p.tracker.seq);
 		      if (l > g_rf_tag_list[i].seq)
 			{
 			  if (g_rf_tag_list[i].seq)
@@ -326,8 +336,8 @@ vnRF_ProcessDevice (u_int8_t device)
 		{
 		  if (pt_debug_level)
 		    debug_printf
-		      ("@%07u[%u] added TAG_ID[%04X] to list[%u]\n",
-		       seconds_since_boot, device, oid, first_free);
+		      ("@%07u[%u.%u] added TAG_ID[%04X] to list[%u]\n",
+		       seconds_since_boot, device, pipe, oid, first_free);
 		  g_rf_tag_list[first_free].id = oid;
 		  g_rf_tag_list[first_free].time = seconds_since_boot;
 
