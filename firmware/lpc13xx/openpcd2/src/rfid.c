@@ -89,13 +89,14 @@ int rfid_read(void *data, unsigned char size)
 	rfid_tx(0x03);
 
 	/* default result */
-	res = -1;
+	res = -9;
 
 	/* find preamble */
 	t = 0;
 	prev = rfid_rx();
-	while ((!(((c = rfid_rx()) == 0xFF) && (prev == 0x00))) && (t
-			< PN532_FIFO_SIZE))
+	while ((!(((c = rfid_rx()) == 0xFF) && (prev == 0x00)))
+		&& (t < PN532_FIFO_SIZE)
+		)
 	{
 		prev = c;
 		t++;
@@ -119,7 +120,7 @@ int rfid_read(void *data, unsigned char size)
 				/* eat Postamble */
 				rfid_rx();
 				/* -1 for NACK, 0 for ACK */
-				res = pkt_size ? 0 : -1;
+				res = pkt_size ? -1 : 0;
 			}
 		}
 		else
