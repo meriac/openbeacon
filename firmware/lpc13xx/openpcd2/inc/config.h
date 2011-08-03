@@ -29,22 +29,23 @@
 #define LED_ON 1	/* Level to set port to turn on led  */
 #define LED_OFF 0	/* Level to set port to turn off led */
 
+//#define ENABLE_USB_FULLFEATURED
+
 /* USB device settings */
-#define ENALBLE_USB_FULLFEATURED
+#ifdef  ENABLE_USB_FULLFEATURED
 #define USB_VENDOR_ID	0x2366
 #define USB_PROD_ID	0x0003
 #define USB_DEVICE	0x0100
+#endif/*ENABLE_USB_FULLFEATURED*/
+
+/* Clock Definition */
+#define SYSTEM_CRYSTAL_CLOCK 12000000
+#define SYSTEM_CORE_CLOCK (SYSTEM_CRYSTAL_CLOCK*6)
 
 /* PN532 pin definitions */
 #define PN532_RESET_PORT 1
 #define PN532_RESET_PIN 11
 #define PN532_CS_PORT 0
 #define PN532_CS_PIN 2
-
-
-/* FreeRTOS configuration */
-#define ENABLE_FREERTOS
-#define TASK_RFID_STACK_SIZE 64
-#define TASK_RFID_PRIORITY (tskIDLE_PRIORITY + 2)
 
 #endif/*__CONFIG_H__*/

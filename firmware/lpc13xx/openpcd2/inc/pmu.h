@@ -1,8 +1,8 @@
 /***************************************************************
  *
- * OpenBeacon.org - PN532 routines for LPC13xx based OpenPCD2
+ * OpenBeacon.org - LPC13xx Power Management Functions
  *
- * Copyright 2010 Milosch Meriac <meriac@openbeacon.de>
+ * Copyright 2011 Milosch Meriac <meriac@openbeacon.de>
  *
  ***************************************************************
 
@@ -20,15 +20,12 @@
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
  */
-#ifndef __RFID_H__
-#define __RFID_H__
 
-#include <pn532.h>
+#ifndef __PMU_H__
+#define __PMU_H__
 
-extern void rfid_init(void);
-extern void rfid_reset(unsigned char reset);
-extern int rfid_read(void *data, unsigned char size);
-extern int rfid_write(const void *data, int len);
-extern int rfid_write_register(unsigned short address, unsigned char data);
+extern void pmu_wait_ms (uint16_t ms);
+extern void pmu_sleep_ms (uint16_t ms);
+extern void pmu_init (void);
 
-#endif/*__RFID_H__*/
+#endif/*__PMU_H__*/

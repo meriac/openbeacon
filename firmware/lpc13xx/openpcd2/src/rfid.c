@@ -23,10 +23,11 @@
 #include <openbeacon.h>
 #include "pn532.h"
 #include "rfid.h"
+#include "pmu.h"
 
 #define BIT_REVERSE(x) ((unsigned char)(__RBIT(x)>>24))
 
-static void rfid_reset(unsigned char reset)
+void rfid_reset(unsigned char reset)
 {
 	GPIOSetValue(PN532_RESET_PORT, PN532_RESET_PIN, reset ? 1 : 0);
 }
@@ -78,7 +79,7 @@ int rfid_read(void *data, unsigned char size)
 	{
 		if(t++>10)
 			return -8;
-		vTaskDelay( 10 / portTICK_RATE_MS);
+		pmu_wait_ms( 10 );
 	}
 
 	/* enable chip select */
@@ -216,41 +217,17 @@ int rfid_write(const void *data, int len)
 	return rfid_read(NULL, 0);
 }
 
-static void rfid_hexdump(const void *buffer, int size)
-{
-	int i;
-	const unsigned char *p = (unsigned char *) buffer;
-
-	for (i = 0; i < size; i++)
-	{
-		if (i && ((i & 3) == 0))
-			debug_printf(" ");
-		debug_printf(" %02X", *p++);
-	}
-	debug_printf(" [size=%02i]\n", size);
-}
-
-static int rfid_execute(void *data, unsigned int isize, unsigned int osize)
+int rfid_execute(void *data, unsigned int isize, unsigned int osize)
 {
 	int res;
-	if (rfid_write(data, isize))
-	{
-		debug_printf("getting result\n");
-		res = rfid_read(data, osize);
-		if (res > 0)
-			rfid_hexdump(data, res);
-		else
-			debug_printf("error: res=%i\n", res);
-	}
+
+	if((res=rfid_write(data, isize))<0)
+	    return res;
 	else
-	{
-		debug_printf("->NACK!\n");
-		res = -1;
-	}
-	return res;
+	    return rfid_read(data, osize);
 }
 
-void WriteRegister(unsigned short address, unsigned char data)
+int rfid_write_register(unsigned short address, unsigned char data)
 {
 	unsigned char cmd[4];
 
@@ -263,65 +240,7 @@ void WriteRegister(unsigned short address, unsigned char data)
 	/* data value */
 	cmd[3] = data;
 
-	rfid_execute(&cmd, sizeof(cmd), sizeof(data));
-}
-
-static
-void rfid_task(void *pvParameters)
-{
-	int i;
-	static unsigned char data[80];
-
-	/* touch unused Parameter */
-	(void) pvParameters;
-
-	/* release reset line after 400ms */
-	vTaskDelay( 400 / portTICK_RATE_MS);
-	rfid_reset(1);
-	/* wait for PN532 to boot */
-	vTaskDelay( 100 / portTICK_RATE_MS);
-
-	/* read firmware revision */
-	debug_printf("\nreading firmware version...\n");
-	data[0] = PN532_CMD_GetFirmwareVersion;
-	rfid_execute(&data, 1, sizeof(data));
-
-	/* enable debug output */
-	debug_printf("\nenabling debug output...\n");
-	WriteRegister(0x6328, 0xFC);
-	// select test bus signal
-	WriteRegister(0x6321, 6);
-	// select test bus type
-	WriteRegister(0x6322, 0x07);
-
-	while (1)
-	{
-		/* wait 500ms */
-		vTaskDelay( 500 / portTICK_RATE_MS);
-
-		/* detect cards in field */
-		GPIOSetValue(LED_PORT, LED_BIT, LED_ON);
-		debug_printf("\nchecking for cards...\n");
-		data[0] = PN532_CMD_InListPassiveTarget;
-		data[1] = 0x01; /* MaxTg - maximum cards    */
-		data[2] = 0x00; /* BrTy - 106 kbps type A   */
-		if (((i = rfid_execute(&data, 3, sizeof(data))) >= 11) && (data[1]
-				== 0x01) && (data[2] == 0x01))
-		{
-			debug_printf("card id: ");
-			rfid_hexdump(&data[7], data[6]);
-		}
-		else
-			debug_printf("unknown response of %i bytes\n", i);
-		GPIOSetValue(LED_PORT, LED_BIT, LED_OFF);
-
-		/* turning field off */
-		debug_printf("\nturning field off again...\n");
-		data[0] = PN532_CMD_RFConfiguration;
-		data[1] = 0x01; /* CfgItem = 0x01           */
-		data[2] = 0x00; /* RF Field = off           */
-		rfid_execute(&data, 3, sizeof(data));
-	}
+	return rfid_execute(&cmd, sizeof(cmd), sizeof(data));
 }
 
 void rfid_init(void)
@@ -353,7 +272,4 @@ void rfid_init(void)
 	rfid_reset(0);
 	GPIOSetDir(PN532_RESET_PORT, PN532_RESET_PIN, 1);
 
-	/* Create PN532 task */
-	xTaskCreate(rfid_task, (const signed char*) "RFID", TASK_RFID_STACK_SIZE,
-			NULL, TASK_RFID_PRIORITY, NULL);
 }
