@@ -17,7 +17,7 @@
  *---------------------------------------------------------------------------*/
 
 #include <openbeacon.h>
-#ifdef  ENALBLE_USB_FULLFEATURED
+#ifdef  ENABLE_USB_FULLFEATURED
 
 #include "cdcusb.h"
 #include "usbhw.h"
@@ -369,4 +369,4 @@ CDC_NotificationIn (void)
   USB_WriteEP (CDC_CEP_IN, &NotificationBuf[0], 10);	// send notification
 }
 
-#endif /*ENALBLE_USB_FULLFEATURED*/
+#endif /*ENABLE_USB_FULLFEATURED*/

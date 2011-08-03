@@ -26,18 +26,18 @@ extern BOOL default_putchar (uint8_t data);
 
 #include <LPC13xx.h>
 #include <uart.h>
-#ifdef ENALBLE_USB_FULLFEATURED
+#ifdef ENABLE_USB_FULLFEATURED
 #include <cdcusb.h>
 #include <usbcfg.h>
 #include <usbhw.h>
 #include <usbcore.h>
 #include <cdc.h>
 #include <cdcuser.h>
-#else /*ENALBLE_USB_FULLFEATURED*/
+#else /*ENABLE_USB_FULLFEATURED*/
 #include <usb.h>
 #include <usbdesc.h>
 #include <rom_drivers.h>
-#endif/*ENALBLE_USB_FULLFEATURED*/
+#endif/*ENABLE_USB_FULLFEATURED*/
 #include <gpio.h>
 
 /* PDSLEEPCFG, PDAWAKECFG, PDRUNCFG */

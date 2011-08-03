@@ -20,7 +20,7 @@
  *          V1.00 Initial Version
  *---------------------------------------------------------------------------*/
 #include <openbeacon.h>
-#ifdef  ENALBLE_USB_FULLFEATURED
+#ifdef  ENABLE_USB_FULLFEATURED
 
 #include "cdcusb.h"
 #include "cdc.h"
@@ -201,4 +201,4 @@ const uint8_t USB_StringDescriptor[] = {
   'M', 0,
 };
 
-#endif/*ENALBLE_USB_FULLFEATURED*/
+#endif/*ENABLE_USB_FULLFEATURED*/

@@ -30,7 +30,7 @@
 #define LED_OFF 0	/* Level to set port to turn off led */
 
 /* USB device settings */
-#define ENALBLE_USB_FULLFEATURED
+#define ENABLE_USB_FULLFEATURED
 #define USB_VENDOR_ID	0x2366
 #define USB_PROD_ID	0x0003
 #define USB_DEVICE	0x0100

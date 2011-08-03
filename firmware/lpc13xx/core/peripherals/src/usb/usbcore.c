@@ -22,7 +22,7 @@
  *          V1.00 Initial Version
  *----------------------------------------------------------------------------*/
 #include <openbeacon.h>
-#ifdef  ENALBLE_USB_FULLFEATURED
+#ifdef  ENABLE_USB_FULLFEATURED
 
 #include "cdcusb.h"
 #include "usbcfg.h"
@@ -1288,4 +1288,4 @@ USB_EndPoint0 (uint32_t event)
     }
 }
 
-#endif /*ENALBLE_USB_FULLFEATURED*/
+#endif /*ENABLE_USB_FULLFEATURED*/
