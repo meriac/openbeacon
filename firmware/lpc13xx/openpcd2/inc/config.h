@@ -29,7 +29,7 @@
 #define LED_ON 1	/* Level to set port to turn on led  */
 #define LED_OFF 0	/* Level to set port to turn off led */
 
-//#define ENABLE_USB_FULLFEATURED
+#define ENABLE_USB_FULLFEATURED
 
 /* USB device settings */
 #ifdef  ENABLE_USB_FULLFEATURED

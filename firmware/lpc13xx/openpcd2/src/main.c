@@ -24,6 +24,88 @@
 #include "rfid.h"
 #include "pmu.h"
 
+static BOOL CDC_DepInEmpty; // Data IN EP is empty
+static unsigned char fifo_out[USB_CDC_BUFSIZE];//, fifo_in[USB_CDC_BUFSIZE];
+static int fifo_out_count;
+
+static void CDC_BulkIn_Handler(BOOL from_isr)
+{
+    uint32_t count, data, *p;
+
+    if(!from_isr)
+	__disable_irq();
+
+    if(!fifo_out_count)
+	CDC_DepInEmpty = 1;
+    else
+    {
+	count = fifo_out_count;
+	if(count>USB_CDC_BUFSIZE)
+	    count = USB_CDC_BUFSIZE;
+	fifo_out_count -= count;
+
+	USB_WriteEP_Count (CDC_DEP_IN, count);
+	p = (uint32_t*)&fifo_out;
+	while(count>0)
+	{
+	    if(count>(int)sizeof(data))
+	    {
+		count -= sizeof(data);
+		data = *p++;
+	    }
+	    else
+	    {
+		data = 0;
+		memcpy(&data,p,count);
+		count = 0;
+	    }
+	    USB_WriteEP_Block (data);
+	}
+	USB_WriteEP_Terminate (CDC_DEP_IN);
+    }
+
+    if(!from_isr)
+	 __enable_irq();
+}
+
+BOOL CDC_PutChar (unsigned char data)
+{
+    __disable_irq();
+
+    if(fifo_out_count>=USB_CDC_BUFSIZE)
+	CDC_BulkIn_Handler (TRUE);
+
+    fifo_out[fifo_out_count++]=data;
+
+    __enable_irq();
+    return TRUE;
+}
+
+void CDC_BulkIn (void)
+{
+    CDC_BulkIn_Handler(TRUE);
+}
+
+void CDC_BulkOut (void)
+{
+}
+
+void CDC_Flush (void)
+{
+    if(CDC_DepInEmpty)
+	CDC_BulkIn_Handler (FALSE);
+}
+
+/*
+ * overwrite default_putchar with USB CDC ACM
+ * output to enable USB support for debug_printf
+ */
+BOOL default_putchar(uint8_t data)
+{
+    UARTSendChar (data);
+    return CDC_PutChar (data);
+}
+
 static
 void rfid_hexdump(const void *buffer, int size)
 {
@@ -51,8 +133,7 @@ static void halt_error(const char* message, int res)
 	}
 }
 
-static
-void loop_rfid(void)
+static void loop_rfid(void)
 {
 	int res;
 	static unsigned char data[80];
@@ -110,7 +191,6 @@ void loop_rfid(void)
 		else
 			debug_printf("PN532 error res=%i\n", res);
 
-
 		/* turning field off */
 		debug_printf("\nturning field off again...\n");
 		data[0] = PN532_CMD_RFConfiguration;
@@ -128,14 +208,12 @@ int main(void)
 	/* Set LED port pin to output */
 	GPIOSetDir(LED_PORT, LED_BIT, LED_ON);
 
-#ifdef  ENABLE_USB_FULLFEATURED
 	/* CDC Initialization */
 	CDC_Init();
 	/* USB Initialization */
 	USB_Init();
 	/* Connect to USB port */
 	USB_Connect(1);
-#endif/*ENABLE_USB_FULLFEATURED*/
 
 	/* Init Power Management Routines */
 	pmu_init();
