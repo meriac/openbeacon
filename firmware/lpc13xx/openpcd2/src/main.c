@@ -25,10 +25,10 @@
 #include "pmu.h"
 
 static BOOL CDC_DepInEmpty; // Data IN EP is empty
-static unsigned char fifo_out[USB_CDC_BUFSIZE];//, fifo_in[USB_CDC_BUFSIZE];
-static int fifo_out_count;
+static unsigned char fifo_out[USB_CDC_BUFSIZE], fifo_in[128];
+static int fifo_out_count, fifo_in_count;
 
-static void CDC_BulkIn_Handler(BOOL from_isr)
+static inline void CDC_BulkIn_Handler(BOOL from_isr)
 {
     uint32_t count, data, *p;
 
@@ -68,11 +68,11 @@ static void CDC_BulkIn_Handler(BOOL from_isr)
 	 __enable_irq();
 }
 
-BOOL CDC_PutChar (unsigned char data)
+static inline BOOL CDC_PutChar (unsigned char data)
 {
     __disable_irq();
 
-    if(fifo_out_count>=USB_CDC_BUFSIZE)
+    if(fifo_out_count>=(int)sizeof(fifo_out))
 	CDC_BulkIn_Handler (TRUE);
 
     fifo_out[fifo_out_count++]=data;
@@ -81,19 +81,58 @@ BOOL CDC_PutChar (unsigned char data)
     return TRUE;
 }
 
+static inline void CDC_Flush (void)
+{
+    if(CDC_DepInEmpty)
+	CDC_BulkIn_Handler (FALSE);
+}
+
 void CDC_BulkIn (void)
 {
     CDC_BulkIn_Handler(TRUE);
 }
 
-void CDC_BulkOut (void)
+static inline void CDC_GetCommand (unsigned char* command)
 {
+    debug_printf("CMD: '%s'\n",command);
+    CDC_Flush ();
 }
 
-void CDC_Flush (void)
+static inline void CDC_GetChar (unsigned char data)
 {
-    if(CDC_DepInEmpty)
-	CDC_BulkIn_Handler (FALSE);
+    if(fifo_in_count<(int)(sizeof(fifo_in)-1))
+    {
+	if(data<' ')
+	{
+	    /* add line termination */
+	    fifo_in[fifo_in_count]=0;
+	    CDC_GetCommand(fifo_in);
+	    fifo_in_count=0;
+	}
+	else
+	    fifo_in[fifo_in_count++]=data;
+    }
+}
+
+void CDC_BulkOut (void)
+{
+    int count, bs;
+    uint32_t data;
+    unsigned char *p;
+
+    count = USB_ReadEP_Count(CDC_DEP_OUT);
+
+    while (count > 0)
+    {
+	data = USB_ReadEP_Block();
+	bs = (count > (int)sizeof(data)) ? (int)sizeof(data) : count;
+	count -= bs;
+	p = (unsigned char *)&data;
+	while(bs--)
+	    CDC_GetChar(*p++);
+    }
+
+    USB_ReadEP_Terminate(CDC_DEP_OUT);
 }
 
 /*
@@ -167,14 +206,14 @@ static void loop_rfid(void)
 	// select test bus type
 	rfid_write_register (0x6322, 0x07);
 
-	GPIOSetValue(LED_PORT, LED_BIT, LED_OFF);
+	GPIOSetValue(LED_PORT, LED_BIT, LED_ON);
 	while (1)
 	{
 		/* wait 10ms */
 		pmu_wait_ms ( 10 );
 
 		/* detect cards in field */
-		debug_printf("\nchecking for cards...\n");
+//		debug_printf("\nchecking for cards...\n");
 		data[0] = PN532_CMD_InListPassiveTarget;
 		data[1] = 0x01; /* MaxTg - maximum cards    */
 		data[2] = 0x00; /* BrTy - 106 kbps type A   */
@@ -189,10 +228,11 @@ static void loop_rfid(void)
 			GPIOSetValue(LED_PORT, LED_BIT, LED_ON);
 		}
 		else
-			debug_printf("PN532 error res=%i\n", res);
+			if(res!=-8)
+				debug_printf("PN532 error res=%i\n", res);
 
 		/* turning field off */
-		debug_printf("\nturning field off again...\n");
+//		debug_printf("\nturning field off again...\n");
 		data[0] = PN532_CMD_RFConfiguration;
 		data[1] = 0x01; /* CfgItem = 0x01           */
 		data[2] = 0x00; /* RF Field = off           */
