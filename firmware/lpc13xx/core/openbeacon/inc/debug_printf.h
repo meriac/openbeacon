@@ -11,7 +11,7 @@
 
 #ifndef __DEBUG_PRINTF_H__
 #define __DEBUG_PRINTF_H__
-#ifdef UART_DISABLE
+#if defined UART_DISABLE && !defined ENABLE_USB_FULLFEATURED
 #define debug_printf(...)
 #else /*UART_DISABLE*/
 extern void debug_printf (const char *fmt, ...);

@@ -10,7 +10,7 @@
  */
 
 #include <openbeacon.h>
-#ifndef UART_DISABLE
+#if !defined UART_DISABLE || defined ENABLE_USB_FULLFEATURED
 #include <ctype.h>
 #include <uart.h>
 #include <debug_printf.h>

@@ -8,6 +8,7 @@
 #define PACKED __attribute__((packed))
 #define WEAK __attribute__ ((weak))
 #define ALIAS(f) __attribute__ ((weak, alias (#f)))
+#define LINKTO(f) __attribute__ ((alias (#f)))
 
 typedef uint8_t BOOL;
 #define TRUE 1

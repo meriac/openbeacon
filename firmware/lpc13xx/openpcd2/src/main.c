@@ -24,40 +24,38 @@
 #include "rfid.h"
 #include "pmu.h"
 
-static BOOL CDC_DepInEmpty; // Data IN EP is empty
+#ifdef ENABLE_USB_FULLFEATURED
+static BOOL CDC_DepInEmpty, CDC_Initialized; // Data IN EP is empty
 static unsigned char fifo_out[USB_CDC_BUFSIZE], fifo_in[128];
 static int fifo_out_count, fifo_in_count;
 
 static inline void CDC_BulkIn_Handler(BOOL from_isr)
 {
-    uint32_t count, data, *p;
+    uint32_t data, *p;
 
     if(!from_isr)
 	__disable_irq();
+
+    CDC_Initialized = TRUE;
 
     if(!fifo_out_count)
 	CDC_DepInEmpty = 1;
     else
     {
-	count = fifo_out_count;
-	if(count>USB_CDC_BUFSIZE)
-	    count = USB_CDC_BUFSIZE;
-	fifo_out_count -= count;
-
-	USB_WriteEP_Count (CDC_DEP_IN, count);
+	USB_WriteEP_Count (CDC_DEP_IN, fifo_out_count);
 	p = (uint32_t*)&fifo_out;
-	while(count>0)
+	while(fifo_out_count>0)
 	{
-	    if(count>(int)sizeof(data))
+	    if(fifo_out_count>=(int)sizeof(data))
 	    {
-		count -= sizeof(data);
+		fifo_out_count -= sizeof(data);
 		data = *p++;
 	    }
 	    else
 	    {
 		data = 0;
-		memcpy(&data,p,count);
-		count = 0;
+		memcpy(&data,p,fifo_out_count);
+		fifo_out_count = 0;
 	    }
 	    USB_WriteEP_Block (data);
 	}
@@ -66,19 +64,6 @@ static inline void CDC_BulkIn_Handler(BOOL from_isr)
 
     if(!from_isr)
 	 __enable_irq();
-}
-
-static inline BOOL CDC_PutChar (unsigned char data)
-{
-    __disable_irq();
-
-    if(fifo_out_count>=(int)sizeof(fifo_out))
-	CDC_BulkIn_Handler (TRUE);
-
-    fifo_out[fifo_out_count++]=data;
-
-    __enable_irq();
-    return TRUE;
 }
 
 static inline void CDC_Flush (void)
@@ -135,15 +120,22 @@ void CDC_BulkOut (void)
     USB_ReadEP_Terminate(CDC_DEP_OUT);
 }
 
-/*
- * overwrite default_putchar with USB CDC ACM
- * output to enable USB support for debug_printf
- */
-BOOL default_putchar(uint8_t data)
+BOOL default_putchar (uint8_t data)
 {
-    UARTSendChar (data);
-    return CDC_PutChar (data);
+    __disable_irq();
+
+    if(fifo_out_count<(int)sizeof(fifo_out))
+	fifo_out[fifo_out_count++]=data;
+
+    if(data=='\n')
+	CDC_BulkIn_Handler (TRUE);
+
+    __enable_irq();
+
+    return UARTSendChar(data);
 }
+#endif/*ENABLE_USB_FULLFEATURED*/
+
 
 static
 void rfid_hexdump(const void *buffer, int size)
@@ -165,6 +157,7 @@ static void halt_error(const char* message, int res)
 	debug_printf("\nError: %s [res=%i]\n",message,res);
 	while(1)
 	{
+	debug_printf("\nError: %s [res=%i]\n",message,res);
 	    pmu_wait_ms( 500 );
 	    GPIOSetValue(LED_PORT, LED_BIT, LED_ON);
 	    pmu_wait_ms( 500 );
@@ -177,12 +170,17 @@ static void loop_rfid(void)
 	int res;
 	static unsigned char data[80];
 
+	/*reset FIFO */
+#ifdef  ENABLE_USB_FULLFEATURED
+	fifo_out_count = fifo_in_count = 0;
+#endif/*ENABLE_USB_FULLFEATURED*/
+
 	rfid_reset(0);
 	/* release reset line after 400ms */
 	pmu_wait_ms( 400 );
 	rfid_reset(1);
 	/* wait for PN532 to boot */
-	pmu_wait_ms( 100 );
+	pmu_wait_ms( 600 );
 
 	/* read firmware revision */
 	debug_printf("\nreading firmware version...\n");
@@ -206,6 +204,7 @@ static void loop_rfid(void)
 	// select test bus type
 	rfid_write_register (0x6322, 0x07);
 
+	/* enable debug output */
 	GPIOSetValue(LED_PORT, LED_BIT, LED_ON);
 	while (1)
 	{
@@ -213,26 +212,27 @@ static void loop_rfid(void)
 		pmu_wait_ms ( 10 );
 
 		/* detect cards in field */
-//		debug_printf("\nchecking for cards...\n");
 		data[0] = PN532_CMD_InListPassiveTarget;
 		data[1] = 0x01; /* MaxTg - maximum cards    */
 		data[2] = 0x00; /* BrTy - 106 kbps type A   */
 		if (((res = rfid_execute(&data, 3, sizeof(data))) >= 11) && (data[1]
 				== 0x01) && (data[2] == 0x01))
 		{
+			GPIOSetValue(LED_PORT, LED_BIT, LED_ON);
+			pmu_wait_ms ( 50 );
+			GPIOSetValue(LED_PORT, LED_BIT, LED_OFF);
+
 			debug_printf("card id: ");
 			rfid_hexdump(&data[7], data[6]);
-
-			GPIOSetValue(LED_PORT, LED_BIT, LED_OFF);
-			pmu_wait_ms ( 50 );
-			GPIOSetValue(LED_PORT, LED_BIT, LED_ON);
 		}
 		else
+		{
+			GPIOSetValue(LED_PORT, LED_BIT, LED_ON);
 			if(res!=-8)
-				debug_printf("PN532 error res=%i\n", res);
+			    debug_printf("PN532 error res=%i\n", res);
+		}
 
 		/* turning field off */
-//		debug_printf("\nturning field off again...\n");
 		data[0] = PN532_CMD_RFConfiguration;
 		data[1] = 0x01; /* CfgItem = 0x01           */
 		data[2] = 0x00; /* RF Field = off           */
@@ -248,18 +248,23 @@ int main(void)
 	/* Set LED port pin to output */
 	GPIOSetDir(LED_PORT, LED_BIT, LED_ON);
 
-	/* CDC Initialization */
-	CDC_Init();
-	/* USB Initialization */
-	USB_Init();
-	/* Connect to USB port */
-	USB_Connect(1);
-
 	/* Init Power Management Routines */
 	pmu_init();
 
 	/* UART setup */
 	UARTInit(115200, 0);
+
+	/* CDC Initialization */
+#ifdef  ENABLE_USB_FULLFEATURED
+	CDC_Initialized = FALSE;
+	CDC_DepInEmpty = TRUE;
+
+	CDC_Init();
+	/* USB Initialization */
+	USB_Init();
+	/* Connect to USB port */
+	USB_Connect(1);
+#endif/*ENABLE_USB_FULLFEATURED*/
 
 	/* Init RFID */
 	rfid_init();
