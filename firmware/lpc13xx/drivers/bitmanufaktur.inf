@@ -1,60 +1,102 @@
 [Version]
-Signature="$Windows NT$"
-Class=Ports
-ClassGuid={4D36E978-E325-11CE-BFC1-08002BE10318}
-Provider=%BITMANUFAKTUR%
-DriverVer=28/03/11
+Signature       = "$Windows NT$"
+Class           = Ports
+ClassGuid       = {4d36e978-e325-11ce-bfc1-08002be10318} 
+Provider        = %BITMANUFAKTUR%
+LayoutFile      = layout.inf
+DriverVer       = 11/08/2011,1.0.0.0
 
 [Manufacturer]
-%BITMANUFAKTUR%=BitmanufakturDevices
+%BITMANUFAKTUR%=BITMANUFAKTUR,NTamd64
+
+[BITMANUFAKTUR]
+%CDCACM_USB2%=CDCACM,NT,USB\VID_2366&PID_0002
+%CDCACM_OPENPCD2%=CDCACM,NT,USB\VID_2366&PID_0003
+%CDCACM_USB%=CDCACM,NT,USB\VID_2366&PID_0004
+%CDCACM_WDIM%=CDCACM,NT,USB\VID_2366&PID_0005
+%CDCACM_WMCU%=CDCACM,NT,USB\VID_2366&PID_0006
+%CDCACM_POE2%=CDCACM,NT,USB\VID_2366&PID_0007
+%CDCACM_WLAN%=CDCACM,NT,USB\VID_2366&PID_0008
+
+[BITMANUFAKTUR.NTamd64]
+%CDCACM_USB2%=CDCACM,NTamd64,USB\VID_2366&PID_0002
+%CDCACM_OPENPCD2%=CDCACM,NTamd64,USB\VID_2366&PID_0003
+%CDCACM_USB%=CDCACM,NTamd64,USB\VID_2366&PID_0004
+%CDCACM_WDIM%=CDCACM,NTamd64,USB\VID_2366&PID_0005
+%CDCACM_WMCU%=CDCACM,NTamd64,USB\VID_2366&PID_0006
+%CDCACM_POE2%=CDCACM,NTamd64,USB\VID_2366&PID_0007
+%CDCACM_WLAN%=CDCACM,NTamd64,USB\VID_2366&PID_0008
 
 [DestinationDirs]
-DefaultDestDir=12
+FakeModemCopyFileSection=12
+DefaultDestDir  = 12
 
-[SourceDisksFiles]
+[CDCACM.NT]
+include         = mdmcpq.inf
+CopyFiles       = FakeModemCopyFileSection
+AddReg          = CDCACM.NT.AddReg
 
-[SourceDisksNames]
+[CDCACM.NTamd64]
+include         = mdmcpq.inf
+CopyFiles       = FakeModemCopyFileSection
+AddReg          = CDCACM.NTamd64.AddReg
 
-[BitmanufakturDevices]
-%OPENBEACON_USB2%=OpenBeacon_CDC_ACM, USB\VID_2366&PID_0002
-%OPENPCD2_BASIC%=OpenBeacon_CDC_ACM, USB\VID_2366&PID_0003
+[CDCACM.NT.HW]
+AddReg          = CDCACM.NT.HW.AddReg
 
-;------------------------------------------------------------------------------
-;  Windows 2000/XP Sections
-;------------------------------------------------------------------------------
+[CDCACM.NTamd64.HW]
+AddReg          = CDCACM.NTamd64.HW.AddReg
 
-[OpenBeacon_CDC_ACM.nt]
-include=mdmcpq.inf
-CopyFiles=DriverCopyFiles
-AddReg=OpenBeacon_CDC_ACM.nt.AddReg
-
-[DriverCopyFiles]
-usbser.sys,,,0x20
-
-[OpenBeacon_CDC_ACM.nt.AddReg]
-HKR,,DevLoader,,*ntkern
+[CDCACM.NT.AddReg]
+HKR,,NTMPDriver,,*ntkern
 HKR,,NTMPDriver,,usbser.sys
 HKR,,EnumPropPages32,,"MsPorts.dll,SerialPortPropPageProvider"
+HKR,,PortSubClass,1,01
 
-[OpenBeacon_CDC_ACM.nt.Services]
-include=mdmcpq.inf
-AddService=usbser, 0x00000002, DriverService
+[CDCACM.NTamd64.AddReg]
+HKR,,NTMPDriver,,*ntkern
+HKR,,NTMPDriver,,usbser.sys
+HKR,,EnumPropPages32,,"MsPorts.dll,SerialPortPropPageProvider"
+HKR,,PortSubClass,1,01
 
-[OpenBeacon_CDC_ACM.nt.HW]
-include=mdmcpq.inf
+[CDCACM.NT.HW.AddReg]
+HKR,,"UpperFilters",0x00010000,"serenum"
 
-[DriverService]
-DisplayName=%DESCRIPTION%
-ServiceType=1
-StartType=3
-ErrorControl=1
-ServiceBinary=%12%\usbser.sys
+[CDCACM.NTamd64.HW.AddReg]
+HKR,,"UpperFilters",0x00010000,"serenum"
 
-;------------------------------------------------------------------------------
-;  String Definitions
-;------------------------------------------------------------------------------
+[CDCACM.NT.Services]
+AddService      = usbser, 0x00000002, Service_Inst
+AddService      = Serenum,,Serenum_Service_Inst
+
+[CDCACM.NTamd64.Services]
+AddService      = usbser, 0x00000002, Service_Inst
+AddService      = Serenum,,Serenum_Service_Inst
+
+[Service_Inst]
+DisplayName     = %Serial.SvcDesc%
+ServiceType     = 1
+StartType       = 3
+ErrorControl    = 1
+ServiceBinary   = %12%\usbser.sys
+LoadOrderGroup  = Base
+
+[Serenum_Service_Inst]
+DisplayName     = %Serenum.SVCDESC%
+ServiceType     = 1
+StartType       = 3
+ErrorControl    = 1
+ServiceBinary   = %12%\serenum.sys
+LoadOrderGroup  = PNP Filter
 
 [Strings]
-BITMANUFAKTUR="Bitmanufaktur GmbH"
-OPENPCD2_BASIC="OpenPCD 2 basic RFID Reader for 13.56MHz"
-OPENBEACON_USB2="OpenBeacon USB 2 active 2.4GHz RFID"
+BITMANUFAKTUR   = "Bitmanufaktur GmbH"
+CDCACM_USB2     = "OpenBeacon USB II 2.4GHz Active RFID Tag"
+CDCACM_OPENPCD2 = "OpenPCD2 Basic 13.56MHz RFID Reader"
+CDCACM_USB      = "OpenBeacon USB 2.4GHz Active RFID Reader"
+CDCACM_WDIM     = "Blinkenlights Wireless Dimmer"
+CDCACM_WMCU     = "Blinkenlights Wireless Matrix Control Unit"
+CDCACM_POE2     = "OpenBeacon Ethernet EasyReader PoE II Active 2.4GHz RFID Reader"
+CDCACM_WLAN     = "OpenBEacon WLAN Active 2.4GHz RFID Reader"
+Serial.SvcDesc  = "CDC-ACM Serial Port Driver"
+Serenum.SVCDESC = "Serenum Filter Driver"
