@@ -25,7 +25,7 @@
 #include "pmu.h"
 
 #ifdef ENABLE_USB_FULLFEATURED
-static BOOL CDC_DepInEmpty, CDC_Initialized;	// Data IN EP is empty
+static BOOL CDC_DepInEmpty;	// Data IN EP is empty
 static unsigned char fifo_out[USB_CDC_BUFSIZE], fifo_in[128];
 static int fifo_out_count, fifo_in_count;
 
@@ -36,8 +36,6 @@ CDC_BulkIn_Handler (BOOL from_isr)
 
   if (!from_isr)
     __disable_irq ();
-
-  CDC_Initialized = TRUE;
 
   if (!fifo_out_count)
     CDC_DepInEmpty = 1;
@@ -159,19 +157,21 @@ rfid_hexdump (const void *buffer, int size)
   debug_printf (" [size=%02i]\n", size);
 }
 
+#if 0
 static void
 halt_error (const char *message, int res)
 {
-  debug_printf ("\nError: %s [res=%i]\n", message, res);
   while (1)
     {
       debug_printf ("\nError: %s [res=%i]\n", message, res);
+
       pmu_wait_ms (500);
       GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
       pmu_wait_ms (500);
       GPIOSetValue (LED_PORT, LED_BIT, LED_OFF);
     }
 }
+#endif
 
 static void
 loop_rfid (void)
@@ -179,31 +179,32 @@ loop_rfid (void)
   int res;
   static unsigned char data[80];
 
-  /*reset FIFO */
-#ifdef  ENABLE_USB_FULLFEATURED
-  fifo_out_count = fifo_in_count = 0;
-#endif /*ENABLE_USB_FULLFEATURED */
-
-  rfid_reset (0);
   /* release reset line after 400ms */
   pmu_wait_ms (400);
   rfid_reset (1);
   /* wait for PN532 to boot */
-  pmu_wait_ms (600);
+  pmu_wait_ms (100);
+
+  /* fully initialized */
+  GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
 
   /* read firmware revision */
   debug_printf ("\nreading firmware version...\n");
   data[0] = PN532_CMD_GetFirmwareVersion;
-  if ((res = rfid_execute (&data, 1, sizeof (data))) < 0)
-    halt_error ("Reading Firmware Version", res);
+  while ((res = rfid_execute (&data, 1, sizeof (data))) < 0)
+  {
+    debug_printf ("Reading Firmware Version Error [%i]\n", res);
+    pmu_wait_ms (450);
+    GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
+    pmu_wait_ms (10);
+    GPIOSetValue (LED_PORT, LED_BIT, LED_OFF);
+  }
+
+  debug_printf ("PN532 Firmware Version: ");
+  if (data[1] != 0x32)
+    rfid_hexdump (&data[1], data[0]);
   else
-    {
-      debug_printf ("PN532 Firmware Version: ");
-      if (data[1] != 0x32)
-	rfid_hexdump (&data[1], data[0]);
-      else
-	debug_printf ("v%i.%i\n", data[2], data[3]);
-    }
+    debug_printf ("v%i.%i\n", data[2], data[3]);
 
   /* enable debug output */
   debug_printf ("\nenabling debug output...\n");
@@ -257,7 +258,11 @@ main (void)
   GPIOInit ();
 
   /* Set LED port pin to output */
-  GPIOSetDir (LED_PORT, LED_BIT, LED_ON);
+  GPIOSetDir (LED_PORT, LED_BIT, 1);
+  GPIOSetValue (LED_PORT, LED_BIT, LED_OFF);
+
+  /* Init RFID */
+  rfid_init ();
 
   /* Init Power Management Routines */
   pmu_init ();
@@ -267,21 +272,23 @@ main (void)
 
   /* CDC Initialization */
 #ifdef  ENABLE_USB_FULLFEATURED
-  CDC_Initialized = FALSE;
+  fifo_out_count = fifo_in_count = 0;
   CDC_DepInEmpty = TRUE;
 
   CDC_Init ();
   /* USB Initialization */
   USB_Init ();
   /* Connect to USB port */
-  USB_Connect (1);
+  USB_Connect (TRUE);
+  /* wait until USB is initialized */
+  while (!USB_Configuration)
+  {
+      pmu_wait_ms (90);
+      GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
+      pmu_wait_ms (10);
+      GPIOSetValue (LED_PORT, LED_BIT, LED_OFF);
+  }
 #endif /*ENABLE_USB_FULLFEATURED */
-
-  /* Init RFID */
-  rfid_init ();
-
-  /* Update Core Clock */
-  SystemCoreClockUpdate ();
 
   /* RUN RFID loop */
   loop_rfid ();

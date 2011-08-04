@@ -266,11 +266,11 @@ void rfid_init(void)
 	LPC_SSP->CPSR = 0x02;
 
 	/* Initialize chip select line */
-	rfid_cs(1);
 	GPIOSetDir(PN532_CS_PORT, PN532_CS_PIN, 1);
+	rfid_cs(1);
 
 	/* Initialize RESET line */
-	rfid_reset(0);
 	GPIOSetDir(PN532_RESET_PORT, PN532_RESET_PIN, 1);
+	rfid_reset(0);
 
 }

@@ -28,7 +28,7 @@
 
 static CDC_LINE_CODING CDC_LineCoding = { 115200, 0, 0, 8 };
 
-static unsigned short CDC_SerialState = 0x0000;
+static unsigned short CDC_SerialState;
 static BOOL CDC_DepInEmpty;	// Data IN EP is empty
 
 #ifdef  ENABLE_FREERTOS
@@ -48,7 +48,7 @@ CDC_Init (void)
   USBIOClkConfig();
 
   CDC_DepInEmpty = TRUE;
-  CDC_SerialState = CDC_GetSerialState ();
+  CDC_SerialState = 0x0000;
 
 #ifdef  ENABLE_FREERTOS
   /* Create the queues used to hold Rx and Tx characters. */
