@@ -10,6 +10,7 @@ APP_LDFLAGS=-lm
 APP_SRC= \
   src/main.c \
   src/pmu.c \
+  src/usbserial.c \
   src/rfid.c
 
 APP_SRC+=$(IMAGES_C)
@@ -20,4 +21,3 @@ app_clean:
 	find src -name '*.o' -exec rm \{\} \;
 
 include ../core/Makefile.rules
-
