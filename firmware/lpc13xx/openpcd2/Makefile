@@ -1,4 +1,4 @@
-TARGET=rfid
+TARGET=openpcd2
 ARCH=LPC13
 CPU=$(ARCH)42
 DEBUG=-g

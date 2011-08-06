@@ -89,6 +89,10 @@ $(ARM_OBJ) : %.o : %.c $(LDSCRIPT) Makefile
 flash : $(TARGET).bin
 	lpc-flash $(TARGET).bin /media/CRP\ DISABLD/firmware.bin
 
+upload_firmware : $(TARGET).bin
+	lpc-flash $(TARGET).bin $(TARGET)-$(CPU).bin
+	scp $(TARGET)-$(CPU).bin bitmanufaktur.net:/home/wwwrun/open.bitmanufaktur.com/web/www/people/milosch/firmware/lpc13xx/
+
 clean : app_clean
 	find $(CORE) -name '*.o' -exec rm \{\} \;
-	rm -f $(TARGET).bin $(TARGET).elf $(TARGET).map $(TARGET).asm
+	rm -f $(TARGET).bin $(TARGET).elf $(TARGET).map $(TARGET).asm $(TARGET)-$(CPU).bin
