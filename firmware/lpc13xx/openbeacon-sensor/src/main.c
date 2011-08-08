@@ -118,8 +118,7 @@ main (void)
   int fifo_pos;
   TFifoEntry *fifo;
   uint32_t seq, alarm_triggered;
-  uint8_t packetloss, alarm_disabled, remote_control;
-
+  uint8_t packetloss, alarm_disabled, remote_control, target_mac;
   volatile int i;
   int x, y, z, firstrun_done, tamper, moving;
 
@@ -285,25 +284,53 @@ main (void)
   bzero (&fifo_buf, sizeof (fifo_buf));
   bzero (&acc_lowpass, sizeof (acc_lowpass));
 
-  seq = firstrun_done = tamper = moving = packetloss = remote_control = 0;
+  seq = firstrun_done = tamper = moving = 0;
+  packetloss = remote_control = target_mac = 0;
+
   /* start with disabled alarm */
   alarm_triggered = alarm_disabled = 1;
 
   while (1)
     {
-      GPIOSetValue (1, 3, 1);
+      /* start acceleration sensor */
+      if (firstrun_done)
+	nRFAPI_SetRxMode (0);
 
       /* read acceleration sensor */
-      nRFAPI_SetRxMode (0);/*FIXME?*/
       acc_power (1);
-      pmu_sleep_ms (10);
+      pmu_sleep_ms (20);
       acc_xyz_read (&x, &y, &z);
       acc_power (0);
 
-      GPIOSetValue (1, 3, 0);
+      /* add new accelerometer values to lowpass */
+      fifo = &fifo_buf[fifo_pos];
+      if (fifo_pos >= (FIFO_DEPTH - 1))
+	fifo_pos = 0;
+      else
+	fifo_pos++;
+
+      /* remove last value from lowpass & add new value */
+      acc_lowpass.x += x - fifo->x;
+      fifo->x = x;
+      acc_lowpass.y += y - fifo->y;
+      fifo->y = y;
+      acc_lowpass.z += z - fifo->z;
+      fifo->z = z;
 
       if (firstrun_done)
 	{
+	  if ((abs (acc_lowpass.x / FIFO_DEPTH - x) >= ACC_TRESHOLD) ||
+	      (abs (acc_lowpass.y / FIFO_DEPTH - y) >= ACC_TRESHOLD) ||
+	      (abs (acc_lowpass.z / FIFO_DEPTH - z) >= ACC_TRESHOLD))
+	    tamper = 5;
+
+	  if (tamper && !alarm_disabled)
+	  {
+	    tamper--;
+	    if (moving < ACC_MOVING_TRESHOLD)
+	      moving++;
+	  }
+
 	  /* increment sequence counter */
 	  seq++;
 
@@ -337,7 +364,7 @@ main (void)
 	      if(moving || ((seq % 10)==0))
 	      {
 		/* transmit to first interface of PoE reader with ACK */
-		set_mac(1);
+		set_mac((target_mac&1)?1:2);
 		nRF_tx ((uint8_t *) & g_Beacon, sizeof (g_Beacon), 1);
 
 		if ((nRFAPI_GetFifoStatus () & FIFO_TX_EMPTY)==0)
@@ -345,9 +372,11 @@ main (void)
 		    /* clear TX fifo */
 		    nRFAPI_FlushTX ();
 		    /* transmit to second interface of PoE reader with ACK */
-		    set_mac(2);
+		    set_mac((target_mac&1)?2:1);
 		    nRF_tx ((uint8_t *) & g_Beacon, sizeof (g_Beacon), 1);
 		}
+
+		target_mac++;
 	      }
 	      else
 	      {
@@ -387,6 +416,7 @@ main (void)
 		    snd_tone (0);
 		    alarm_triggered = alarm_disabled = 0;
 		  }
+
 	      tamper = moving = packetloss = 0;
 	    }
 	  else
@@ -408,33 +438,11 @@ main (void)
 	  /* powering down */
 	  nRFAPI_PowerDown ();
 	}
-
-      /* add new accelerometer values to lowpass */
-      fifo = &fifo_buf[fifo_pos];
-      if (fifo_pos >= (FIFO_DEPTH - 1))
-	fifo_pos = 0;
-      else
-	fifo_pos++;
-
-      acc_lowpass.x += x - fifo->x;
-      fifo->x = x;
-      acc_lowpass.y += y - fifo->y;
-      fifo->y = y;
-      acc_lowpass.z += z - fifo->z;
-      fifo->z = z;
-
-      if (firstrun_done)
-	{
-	  if ((abs (acc_lowpass.x / FIFO_DEPTH - x) >= ACC_TRESHOLD) ||
-	      (abs (acc_lowpass.y / FIFO_DEPTH - y) >= ACC_TRESHOLD) ||
-	      (abs (acc_lowpass.z / FIFO_DEPTH - z) >= ACC_TRESHOLD))
-	    tamper = 5;
-	}
       else
 	{
 	  if (fifo_pos)
 	    {
-	      pmu_sleep_ms (400 + random (200));
+	      pmu_sleep_ms (100);
 	      continue;
 	    }
 	  else
@@ -459,11 +467,9 @@ main (void)
       if (tamper && !alarm_disabled)
 	{
 	  tamper--;
+
 	  if (moving < ACC_MOVING_TRESHOLD)
-	  {
-	    pmu_sleep_ms (900 + random (200));
-	    moving++;
-	  }
+	      pmu_sleep_ms (900 + random (200));
 	  else
 	    {
 	      pmu_sleep_ms (490 + random (20));
