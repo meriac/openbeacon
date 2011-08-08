@@ -78,7 +78,7 @@ typedef enum IRQn {
     WAKEUP_PIO2_5_IRQn = 29,
     WAKEUP_PIO2_6_IRQn = 30,
     WAKEUP_PIO2_7_IRQn = 31,
-    WAKEUP_PIO2_8_IRQn = 31,
+    WAKEUP_PIO2_8_IRQn = 32,
     WAKEUP_PIO2_9_IRQn = 33,
     WAKEUP_PIO2_10_IRQn = 34,
     WAKEUP_PIO2_11_IRQn = 35,
