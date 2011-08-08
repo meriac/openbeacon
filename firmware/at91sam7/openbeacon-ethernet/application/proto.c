@@ -58,9 +58,9 @@ typedef struct
 {
   portTickType time;
   u_int32_t id;
-  u_int32_t moving;
   u_int32_t rxed, lost;
   u_int32_t seq;
+  u_int8_t moving;
 } TVisibleTagList;
 
 /**********************************************************************/
@@ -307,10 +307,10 @@ vnRF_ProcessDevice (u_int8_t device)
 		      /* if Tag is not moving - wait twice the tracking time */
 		      g_rf_tag_list[i].time = seconds_since_boot;
 		      g_rf_tag_list[i].moving = g_Beacon.log.pkt.p.tracker.reserved;
-		      g_rf_tag_list[i].rxed++;
 
 		      if (l > g_rf_tag_list[i].seq)
 			{
+			  g_rf_tag_list[i].rxed++;
 			  if (g_rf_tag_list[i].seq)
 			    g_rf_tag_list[i].lost +=
 			      (l - g_rf_tag_list[i].seq) - 1;
@@ -425,9 +425,9 @@ vnRFtaskRxTx (void *parameter)
 		    {
 		      l = g_rf_tag_list[i].rxed + g_rf_tag_list[i].lost;
 		      debug_printf
-			("\tTAG_ID[%04X]: rxed:%06u lost:%06u(%02u%%) total=%06u\n",
+			("\tTAG_ID[%04X]: rxed:%06u lost:%06u(%02u%%) mov:0x%02X total:%06u\n",
 			 id, g_rf_tag_list[i].rxed, g_rf_tag_list[i].lost,
-			 ((100 * g_rf_tag_list[i].lost) / l), l);
+			 ((100 * g_rf_tag_list[i].lost) / l), g_rf_tag_list[i].moving, l);
 		    }
 		}
 
@@ -464,8 +464,16 @@ vnRFtaskRxTx (void *parameter)
 	  nrf_powerlevel_last = nrf_powerlevel_current;
 	}
 
-      if ((vnRF_ProcessDevice(NRFCMD_DEV0)+vnRF_ProcessDevice(NRFCMD_DEV1))==0)
-	nRFCMD_WaitRx (200);
+      l=0;
+
+      if (nRFCMD_PendingDevice(NRFCMD_DEV0) && vnRF_ProcessDevice(NRFCMD_DEV0))
+	    l++;
+
+      if (nRFCMD_PendingDevice(NRFCMD_DEV1) && vnRF_ProcessDevice(NRFCMD_DEV1))
+	    l++;
+
+      if(!l)
+	    nRFCMD_WaitRx (200);
     }
 }
 
@@ -530,12 +538,9 @@ PtStatusRxTxDevice (u_int8_t device)
   debug_printf ("\treceive rate= %u packets/second\n",
 		rf_pkt_per_sec[device]);
 
-  if (pt_debug_level)
-    {
-      debug_printf ("\tdecrypted   = %u\n", rf_decrypt[device]);
-      debug_printf ("\tpkt crc ok  = %u\n", rf_crc_ok[device]);
-      debug_printf ("\tpkt crc err = %u\n", rf_crc_err[device]);
-    }
+  debug_printf ("\tdecrypted   = %u\n", rf_decrypt[device]);
+  debug_printf ("\tpkt crc ok  = %u\n", rf_crc_ok[device]);
+  debug_printf ("\tpkt crc err = %u\n", rf_crc_err[device]);
   debug_printf ("\n");
 }
 
