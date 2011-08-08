@@ -40,7 +40,7 @@
 extern unsigned char nRFCMD_Init(void);
 extern unsigned char nRFCMD_GetRegSize(unsigned char reg);
 extern unsigned char nRFCMD_WaitRx(unsigned int ticks);
-
+extern unsigned char nRFCMD_PendingDevice(unsigned char device);
 extern void nRFCMD_CE(unsigned char device, unsigned char enable);
 extern void nRFCMD_ExecMacro(unsigned char device, const unsigned char *macro, unsigned char *rx_data);
 extern unsigned char nRFCMD_ReadWriteBuffer(unsigned char device, const unsigned char *tx_data, unsigned char *rx_data, unsigned int len);
