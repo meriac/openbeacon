@@ -1,3 +1,111 @@
+commit 7e76e5239d4ac9c8522a3c3e3aed878e14c25ad7
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Sat Jul 30 11:40:00 2011 +0200
+
+    added reader ID to UDP packet to support IP masquerading
+
+commit bd6007eb98eda5fee9d0957dea32acbfb8e3a4d5
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Sat Jul 30 11:29:30 2011 +0200
+
+    adapted single-RF-interface declarations to new multi-RF-API
+
+commit 533d8d176c82fe85367faa072be27bb92d9b403b
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Sat Jul 30 11:26:06 2011 +0200
+
+    added backward compatibility for single-RF-interface board.h declarations
+
+commit f2c7ccd244a6f1f49294b7789af0bda3eb5f0723
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Sat Jul 30 11:18:11 2011 +0200
+
+    removed automatically generated audio.raw
+
+commit 436485561e7108ab6fcf865ff655758027c2b366
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Sat Jul 30 11:14:35 2011 +0200
+
+    changed firmware upload to rsync
+
+commit 5c73dfc3de91a2969e70ea09bd5bc2d3e4b770a8
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Sat Jul 30 11:14:13 2011 +0200
+
+    re-added set_clock
+
+commit 82ed9dda849e0ba85cd88e639dcae3f983b25e70
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Sat Jul 30 11:13:22 2011 +0200
+
+    changed firmware upload to rsync
+
+commit fea883a00fac15f00633aba53010e61efba4e178
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Sat Jul 30 09:46:11 2011 +0200
+
+    changed keys & added debug_printf for CRC error packets
+
+commit e6258c350443c6ae415d4a2934d01967e6ddad42
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Sat Jul 30 03:05:06 2011 +0200
+
+    removed loop
+
+commit f39577696eab176beedf5669f5b99a74640744cb
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Sat Jul 30 02:44:46 2011 +0200
+
+    added multiple device support
+
+commit 6e7bf896f2dc5224ab4108d21b3949e42532c776
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Sat Jul 23 03:16:33 2011 +0200
+
+    added support for latest toolchain (crosstool-NG)
+
+commit 3b87d908ddec336c108ddd0a68c24b1c7eed239b
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Fri Jul 22 17:42:52 2011 +0200
+
+    fixed compile error
+
+commit 3d2eb75159d1a5a8e67298ef151db4b2ca6a3c36
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Fri Jul 22 17:35:42 2011 +0200
+
+    changed toolchain to cross-ng (arm-unknown-eabi-*)
+
+commit c06a4006d641e95788256e5f891ad773187d1a72
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Tue Jun 28 01:48:08 2011 +0200
+
+    added firmware uploader code
+
+commit 7c9f315e3d82829cda93017d60104bfb18f506f9
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Tue Jun 28 01:04:51 2011 +0200
+
+    switched to new descriptor format and USB IDs http://www.openbeacon.org/Bitmanufaktur_USB_PID_Assignments
+
+commit e16db2cd55652fff1671849ec983821970334170
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Tue Jun 28 00:34:36 2011 +0200
+
+    added CRC error output
+
+commit d3d95ba53bb52ab3fb1afc8c00fd75a9ec53ac99
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Tue Jun 28 00:31:00 2011 +0200
+
+    added usbSEND_BREAK support & removed second descriptor - seems to be broken in OSX
+
+commit da5236c2bdd9a7b818c81b8919f7cd4866941353
+Author: Milosch Meriac <meriac@bitmanufaktur.de>
+Date:   Sun Jun 26 18:01:09 2011 +0200
+
+    updated logfile
+
 commit 4c6fcba38095b1614b1375fe40fabcd2bda09b77
 Author: Milosch Meriac <meriac@bitmanufaktur.de>
 Date:   Sun Jun 26 17:39:05 2011 +0200
