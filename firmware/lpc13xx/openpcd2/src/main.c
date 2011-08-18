@@ -21,7 +21,6 @@
 
  */
 #include <openbeacon.h>
-#include "rfid.h"
 #include "pmu.h"
 #include "usbserial.h"
 
@@ -39,22 +38,6 @@ rfid_hexdump (const void *buffer, int size)
     }
   debug_printf (" [size=%02i]\n", size);
 }
-
-#if 0
-static void
-halt_error (const char *message, int res)
-{
-  while (1)
-    {
-      debug_printf ("\nError: %s [res=%i]\n", message, res);
-
-      pmu_wait_ms (500);
-      GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
-      pmu_wait_ms (500);
-      GPIOSetValue (LED_PORT, LED_BIT, LED_OFF);
-    }
-}
-#endif
 
 static void
 loop_rfid (void)

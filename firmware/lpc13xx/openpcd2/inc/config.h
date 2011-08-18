@@ -30,6 +30,7 @@
 #define LED_OFF 0	/* Level to set port to turn off led */
 
 #define ENABLE_USB_FULLFEATURED
+#define ENABLE_PN532_RFID
 
 /* USB device settings */
 #ifdef  ENABLE_USB_FULLFEATURED
@@ -43,9 +44,11 @@
 #define SYSTEM_CORE_CLOCK (SYSTEM_CRYSTAL_CLOCK*6)
 
 /* PN532 pin definitions */
+#ifdef  ENABLE_PN532_RFID
 #define PN532_RESET_PORT 1
 #define PN532_RESET_PIN 11
 #define PN532_CS_PORT 0
 #define PN532_CS_PIN 2
+#endif/*ENABLE_PN532_RFID*/
 
 #endif/*__CONFIG_H__*/

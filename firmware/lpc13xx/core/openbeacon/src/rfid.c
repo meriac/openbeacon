@@ -21,6 +21,9 @@
 
  */
 #include <openbeacon.h>
+
+#ifdef  ENABLE_PN532_RFID
+
 #include "pn532.h"
 #include "rfid.h"
 #include "pmu.h"
@@ -274,3 +277,5 @@ void rfid_init(void)
 	rfid_reset(0);
 
 }
+
+#endif/*ENABLE_PN532_RFID*/

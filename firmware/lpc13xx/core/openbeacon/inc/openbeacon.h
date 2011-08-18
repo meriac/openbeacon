@@ -27,7 +27,8 @@ extern BOOL default_putchar (uint8_t data);
 
 #include <LPC13xx.h>
 #include <uart.h>
-#ifdef ENABLE_USB_FULLFEATURED
+
+#ifdef  ENABLE_USB_FULLFEATURED
 #include <cdcusb.h>
 #include <usbcfg.h>
 #include <usbhw.h>
@@ -39,6 +40,11 @@ extern BOOL default_putchar (uint8_t data);
 #include <usbdesc.h>
 #include <rom_drivers.h>
 #endif/*ENABLE_USB_FULLFEATURED*/
+
+#ifdef  ENABLE_PN532_RFID
+#include <rfid.h>
+#endif/*ENABLE_PN532_RFID*/
+
 #include <gpio.h>
 
 /* PDSLEEPCFG, PDAWAKECFG, PDRUNCFG */

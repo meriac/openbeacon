@@ -22,6 +22,7 @@
  */
 #ifndef __RFID_H__
 #define __RFID_H__
+#ifdef  ENABLE_PN532_RFID
 
 #include <pn532.h>
 
@@ -32,4 +33,5 @@ extern int rfid_write(const void *data, int len);
 extern int rfid_write_register(unsigned short address, unsigned char data);
 extern int rfid_execute(void *data, unsigned int isize, unsigned int osize);
 
+#endif/*ENABLE_PN532_RFID*/
 #endif/*__RFID_H__*/
