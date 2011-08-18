@@ -46,6 +46,7 @@ ARM_SRC= \
   $(CORE)cmsis/src/core_cm3.c \
   $(CORE)cmsis/src/system_$(ARCH)xx.c \
   $(CORE)startup/$(ARCH)xx.c \
+  $(CORE)peripherals/src/rfid.c \
   $(CORE)peripherals/src/uart.c \
   $(CORE)peripherals/src/gpio.c \
   $(CORE)peripherals/src/usb/cdcusbdesc.c \
