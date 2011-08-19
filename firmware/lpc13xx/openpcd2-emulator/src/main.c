@@ -24,6 +24,8 @@
 #include "pmu.h"
 #include "usbserial.h"
 
+#define DELAY_TIME_MS 500
+
 static void
 rfid_hexdump (const void *buffer, int size)
 {
@@ -39,10 +41,44 @@ rfid_hexdump (const void *buffer, int size)
   debug_printf (" [size=%02i]\n", size);
 }
 
+static inline void
+rfid_init_emulator (void)
+{
+  /* enable timer 32_0 */
+  LPC_SYSCON->SYSAHBCLKCTRL |= EN_CT32B0;
+  /* reset and stop counter */
+  LPC_TMR32B0->TCR = 0x02;
+  LPC_TMR32B0->TCR = 0x00;
+  /* enable CT32B0_CAP0 timer clock */
+  LPC_IOCON->PIO1_5 = 0x02;
+  /* no capturing */
+  LPC_TMR32B0->CCR = 0x00;
+  /* no match */
+  LPC_TMR32B0->MCR = 0;
+  LPC_TMR32B0->EMR = 0;
+  LPC_TMR32B0->PWMC = 0;
+  /* incremented upon CAP0 input rising edge */
+  LPC_TMR32B0->CTCR = 0x01;
+  /* disable prescaling */
+  LPC_TMR32B0->PR = 0;
+  /* run counter */
+  LPC_TMR32B0->TCR = 0x01;
+
+  /* enable SVDD switch */
+  rfid_write_register (0x6106, 0x10);
+  /* enable secure clock */
+  rfid_write_register (0x6330, 0x80);
+  rfid_write_register (0x6321, 0x30);
+
+  /* WTF? FIXME !!! */
+  LPC_SYSCON->SYSAHBCLKCTRL |= EN_CT32B0;
+}
+
 static void
 loop_rfid (void)
 {
-  int res;
+  int res, line;
+  uint32_t counter;
   static unsigned char data[80];
 
   /* release reset line after 400ms */
@@ -58,13 +94,13 @@ loop_rfid (void)
   debug_printf ("\nreading firmware version...\n");
   data[0] = PN532_CMD_GetFirmwareVersion;
   while ((res = rfid_execute (&data, 1, sizeof (data))) < 0)
-  {
-    debug_printf ("Reading Firmware Version Error [%i]\n", res);
-    pmu_wait_ms (450);
-    GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
-    pmu_wait_ms (10);
-    GPIOSetValue (LED_PORT, LED_BIT, LED_OFF);
-  }
+    {
+      debug_printf ("Reading Firmware Version Error [%i]\n", res);
+      pmu_wait_ms (450);
+      GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
+      pmu_wait_ms (10);
+      GPIOSetValue (LED_PORT, LED_BIT, LED_OFF);
+    }
 
   debug_printf ("PN532 Firmware Version: ");
   if (data[1] != 0x32)
@@ -72,48 +108,30 @@ loop_rfid (void)
   else
     debug_printf ("v%i.%i\n", data[2], data[3]);
 
-  /* enable debug output */
-  debug_printf ("\nenabling debug output...\n");
-  rfid_write_register (0x6328, 0xFC);
-  // select test bus signal
-  rfid_write_register (0x6321, 6);
-  // select test bus type
-  rfid_write_register (0x6322, 0x07);
+  /* Set PN532 to virtual card */
+  data[0] = PN532_CMD_SAMConfiguration;
+  data[1] = 0x02;		/* Virtual Card Mode */
+  data[2] = 0x00;		/* No Timeout Control */
+  data[3] = 0x00;		/* No IRQ */
+  if ((res = rfid_execute (&data, 4, sizeof (data))) > 0)
+    {
+      debug_printf ("SAMConfiguration: ");
+      rfid_hexdump (&data, res);
+    }
+
+  /* init RFID emulator */
+  rfid_init_emulator ();
 
   /* enable debug output */
   GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
+  line = 0;
   while (1)
     {
-      /* wait 10ms */
-      pmu_wait_ms (10);
+      counter = LPC_TMR32B0->TC;
+      pmu_wait_ms (DELAY_TIME_MS);
+      counter = (LPC_TMR32B0->TC - counter) * 2;
 
-      /* detect cards in field */
-      data[0] = PN532_CMD_InListPassiveTarget;
-      data[1] = 0x01;		/* MaxTg - maximum cards    */
-      data[2] = 0x00;		/* BrTy - 106 kbps type A   */
-      if (((res = rfid_execute (&data, 3, sizeof (data))) >= 11) && (data[1]
-								     == 0x01)
-	  && (data[2] == 0x01))
-	{
-	  GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
-	  pmu_wait_ms (50);
-	  GPIOSetValue (LED_PORT, LED_BIT, LED_OFF);
-
-	  debug_printf ("card id: ");
-	  rfid_hexdump (&data[7], data[6]);
-	}
-      else
-	{
-	  GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
-	  if (res != -8)
-	    debug_printf ("PN532 error res=%i\n", res);
-	}
-
-      /* turning field off */
-      data[0] = PN532_CMD_RFConfiguration;
-      data[1] = 0x01;		/* CfgItem = 0x01           */
-      data[2] = 0x00;		/* RF Field = off           */
-      rfid_execute (&data, 3, sizeof (data));
+      debug_printf ("LPC_TMR32B0[%08u]: %uHz\n", line++, counter);
     }
 }
 

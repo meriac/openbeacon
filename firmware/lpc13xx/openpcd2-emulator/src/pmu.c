@@ -23,7 +23,7 @@
 #include <openbeacon.h>
 #include "pmu.h"
 
-static uint32_t g_sysahbclkctrl;
+static volatile uint32_t g_sysahbclkctrl;
 
 #define MAINCLKSEL_IRC 0
 #define MAINCLKSEL_SYSPLL_IN 1
