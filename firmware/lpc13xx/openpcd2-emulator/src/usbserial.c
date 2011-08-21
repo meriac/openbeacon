@@ -21,6 +21,7 @@
 
  */
 #include <openbeacon.h>
+#include "main.h"
 #include "pmu.h"
 #include "usbserial.h"
 
@@ -78,10 +79,70 @@ CDC_BulkIn (void)
   CDC_BulkIn_Handler (TRUE);
 }
 
+uint8_t
+char2hex(char hex)
+{
+  if((hex>='0')&&(hex<='9'))
+    hex-='0';
+  else
+    if((hex>='A')&&(hex<='F'))
+      hex=(hex-'A')+0xA;
+    else
+      if((hex>='a')&&(hex<='f'))
+	hex=(hex-'a')+0xA;
+      else
+	hex=0;
+
+  return hex;
+}
+
 static inline void
 CDC_GetCommand (unsigned char *command)
 {
+  uint8_t len;
+  static uint8_t bus=0,channel=0;
+
   debug_printf ("CMD: '%s'\n", command);
+
+  len=strlen((char*)command);
+  if((len==4)&&(command[0]=='D'))
+  {
+    bus=(char2hex(command[1])<<4)|char2hex(command[2]);
+    channel=char2hex(command[3]);
+    set_debug_channel(bus,channel);
+  }
+  else
+    if(len==1)
+	switch(command[0])
+	{
+	    case '+':
+		channel++;
+		if(channel>7)
+		{
+		    channel=0;
+		    bus++;
+		    if(bus>0x1F)
+			bus=0;
+		}
+		set_debug_channel(bus,channel);
+		break;
+	    case '-':
+		if(channel)
+		    channel--;
+		else
+		{
+		    channel=7;
+		    if(bus)
+			bus--;
+		    else
+			bus=0x1F;
+		}
+		set_debug_channel(bus,channel);
+		break;
+	}
+    else
+	debug_printf ("Unknown command: '%s'\n", command);
+
   CDC_Flush ();
 }
 
