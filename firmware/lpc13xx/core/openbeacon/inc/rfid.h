@@ -31,6 +31,7 @@ extern void rfid_reset(unsigned char reset);
 extern int rfid_read(void *data, unsigned char size);
 extern int rfid_write(const void *data, int len);
 extern int rfid_write_register(unsigned short address, unsigned char data);
+extern int rfid_read_register(unsigned short address);
 extern int rfid_execute(void *data, unsigned int isize, unsigned int osize);
 
 #endif/*ENABLE_PN532_RFID*/

@@ -236,7 +236,7 @@ int rfid_write_register(unsigned short address, unsigned char data)
 	unsigned char cmd[4];
 
 	/* write register */
-	cmd[0] = 0x08;
+	cmd[0] = PN532_CMD_WriteRegister;
 	/* high byte of address */
 	cmd[1] = address >> 8;
 	/* low byte of address */
@@ -246,6 +246,25 @@ int rfid_write_register(unsigned short address, unsigned char data)
 
 	return rfid_execute(&cmd, sizeof(cmd), sizeof(data));
 }
+
+int rfid_read_register(unsigned short address)
+{
+	int res;
+	unsigned char cmd[3];
+
+	/* write register */
+	cmd[0] = PN532_CMD_ReadRegister;
+	/* high byte of address */
+	cmd[1] = address >> 8;
+	/* low byte of address */
+	cmd[2] = address & 0xFF;
+
+	if((res = rfid_execute(&cmd, sizeof(cmd), sizeof(cmd)))>1)
+	    return cmd[1];
+	else
+	    return res;
+}
+
 
 void rfid_init(void)
 {
