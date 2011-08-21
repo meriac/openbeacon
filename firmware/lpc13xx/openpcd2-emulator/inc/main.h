@@ -23,6 +23,4 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
-extern void set_debug_channel(uint8_t bus, uint8_t channel);
-
 #endif/*__MAIN_H__*/

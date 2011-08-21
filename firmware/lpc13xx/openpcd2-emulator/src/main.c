@@ -25,10 +25,6 @@
 #include "pmu.h"
 #include "usbserial.h"
 
-#define DELAY_TIME_MS 500
-
-static uint8_t g_channel, g_bus;
-
 static void
 rfid_hexdump (const void *buffer, int size)
 {
@@ -68,24 +64,19 @@ rfid_init_emulator (void)
   LPC_TMR32B0->TCR = 0x01;
 
   /* enable SVDD switch */
+  rfid_write_register (0x6306, 0x2F);
   rfid_write_register (0x6307, 0x03);
   rfid_write_register (0x6106, 0x10);
   /* enable secure clock */
   rfid_write_register (0x6330, 0x80);
   rfid_write_register (0x6104, 0x00);
-  /* disable internal receiver */
-  rfid_write_register (0x6328, 0xFF);
+  /* output envelope to AUX1 */
+  rfid_write_register (0x6321, 0x34);
+  rfid_write_register (0x6322, 0x0E);
+  rfid_write_register (0x6328, 0xF9);
 
   /* WTF? FIXME !!! */
   LPC_SYSCON->SYSAHBCLKCTRL |= EN_CT32B0;
-}
-
-void
-set_debug_channel (uint8_t bus, uint8_t channel)
-{
-  debug_printf ("Set debug channel [0x%02X]=%u\n", bus, channel);
-  g_bus = bus & 0x1F;
-  g_channel = channel & 0x7;
 }
 
 static void
@@ -93,8 +84,8 @@ loop_rfid (void)
 {
   int res, line, t;
   uint32_t counter;
-  static uint8_t prev_bus = 0xFF;
-  static uint8_t prev_channel = 0xFF;
+//  static uint8_t prev_bus = 0xFF;
+//  static uint8_t prev_channel = 0xFF;
   static unsigned char data[80];
 
   /* release reset line after 400ms */
@@ -143,26 +134,13 @@ loop_rfid (void)
   line = 0;
   t = 0;
 
-  set_debug_channel (0x0E, 4);
   while (1)
     {
-      if (g_channel != prev_channel)
-	{
-	  prev_channel = g_channel;
-	  rfid_write_register (0x6321, 0x30 | (g_channel & 0x07));
-	}
-
-      if (g_bus != prev_bus)
-	{
-	  prev_bus = g_bus;
-	  rfid_write_register (0x6322, g_bus & 0x1F);
-	}
-
-//    debug_printf ("BUS:0x%02X BIT:%u\n", g_bus, g_channel);
       counter = LPC_TMR32B0->TC;
-      pmu_wait_ms (1000);
-      counter = (LPC_TMR32B0->TC - counter) * 2;
-//    debug_printf ("LPC_TMR32B0[%08u]: %uHz\n", line++, counter);
+      pmu_wait_ms (500);
+      counter = (LPC_TMR32B0->TC - counter)*2;
+
+      debug_printf ("LPC_TMR32B0[%08u]: %uHz\n", line++, counter);
     }
 }
 
