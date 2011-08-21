@@ -143,7 +143,7 @@ loop_rfid (void)
   line = 0;
   t = 0;
 
-  set_debug_channel (0x1B, 5);
+  set_debug_channel (0x0E, 4);
   while (1)
     {
       if (g_channel != prev_channel)
