@@ -64,15 +64,20 @@ rfid_init_emulator (void)
   LPC_TMR32B0->TCR = 0x01;
 
   /* enable SVDD switch */
-  rfid_write_register (0x6306, 0x2F);
+  rfid_write_register (0x6306, 0x2A);
   rfid_write_register (0x6307, 0x03);
   rfid_write_register (0x6106, 0x10);
   /* enable secure clock */
   rfid_write_register (0x6330, 0x80);
   rfid_write_register (0x6104, 0x00);
   /* output envelope to AUX1 */
+#if 0
   rfid_write_register (0x6321, 0x34);
   rfid_write_register (0x6322, 0x0E);
+#else
+  rfid_write_register (0x6321, 0x32);
+  rfid_write_register (0x6322, 0x02);
+#endif
   rfid_write_register (0x6328, 0xF9);
 
   /* WTF? FIXME !!! */
@@ -84,8 +89,6 @@ loop_rfid (void)
 {
   int res, line, t;
   uint32_t counter;
-//  static uint8_t prev_bus = 0xFF;
-//  static uint8_t prev_channel = 0xFF;
   static unsigned char data[80];
 
   /* release reset line after 400ms */
