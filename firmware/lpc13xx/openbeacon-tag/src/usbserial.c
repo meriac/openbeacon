@@ -154,10 +154,12 @@ init_usbserial (void)
   /* wait until USB is initialized */
   while (!USB_Configuration)
   {
-      pmu_wait_ms (90);
-      GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
-      pmu_wait_ms (10);
-      GPIOSetValue (LED_PORT, LED_BIT, LED_OFF);
+    pmu_wait_ms (100);
+/*  pmu_wait_ms (90);
+    GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
+    pmu_wait_ms (10);
+    GPIOSetValue (LED_PORT, LED_BIT, LED_OFF);
+    FIXME! */
   }
 }
 #endif /*ENABLE_USB_FULLFEATURE*/

@@ -103,12 +103,6 @@ pmu_sleep_ms (uint16_t ms)
   /* select CT16B0_MAT0 function for PIO0_8 */
   LPC_IOCON->PIO0_8 = 2;
 
-  /* Turn off all other peripheral dividers FIXME save settings */
-/*  LPC_SYSCON->SSPCLKDIV = 0;
-  LPC_SYSCON->USBCLKDIV = 0;
-  LPC_SYSCON->WDTCLKDIV = 0;
-  LPC_SYSCON->SYSTICKCLKDIV = 0;*/
-
   g_sysahbclkctrl = LPC_SYSCON->SYSAHBCLKCTRL;
   LPC_SYSCON->SYSAHBCLKCTRL = EN_RAM | EN_GPIO | EN_CT16B0 | EN_FLASHARRAY | EN_IOCON;
 
