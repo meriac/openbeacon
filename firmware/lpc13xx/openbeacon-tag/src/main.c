@@ -75,6 +75,7 @@ int
 main (void)
 {
   volatile int i;
+  int x, y, z;
   /* wait on boot - debounce */
   for (i = 0; i < 2000000; i++);
 
@@ -238,6 +239,13 @@ main (void)
   i=0;
   while (1)
     {
+	/* read acceleration sensor */
+	nRFAPI_SetRxMode (0);
+	acc_power (1);
+	pmu_wait_ms (20);
+	acc_xyz_read (&x, &y, &z);
+	acc_power (0);
+
 	GPIOSetValue (1, 3, 1);
 	pmu_wait_ms (100);
 	GPIOSetValue (1, 3, 0);
@@ -246,7 +254,7 @@ main (void)
 	pmu_wait_ms (100);
 	GPIOSetValue (1, 3, 0);
 	pmu_wait_ms (1000);
-	debug_printf ("Hello World %u\n",i++);
+	debug_printf ("Hello World %08u [%04i,%04i,%04i]\n",i++,x,y,z);
     }
 
   return 0;
