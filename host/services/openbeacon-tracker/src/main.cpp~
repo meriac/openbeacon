@@ -58,12 +58,12 @@ static int g_DoEstimation = 1;
 
 /* proximity tag TEA encryption key */
 const long tea_keys[][4] = {
-  {0x7013F569, 0x4417CA7E, 0x07AAA968, 0x822D7554},	/* 25C3 free beta version key */
-  {0xbf0c3a08, 0x1d4228fc, 0x4244b2b0, 0x0b4492e9},	/* 25C3 final key  */
-  {0xB4595344, 0xD3E119B6, 0xA814D0EC, 0xEFF5A24E},	/* 24C3 */
-  {0xe107341e, 0xab99c57e, 0x48e17803, 0x52fb4d16},	/* 23C3 key */
-  {0x8e7d6649, 0x7e82fa5b, 0xddd4541e, 0xe23742cb},	/* Camp 2007 key */
-  {0x9c43725e, 0xad8ec2ab, 0x6ebad8db, 0xf29c3638}	/* The Last Hope - AMD Project (Attendee Metadata Project) */
+    { 0x7013F569,0x4417CA7E,0x07AAA968,0x822D7554 }, /* 25C3 free beta version key */
+    { 0xbf0c3a08,0x1d4228fc,0x4244b2b0,0x0b4492e9 }, /* 25C3 final key  */
+    { 0xB4595344,0xD3E119B6,0xA814D0EC,0xEFF5A24E }, /* 24C3 */
+    { 0xe107341e,0xab99c57e,0x48e17803,0x52fb4d16 }, /* 23C3 key */
+    { 0x8e7d6649,0x7e82fa5b,0xddd4541e,0xe23742cb }, /* Camp 2007 key */
+    { 0x9c43725e,0xad8ec2ab,0x6ebad8db,0xf29c3638 }  /* The Last Hope - AMD Project (Attendee Metadata Project) */
 };
 
 #define TEA_KEY_COUNT (sizeof(tea_keys)/sizeof(tea_keys[0]))
@@ -331,7 +331,7 @@ hex_dump (const void *data, unsigned int addr, unsigned int len)
 }
 
 static void
-parse_packet (uint32_t reader_id, const void *data, int len, bool decrypt)
+parse_packet (uint32_t reader_id, const void* data, int len, bool decrypt)
 {
   TTagItem *tag;
   TEstimatorItem *item;
@@ -342,67 +342,63 @@ parse_packet (uint32_t reader_id, const void *data, int len, bool decrypt)
   int tag_strength, j, key_id;
   TBeaconEnvelope env;
 
-  if (len != sizeof (env))
+  if(len!=sizeof(env))
     return;
 
-  key_id = -1;
-  if (decrypt)
+  key_id=-1;
+  if(decrypt)
+  {
+  for(j=0;j<(int)TEA_KEY_COUNT;j++)
+  {
+    memcpy(&env,data,len);
+
+    /* decode packet */
+    shuffle_tx_byteorder (env.block, XXTEA_BLOCK_COUNT);
+    xxtea_decode (env.block, XXTEA_BLOCK_COUNT, tea_keys[j]);
+    shuffle_tx_byteorder (env.block, XXTEA_BLOCK_COUNT);
+
+    /* verify CRC */
+    if (crc16(env.byte,
+      sizeof (env.pkt) - sizeof (env.pkt.crc)) == ntohs (env.pkt.crc))
     {
-      for (j = 0; j < (int) TEA_KEY_COUNT; j++)
-	{
-	  memcpy (&env, data, len);
-
-	  /* decode packet */
-	  shuffle_tx_byteorder (env.block, XXTEA_BLOCK_COUNT);
-	  xxtea_decode (env.block, XXTEA_BLOCK_COUNT, tea_keys[j]);
-	  shuffle_tx_byteorder (env.block, XXTEA_BLOCK_COUNT);
-
-	  /* verify CRC */
-	  if (crc16 (env.byte,
-		     sizeof (env.pkt) - sizeof (env.pkt.crc)) ==
-	      ntohs (env.pkt.crc))
-	    {
-	      key_id = j;
-	      break;
-	    }
-	}
+       key_id=j;
+       break;
     }
+  }
+  }
   else
-    {
-      memcpy (&env, data, len);
-      if (crc16 (env.byte,
-		 sizeof (env.pkt) - sizeof (env.pkt.crc)) ==
-	  ntohs (env.pkt.crc))
-	key_id = 0;
-    }
+  {
+    memcpy(&env,data,len);
+    if (crc16(env.byte,
+      sizeof (env.pkt) - sizeof (env.pkt.crc)) == ntohs (env.pkt.crc))
+      key_id=0;
+  }
 
-  if (key_id < 0)
-    {
-      printf ("CRC[0x%04X] error from reader 0x%08X\n",
-	      (int) crc16 ((const unsigned char *) data, len), reader_id);
-      hex_dump (data, 0, len);
-      return;
-    }
+  if(key_id<0)
+  {
+    printf ("CRC[0x%04X] error from reader 0x%08X\n",(int)crc16((const unsigned char*)data,len), reader_id);
+    hex_dump(data,0,len);
+    return;
+  }
 
   switch (env.pkt.proto)
     {
     case RFBPROTO_BEACONTRACKER_OLD:
       {
-	if (env.old.proto2 != RFBPROTO_BEACONTRACKER_OLD2)
-	  {
-	    tag_strength = -1;
-	    tag_sequence = 0;
-	    printf ("unknown old packet protocol2[%i] key[%i] ",
-		    env.old.proto2, key_id);
-	  }
+        if(env.old.proto2!=RFBPROTO_BEACONTRACKER_OLD2)
+        {
+	  tag_strength = -1;
+	  tag_sequence = 0;
+	  printf ("unknown old packet protocol2[%i] key[%i] ", env.old.proto2, key_id);
+	}
 	else
-	  {
-	    tag_id = ntohl (env.old.oid);
-	    tag_sequence = ntohl (env.old.seq);
-	    tag_strength = env.old.strength / 0x55;
-	    tag_flags = (env.old.flags & RFBFLAGS_SENSOR) ?
-	      TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
-	  }
+	{
+	  tag_id = ntohl (env.old.oid);
+	  tag_sequence = ntohl (env.old.seq);
+	  tag_strength = env.old.strength / 0x55;
+	  tag_flags = (env.old.flags & RFBFLAGS_SENSOR) ?
+	    TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
+	}
 	break;
       }
 
@@ -419,7 +415,8 @@ parse_packet (uint32_t reader_id, const void *data, int len, bool decrypt)
     case RFBPROTO_PROXTRACKER:
       tag_id = ntohs (env.pkt.oid);
       tag_sequence = ntohl (env.pkt.p.tracker.seq);
-      tag_strength = env.pkt.p.tracker.strength & (STRENGTH_LEVELS_COUNT - 1);
+      tag_strength = env.pkt.p.tracker.strength
+	& (STRENGTH_LEVELS_COUNT - 1);
       tag_flags = (env.pkt.flags & RFBFLAGS_SENSOR) ?
 	TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
       break;
@@ -446,9 +443,8 @@ parse_packet (uint32_t reader_id, const void *data, int len, bool decrypt)
       tag_sequence = 0;
       break;
     default:
-      printf ("unknown packet protocol[%03i] key[%i] ", env.pkt.proto,
-	      key_id);
-      hex_dump (&env, 0, sizeof (env));
+      printf ("unknown packet protocol[%03i] key[%i] ", env.pkt.proto, key_id);
+      hex_dump (&env, 0, sizeof(env));
       tag_strength = -1;
       tag_sequence = 0;
     }
@@ -563,8 +559,7 @@ parse_packet (uint32_t reader_id, const void *data, int len, bool decrypt)
     }
 }
 
-static int
-parse_pcap (const char *file)
+static int parse_pcap (const char *file)
 {
   int len, items;
   FILE *f;
@@ -578,57 +573,56 @@ parse_pcap (const char *file)
   TBeaconEnvelopeLog log;
 
   if ((h = pcap_open_offline (file, error)) == NULL)
+  {
+    f=fopen(file,"r");
+    if(!f)
+      diep ("failed to open '%s' PCAP file (%s)\n", file, error);
+    else
     {
-      f = fopen (file, "r");
-      if (!f)
-	diep ("failed to open '%s' PCAP file (%s)\n", file, error);
-      else
-	{
-	  while (fread (&log, sizeof (log), 1, f) == 1)
-	    {
-	      reader_id = ntohl (log.ip);
-	      parse_packet (reader_id, &log.env, sizeof (log.env), false);
-	    }
-	  fclose (f);
-	}
+      while(fread(&log,sizeof(log),1,f)==1)
+      {
+	reader_id=ntohl(log.ip);
+	parse_packet (reader_id, &log.env, sizeof(log.env), false);
+      }
+      fclose(f);
     }
+  }
   else
     {
       /* iterate over all IPv4 UDP packets */
-      while ((packet = (const uint8_t *) pcap_next (h, &header)) != NULL)
-	/* check for ethernet protocol */
-	if ((((uint32_t) (packet[12]) << 8) | packet[13]) == 0x0800)
-	  {
-	    /* skip ethernet header */
-	    packet += 14;
-	    ip_hdr = (const ip *) packet;
+      while ((packet = (const uint8_t*) pcap_next (h, &header))!=NULL)
+        /* check for ethernet protocol */
+	if((((uint32_t) (packet[12]) << 8) | packet[13])==0x0800)
+	{
+		/* skip ethernet header */
+		packet+=14;
+		ip_hdr=(const ip*)packet;
 
-	    /* if IPv4 UDP protocol */
-	    if ((ip_hdr->ip_v == 0x4) && (ip_hdr->ip_p == 17))
-	      {
-		len = 4 * ip_hdr->ip_hl;
-		packet += len;
-		udp_hdr = (const udphdr *) packet;
+		/* if IPv4 UDP protocol */
+		if((ip_hdr->ip_v==0x4) && (ip_hdr->ip_p==17))
+		{
+		  len=4*ip_hdr->ip_hl;
+		  packet+=len;
+		  udp_hdr=(const udphdr*)packet;
 
-		/* get UDP packet payload size */
-		len = ntohs (udp_hdr->len) - sizeof (udphdr);
-		packet += sizeof (udphdr);
+		  /* get UDP packet payload size */
+		  len=ntohs(udp_hdr->len)-sizeof(udphdr);
+		  packet+=sizeof(udphdr);
 
-		/* calculate amount of OpenBeacon packets */
-		items = len / sizeof (TBeaconEnvelope);
-		if (!items)
-		  continue;
+		  /* calculate amount of OpenBeacon packets */
+		  items = len / sizeof (TBeaconEnvelope);
+		  if (!items)
+		    continue;
 
-		/* process all packets in this packet */
-		reader_id = ntohl (ip_hdr->ip_src.s_addr);
-		while (items--)
+		  /* process all packets in this packet */
+		  reader_id = ntohl (ip_hdr->ip_src.s_addr);
+		  while(items--)
 		  {
-		    parse_packet (reader_id, packet, sizeof (TBeaconEnvelope),
-				  true);
-		    packet += sizeof (TBeaconEnvelope);
+		    parse_packet (reader_id, packet, sizeof(TBeaconEnvelope), true);
+		    packet+=sizeof(TBeaconEnvelope);
 		  }
-	      }
-	  }
+		}
+	}
     }
   return 0;
 }
@@ -674,7 +668,7 @@ listen_packets (void)
 	  reader_id = ntohl (si_other.sin_addr.s_addr);
 
 	  while (items--)
-	    parse_packet (reader_id, pkt++, sizeof (*pkt), true);
+	    parse_packet (reader_id, pkt++,sizeof(*pkt),true);
 	}
     }
 
@@ -685,8 +679,8 @@ int
 main (int argc, char **argv)
 {
   /* check command line arguments */
-  if (argc <= 1)
-    return listen_packets ();
+  if(argc<=1)
+    return listen_packets();
   else
-    return parse_pcap (argv[1]);
+    return parse_pcap(argv[1]);
 }
