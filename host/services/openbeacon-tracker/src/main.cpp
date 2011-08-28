@@ -48,12 +48,13 @@
 static bmMapHandleToItem g_map_reader, g_map_tag;
 static int g_DoEstimation = 1;
 
-#define XXTEA_KEY_25C3_BETA 0
-#define XXTEA_KEY_25C3_FINAL 1
-#define XXTEA_KEY_24C3 2
-#define XXTEA_KEY_23C3 3
-#define XXTEA_KEY_CAMP07 4
-#define XXTEA_KEY_LASTHOPE 5
+#define XXTEA_KEY_NONE 0
+#define XXTEA_KEY_25C3_BETA 1
+#define XXTEA_KEY_25C3_FINAL 2
+#define XXTEA_KEY_24C3 3
+#define XXTEA_KEY_23C3 4
+#define XXTEA_KEY_CAMP07 5
+#define XXTEA_KEY_LASTHOPE 6
 
 /* proximity tag TEA encryption key */
 const long tea_keys[][4] = {
@@ -293,39 +294,44 @@ ThreadEstimation (void *context)
 static void
 hex_dump (const void *data, unsigned int addr, unsigned int len)
 {
-        unsigned int start, i, j;
-        const unsigned char *buf;
-        char c;
+  unsigned int start, i, j;
+  const unsigned char *buf;
+  char c;
 
-        start = addr & ~0xf;
-        buf = (const unsigned char*) data;
+  buf = (const unsigned char *) data;
+  start = addr & ~0xf;
 
-        for (j=0; j<len; j+=16) {
-                printf("%08x:", start+j);
+  for (j = 0; j < len; j += 16)
+    {
+      printf ("%08x:", start + j);
 
-                for (i=0; i<16; i++) {
-                        if (start+i+j >= addr && start+i+j < addr+len)
-                                printf(" %02x", buf[start+i+j]);
-                        else
-                                printf("   ");
-                }
-                printf("  |");
-                for (i=0; i<16; i++) {
-                        if (start+i+j >= addr && start+i+j < addr+len) {
-                                c = buf[start+i+j];
-                                if (c >= ' ' && c < 127)
-                                        printf("%c", c);
-                                else
-                                        printf(".");
-                        } else
-                                printf(" ");
-                }
-                printf("|\n\r");
-        }
+      for (i = 0; i < 16; i++)
+	{
+	  if (start + i + j >= addr && start + i + j < addr + len)
+	    printf (" %02x", buf[start + i + j]);
+	  else
+	    printf ("   ");
+	}
+      printf ("  |");
+      for (i = 0; i < 16; i++)
+	{
+	  if (start + i + j >= addr && start + i + j < addr + len)
+	    {
+	      c = buf[start + i + j];
+	      if (c >= ' ' && c < 127)
+		printf ("%c", c);
+	      else
+		printf (".");
+	    }
+	  else
+	    printf (" ");
+	}
+      printf ("|\n\r");
+    }
 }
 
 static void
-parse_packet (uint32_t reader_id, const void* data, int len)
+parse_packet (uint32_t reader_id, const void* data, int len, bool decrypt)
 {
   TTagItem *tag;
   TEstimatorItem *item;
@@ -340,6 +346,8 @@ parse_packet (uint32_t reader_id, const void* data, int len)
     return;
 
   key_id=-1;
+  if(decrypt)
+  {
   for(j=0;j<(int)TEA_KEY_COUNT;j++)
   {
     memcpy(&env,data,len);
@@ -357,15 +365,43 @@ parse_packet (uint32_t reader_id, const void* data, int len)
        break;
     }
   }
+  }
+  else
+  {
+    memcpy(&env,data,len);
+    if (crc16(env.byte,
+      sizeof (env.pkt) - sizeof (env.pkt.crc)) == ntohs (env.pkt.crc))
+      key_id=0;
+  }
 
   if(key_id<0)
   {
-    printf ("CRC error from reader 0x%08X\n", reader_id);
+    printf ("CRC[0x%04X] error from reader 0x%08X\n",(int)crc16((const unsigned char*)data,len), reader_id);
+    hex_dump(data,0,len);
     return;
   }
 
   switch (env.pkt.proto)
     {
+    case RFBPROTO_BEACONTRACKER_OLD:
+      {
+        if(env.old.proto2!=RFBPROTO_BEACONTRACKER_OLD2)
+        {
+	  tag_strength = -1;
+	  tag_sequence = 0;
+	  printf ("unknown old packet protocol2[%i] key[%i] ", env.old.proto2, key_id);
+	}
+	else
+	{
+	  tag_id = ntohl (env.old.oid);
+	  tag_sequence = ntohl (env.old.seq);
+	  tag_strength = env.old.strength / 0x55;
+	  tag_flags = (env.old.flags & RFBFLAGS_SENSOR) ?
+	    TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
+	}
+	break;
+      }
+
     case RFBPROTO_BEACONTRACKER:
       {
 	tag_id = ntohs (env.pkt.oid);
@@ -407,7 +443,7 @@ parse_packet (uint32_t reader_id, const void* data, int len)
       tag_sequence = 0;
       break;
     default:
-      printf ("unknown packet protocol[%i] key[%i] ", env.pkt.proto, key_id);
+      printf ("unknown packet protocol[%03i] key[%i] ", env.pkt.proto, key_id);
       hex_dump (&env, 0, sizeof(env));
       tag_strength = -1;
       tag_sequence = 0;
@@ -467,7 +503,7 @@ parse_packet (uint32_t reader_id, const void* data, int len)
 
       delta_t = timestamp - item->last_seen;
       if (delta_t >= MAX_AGGREGATION_SECONDS)
-{
+	{
 	  memset (&item->levels, 0, sizeof (item->levels));
 	  memset (&item->strength, 0, sizeof (item->strength));
 	  item->fifo_pos = 0;
@@ -526,6 +562,7 @@ parse_packet (uint32_t reader_id, const void* data, int len)
 static int parse_pcap (const char *file)
 {
   int len, items;
+  FILE *f;
   pcap_t *h;
   char error[PCAP_ERRBUF_SIZE];
   pcap_pkthdr header;
@@ -533,9 +570,23 @@ static int parse_pcap (const char *file)
   const udphdr *udp_hdr;
   const uint8_t *packet;
   uint32_t reader_id;
+  TBeaconEnvelopeLog log;
 
   if ((h = pcap_open_offline (file, error)) == NULL)
-    diep ("failed to open '%s' PCAP file (%s)\n", file, error);
+  {
+    f=fopen(file,"r");
+    if(!f)
+      diep ("failed to open '%s' PCAP file (%s)\n", file, error);
+    else
+    {
+      while(fread(&log,sizeof(log),1,f)==1)
+      {
+	reader_id=ntohl(log.ip);
+	parse_packet (reader_id, &log.env, sizeof(log.env), false);
+      }
+      fclose(f);
+    }
+  }
   else
     {
       /* iterate over all IPv4 UDP packets */
@@ -567,7 +618,7 @@ static int parse_pcap (const char *file)
 		  reader_id = ntohl (ip_hdr->ip_src.s_addr);
 		  while(items--)
 		  {
-		    parse_packet (reader_id, packet, sizeof(TBeaconEnvelope));
+		    parse_packet (reader_id, packet, sizeof(TBeaconEnvelope), true);
 		    packet+=sizeof(TBeaconEnvelope);
 		  }
 		}
@@ -617,7 +668,7 @@ listen_packets (void)
 	  reader_id = ntohl (si_other.sin_addr.s_addr);
 
 	  while (items--)
-	    parse_packet (reader_id, pkt++,sizeof(*pkt));
+	    parse_packet (reader_id, pkt++,sizeof(*pkt),true);
 	}
     }
 

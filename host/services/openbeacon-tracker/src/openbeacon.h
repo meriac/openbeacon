@@ -29,11 +29,13 @@
 
 #define XXTEA_BLOCK_COUNT 4
 
-#define RFBPROTO_READER_ANNOUNCE 22
-#define RFBPROTO_READER_COMMAND  23
-#define RFBPROTO_BEACONTRACKER   24
-#define RFBPROTO_PROXTRACKER     42
-#define RFBPROTO_PROXREPORT      69
+#define RFBPROTO_READER_ANNOUNCE    22
+#define RFBPROTO_READER_COMMAND     23
+#define RFBPROTO_BEACONTRACKER      24
+#define RFBPROTO_BEACONTRACKER_OLD  16
+#define RFBPROTO_BEACONTRACKER_OLD2 23
+#define RFBPROTO_PROXTRACKER        42
+#define RFBPROTO_PROXREPORT         69
 
 #define PROX_MAX 4
 
@@ -54,6 +56,16 @@
 #define READ_RES__UNKNOWN_CMD		0xFF
 
 #define PACKED  __attribute__((__packed__))
+
+typedef struct
+{
+  u_int8_t proto, proto2;
+  u_int8_t flags, strength;
+  u_int32_t seq;
+  u_int32_t oid;
+  u_int16_t reserved;
+  u_int16_t crc;
+} PACKED TBeaconTrackerOld;
 
 typedef struct
 {
@@ -103,9 +115,18 @@ typedef struct
 
 typedef union
 {
+  u_int8_t proto;
   TBeaconWrapper pkt;
+  TBeaconTrackerOld old;
   u_int32_t block[XXTEA_BLOCK_COUNT];
   u_int8_t byte[XXTEA_BLOCK_COUNT * 4];
 } PACKED TBeaconEnvelope;
+
+typedef struct
+{
+  u_int32_t timestamp;
+  u_int32_t ip;
+  TBeaconEnvelope env;
+} PACKED TBeaconEnvelopeLog;
 
 #endif/*__OPENBEACON_H__*/
