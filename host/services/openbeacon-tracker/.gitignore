@@ -1,3 +1,4 @@
 .depend
 openbeacon-tracker
 *.o
+logs
