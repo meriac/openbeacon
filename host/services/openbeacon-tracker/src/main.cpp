@@ -84,7 +84,7 @@ const long tea_keys[][4] = {
 
 typedef struct
 {
-  u_int32_t time;
+  double time;
   uint8_t strength[STRENGTH_LEVELS_COUNT];
 } TAggregation;
 
@@ -214,7 +214,7 @@ ThreadIterateLocked (void *Context, double timestamp)
   TEstimatorItem *item = (TEstimatorItem *) Context;
 
   if (!item->reader
-      || ((time (NULL) - item->last_seen) >= MAX_AGGREGATION_SECONDS))
+      || ((timestamp - item->last_seen) >= MAX_AGGREGATION_SECONDS))
     return;
 
   tag = item->tag;
@@ -585,8 +585,7 @@ parse_pcap (const char *file)
   const ip *ip_hdr;
   const udphdr *udp_hdr;
   const uint8_t *packet;
-  uint32_t reader_id;
-  double timestamp_old,timestamp;
+  uint32_t reader_id, timestamp_old,timestamp;
   TBeaconEnvelopeLog log;
 
   timestamp_old=0;
@@ -601,7 +600,7 @@ parse_pcap (const char *file)
 	  while (fread (&log, sizeof (log), 1, f) == 1)
 	  {
 	    timestamp = ntohl (log.timestamp);
-	    if((timestamp-timestamp_old)>=1)
+	    if(timestamp!=timestamp_old)
 	    {
 	      timestamp_old=timestamp;
 	      EstimationStep(timestamp);
@@ -664,7 +663,8 @@ static int
 listen_packets (void)
 {
   int sock, items;
-  uint32_t reader_id, timestamp;
+  uint32_t reader_id;
+  double timestamp;
   TBeaconEnvelope beacons[100], *pkt;
   struct sockaddr_in si_me, si_other;
   socklen_t slen = sizeof (si_other);
@@ -697,7 +697,7 @@ listen_packets (void)
 	  pkt = beacons;
 	  reader_id = ntohl (si_other.sin_addr.s_addr);
 
-	  timestamp = time(NULL);
+	  timestamp = microtime();
 	  while (items--)
 	    parse_packet (timestamp, reader_id, pkt++, sizeof (*pkt), true);
 	}
