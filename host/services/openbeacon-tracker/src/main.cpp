@@ -48,10 +48,17 @@
 static bmMapHandleToItem g_map_reader, g_map_tag;
 static int g_DoEstimation = 1;
 
+#define XXTEA_KEY_25C3_BETA 0
+#define XXTEA_KEY_25C3_FINAL 1
+#define XXTEA_KEY_24C3 2
+#define XXTEA_KEY_23C3 3
+#define XXTEA_KEY_CAMP07 4
+#define XXTEA_KEY_LASTHOPE 5
+
 /* proximity tag TEA encryption key */
 const long tea_keys[][4] = {
-    { 0xbf0c3a08,0x1d4228fc,0x4244b2b0,0x0b4492e9 }, /* 25C3 final key  */
     { 0x7013F569,0x4417CA7E,0x07AAA968,0x822D7554 }, /* 25C3 free beta version key */
+    { 0xbf0c3a08,0x1d4228fc,0x4244b2b0,0x0b4492e9 }, /* 25C3 final key  */
     { 0xB4595344,0xD3E119B6,0xA814D0EC,0xEFF5A24E }, /* 24C3 */
     { 0xe107341e,0xab99c57e,0x48e17803,0x52fb4d16 }, /* 23C3 key */
     { 0x8e7d6649,0x7e82fa5b,0xddd4541e,0xe23742cb }, /* Camp 2007 key */
@@ -284,6 +291,40 @@ ThreadEstimation (void *context)
 }
 
 static void
+hex_dump (const void *data, unsigned int addr, unsigned int len)
+{
+        unsigned int start, i, j;
+        const unsigned char *buf;
+        char c;
+
+        start = addr & ~0xf;
+        buf = (const unsigned char*) data;
+
+        for (j=0; j<len; j+=16) {
+                printf("%08x:", start+j);
+
+                for (i=0; i<16; i++) {
+                        if (start+i+j >= addr && start+i+j < addr+len)
+                                printf(" %02x", buf[start+i+j]);
+                        else
+                                printf("   ");
+                }
+                printf("  |");
+                for (i=0; i<16; i++) {
+                        if (start+i+j >= addr && start+i+j < addr+len) {
+                                c = buf[start+i+j];
+                                if (c >= ' ' && c < 127)
+                                        printf("%c", c);
+                                else
+                                        printf(".");
+                        } else
+                                printf(" ");
+                }
+                printf("|\n\r");
+        }
+}
+
+static void
 parse_packet (uint32_t reader_id, const void* data, int len)
 {
   TTagItem *tag;
@@ -366,7 +407,8 @@ parse_packet (uint32_t reader_id, const void* data, int len)
       tag_sequence = 0;
       break;
     default:
-      printf ("unknown packet protocol[%i] key[%i]\n", env.pkt.proto, key_id);
+      printf ("unknown packet protocol[%i] key[%i] ", env.pkt.proto, key_id);
+      hex_dump (&env, 0, sizeof(env));
       tag_strength = -1;
       tag_sequence = 0;
     }
