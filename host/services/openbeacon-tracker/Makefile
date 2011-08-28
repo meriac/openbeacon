@@ -1,0 +1,35 @@
+VERSION =0.1
+CXX     =g++
+TARGET  =openbeacon-tracker
+SOURCES =src/bmMapHandleToItem.cpp src/main.cpp
+LIBS    =
+
+CXXFLAGS=-O3 -Werror -Wall -std=gnu++0x -D_REENTRANT -DVERSION=\"$(VERSION)\"
+LDFLAGS =-lm -lpthread
+OBJS    =$(SOURCES:%.cpp=%.o)
+
+all: $(TARGET)
+
+run: $(TARGET)
+	./$(TARGET)
+
+indent: $(SOURCES)
+	indent $+
+	rm -f *~
+
+$(TARGET): .depend $(OBJS)
+	$(CXX) $(LDFLAGS) $(OBJS) -o $@
+
+%o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $<
+
+.depend: $(SOURCES)
+	$(CXX) $(CXXFLAGS) -MM $^ > $@
+
+cleanall: clean
+	rm -rf .depend
+
+clean:
+	rm -f $(TARGET) $(OBJS) *~
+
+include .depend
