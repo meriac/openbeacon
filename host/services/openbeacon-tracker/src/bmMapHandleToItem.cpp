@@ -181,7 +181,7 @@ bmMapHandleToItem::Add (bmHandle handle, pthread_mutex_t ** mutex)
 }
 
 int
-bmMapHandleToItem::IterateLocked (bmIterationCallback cb)
+bmMapHandleToItem::IterateLocked (bmIterationCallback cb, double timestamp)
 {
   int i, count;
   bmHandleMap *map;
@@ -197,7 +197,7 @@ bmMapHandleToItem::IterateLocked (bmIterationCallback cb)
 	      count++;
 	      pthread_mutex_lock (&map->mutex);
 	      cb ((m_ItemSize <= (int) sizeof (map->data)) ? &map->data
-		  : map->data);
+		  : map->data, timestamp);
 	      pthread_mutex_unlock (&map->mutex);
 	    }
 	  map++;

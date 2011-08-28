@@ -96,8 +96,7 @@ typedef struct
 typedef struct
 {
   uint32_t id, sequence, button;
-  uint32_t last_seen;
-  double last_calculated;
+  uint32_t last_seen, last_calculated;
   double px, py, vx, vy;
   const TReaderItem *last_reader;
   TTagItemStrength power[STRENGTH_LEVELS_COUNT];
@@ -107,7 +106,7 @@ typedef struct
 {
   uint32_t last_seen, fifo_pos;
   uint32_t tag_id, reader_id;
-  uint32_t timestamp;
+  double timestamp;
   const TReaderItem *reader;
   TTagItem *tag;
   uint8_t strength[STRENGTH_LEVELS_COUNT];
@@ -176,18 +175,24 @@ shuffle_tx_byteorder (u_int32_t * v, u_int32_t len)
 }
 
 static inline double
+microtime_calc (struct timeval *tv)
+{
+  return tv->tv_sec + (tv->tv_usec / 1000000.0);
+}
+
+static inline double
 microtime (void)
 {
   struct timeval tv;
 
   if (!gettimeofday (&tv, NULL))
-    return tv.tv_sec + (tv.tv_usec / 1000000.0);
+    return microtime_calc(&tv);
   else
     return 0;
 }
 
 static inline void
-ThreadIterateForceReset (void *Context)
+ThreadIterateForceReset (void *Context, double timestamp)
 {
   int i;
   TTagItemStrength *power = ((TTagItem *) Context)->power;
@@ -200,7 +205,7 @@ ThreadIterateForceReset (void *Context)
 }
 
 static inline void
-ThreadIterateLocked (void *Context)
+ThreadIterateLocked (void *Context, double timestamp)
 {
   int i, strength;
   double dist, dx, dy;
@@ -232,16 +237,15 @@ ThreadIterateLocked (void *Context)
 }
 
 static inline void
-ThreadIterateForceCalculate (void *Context)
+ThreadIterateForceCalculate (void *Context, double timestamp)
 {
   int i;
-  double t, delta_t, r, px, py, F;
+  double delta_t, r, px, py, F;
   TTagItem *tag = (TTagItem *) Context;
   TTagItemStrength *power = tag->power;
 
-  t = microtime ();
-  delta_t = t - tag->last_calculated;
-  tag->last_calculated = t;
+  delta_t = timestamp - tag->last_calculated;
+  tag->last_calculated = timestamp;
   px = py = 0;
 
   if (tag->button)
@@ -278,14 +282,20 @@ ThreadIterateForceCalculate (void *Context)
   printf ("tag id=%u px=%f py=%f\n", tag->id, tag->px, tag->py);
 }
 
+static void
+EstimationStep(double timestamp)
+{
+  g_map_tag.IterateLocked (&ThreadIterateForceReset, timestamp);
+  g_map_reader.IterateLocked (&ThreadIterateLocked, timestamp);
+  g_map_tag.IterateLocked (&ThreadIterateForceCalculate, timestamp);
+}
+
 static void *
 ThreadEstimation (void *context)
 {
   while (g_DoEstimation)
     {
-      g_map_tag.IterateLocked (&ThreadIterateForceReset);
-      g_map_reader.IterateLocked (&ThreadIterateLocked);
-      g_map_tag.IterateLocked (&ThreadIterateForceCalculate);
+      EstimationStep(microtime());
       sleep (1);
     }
   return NULL;
@@ -331,13 +341,13 @@ hex_dump (const void *data, unsigned int addr, unsigned int len)
 }
 
 static void
-parse_packet (uint32_t reader_id, const void *data, int len, bool decrypt)
+parse_packet (double timestamp, uint32_t reader_id, const void *data, int len, bool decrypt)
 {
   TTagItem *tag;
   TEstimatorItem *item;
   TAggregation *aggregation;
   uint32_t tag_id, tag_flags, tag_sequence;
-  uint32_t delta_t, t, timestamp, tag_sighting;
+  uint32_t delta_t, t, tag_sighting;
   pthread_mutex_t *item_mutex, *tag_mutex;
   int tag_strength, j, key_id;
   TBeaconEnvelope env;
@@ -451,6 +461,7 @@ parse_packet (uint32_t reader_id, const void *data, int len, bool decrypt)
       hex_dump (&env, 0, sizeof (env));
       tag_strength = -1;
       tag_sequence = 0;
+      tag_id = 0;
     }
 
   if ((tag_strength >= 0)
@@ -459,7 +470,6 @@ parse_packet (uint32_t reader_id, const void *data, int len, bool decrypt)
 	  g_map_reader.Add ((((uint64_t) reader_id) << 32) |
 			    tag_id, &item_mutex)) != NULL)
     {
-      timestamp = time (NULL);
       item->timestamp = timestamp;
 
       /* initialize on first occurence */
@@ -493,7 +503,7 @@ parse_packet (uint32_t reader_id, const void *data, int len, bool decrypt)
 	    {
 	      printf ("new tag %u seen\n", tag_id);
 	      tag->id = tag_id;
-	      tag->last_calculated = microtime ();
+	      tag->last_calculated = timestamp;
 	    }
 	  tag->last_reader = item->reader;
 	  tag->last_seen = timestamp;
@@ -550,6 +560,7 @@ parse_packet (uint32_t reader_id, const void *data, int len, bool decrypt)
       if (tag_flags & TAGSIGHTINGFLAG_BUTTON_PRESS)
 	tag->button = TAGSIGHTING_BUTTON_TIME;
 
+#if 0
       printf
 	("id:%04u reader:%03u proto:%03u strength:%u button:%03u levels:",
 	 tag_id, reader_id & 0xFF, env.pkt.proto, tag_strength, tag->button);
@@ -558,7 +569,7 @@ parse_packet (uint32_t reader_id, const void *data, int len, bool decrypt)
       printf ("\n");
 
       fflush (stdout);
-
+#endif
       pthread_mutex_unlock (item_mutex);
     }
 }
@@ -575,7 +586,10 @@ parse_pcap (const char *file)
   const udphdr *udp_hdr;
   const uint8_t *packet;
   uint32_t reader_id;
+  double timestamp_old,timestamp;
   TBeaconEnvelopeLog log;
+
+  timestamp_old=0;
 
   if ((h = pcap_open_offline (file, error)) == NULL)
     {
@@ -585,10 +599,15 @@ parse_pcap (const char *file)
       else
 	{
 	  while (fread (&log, sizeof (log), 1, f) == 1)
+	  {
+	    timestamp = ntohl (log.timestamp);
+	    if((timestamp-timestamp_old)>=1)
 	    {
-	      reader_id = ntohl (log.ip);
-	      parse_packet (reader_id, &log.env, sizeof (log.env), false);
+	      timestamp_old=timestamp;
+	      EstimationStep(timestamp);
 	    }
+	    parse_packet (timestamp, ntohl (log.ip), &log.env, sizeof (log.env), false);
+	  }
 	  fclose (f);
 	}
     }
@@ -619,12 +638,20 @@ parse_pcap (const char *file)
 		if (!items)
 		  continue;
 
+		/* run estimation every second */
+		timestamp=microtime_calc(&header.ts);
+		if((timestamp-timestamp_old)>=1)
+		{
+		  timestamp_old=timestamp;
+		  EstimationStep(timestamp);
+		}
+
 		/* process all packets in this packet */
 		reader_id = ntohl (ip_hdr->ip_src.s_addr);
 		while (items--)
 		  {
-		    parse_packet (reader_id, packet, sizeof (TBeaconEnvelope),
-				  true);
+		    parse_packet (timestamp, reader_id,
+			packet, sizeof (TBeaconEnvelope), true);
 		    packet += sizeof (TBeaconEnvelope);
 		  }
 	      }
@@ -637,7 +664,7 @@ static int
 listen_packets (void)
 {
   int sock, items;
-  uint32_t reader_id;
+  uint32_t reader_id, timestamp;
   TBeaconEnvelope beacons[100], *pkt;
   struct sockaddr_in si_me, si_other;
   socklen_t slen = sizeof (si_other);
@@ -657,9 +684,6 @@ listen_packets (void)
 
       pthread_create (&thread_handle, NULL, &ThreadEstimation, NULL);
 
-      g_map_reader.SetItemSize (sizeof (TEstimatorItem));
-      g_map_tag.SetItemSize (sizeof (TTagItem));
-
       while (1)
 	{
 	  if ((items = recvfrom (sock, &beacons, sizeof (beacons), 0,
@@ -673,8 +697,9 @@ listen_packets (void)
 	  pkt = beacons;
 	  reader_id = ntohl (si_other.sin_addr.s_addr);
 
+	  timestamp = time(NULL);
 	  while (items--)
-	    parse_packet (reader_id, pkt++, sizeof (*pkt), true);
+	    parse_packet (timestamp, reader_id, pkt++, sizeof (*pkt), true);
 	}
     }
 
@@ -684,6 +709,9 @@ listen_packets (void)
 int
 main (int argc, char **argv)
 {
+  g_map_reader.SetItemSize (sizeof (TEstimatorItem));
+  g_map_tag.SetItemSize (sizeof (TTagItem));
+
   /* check command line arguments */
   if (argc <= 1)
     return listen_packets ();
