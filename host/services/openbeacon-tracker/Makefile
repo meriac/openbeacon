@@ -4,8 +4,8 @@ TARGET  =openbeacon-tracker
 SOURCES =src/bmMapHandleToItem.cpp src/main.cpp
 LIBS    =
 
-CXXFLAGS=-O3 -Werror -Wall -std=gnu++0x -D_REENTRANT -DVERSION=\"$(VERSION)\"
-LDFLAGS =-lm -lpthread
+CXXFLAGS=-O3 -Werror -Wall -std=gnu++0x -ffunction-sections -fdata-sections -D_REENTRANT -DVERSION=\"$(VERSION)\"
+LDFLAGS =-lm -lpthread -Wl,--gc-sections
 OBJS    =$(SOURCES:%.cpp=%.o)
 
 all: $(TARGET)

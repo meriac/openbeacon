@@ -288,7 +288,6 @@ main (void)
   socklen_t slen = sizeof (si_other);
   TEstimatorItem *item;
   TAggregation *aggregation;
-  char sql_req[4096];
 
   if ((sock = socket (AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
     diep (NULL, "socket");
@@ -373,24 +372,6 @@ main (void)
 		      tag_sighting = (ntohs (pkt->pkt.p.prox.oid_prox[j]));
 		      if (tag_sighting)
 			{
-			  sprintf (sql_req,
-				   "INSERT INTO proximity ("
-				   "tag_id,reader_id,tag_flags,"
-				   "proximity_tag,proximity_count,proximity_strength"
-				   ") VALUES(%u,%u,%u,%u,%u,%u)"
-				   "ON DUPLICATE KEY UPDATE reader_id=%u, tag_flags=%u, proximity_tag=%u proximity_count=%u, proximity_strength=%u, time=NOW()\n",
-				   tag_id, reader_id,
-				   tag_flags,
-				   (tag_sighting >> 0) & 0x7FF,
-				   (tag_sighting >> 11) & 0x7,
-				   (tag_sighting >> 14) & 0x3,
-				   reader_id, tag_flags,
-				   (tag_sighting >> 0) & 0x7FF,
-				   (tag_sighting >> 11) & 0x7,
-				   (tag_sighting >> 14) & 0x3);
-
-//                            printf (sql_req);
-//                            db_do_query (g_db, sql_req);
 			}
 		    }
 		  break;
