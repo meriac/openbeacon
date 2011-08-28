@@ -48,9 +48,7 @@
 static bmMapHandleToItem g_map_reader, g_map_tag;
 static int g_DoEstimation = 1;
 
-//
-// proximity tag TEA encryption key
-//
+/* proximity tag TEA encryption key */
 const long tea_keys[][4] = {
     { 0xbf0c3a08,0x1d4228fc,0x4244b2b0,0x0b4492e9 }, /* 25C3 final key  */
     { 0x7013F569,0x4417CA7E,0x07AAA968,0x822D7554 }, /* 25C3 free beta version key */
@@ -368,7 +366,7 @@ parse_packet (uint32_t reader_id, const void* data, int len)
       tag_sequence = 0;
       break;
     default:
-      printf ("unknown packet protocol [%i]\n", env.pkt.proto);
+      printf ("unknown packet protocol[%i] key[%i]\n", env.pkt.proto, key_id);
       tag_strength = -1;
       tag_sequence = 0;
     }
@@ -382,7 +380,7 @@ parse_packet (uint32_t reader_id, const void* data, int len)
       timestamp = time (NULL);
       item->timestamp = timestamp;
 
-      // initialize on first occurence
+      /* initialize on first occurence */
       if (!item->tag_id)
 	{
 	  item->tag_id = tag_id;
@@ -408,7 +406,7 @@ parse_packet (uint32_t reader_id, const void* data, int len)
 	diep ("can't add tag");
       else
 	{
-	  // on first occurence
+	  /* on first occurence */
 	  if (!tag->id)
 	    {
 	      printf ("new tag %u seen\n", tag_id);
@@ -417,7 +415,7 @@ parse_packet (uint32_t reader_id, const void* data, int len)
 	    }
 	  tag->last_reader = item->reader;
 	  tag->last_seen = timestamp;
-	  // TODO: fix wrapping of 16 bit sequence numbers
+	  /* TODO: fix wrapping of 16 bit sequence numbers */
 	  if (tag_flags & TAGSIGHTINGFLAG_SHORT_SEQUENCE)
 	    tag->sequence = (tag->sequence & ~0xFFFF) | tag_sequence;
 
@@ -444,7 +442,7 @@ parse_packet (uint32_t reader_id, const void* data, int len)
 
 	  aggregation = &item->levels[item->fifo_pos];
 
-	  // reset values to zero
+	  /* reset values to zero */
 	  if (delta_t)
 	    {
 	      memset (aggregation, 0, sizeof (*aggregation));
@@ -587,7 +585,7 @@ listen_packets (void)
 int
 main (int argc, char **argv)
 {
-  //check command line arguments.
+  /* check command line arguments */
   if(argc<=1)
     return listen_packets();
   else
