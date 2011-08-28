@@ -20,9 +20,6 @@ indent: $(SOURCES)
 $(TARGET): .depend $(OBJS)
 	$(CXX) $(LDFLAGS) $(OBJS) -o $@
 
-%o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $<
-
 .depend: $(SOURCES)
 	$(CXX) $(CXXFLAGS) -MM $^ > $@
 
