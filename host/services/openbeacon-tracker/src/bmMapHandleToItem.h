@@ -31,7 +31,7 @@
 #define HASH_MAP_INDEX_SIZE 0x100000
 
 typedef uint64_t bmHandle;
-typedef void (*bmIterationCallback) (void *Item, double timestamp);
+typedef void (*bmIterationCallback) (void *Item, double timestamp, bool realtime);
 
 typedef struct
 {
@@ -53,7 +53,7 @@ public:
   int GetItemSize (void);
   void *Find (bmHandle handle, pthread_mutex_t ** mutex);
   void *Add (bmHandle handle, pthread_mutex_t ** mutex);
-  int IterateLocked (bmIterationCallback Callback, double timestamp);
+  int IterateLocked (bmIterationCallback Callback, double timestamp, bool realtime);
 };
 
 #endif/*__BMMAPHANDLETOITEM_H__*/

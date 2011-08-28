@@ -192,7 +192,7 @@ microtime (void)
 }
 
 static inline void
-ThreadIterateForceReset (void *Context, double timestamp)
+ThreadIterateForceReset (void *Context, double timestamp, bool realtime)
 {
   int i;
   TTagItemStrength *power = ((TTagItem *) Context)->power;
@@ -205,7 +205,7 @@ ThreadIterateForceReset (void *Context, double timestamp)
 }
 
 static inline void
-ThreadIterateLocked (void *Context, double timestamp)
+ThreadIterateLocked (void *Context, double timestamp, bool realtime)
 {
   int i, strength;
   double dist, dx, dy;
@@ -237,7 +237,7 @@ ThreadIterateLocked (void *Context, double timestamp)
 }
 
 static inline void
-ThreadIterateForceCalculate (void *Context, double timestamp)
+ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
 {
   int i;
   double delta_t, r, px, py, F;
@@ -283,11 +283,11 @@ ThreadIterateForceCalculate (void *Context, double timestamp)
 }
 
 static void
-EstimationStep(double timestamp)
+EstimationStep(double timestamp, bool realtime)
 {
-  g_map_tag.IterateLocked (&ThreadIterateForceReset, timestamp);
-  g_map_reader.IterateLocked (&ThreadIterateLocked, timestamp);
-  g_map_tag.IterateLocked (&ThreadIterateForceCalculate, timestamp);
+  g_map_tag.IterateLocked (&ThreadIterateForceReset, timestamp, realtime);
+  g_map_reader.IterateLocked (&ThreadIterateLocked, timestamp, realtime);
+  g_map_tag.IterateLocked (&ThreadIterateForceCalculate, timestamp, realtime);
 }
 
 static void *
@@ -295,7 +295,7 @@ ThreadEstimation (void *context)
 {
   while (g_DoEstimation)
     {
-      EstimationStep(microtime());
+      EstimationStep(microtime(),true);
       sleep (1);
     }
   return NULL;
@@ -575,7 +575,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len, b
 }
 
 static int
-parse_pcap (const char *file)
+parse_pcap (const char *file, bool realtime)
 {
   int len, items;
   FILE *f;
@@ -603,7 +603,9 @@ parse_pcap (const char *file)
 	    if(timestamp!=timestamp_old)
 	    {
 	      timestamp_old=timestamp;
-	      EstimationStep(timestamp);
+	      EstimationStep(timestamp,realtime);
+	      if(realtime)
+		sleep (1);
 	    }
 	    parse_packet (timestamp, ntohl (log.ip), &log.env, sizeof (log.env), false);
 	  }
@@ -642,7 +644,9 @@ parse_pcap (const char *file)
 		if((timestamp-timestamp_old)>=1)
 		{
 		  timestamp_old=timestamp;
-		  EstimationStep(timestamp);
+		  EstimationStep(timestamp,realtime);
+		  if(realtime)
+		    sleep (1);
 		}
 
 		/* process all packets in this packet */
@@ -709,6 +713,7 @@ listen_packets (void)
 int
 main (int argc, char **argv)
 {
+  bool realtime;
   g_map_reader.SetItemSize (sizeof (TEstimatorItem));
   g_map_tag.SetItemSize (sizeof (TTagItem));
 
@@ -716,5 +721,8 @@ main (int argc, char **argv)
   if (argc <= 1)
     return listen_packets ();
   else
-    return parse_pcap (argv[1]);
+  {
+    realtime=(argc >= 3)?(atoi(argv[2])?true:false):false;
+    return parse_pcap (argv[1],realtime);
+  }
 }
