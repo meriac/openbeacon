@@ -25,6 +25,7 @@
 */
 
 #include <stdio.h>
+#include <pcap.h>
 #include <stdarg.h>
 #include <math.h>
 #include <stdlib.h>
@@ -34,7 +35,9 @@
 #include <pthread.h>
 #include <sys/time.h>
 #include <arpa/inet.h>
+#include <netinet/ip.h>
 #include <netinet/in.h>
+#include <netinet/udp.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 
@@ -48,9 +51,17 @@ static int g_DoEstimation = 1;
 //
 // proximity tag TEA encryption key
 //
-const long tea_key[4] = { 0xab94ec75, 0x160869c5, 0xfbf908da, 0x60bedc73 };
+const long tea_keys[][4] = {
+    { 0xbf0c3a08,0x1d4228fc,0x4244b2b0,0x0b4492e9 }, /* 25C3 final key  */
+    { 0x7013F569,0x4417CA7E,0x07AAA968,0x822D7554 }, /* 25C3 free beta version key */
+    { 0xB4595344,0xD3E119B6,0xA814D0EC,0xEFF5A24E }, /* 24C3 */
+    { 0xe107341e,0xab99c57e,0x48e17803,0x52fb4d16 }, /* 23C3 key */
+    { 0x8e7d6649,0x7e82fa5b,0xddd4541e,0xe23742cb }, /* Camp 2007 key */
+    { 0x9c43725e,0xad8ec2ab,0x6ebad8db,0xf29c3638 }  /* The Last Hope - AMD Project (Attendee Metadata Project) */
+};
 
-//const long tea_key[4] = { 0xB4595344, 0xD3E119B6, 0xA814D0EC, 0xEFF5A24E };
+#define TEA_KEY_COUNT (sizeof(tea_keys)/sizeof(tea_keys[0]))
+
 #define MX  ( (((z>>5)^(y<<2))+((y>>3)^(z<<4)))^((sum^y)+(tea_key[(p&3)^e]^z)) )
 #define DELTA 0x9e3779b9UL
 
@@ -274,20 +285,266 @@ ThreadEstimation (void *context)
   return NULL;
 }
 
-int
-main (void)
+static void
+parse_packet (uint32_t reader_id, const void* data, int len)
 {
-  pthread_mutex_t *item_mutex, *tag_mutex;
-  pthread_t thread_handle;
-  struct sockaddr_in si_me, si_other;
   TTagItem *tag;
-  TBeaconEnvelope beacons[100], *pkt;
-  int j, items, sock, tag_strength;
-  uint32_t reader_id, tag_id, tag_flags, tag_sequence, delta_t, t, timestamp,
-    tag_sighting;
-  socklen_t slen = sizeof (si_other);
   TEstimatorItem *item;
   TAggregation *aggregation;
+  uint32_t tag_id, tag_flags, tag_sequence;
+  uint32_t delta_t, t, timestamp, tag_sighting;
+  pthread_mutex_t *item_mutex, *tag_mutex;
+  int tag_strength, j, key_id;
+  TBeaconEnvelope env;
+
+  if(len!=sizeof(env))
+    return;
+
+  key_id=-1;
+  for(j=0;j<(int)TEA_KEY_COUNT;j++)
+  {
+    memcpy(&env,data,len);
+
+    /* decode packet */
+    shuffle_tx_byteorder (env.block, XXTEA_BLOCK_COUNT);
+    xxtea_decode (env.block, XXTEA_BLOCK_COUNT, tea_keys[j]);
+    shuffle_tx_byteorder (env.block, XXTEA_BLOCK_COUNT);
+
+    /* verify CRC */
+    if (crc16(env.byte,
+      sizeof (env.pkt) - sizeof (env.pkt.crc)) == ntohs (env.pkt.crc))
+    {
+       key_id=j;
+       break;
+    }
+  }
+
+  if(key_id<0)
+  {
+    printf ("CRC error from reader 0x%08X\n", reader_id);
+    return;
+  }
+
+  switch (env.pkt.proto)
+    {
+    case RFBPROTO_BEACONTRACKER:
+      {
+	tag_id = ntohs (env.pkt.oid);
+	tag_sequence = ntohl (env.pkt.p.tracker.seq);
+	tag_strength = env.pkt.p.tracker.strength;
+	tag_flags = (env.pkt.flags & RFBFLAGS_SENSOR) ?
+	  TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
+      }
+      break;
+
+    case RFBPROTO_PROXTRACKER:
+      tag_id = ntohs (env.pkt.oid);
+      tag_sequence = ntohl (env.pkt.p.tracker.seq);
+      tag_strength = env.pkt.p.tracker.strength
+	& (STRENGTH_LEVELS_COUNT - 1);
+      tag_flags = (env.pkt.flags & RFBFLAGS_SENSOR) ?
+	TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
+      break;
+
+    case RFBPROTO_PROXREPORT:
+      tag_id = ntohs (env.pkt.oid);
+      tag_flags = (env.pkt.flags & RFBFLAGS_SENSOR) ?
+	TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
+
+      tag_sequence = ntohs (env.pkt.p.prox.seq);
+      tag_strength = (STRENGTH_LEVELS_COUNT - 1);
+      tag_flags |= TAGSIGHTINGFLAG_SHORT_SEQUENCE;
+
+      for (j = 0; j < PROX_MAX; j++)
+	{
+	  tag_sighting = (ntohs (env.pkt.p.prox.oid_prox[j]));
+	  if (tag_sighting)
+	    {
+	    }
+	}
+      break;
+    case RFBPROTO_READER_ANNOUNCE:
+      tag_strength = -1;
+      tag_sequence = 0;
+      break;
+    default:
+      printf ("unknown packet protocol [%i]\n", env.pkt.proto);
+      tag_strength = -1;
+      tag_sequence = 0;
+    }
+
+  if ((tag_strength >= 0)
+      && (item =
+	  (TEstimatorItem *)
+	  g_map_reader.Add ((((uint64_t) reader_id) << 32) |
+			    tag_id, &item_mutex)) != NULL)
+    {
+      timestamp = time (NULL);
+      item->timestamp = timestamp;
+
+      // initialize on first occurence
+      if (!item->tag_id)
+	{
+	  item->tag_id = tag_id;
+
+	  for (t = 0; t < READER_COUNT; t++)
+	    if (g_ReaderList[t].id == reader_id)
+	      {
+		item->reader = &g_ReaderList[t];
+		break;
+	      }
+	  if (t < READER_COUNT)
+	    item->reader_id = reader_id;
+	  else
+	    {
+	      printf ("unknown reader 0x%08X\n", reader_id);
+	      item->reader = NULL;
+	      item->reader_id = 0;
+	      reader_id = 0;
+	    }
+	}
+
+      if ((tag = (TTagItem *) g_map_tag.Add (tag_id, &tag_mutex)) == NULL)
+	diep ("can't add tag");
+      else
+	{
+	  // on first occurence
+	  if (!tag->id)
+	    {
+	      printf ("new tag %u seen\n", tag_id);
+	      tag->id = tag_id;
+	      tag->last_calculated = microtime ();
+	    }
+	  tag->last_reader = item->reader;
+	  tag->last_seen = timestamp;
+	  // TODO: fix wrapping of 16 bit sequence numbers
+	  if (tag_flags & TAGSIGHTINGFLAG_SHORT_SEQUENCE)
+	    tag->sequence = (tag->sequence & ~0xFFFF) | tag_sequence;
+
+	  item->tag = tag;
+	  pthread_mutex_unlock (tag_mutex);
+	}
+
+      delta_t = timestamp - item->last_seen;
+      if (delta_t >= MAX_AGGREGATION_SECONDS)
+{
+	  memset (&item->levels, 0, sizeof (item->levels));
+	  memset (&item->strength, 0, sizeof (item->strength));
+	  item->fifo_pos = 0;
+	  item->last_seen = timestamp;
+	}
+      else
+	{
+	  if (delta_t)
+	    {
+	      item->fifo_pos++;
+	      if (item->fifo_pos >= MAX_AGGREGATION_SECONDS)
+		item->fifo_pos = 0;
+	    }
+
+	  aggregation = &item->levels[item->fifo_pos];
+
+	  // reset values to zero
+	  if (delta_t)
+	    {
+	      memset (aggregation, 0, sizeof (*aggregation));
+	      aggregation->time = timestamp;
+	    }
+	  aggregation->strength[tag_strength]++;
+
+	  if (delta_t)
+	    {
+	      memset (&item->strength, 0, sizeof (item->strength));
+	      aggregation = item->levels;
+	      for (t = 0; t < MAX_AGGREGATION_SECONDS; t++)
+		{
+		  for (j = 0; j < STRENGTH_LEVELS_COUNT; j++)
+		    if ((timestamp - aggregation->time) <=
+			AGGREGATION_TIMEOUT (j))
+		      item->strength[j] += aggregation->strength[j];
+		  aggregation++;
+		}
+	    }
+	}
+
+      if (tag_flags & TAGSIGHTINGFLAG_BUTTON_PRESS)
+	tag->button = TAGSIGHTING_BUTTON_TIME;
+
+      printf
+	("id:%04u reader:%03u proto:%03u strength:%u button:%03u levels:",
+	 tag_id, reader_id & 0xFF, env.pkt.proto, tag_strength, tag->button);
+      for (j = 0; j < STRENGTH_LEVELS_COUNT; j++)
+	printf ("%03u,", item->strength[j]);
+      printf ("\n");
+
+      fflush (stdout);
+
+      pthread_mutex_unlock (item_mutex);
+    }
+}
+
+static int parse_pcap (const char *file)
+{
+  int len, items;
+  pcap_t *h;
+  char error[PCAP_ERRBUF_SIZE];
+  pcap_pkthdr header;
+  const ip *ip_hdr;
+  const udphdr *udp_hdr;
+  const uint8_t *packet;
+  uint32_t reader_id;
+
+  if ((h = pcap_open_offline (file, error)) == NULL)
+    diep ("failed to open '%s' PCAP file (%s)\n", file, error);
+  else
+    {
+      /* iterate over all IPv4 UDP packets */
+      while ((packet = (const uint8_t*) pcap_next (h, &header))!=NULL)
+        /* check for ethernet protocol */
+	if((((uint32_t) (packet[12]) << 8) | packet[13])==0x0800)
+	{
+		/* skip ethernet header */
+		packet+=14;
+		ip_hdr=(const ip*)packet;
+
+		/* if IPv4 UDP protocol */
+		if((ip_hdr->ip_v==0x4) && (ip_hdr->ip_p==17))
+		{
+		  len=4*ip_hdr->ip_hl;
+		  packet+=len;
+		  udp_hdr=(const udphdr*)packet;
+
+		  /* get UDP packet payload size */
+		  len=ntohs(udp_hdr->len)-sizeof(udphdr);
+		  packet+=sizeof(udphdr);
+
+		  /* calculate amount of OpenBeacon packets */
+		  items = len / sizeof (TBeaconEnvelope);
+		  if (!items)
+		    continue;
+
+		  /* process all packets in this packet */
+		  reader_id = ntohl (ip_hdr->ip_src.s_addr);
+		  while(items--)
+		  {
+		    parse_packet (reader_id, packet, sizeof(TBeaconEnvelope));
+		    packet+=sizeof(TBeaconEnvelope);
+		  }
+		}
+	}
+    }
+  return 0;
+}
+
+static int
+listen_packets (void)
+{
+  int sock, items;
+  uint32_t reader_id;
+  TBeaconEnvelope beacons[100], *pkt;
+  struct sockaddr_in si_me, si_other;
+  socklen_t slen = sizeof (si_other);
+  pthread_t thread_handle;
 
   if ((sock = socket (AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
     diep (NULL, "socket");
@@ -314,196 +571,25 @@ main (void)
 
 	  items /= sizeof (TBeaconEnvelope);
 	  if (!items)
-	    {
-	      printf ("Too small packet received\n");
-	      continue;
-	    }
+	    continue;
 
 	  pkt = beacons;
 	  reader_id = ntohl (si_other.sin_addr.s_addr);
 
 	  while (items--)
-	    {
-	      shuffle_tx_byteorder (pkt->block, XXTEA_BLOCK_COUNT);
-	      xxtea_decode (pkt->block, XXTEA_BLOCK_COUNT, tea_key);
-	      shuffle_tx_byteorder (pkt->block, XXTEA_BLOCK_COUNT);
-
-	      if (crc16
-		  (pkt->byte,
-		   sizeof (pkt->pkt) - sizeof (pkt->pkt.crc)) !=
-		  ntohs (pkt->pkt.crc))
-		{
-		  printf ("CRC error from reader 0x%08X\n", reader_id);
-		  continue;
-		}
-
-	      switch (pkt->pkt.proto)
-		{
-		case RFBPROTO_BEACONTRACKER:
-		  {
-		    tag_id = ntohs (pkt->pkt.oid);
-		    tag_sequence = ntohl (pkt->pkt.p.tracker.seq);
-		    tag_strength = pkt->pkt.p.tracker.strength;
-		    tag_flags = (pkt->pkt.flags & RFBFLAGS_SENSOR) ?
-		      TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
-		  }
-		  break;
-
-		case RFBPROTO_PROXTRACKER:
-		  tag_id = ntohs (pkt->pkt.oid);
-		  tag_sequence = ntohl (pkt->pkt.p.tracker.seq);
-		  tag_strength = pkt->pkt.p.tracker.strength
-		    & (STRENGTH_LEVELS_COUNT - 1);
-		  tag_flags = (pkt->pkt.flags & RFBFLAGS_SENSOR) ?
-		    TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
-		  break;
-
-		case RFBPROTO_PROXREPORT:
-		  tag_id = ntohs (pkt->pkt.oid);
-		  tag_flags = (pkt->pkt.flags & RFBFLAGS_SENSOR) ?
-		    TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
-
-		  tag_sequence = ntohs (pkt->pkt.p.prox.seq);
-		  tag_strength = (STRENGTH_LEVELS_COUNT - 1);
-		  tag_flags |= TAGSIGHTINGFLAG_SHORT_SEQUENCE;
-
-		  for (j = 0; j < PROX_MAX; j++)
-		    {
-		      tag_sighting = (ntohs (pkt->pkt.p.prox.oid_prox[j]));
-		      if (tag_sighting)
-			{
-			}
-		    }
-		  break;
-		case RFBPROTO_READER_ANNOUNCE:
-		  tag_strength = -1;
-		  tag_sequence = 0;
-		  break;
-		default:
-		  printf ("unknown packet protocol [%i]\n", pkt->pkt.proto);
-		  tag_strength = -1;
-		  tag_sequence = 0;
-		}
-
-	      if ((tag_strength >= 0)
-		  && (item =
-		      (TEstimatorItem *)
-		      g_map_reader.Add ((((uint64_t) reader_id) << 32) |
-					tag_id, &item_mutex)) != NULL)
-		{
-		  timestamp = time (NULL);
-		  item->timestamp = timestamp;
-
-		  // initialize on first occurence
-		  if (!item->tag_id)
-		    {
-		      item->tag_id = tag_id;
-
-		      for (t = 0; t < READER_COUNT; t++)
-			if (g_ReaderList[t].id == reader_id)
-			  {
-			    item->reader = &g_ReaderList[t];
-			    break;
-			  }
-		      if (t < READER_COUNT)
-			item->reader_id = reader_id;
-		      else
-			{
-			  printf ("unknown reader 0x%08X\n", reader_id);
-			  item->reader = NULL;
-			  item->reader_id = 0;
-			  reader_id = 0;
-			}
-		    }
-
-		  if ((tag =
-		       (TTagItem *) g_map_tag.Add (tag_id,
-						   &tag_mutex)) == NULL)
-		    diep ("can't add tag");
-		  else
-		    {
-		      // on first occurence
-		      if (!tag->id)
-			{
-			  printf ("new tag %u seen\n", tag_id);
-			  tag->id = tag_id;
-			  tag->last_calculated = microtime ();
-			}
-		      tag->last_reader = item->reader;
-		      tag->last_seen = timestamp;
-		      // TODO: fix wrapping of 16 bit sequence numbers
-		      if (tag_flags & TAGSIGHTINGFLAG_SHORT_SEQUENCE)
-			tag->sequence =
-			  (tag->sequence & ~0xFFFF) | tag_sequence;
-
-		      item->tag = tag;
-		      pthread_mutex_unlock (tag_mutex);
-		    }
-
-		  delta_t = timestamp - item->last_seen;
-		  if (delta_t >= MAX_AGGREGATION_SECONDS)
-		    {
-		      memset (&item->levels, 0, sizeof (item->levels));
-		      memset (&item->strength, 0, sizeof (item->strength));
-		      item->fifo_pos = 0;
-		      item->last_seen = timestamp;
-		    }
-		  else
-		    {
-		      if (delta_t)
-			{
-			  item->fifo_pos++;
-			  if (item->fifo_pos >= MAX_AGGREGATION_SECONDS)
-			    item->fifo_pos = 0;
-			}
-
-		      aggregation = &item->levels[item->fifo_pos];
-
-		      // reset values to zero
-		      if (delta_t)
-			{
-			  memset (aggregation, 0, sizeof (*aggregation));
-			  aggregation->time = timestamp;
-			}
-		      aggregation->strength[tag_strength]++;
-
-		      if (delta_t)
-			{
-			  memset (&item->strength, 0,
-				  sizeof (item->strength));
-			  aggregation = item->levels;
-			  for (t = 0; t < MAX_AGGREGATION_SECONDS; t++)
-			    {
-			      for (j = 0; j < STRENGTH_LEVELS_COUNT; j++)
-				if ((timestamp - aggregation->time) <=
-				    AGGREGATION_TIMEOUT (j))
-				  item->strength[j] +=
-				    aggregation->strength[j];
-			      aggregation++;
-			    }
-			}
-		    }
-
-		  if (tag_flags & TAGSIGHTINGFLAG_BUTTON_PRESS)
-		    tag->button = TAGSIGHTING_BUTTON_TIME;
-
-		  printf
-		    ("id:%04u reader:%03u proto:%03u strength:%u button:%03u levels:",
-		     tag_id, reader_id & 0xFF, pkt->pkt.proto,
-		     tag_strength, tag->button);
-		  for (j = 0; j < STRENGTH_LEVELS_COUNT; j++)
-		    printf ("%03u,", item->strength[j]);
-		  printf ("\n");
-
-		  fflush (stdout);
-
-		  pthread_mutex_unlock (item_mutex);
-		}
-
-	      // process next packet
-	      pkt++;
-	    }
+	    parse_packet (reader_id, pkt++,sizeof(*pkt));
 	}
     }
+
   return 0;
+}
+
+int
+main (int argc, char **argv)
+{
+  //check command line arguments.
+  if(argc<=1)
+    return listen_packets();
+  else
+    return parse_pcap(argv[1]);
 }
