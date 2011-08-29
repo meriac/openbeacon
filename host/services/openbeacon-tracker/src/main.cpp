@@ -279,12 +279,17 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
   tag->vy += (F * delta_t) / TAG_MASS;
   tag->py += F * delta_t * delta_t / (TAG_MASS * 2.0);
 
-  printf ("tag id=%u px=%f py=%f\n", tag->id, tag->px, tag->py);
+  printf ("tag id=%04u px=%06.1f py=%06.1f\n", tag->id, tag->px, tag->py);
 }
 
 static void
 EstimationStep(double timestamp, bool realtime)
 {
+  if(realtime)
+  {
+    sleep (1);
+    printf("[TICK]\n");
+  }
   g_map_tag.IterateLocked (&ThreadIterateForceReset, timestamp, realtime);
   g_map_reader.IterateLocked (&ThreadIterateLocked, timestamp, realtime);
   g_map_tag.IterateLocked (&ThreadIterateForceCalculate, timestamp, realtime);
@@ -294,10 +299,7 @@ static void *
 ThreadEstimation (void *context)
 {
   while (g_DoEstimation)
-    {
-      EstimationStep(microtime(),true);
-      sleep (1);
-    }
+    EstimationStep(microtime(),true);
   return NULL;
 }
 
@@ -604,8 +606,6 @@ parse_pcap (const char *file, bool realtime)
 	    {
 	      timestamp_old=timestamp;
 	      EstimationStep(timestamp,realtime);
-	      if(realtime)
-		sleep (1);
 	    }
 	    parse_packet (timestamp, ntohl (log.ip), &log.env, sizeof (log.env), false);
 	  }
@@ -645,8 +645,6 @@ parse_pcap (const char *file, bool realtime)
 		{
 		  timestamp_old=timestamp;
 		  EstimationStep(timestamp,realtime);
-		  if(realtime)
-		    sleep (1);
 		}
 
 		/* process all packets in this packet */
