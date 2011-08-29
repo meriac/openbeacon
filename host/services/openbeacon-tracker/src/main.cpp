@@ -305,7 +305,7 @@ EstimationStep(double timestamp, bool realtime)
   for(i=0;i<(int)READER_COUNT;i++)
   {
     if(g_reader_stats[i])
-      printf("    {\"id\":%u,\"index\":%u,\"px\":%u,\"py\":%u,\"seen\":%u},\n", reader->id, i, (int)reader->x, (int)reader->y, g_reader_stats[i]);
+      printf("    {\"id\":%u,\"px\":%u,\"py\":%u,\"seen\":%u},\n", reader->id, (int)reader->x, (int)reader->y, g_reader_stats[i]);
     reader++;
   }
   printf("  ]\n}\n");
