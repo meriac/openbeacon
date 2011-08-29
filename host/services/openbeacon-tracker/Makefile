@@ -15,7 +15,7 @@ all: $(TARGET)
 run: $(TARGET)
 	./$(TARGET)
 
-replay: $(TARGET) logs/$(LOGFILE)
+demo: $(TARGET) logs/$(LOGFILE)
 	./$(TARGET) logs/$(LOGFILE) 1
 
 logs/$(LOGFILE): logs/$(LOGFILE).bz2
