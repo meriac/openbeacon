@@ -287,16 +287,17 @@ static void
 EstimationStep(double timestamp, bool realtime)
 {
   int i;
+  static uint32_t sequence = 0;
   const TReaderItem *reader=g_ReaderList;
 
   if(realtime)
-    sleep (1);
+    usleep (100*1000);
 
   g_map_tag.IterateLocked (&ThreadIterateForceReset, timestamp, realtime);
   g_map_reader.IterateLocked (&ThreadIterateLocked, timestamp, realtime);
 
-  printf("{\n  \"time\":%u,\n",(uint32_t)timestamp);
-
+  printf("{\n  \"id\":%u,\n",sequence++);
+  printf("  \"time\":%u,\n",(uint32_t)timestamp);
   printf("  \"tag\":[\n");
   g_map_tag.IterateLocked (&ThreadIterateForceCalculate, timestamp, realtime);
   printf("  ],\n");
