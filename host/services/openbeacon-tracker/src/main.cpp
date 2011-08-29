@@ -279,17 +279,14 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
   tag->vy += (F * delta_t) / TAG_MASS;
   tag->py += F * delta_t * delta_t / (TAG_MASS * 2.0);
 
-  printf ("tag id=%04u px=%06.1f py=%06.1f\n", tag->id, tag->px, tag->py);
+  printf ("tag:{id:%04u,time:%09i,px:%04i,py:%04i}\n", tag->id, (int)timestamp, (int)tag->px, (int)tag->py);
 }
 
 static void
 EstimationStep(double timestamp, bool realtime)
 {
   if(realtime)
-  {
     sleep (1);
-    printf("[TICK]\n");
-  }
   g_map_tag.IterateLocked (&ThreadIterateForceReset, timestamp, realtime);
   g_map_reader.IterateLocked (&ThreadIterateLocked, timestamp, realtime);
   g_map_tag.IterateLocked (&ThreadIterateForceCalculate, timestamp, realtime);
