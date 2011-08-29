@@ -47,6 +47,7 @@
 
 static bmMapHandleToItem g_map_reader, g_map_tag;
 static int g_DoEstimation = 1;
+static uint32_t g_reader_stats[READER_COUNT];
 
 #define XXTEA_KEY_NONE 0
 #define XXTEA_KEY_25C3_BETA 1
@@ -105,7 +106,7 @@ typedef struct
 typedef struct
 {
   uint32_t last_seen, fifo_pos;
-  uint32_t tag_id, reader_id;
+  uint32_t tag_id, reader_id, reader_index;
   double timestamp;
   const TReaderItem *reader;
   TTagItem *tag;
@@ -279,17 +280,38 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
   tag->vy += (F * delta_t) / TAG_MASS;
   tag->py += F * delta_t * delta_t / (TAG_MASS * 2.0);
 
-  printf ("tag:{id:%04u,time:%09i,px:%04i,py:%04i}\n", tag->id, (int)timestamp, (int)tag->px, (int)tag->py);
+  printf ("    {\"id\":%u,\"px\":%i,\"py\":%i},\n", tag->id, (int)tag->px, (int)tag->py);
 }
 
 static void
 EstimationStep(double timestamp, bool realtime)
 {
+  int i;
+  const TReaderItem *reader=g_ReaderList;
+
   if(realtime)
     sleep (1);
+
   g_map_tag.IterateLocked (&ThreadIterateForceReset, timestamp, realtime);
   g_map_reader.IterateLocked (&ThreadIterateLocked, timestamp, realtime);
+
+  printf("{\n  \"time\":%u,\n",(uint32_t)timestamp);
+
+  printf("  \"tag\":[\n");
   g_map_tag.IterateLocked (&ThreadIterateForceCalculate, timestamp, realtime);
+  printf("  ],\n");
+
+  printf("  \"reader\":[\n");
+  for(i=0;i<(int)READER_COUNT;i++)
+  {
+    if(g_reader_stats[i])
+      printf("    {\"id\":%u,\"index\":%u,\"px\":%u,\"py\":%u,\"seen\":%u},\n", reader->id, i, (int)reader->x, (int)reader->y, g_reader_stats[i]);
+    reader++;
+  }
+  printf("  ]\n}\n");
+
+  /* reset reader stats */
+  memset(&g_reader_stats,0,sizeof(g_reader_stats));
 }
 
 static void *
@@ -478,20 +500,26 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len, b
 
 	  for (t = 0; t < READER_COUNT; t++)
 	    if (g_ReaderList[t].id == reader_id)
-	      {
-		item->reader = &g_ReaderList[t];
-		break;
-	      }
+	      break;
 	  if (t < READER_COUNT)
+	  {
+	    item->reader = &g_ReaderList[t];
 	    item->reader_id = reader_id;
+	    item->reader_index = t;
+	  }
 	  else
 	    {
 	      printf ("unknown reader 0x%08X\n", reader_id);
 	      item->reader = NULL;
 	      item->reader_id = 0;
+	      item->reader_index = 0;
 	      reader_id = 0;
 	    }
 	}
+
+      /* increment reader stats for each packet */
+      if(item->reader_id)
+        g_reader_stats[item->reader_index]++;
 
       if ((tag = (TTagItem *) g_map_tag.Add (tag_id, &tag_mutex)) == NULL)
 	diep ("can't add tag");
