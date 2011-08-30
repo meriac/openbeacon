@@ -31,6 +31,8 @@ demo_fastest: $(TARGET) $(LOGFILE)
 	rm -f $(FILTERFILE_PREFIX)*
 	./$(TARGET) $(LOGFILE) 0 | bzip2 -9 >$(LOGJSON)
 
+logfile: $(LOGFILE)
+
 $(LOGFILE): $(LOGFILE).bz2
 	bzip2 -cd $^ > $@
 
