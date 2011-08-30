@@ -329,6 +329,9 @@ EstimationStep (double timestamp, bool realtime)
       reader++;
     }
   printf ("\n    ]\n},");
+
+  /* propagate object on stdout */
+  fflush (stdout);
 }
 
 static void *
@@ -492,10 +495,12 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	    }
 	}
       break;
+
     case RFBPROTO_READER_ANNOUNCE:
       tag_strength = -1;
       tag_sequence = 0;
       break;
+
     default:
       fprintf (stderr, "unknown packet protocol[%03i] key[%i] ",
 	       env.pkt.proto, key_id);
@@ -630,17 +635,6 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
       if (tag_flags & TAGSIGHTINGFLAG_BUTTON_PRESS)
 	tag->button = TAGSIGHTING_BUTTON_TIME;
 
-#if 0
-      fprintf
-	(stderr,
-	 "id:%04u reader:%03u proto:%03u strength:%u button:%03u levels:",
-	 tag_id, reader_id & 0xFF, env.pkt.proto, tag_strength, tag->button);
-      for (j = 0; j < STRENGTH_LEVELS_COUNT; j++)
-	fprintf (stderr, "%03u,", item->strength[j]);
-      fprintf (stderr, "\n");
-
-      fflush (stdout);
-#endif
       pthread_mutex_unlock (item_mutex);
     }
 }
