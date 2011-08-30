@@ -82,6 +82,7 @@ const long tea_keys[][4] = {
 
 #define MIN_AGGREGATION_SECONDS 5
 #define MAX_AGGREGATION_SECONDS 16
+#define RESET_TAG_POSITION_SECONDS (60*5)
 #define AGGREGATION_TIMEOUT(strength) ((uint32_t)(MIN_AGGREGATION_SECONDS+(((MAX_AGGREGATION_SECONDS-MIN_AGGREGATION_SECONDS)/(STRENGTH_LEVELS_COUNT-1))*(strength))))
 
 typedef struct
@@ -250,8 +251,8 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
   delta_t = timestamp - tag->last_calculated;
   tag->last_calculated = timestamp;
 
-  /* ignore tags that were invisible for more than 2*MAX_AGGREGATION_SECONDS */
-  if ((timestamp - tag->last_seen) > (2 * MAX_AGGREGATION_SECONDS))
+  /* ignore tags that were invisible for more than RESET_TAG_POSITION_SECONDS */
+  if ((timestamp - tag->last_seen) > RESET_TAG_POSITION_SECONDS)
     {
       tag->vx = tag->vy = 0;
       return;
@@ -392,6 +393,8 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
   pthread_mutex_t *item_mutex, *tag_mutex;
   int tag_strength, j, key_id;
   TBeaconEnvelope env;
+  TTagItemStrength *power;
+  double px,py;
 
   if (len != sizeof (env))
     return;
@@ -524,6 +527,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	      item->reader = &g_ReaderList[t];
 	      item->reader_id = reader_id;
 	      item->reader_index = t;
+	      item->last_seen = 0;
 	    }
 	  else
 	    {
@@ -549,10 +553,6 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	      fprintf (stderr, "new tag %u seen\n", tag_id);
 	      tag->id = tag_id;
 	      tag->last_calculated = timestamp;
-
-	      /* for newly found tags start at first reader seen */
-	      tag->px = item->reader->x;
-	      tag->py = item->reader->y;
 	    }
 
 	  tag->last_reader = item->reader;
@@ -577,6 +577,24 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	    memset (&item->levels, 0, sizeof (item->levels));
 	    memset (&item->strength, 0, sizeof (item->strength));
 	    item->fifo_pos = 0;
+
+	    if(delta_t >= RESET_TAG_POSITION_SECONDS)
+	    {
+	      /* reset tag origin to first reader seen */
+	      px = item->reader->x;
+	      py = item->reader->y;
+	      tag->px = px;
+	      tag->py = py;
+	      power = tag->power;
+
+	      for(t=0;t<STRENGTH_LEVELS_COUNT;t++)
+	      {
+		power->px = px;
+		power->py = py;
+		power++;
+	      }
+	    }
+
 	    delta_t = 0;
 	  }
 	  else
