@@ -564,13 +564,15 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	  pthread_mutex_unlock (tag_mutex);
 	}
 
+      /* get time difference since last run */
       delta_t = timestamp - item->last_seen;
+      item->last_seen = timestamp;
+
       if (delta_t >= MAX_AGGREGATION_SECONDS)
 	{
 	  memset (&item->levels, 0, sizeof (item->levels));
 	  memset (&item->strength, 0, sizeof (item->strength));
 	  item->fifo_pos = 0;
-	  item->last_seen = timestamp;
 	  delta_t = 0;
 
 	  /* for newly found tags start at first reader seen */
