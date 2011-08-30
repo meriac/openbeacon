@@ -48,6 +48,7 @@
 static bmMapHandleToItem g_map_reader, g_map_tag;
 static int g_DoEstimation = 1;
 static uint32_t g_reader_stats[READER_COUNT];
+static bool g_first;
 
 #define XXTEA_KEY_NONE 0
 #define XXTEA_KEY_25C3_BETA 1
@@ -280,13 +281,15 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
   tag->vy += (F * delta_t) / TAG_MASS;
   tag->py += F * delta_t * delta_t / (TAG_MASS * 2.0);
 
-  printf ("    {\"id\":%u,\"px\":%i,\"py\":%i},\n", tag->id, (int)tag->px, (int)tag->py);
+  printf ("%s    {\"id\":%u,\"px\":%i,\"py\":%i}",
+    g_first ? "":",\n", tag->id, (int)tag->px, (int)tag->py);
+  g_first=false;
 }
 
 static void
 EstimationStep(double timestamp, bool realtime)
 {
-  int i;
+  int i,j;
   static uint32_t sequence = 0;
   const TReaderItem *reader=g_ReaderList;
 
@@ -299,15 +302,17 @@ EstimationStep(double timestamp, bool realtime)
   printf("{\n  \"id\":%u,\n",sequence++);
   printf("  \"time\":%u,\n",(uint32_t)timestamp);
   printf("  \"tag\":[\n");
+  g_first=true;
   g_map_tag.IterateLocked (&ThreadIterateForceCalculate, timestamp, realtime);
-  printf("    ],\n  \"reader\":[\n");
+  printf("\n    ],\n  \"reader\":[\n");
+  j=0;
   for(i=0;i<(int)READER_COUNT;i++)
   {
     if(g_reader_stats[i])
-      printf("    {\"id\":%u,\"px\":%u,\"py\":%u,\"seen\":%u},\n", reader->id, (int)reader->x, (int)reader->y, g_reader_stats[i]);
+      printf("%s    {\"id\":%u,\"px\":%u,\"py\":%u,\"seen\":%u}", j++?",\n":"", reader->id, (int)reader->x, (int)reader->y, g_reader_stats[i]);
     reader++;
   }
-  printf("    ]\n},");
+  printf("\n    ]\n},");
 
   /* reset reader stats */
   memset(&g_reader_stats,0,sizeof(g_reader_stats));
