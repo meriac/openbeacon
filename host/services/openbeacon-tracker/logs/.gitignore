@@ -2,4 +2,6 @@
 *.bin.bz2
 *.pdf
 *.log
+*.json
+*.json.*
 raw/raw-packets_*
