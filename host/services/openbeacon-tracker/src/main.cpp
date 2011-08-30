@@ -306,7 +306,7 @@ EstimationStep (double timestamp, bool realtime)
   const TReaderItem *reader = g_ReaderList;
 
   if (realtime)
-    usleep (100 * 1000);
+    usleep (250 * 1000);
 
   g_map_tag.IterateLocked (&ThreadIterateForceReset, timestamp, realtime);
   g_map_reader.IterateLocked (&ThreadIterateLocked, timestamp, realtime);
