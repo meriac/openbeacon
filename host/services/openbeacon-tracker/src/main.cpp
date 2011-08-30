@@ -47,7 +47,7 @@
 
 static bmMapHandleToItem g_map_reader, g_map_tag;
 static int g_DoEstimation = 1;
-static uint32_t g_reader_stats[READER_COUNT];
+static uint32_t g_reader_last_seen[READER_COUNT];
 static bool g_first;
 
 #define XXTEA_KEY_NONE 0
@@ -83,6 +83,7 @@ const long tea_keys[][4] = {
 #define MIN_AGGREGATION_SECONDS 5
 #define MAX_AGGREGATION_SECONDS 16
 #define RESET_TAG_POSITION_SECONDS (60*5)
+#define READER_TIMEOUT_SECONDS (60*15)
 #define AGGREGATION_TIMEOUT(strength) ((uint32_t)(MIN_AGGREGATION_SECONDS+(((MAX_AGGREGATION_SECONDS-MIN_AGGREGATION_SECONDS)/(STRENGTH_LEVELS_COUNT-1))*(strength))))
 
 typedef struct
@@ -320,18 +321,14 @@ EstimationStep (double timestamp, bool realtime)
   j = 0;
   for (i = 0; i < (int) READER_COUNT; i++)
     {
-      if (g_reader_stats[i])
+      if ((timestamp-g_reader_last_seen[i])<READER_TIMEOUT_SECONDS)
 	printf
-	  ("%s    {\"id\":%u,\"px\":%u,\"py\":%u,\"room\":%u,\"floor\":%u,\"group\":%u,\"seen\":%u}",
+	  ("%s    {\"id\":%u,\"px\":%u,\"py\":%u,\"room\":%u,\"floor\":%u,\"group\":%u}",
 	   j++ ? ",\n" : "", reader->id, (int) reader->x, (int) reader->y,
-	   (int) reader->room, (int) reader->floor, (int) reader->group,
-	   g_reader_stats[i]);
+	   (int) reader->room, (int) reader->floor, (int) reader->group);
       reader++;
     }
   printf ("\n    ]\n},");
-
-  /* reset reader stats */
-  memset (&g_reader_stats, 0, sizeof (g_reader_stats));
 }
 
 static void *
@@ -541,7 +538,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 
       /* increment reader stats for each packet */
       if (item->reader_id)
-	g_reader_stats[item->reader_index]++;
+	g_reader_last_seen[item->reader_index] = timestamp;
 
       if ((tag = (TTagItem *) g_map_tag.Add (tag_id, &tag_mutex)) == NULL)
 	diep ("can't add tag");
