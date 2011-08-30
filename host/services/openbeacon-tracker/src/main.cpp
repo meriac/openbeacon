@@ -300,16 +300,14 @@ EstimationStep(double timestamp, bool realtime)
   printf("  \"time\":%u,\n",(uint32_t)timestamp);
   printf("  \"tag\":[\n");
   g_map_tag.IterateLocked (&ThreadIterateForceCalculate, timestamp, realtime);
-  printf("  ],\n");
-
-  printf("  \"reader\":[\n");
+  printf("    ],\n  \"reader\":[\n");
   for(i=0;i<(int)READER_COUNT;i++)
   {
     if(g_reader_stats[i])
       printf("    {\"id\":%u,\"px\":%u,\"py\":%u,\"seen\":%u},\n", reader->id, (int)reader->x, (int)reader->y, g_reader_stats[i]);
     reader++;
   }
-  printf("  ]\n}\n");
+  printf("    ]\n},");
 
   /* reset reader stats */
   memset(&g_reader_stats,0,sizeof(g_reader_stats));
@@ -335,30 +333,30 @@ hex_dump (const void *data, unsigned int addr, unsigned int len)
 
   for (j = 0; j < len; j += 16)
     {
-      printf ("%08x:", start + j);
+      fprintf (stderr,"%08x:", start + j);
 
       for (i = 0; i < 16; i++)
 	{
 	  if (start + i + j >= addr && start + i + j < addr + len)
-	    printf (" %02x", buf[start + i + j]);
+	    fprintf (stderr," %02x", buf[start + i + j]);
 	  else
-	    printf ("   ");
+	    fprintf (stderr,"   ");
 	}
-      printf ("  |");
+      fprintf (stderr,"  |");
       for (i = 0; i < 16; i++)
 	{
 	  if (start + i + j >= addr && start + i + j < addr + len)
 	    {
 	      c = buf[start + i + j];
 	      if (c >= ' ' && c < 127)
-		printf ("%c", c);
+		fprintf (stderr,"%c", c);
 	      else
-		printf (".");
+		fprintf (stderr,".");
 	    }
 	  else
-	    printf (" ");
+	    fprintf (stderr," ");
 	}
-      printf ("|\n\r");
+      fprintf (stderr,"|\n\r");
     }
 }
 
@@ -410,7 +408,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len, b
 
   if (key_id < 0)
     {
-      printf ("CRC[0x%04X] error from reader 0x%08X\n",
+      fprintf (stderr,"CRC[0x%04X] error from reader 0x%08X\n",
 	      (int) crc16 ((const unsigned char *) data, len), reader_id);
       hex_dump (data, 0, len);
       return;
@@ -424,7 +422,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len, b
 	  {
 	    tag_strength = -1;
 	    tag_sequence = 0;
-	    printf ("unknown old packet protocol2[%i] key[%i] ",
+	    fprintf (stderr,"unknown old packet protocol2[%i] key[%i] ",
 		    env.old.proto2, key_id);
 	  }
 	else
@@ -478,7 +476,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len, b
       tag_sequence = 0;
       break;
     default:
-      printf ("unknown packet protocol[%03i] key[%i] ", env.pkt.proto,
+      fprintf (stderr,"unknown packet protocol[%03i] key[%i] ", env.pkt.proto,
 	      key_id);
       hex_dump (&env, 0, sizeof (env));
       tag_strength = -1;
@@ -510,7 +508,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len, b
 	  }
 	  else
 	    {
-	      printf ("unknown reader 0x%08X\n", reader_id);
+	      fprintf (stderr,"unknown reader 0x%08X\n", reader_id);
 	      item->reader = NULL;
 	      item->reader_id = 0;
 	      item->reader_index = 0;
@@ -529,7 +527,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len, b
 	  /* on first occurence */
 	  if (!tag->id)
 	    {
-	      printf ("new tag %u seen\n", tag_id);
+	      fprintf (stderr,"new tag %u seen\n", tag_id);
 	      tag->id = tag_id;
 	      tag->last_calculated = timestamp;
 	    }
@@ -589,12 +587,12 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len, b
 	tag->button = TAGSIGHTING_BUTTON_TIME;
 
 #if 0
-      printf
-	("id:%04u reader:%03u proto:%03u strength:%u button:%03u levels:",
+      fprintf
+	(stderr,"id:%04u reader:%03u proto:%03u strength:%u button:%03u levels:",
 	 tag_id, reader_id & 0xFF, env.pkt.proto, tag_strength, tag->button);
       for (j = 0; j < STRENGTH_LEVELS_COUNT; j++)
-	printf ("%03u,", item->strength[j]);
-      printf ("\n");
+	fprintf (stderr,"%03u,", item->strength[j]);
+      fprintf (stderr,"\n");
 
       fflush (stdout);
 #endif
@@ -738,6 +736,7 @@ int
 main (int argc, char **argv)
 {
   bool realtime;
+
   g_map_reader.SetItemSize (sizeof (TEstimatorItem));
   g_map_tag.SetItemSize (sizeof (TTagItem));
 
