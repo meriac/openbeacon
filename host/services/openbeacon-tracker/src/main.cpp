@@ -568,8 +568,8 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len, b
 	  item->last_seen = timestamp;
 
 	  /* for newly found tags start at first reader seen */
-	  tag->px=item->reader->x;
-	  tag->px=item->reader->y;
+	  tag->px=tag->last_reader->x;
+	  tag->py=tag->last_reader->y;
 	}
       else
 	{
