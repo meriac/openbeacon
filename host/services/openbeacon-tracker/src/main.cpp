@@ -566,6 +566,10 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len, b
 	  memset (&item->strength, 0, sizeof (item->strength));
 	  item->fifo_pos = 0;
 	  item->last_seen = timestamp;
+
+	  /* for newly found tags start at first reader seen */
+	  tag->px=item->reader->x;
+	  tag->px=item->reader->y;
 	}
       else
 	{
