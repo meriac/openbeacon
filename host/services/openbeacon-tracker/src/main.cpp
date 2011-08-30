@@ -553,7 +553,12 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	      fprintf (stderr, "new tag %u seen\n", tag_id);
 	      tag->id = tag_id;
 	      tag->last_calculated = timestamp;
+
+	      /* for newly found tags start at first reader seen */
+	      tag->px = tag->last_reader->x;
+	      tag->py = tag->last_reader->y;
 	    }
+
 	  tag->last_reader = item->reader;
 	  tag->last_seen = timestamp;
 	  /* TODO: fix wrapping of 16 bit sequence numbers */
@@ -574,10 +579,6 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	  memset (&item->strength, 0, sizeof (item->strength));
 	  item->fifo_pos = 0;
 	  delta_t = 0;
-
-	  /* for newly found tags start at first reader seen */
-	  tag->px = tag->last_reader->x;
-	  tag->py = tag->last_reader->y;
 	}
 
       if (delta_t)
