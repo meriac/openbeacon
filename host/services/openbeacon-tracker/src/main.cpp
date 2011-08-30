@@ -189,7 +189,7 @@ microtime (void)
   struct timeval tv;
 
   if (!gettimeofday (&tv, NULL))
-    return microtime_calc(&tv);
+    return microtime_calc (&tv);
   else
     return 0;
 }
@@ -253,11 +253,11 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
   tag->last_calculated = timestamp;
 
   /* ignore tags that were invisible for more than 2*MAX_AGGREGATION_SECONDS */
-  if((timestamp - tag->last_seen)>(2*MAX_AGGREGATION_SECONDS))
-  {
-    tag->vx = tag->vy = 0;
-    return;
-  }
+  if ((timestamp - tag->last_seen) > (2 * MAX_AGGREGATION_SECONDS))
+    {
+      tag->vx = tag->vy = 0;
+      return;
+    }
 
   px = py = 0;
 
@@ -293,49 +293,53 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
   tag->py += F * delta_t * delta_t / (TAG_MASS * 2.0);
 
   printf ("%s    {\"id\":%u,\"px\":%i,\"py\":%i}",
-    g_first ? "":",\n", tag->id, (int)tag->px, (int)tag->py);
+	  g_first ? "" : ",\n", tag->id, (int) tag->px, (int) tag->py);
 
-  g_first=false;
+  g_first = false;
 }
 
 static void
-EstimationStep(double timestamp, bool realtime)
+EstimationStep (double timestamp, bool realtime)
 {
-  int i,j;
+  int i, j;
   static uint32_t sequence = 0;
-  const TReaderItem *reader=g_ReaderList;
+  const TReaderItem *reader = g_ReaderList;
 
-  if(realtime)
-    usleep (100*1000);
+  if (realtime)
+    usleep (100 * 1000);
 
   g_map_tag.IterateLocked (&ThreadIterateForceReset, timestamp, realtime);
   g_map_reader.IterateLocked (&ThreadIterateLocked, timestamp, realtime);
 
   /* tracking dump state in JSON format */
-  printf("{\n  \"id\":%u,\n",sequence++);
-  printf("  \"time\":%u,\n",(uint32_t)timestamp);
-  printf("  \"tag\":[\n");
-  g_first=true;
+  printf ("{\n  \"id\":%u,\n", sequence++);
+  printf ("  \"time\":%u,\n", (uint32_t) timestamp);
+  printf ("  \"tag\":[\n");
+  g_first = true;
   g_map_tag.IterateLocked (&ThreadIterateForceCalculate, timestamp, realtime);
-  printf("\n    ],\n  \"reader\":[\n");
-  j=0;
-  for(i=0;i<(int)READER_COUNT;i++)
-  {
-    if(g_reader_stats[i])
-      printf("%s    {\"id\":%u,\"px\":%u,\"py\":%u,\"room\":%u,\"floor\":%u,\"group\":%u,\"seen\":%u}", j++?",\n":"", reader->id, (int)reader->x, (int)reader->y, (int)reader->room, (int)reader->floor, (int)reader->group, g_reader_stats[i]);
-    reader++;
-  }
-  printf("\n    ]\n},");
+  printf ("\n    ],\n  \"reader\":[\n");
+  j = 0;
+  for (i = 0; i < (int) READER_COUNT; i++)
+    {
+      if (g_reader_stats[i])
+	printf
+	  ("%s    {\"id\":%u,\"px\":%u,\"py\":%u,\"room\":%u,\"floor\":%u,\"group\":%u,\"seen\":%u}",
+	   j++ ? ",\n" : "", reader->id, (int) reader->x, (int) reader->y,
+	   (int) reader->room, (int) reader->floor, (int) reader->group,
+	   g_reader_stats[i]);
+      reader++;
+    }
+  printf ("\n    ]\n},");
 
   /* reset reader stats */
-  memset(&g_reader_stats,0,sizeof(g_reader_stats));
+  memset (&g_reader_stats, 0, sizeof (g_reader_stats));
 }
 
 static void *
 ThreadEstimation (void *context)
 {
   while (g_DoEstimation)
-    EstimationStep(microtime(),true);
+    EstimationStep (microtime (), true);
   return NULL;
 }
 
@@ -351,35 +355,36 @@ hex_dump (const void *data, unsigned int addr, unsigned int len)
 
   for (j = 0; j < len; j += 16)
     {
-      fprintf (stderr,"%08x:", start + j);
+      fprintf (stderr, "%08x:", start + j);
 
       for (i = 0; i < 16; i++)
 	{
 	  if (start + i + j >= addr && start + i + j < addr + len)
-	    fprintf (stderr," %02x", buf[start + i + j]);
+	    fprintf (stderr, " %02x", buf[start + i + j]);
 	  else
-	    fprintf (stderr,"   ");
+	    fprintf (stderr, "   ");
 	}
-      fprintf (stderr,"  |");
+      fprintf (stderr, "  |");
       for (i = 0; i < 16; i++)
 	{
 	  if (start + i + j >= addr && start + i + j < addr + len)
 	    {
 	      c = buf[start + i + j];
 	      if (c >= ' ' && c < 127)
-		fprintf (stderr,"%c", c);
+		fprintf (stderr, "%c", c);
 	      else
-		fprintf (stderr,".");
+		fprintf (stderr, ".");
 	    }
 	  else
-	    fprintf (stderr," ");
+	    fprintf (stderr, " ");
 	}
-      fprintf (stderr,"|\n\r");
+      fprintf (stderr, "|\n\r");
     }
 }
 
 static void
-parse_packet (double timestamp, uint32_t reader_id, const void *data, int len, bool decrypt)
+parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
+	      bool decrypt)
 {
   TTagItem *tag;
   TEstimatorItem *item;
@@ -426,8 +431,8 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len, b
 
   if (key_id < 0)
     {
-      fprintf (stderr,"CRC[0x%04X] error from reader 0x%08X\n",
-	      (int) crc16 ((const unsigned char *) data, len), reader_id);
+      fprintf (stderr, "CRC[0x%04X] error from reader 0x%08X\n",
+	       (int) crc16 ((const unsigned char *) data, len), reader_id);
       hex_dump (data, 0, len);
       return;
     }
@@ -440,8 +445,8 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len, b
 	  {
 	    tag_strength = -1;
 	    tag_sequence = 0;
-	    fprintf (stderr,"unknown old packet protocol2[%i] key[%i] ",
-		    env.old.proto2, key_id);
+	    fprintf (stderr, "unknown old packet protocol2[%i] key[%i] ",
+		     env.old.proto2, key_id);
 	  }
 	else
 	  {
@@ -494,8 +499,8 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len, b
       tag_sequence = 0;
       break;
     default:
-      fprintf (stderr,"unknown packet protocol[%03i] key[%i] ", env.pkt.proto,
-	      key_id);
+      fprintf (stderr, "unknown packet protocol[%03i] key[%i] ",
+	       env.pkt.proto, key_id);
       hex_dump (&env, 0, sizeof (env));
       tag_strength = -1;
       tag_sequence = 0;
@@ -519,14 +524,14 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len, b
 	    if (g_ReaderList[t].id == reader_id)
 	      break;
 	  if (t < READER_COUNT)
-	  {
-	    item->reader = &g_ReaderList[t];
-	    item->reader_id = reader_id;
-	    item->reader_index = t;
-	  }
+	    {
+	      item->reader = &g_ReaderList[t];
+	      item->reader_id = reader_id;
+	      item->reader_index = t;
+	    }
 	  else
 	    {
-	      fprintf (stderr,"unknown reader 0x%08X\n", reader_id);
+	      fprintf (stderr, "unknown reader 0x%08X\n", reader_id);
 	      item->reader = NULL;
 	      item->reader_id = 0;
 	      item->reader_index = 0;
@@ -535,8 +540,8 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len, b
 	}
 
       /* increment reader stats for each packet */
-      if(item->reader_id)
-        g_reader_stats[item->reader_index]++;
+      if (item->reader_id)
+	g_reader_stats[item->reader_index]++;
 
       if ((tag = (TTagItem *) g_map_tag.Add (tag_id, &tag_mutex)) == NULL)
 	diep ("can't add tag");
@@ -545,7 +550,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len, b
 	  /* on first occurence */
 	  if (!tag->id)
 	    {
-	      fprintf (stderr,"new tag %u seen\n", tag_id);
+	      fprintf (stderr, "new tag %u seen\n", tag_id);
 	      tag->id = tag_id;
 	      tag->last_calculated = timestamp;
 	    }
@@ -566,42 +571,41 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len, b
 	  memset (&item->strength, 0, sizeof (item->strength));
 	  item->fifo_pos = 0;
 	  item->last_seen = timestamp;
+	  delta_t = 0;
 
 	  /* for newly found tags start at first reader seen */
-	  tag->px=tag->last_reader->x;
-	  tag->py=tag->last_reader->y;
+	  tag->px = tag->last_reader->x;
+	  tag->py = tag->last_reader->y;
 	}
-      else
+
+      if (delta_t)
 	{
-	  if (delta_t)
-	    {
-	      item->fifo_pos++;
-	      if (item->fifo_pos >= MAX_AGGREGATION_SECONDS)
-		item->fifo_pos = 0;
-	    }
+	  item->fifo_pos++;
+	  if (item->fifo_pos >= MAX_AGGREGATION_SECONDS)
+	    item->fifo_pos = 0;
+	}
 
-	  aggregation = &item->levels[item->fifo_pos];
+      aggregation = &item->levels[item->fifo_pos];
 
-	  /* reset values to zero */
-	  if (delta_t)
-	    {
-	      memset (aggregation, 0, sizeof (*aggregation));
-	      aggregation->time = timestamp;
-	    }
-	  aggregation->strength[tag_strength]++;
+      /* reset values to zero */
+      if (delta_t)
+	{
+	  memset (aggregation, 0, sizeof (*aggregation));
+	  aggregation->time = timestamp;
+	}
+      aggregation->strength[tag_strength]++;
 
-	  if (delta_t)
+      if (delta_t)
+	{
+	  memset (&item->strength, 0, sizeof (item->strength));
+	  aggregation = item->levels;
+	  for (t = 0; t < MAX_AGGREGATION_SECONDS; t++)
 	    {
-	      memset (&item->strength, 0, sizeof (item->strength));
-	      aggregation = item->levels;
-	      for (t = 0; t < MAX_AGGREGATION_SECONDS; t++)
-		{
-		  for (j = 0; j < STRENGTH_LEVELS_COUNT; j++)
-		    if ((timestamp - aggregation->time) <=
-			AGGREGATION_TIMEOUT (j))
-		      item->strength[j] += aggregation->strength[j];
-		  aggregation++;
-		}
+	      for (j = 0; j < STRENGTH_LEVELS_COUNT; j++)
+		if ((timestamp - aggregation->time) <=
+		    AGGREGATION_TIMEOUT (j))
+		  item->strength[j] += aggregation->strength[j];
+	      aggregation++;
 	    }
 	}
 
@@ -610,11 +614,12 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len, b
 
 #if 0
       fprintf
-	(stderr,"id:%04u reader:%03u proto:%03u strength:%u button:%03u levels:",
+	(stderr,
+	 "id:%04u reader:%03u proto:%03u strength:%u button:%03u levels:",
 	 tag_id, reader_id & 0xFF, env.pkt.proto, tag_strength, tag->button);
       for (j = 0; j < STRENGTH_LEVELS_COUNT; j++)
-	fprintf (stderr,"%03u,", item->strength[j]);
-      fprintf (stderr,"\n");
+	fprintf (stderr, "%03u,", item->strength[j]);
+      fprintf (stderr, "\n");
 
       fflush (stdout);
 #endif
@@ -633,10 +638,10 @@ parse_pcap (const char *file, bool realtime)
   const ip *ip_hdr;
   const udphdr *udp_hdr;
   const uint8_t *packet;
-  uint32_t reader_id, timestamp_old,timestamp;
+  uint32_t reader_id, timestamp_old, timestamp;
   TBeaconEnvelopeLog log;
 
-  timestamp_old=0;
+  timestamp_old = 0;
 
   if ((h = pcap_open_offline (file, error)) == NULL)
     {
@@ -646,15 +651,16 @@ parse_pcap (const char *file, bool realtime)
       else
 	{
 	  while (fread (&log, sizeof (log), 1, f) == 1)
-	  {
-	    timestamp = ntohl (log.timestamp);
-	    if(timestamp!=timestamp_old)
 	    {
-	      timestamp_old=timestamp;
-	      EstimationStep(timestamp,realtime);
+	      timestamp = ntohl (log.timestamp);
+	      if (timestamp != timestamp_old)
+		{
+		  timestamp_old = timestamp;
+		  EstimationStep (timestamp, realtime);
+		}
+	      parse_packet (timestamp, ntohl (log.ip), &log.env,
+			    sizeof (log.env), false);
 	    }
-	    parse_packet (timestamp, ntohl (log.ip), &log.env, sizeof (log.env), false);
-	  }
 	  fclose (f);
 	}
     }
@@ -686,19 +692,19 @@ parse_pcap (const char *file, bool realtime)
 		  continue;
 
 		/* run estimation every second */
-		timestamp=microtime_calc(&header.ts);
-		if((timestamp-timestamp_old)>=1)
-		{
-		  timestamp_old=timestamp;
-		  EstimationStep(timestamp,realtime);
-		}
+		timestamp = microtime_calc (&header.ts);
+		if ((timestamp - timestamp_old) >= 1)
+		  {
+		    timestamp_old = timestamp;
+		    EstimationStep (timestamp, realtime);
+		  }
 
 		/* process all packets in this packet */
 		reader_id = ntohl (ip_hdr->ip_src.s_addr);
 		while (items--)
 		  {
 		    parse_packet (timestamp, reader_id,
-			packet, sizeof (TBeaconEnvelope), true);
+				  packet, sizeof (TBeaconEnvelope), true);
 		    packet += sizeof (TBeaconEnvelope);
 		  }
 	      }
@@ -745,7 +751,7 @@ listen_packets (void)
 	  pkt = beacons;
 	  reader_id = ntohl (si_other.sin_addr.s_addr);
 
-	  timestamp = microtime();
+	  timestamp = microtime ();
 	  while (items--)
 	    parse_packet (timestamp, reader_id, pkt++, sizeof (*pkt), true);
 	}
@@ -766,8 +772,8 @@ main (int argc, char **argv)
   if (argc <= 1)
     return listen_packets ();
   else
-  {
-    realtime=(argc >= 3)?(atoi(argv[2])?true:false):false;
-    return parse_pcap (argv[1],realtime);
-  }
+    {
+      realtime = (argc >= 3) ? (atoi (argv[2]) ? true : false) : false;
+      return parse_pcap (argv[1], realtime);
+    }
 }
