@@ -511,8 +511,6 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	  g_map_reader.Add ((((uint64_t) reader_id) << 32) |
 			    tag_id, &item_mutex)) != NULL)
     {
-      item->last_seen = timestamp;
-
       /* initialize on first occurence */
       if (!item->tag_id)
 	{
@@ -569,23 +567,27 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 
       /* get time difference since last run */
       delta_t = timestamp - item->last_seen;
-      item->last_seen = timestamp;
-
-      if (delta_t >= MAX_AGGREGATION_SECONDS)
-	{
-	  memset (&item->levels, 0, sizeof (item->levels));
-	  memset (&item->strength, 0, sizeof (item->strength));
-	  item->fifo_pos = 0;
-	  delta_t = 0;
-	}
 
       if (delta_t)
 	{
-	  item->fifo_pos++;
-	  if (item->fifo_pos >= MAX_AGGREGATION_SECONDS)
+	  item->last_seen = timestamp;
+
+	  if (delta_t >= MAX_AGGREGATION_SECONDS)
+	  {
+	    memset (&item->levels, 0, sizeof (item->levels));
+	    memset (&item->strength, 0, sizeof (item->strength));
 	    item->fifo_pos = 0;
+	    delta_t = 0;
+	  }
+	  else
+	  {
+	    item->fifo_pos++;
+	    if (item->fifo_pos >= MAX_AGGREGATION_SECONDS)
+	      item->fifo_pos = 0;
+	  }
 	}
 
+      /* get current aggregation position */
       aggregation = &item->levels[item->fifo_pos];
 
       /* reset values to zero */
