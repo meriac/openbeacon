@@ -98,7 +98,7 @@ typedef struct
 typedef struct
 {
   uint32_t id, sequence, button;
-  uint32_t last_seen, last_calculated;
+  double last_seen, last_calculated;
   double px, py, vx, vy;
   const TReaderItem *last_reader;
   TTagItemStrength power[STRENGTH_LEVELS_COUNT];
@@ -108,7 +108,6 @@ typedef struct
 {
   uint32_t last_seen, fifo_pos;
   uint32_t tag_id, reader_id, reader_index;
-  double timestamp;
   const TReaderItem *reader;
   TTagItem *tag;
   uint8_t strength[STRENGTH_LEVELS_COUNT];
@@ -512,7 +511,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	  g_map_reader.Add ((((uint64_t) reader_id) << 32) |
 			    tag_id, &item_mutex)) != NULL)
     {
-      item->timestamp = timestamp;
+      item->last_seen = timestamp;
 
       /* initialize on first occurence */
       if (!item->tag_id)
