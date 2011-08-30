@@ -98,7 +98,7 @@ typedef struct
 typedef struct
 {
   uint32_t id, sequence, button;
-  double last_seen, last_calculated;
+  uint32_t last_seen, last_calculated;
   double px, py, vx, vy;
   const TReaderItem *last_reader;
   TTagItemStrength power[STRENGTH_LEVELS_COUNT];
@@ -106,8 +106,7 @@ typedef struct
 
 typedef struct
 {
-  double last_seen;
-  uint32_t fifo_pos;
+  uint32_t last_seen, fifo_pos;
   uint32_t tag_id, reader_id, reader_index;
   double timestamp;
   const TReaderItem *reader;
@@ -123,7 +122,7 @@ diep (const char *fmt, ...)
   va_start (ap, fmt);
   vfprintf (stderr, fmt, ap);
   va_end (ap);
-  (void) putc ('\n', stderr);
+  putc ('\n', stderr);
   exit (EXIT_FAILURE);
 }
 
