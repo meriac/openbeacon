@@ -98,7 +98,7 @@ typedef struct
 typedef struct
 {
   uint32_t id, sequence, button;
-  uint32_t last_seen, last_calculated;
+  double last_seen, last_calculated;
   double px, py, vx, vy;
   const TReaderItem *last_reader;
   TTagItemStrength power[STRENGTH_LEVELS_COUNT];
@@ -106,7 +106,8 @@ typedef struct
 
 typedef struct
 {
-  uint32_t last_seen, fifo_pos;
+  double last_seen;
+  uint32_t fifo_pos;
   uint32_t tag_id, reader_id, reader_index;
   double timestamp;
   const TReaderItem *reader;
@@ -244,10 +245,20 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
   int i;
   double delta_t, r, px, py, F;
   TTagItem *tag = (TTagItem *) Context;
+
   TTagItemStrength *power = tag->power;
 
+  /* maintain delta time since last calculation */
   delta_t = timestamp - tag->last_calculated;
   tag->last_calculated = timestamp;
+
+  /* ignore tags that were invisible for more than MAX_AGGREGATION_SECONDS */
+  if((timestamp - tag->last_seen)>MAX_AGGREGATION_SECONDS)
+  {
+    tag->vx = tag->vy = 0;
+    return;
+  }
+
   px = py = 0;
 
   if (tag->button)
@@ -283,6 +294,7 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
 
   printf ("%s    {\"id\":%u,\"px\":%i,\"py\":%i}",
     g_first ? "":",\n", tag->id, (int)tag->px, (int)tag->py);
+
   g_first=false;
 }
 
@@ -299,6 +311,7 @@ EstimationStep(double timestamp, bool realtime)
   g_map_tag.IterateLocked (&ThreadIterateForceReset, timestamp, realtime);
   g_map_reader.IterateLocked (&ThreadIterateLocked, timestamp, realtime);
 
+  /* tracking dump state in JSON format */
   printf("{\n  \"id\":%u,\n",sequence++);
   printf("  \"time\":%u,\n",(uint32_t)timestamp);
   printf("  \"tag\":[\n");
