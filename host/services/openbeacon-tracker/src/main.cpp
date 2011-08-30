@@ -252,8 +252,8 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
   delta_t = timestamp - tag->last_calculated;
   tag->last_calculated = timestamp;
 
-  /* ignore tags that were invisible for more than MAX_AGGREGATION_SECONDS */
-  if((timestamp - tag->last_seen)>MAX_AGGREGATION_SECONDS)
+  /* ignore tags that were invisible for more than 2*MAX_AGGREGATION_SECONDS */
+  if((timestamp - tag->last_seen)>(2*MAX_AGGREGATION_SECONDS))
   {
     tag->vx = tag->vy = 0;
     return;
