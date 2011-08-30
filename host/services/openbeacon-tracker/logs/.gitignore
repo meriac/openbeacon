@@ -1,4 +1,5 @@
 *.bin
 *.bin.bz2
 *.pdf
+*.log
 raw/raw-packets_*
