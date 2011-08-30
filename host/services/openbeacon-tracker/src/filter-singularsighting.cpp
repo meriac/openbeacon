@@ -26,7 +26,8 @@ start_new_fileset (void)
       if(rename (g_file_gztarget_tmp, g_file_gztarget))
 	fprintf(stderr,LOG"failed to rename file '%s'->'%s'\n",g_file_gztarget_tmp,g_file_gztarget);
     }
-  g_fgzlog = gzopen (g_file_gztarget_tmp, "w9");
+  if((g_fgzlog = gzopen (g_file_gztarget_tmp, "w9"))==NULL)
+    fprintf(stderr,LOG"failed to open temporary gzip file '%s'\n",g_file_gztarget_tmp);
 
   if (g_ftextlog)
     {
@@ -34,7 +35,8 @@ start_new_fileset (void)
       if(rename (g_file_target_tmp,g_file_target))
         fprintf(stderr,LOG"failed to rename file '%s'->'%s'\n",g_file_target_tmp,g_file_target);
     }
-  g_ftextlog = fopen (g_file_target_tmp, "w");
+  if((g_ftextlog = fopen (g_file_target_tmp, "w"))==NULL)
+    fprintf(stderr,LOG"failed to open temporary target file '%s'\n",g_file_target_tmp);
 }
 
 int
@@ -101,7 +103,7 @@ main (int argc, char *argv[])
 	  if (g_fgzlog)
 	    gzwrite (g_fgzlog, c, 1);
 	  /* echo to text file */
-	  if (g_ftextlog);
+	  if (g_ftextlog)
 	    fwrite (c, 1, 1, g_ftextlog);
 	}
 
