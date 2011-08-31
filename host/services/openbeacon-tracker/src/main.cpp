@@ -1,11 +1,11 @@
 /***************************************************************
  *
- * OpenBeacon.org - OnAir protocol position estimator
+ * OpenBeacon.org - OnAir protocol position tracker
  *
  * uses a physical model and statistical analysis to calculate
  * positions of tags
  *
- * Copyright 2009 Milosch Meriac <meriac@bitmanufaktur.de>
+ * Copyright 2009-2011 Milosch Meriac <meriac@bitmanufaktur.de>
  *
  ***************************************************************/
 

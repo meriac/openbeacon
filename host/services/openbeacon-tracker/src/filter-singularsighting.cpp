@@ -1,3 +1,33 @@
+/***************************************************************
+ *
+ * OpenBeacon.org - OnAir protocol position tracker filter
+ *
+ * accepts stdout from position tracker on stdin and constantly
+ * updates two JSON files reflecting the current state of the
+ * tracker. One of the files ig gzip compressed.
+ *
+ * The basic idea is to point this filter to a RAM backed tmpfs
+ * mount which is served by an Apache webserver et al.
+ *
+ * Copyright 2009-2011 Milosch Meriac <meriac@bitmanufaktur.de>
+ *
+ ***************************************************************/
+
+/*
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU Affero General Public License as published
+ by the Free Software Foundation; version 3.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU Affero General Public License
+ along with this program; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
