@@ -308,7 +308,7 @@ EstimationStep (double timestamp, bool realtime)
   int i, j;
   static uint32_t sequence = 0, packet_count_prev = 0, packet_rate = 0;
   static double timestamp_prev = 0;
-  double delta_t, r;
+  double delta_t;
   const TReaderItem *reader = g_ReaderList;
 
   if (realtime)
@@ -334,11 +334,10 @@ EstimationStep (double timestamp, bool realtime)
   }
 
   /* maintain packet rate statistics */
-  r=microtime();
-  delta_t=r-timestamp_prev;
+  delta_t=timestamp-timestamp_prev;
   if(delta_t>=PACKET_STATISTICS_WINDOW)
   {
-    timestamp_prev=r;
+    timestamp_prev=timestamp;
     packet_rate=(g_valid_packets-packet_count_prev)/delta_t;
     packet_count_prev=g_valid_packets;
   }
