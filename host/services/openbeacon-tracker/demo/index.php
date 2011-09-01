@@ -74,8 +74,8 @@
 	}
 
     // timestamp
-    $duration = ' ['.round((microtime(TRUE)-$time_start)*1000,1).'ms]';
-    imagestring($im, 4, $im_width-360, $im_height-30, date(DATE_RSS,$track->time).$duration, $inactive_color);
+    $duration = sprintf(" [rate=%u/s, %ums]",$track->packets->rate,round((microtime(TRUE)-$time_start)*1000,1));
+    imagestring($im, 4, $im_width-420, $im_height-30, date(DATE_RSS,$track->time).$duration, $inactive_color);
 
     header('Content-type: image/png');
     header('Refresh: 1');
