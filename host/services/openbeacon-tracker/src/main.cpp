@@ -59,7 +59,7 @@ static bool g_first;
 #define XXTEA_KEY_LASTHOPE 6
 
 /* proximity tag TEA encryption key */
-const long tea_keys[][4] = {
+static const long tea_keys[][4] = {
   {0x7013F569, 0x4417CA7E, 0x07AAA968, 0x822D7554},	/* 25C3 free beta version key */
   {0xbf0c3a08, 0x1d4228fc, 0x4244b2b0, 0x0b4492e9},	/* 25C3 final key  */
   {0xB4595344, 0xD3E119B6, 0xA814D0EC, 0xEFF5A24E},	/* 24C3 */
@@ -69,6 +69,9 @@ const long tea_keys[][4] = {
 };
 
 #define TEA_KEY_COUNT (sizeof(tea_keys)/sizeof(tea_keys[0]))
+
+static uint32_t g_tea_key_usage[TEA_KEY_COUNT+1];
+static uint32_t g_valid_packets,g_total_crc_errors;
 
 #define MX  ( (((z>>5)^(y<<2))+((y>>3)^(z<<4)))^((sum^y)+(tea_key[(p&3)^e]^z)) )
 #define DELTA 0x9e3779b9UL
@@ -302,7 +305,9 @@ static void
 EstimationStep (double timestamp, bool realtime)
 {
   int i, j;
-  static uint32_t sequence = 0;
+  static uint32_t sequence = 0, packet_count_prev = 0, packet_rate = 0;
+  static double timestamp_prev = 0;
+  double delta_t;
   const TReaderItem *reader = g_ReaderList;
 
   if (realtime)
@@ -312,9 +317,44 @@ EstimationStep (double timestamp, bool realtime)
   g_map_reader.IterateLocked (&ThreadIterateLocked, timestamp, realtime);
 
   /* tracking dump state in JSON format */
-  printf ("{\n  \"id\":%u,\n", sequence++);
-  printf ("  \"time\":%u,\n", (uint32_t) timestamp);
+  printf ("{\n  \"id\":%u,\n"
+          "  \"time\":%u,\n"
+          "  \"packets\":{\n",
+          sequence++,
+          (uint32_t) timestamp);
+
+  /* show per-key-statistics */
+  if(g_valid_packets!=g_tea_key_usage[0])
+  {
+    printf ("    \"per_key\":[");
+    for (i = 0; i < (int) TEA_KEY_COUNT; i++)
+      printf ("%s%i",i?",":"",g_tea_key_usage[i]);
+    printf ("],\n");
+  }
+
+  /* maintain packet rate statistics */
+  delta_t=timestamp-timestamp_prev;
+  if(delta_t>=10)
+  {
+    timestamp_prev=timestamp;
+    packet_rate=(g_valid_packets-packet_count_prev)/delta_t;
+    packet_count_prev=g_valid_packets;
+  }
+
+  /* print packet rate */
+  printf ("    \"rate\":%i,\n",packet_rate);
+
+  /* show CRC errors count */
+  if(g_total_crc_errors)
+    printf ("    \"crc_error\":%i,\n",g_total_crc_errors);
+
+  /* show total packet count */
+  printf ("    \"valid\":%i\n    },\n",g_valid_packets);
+
+  /* show tag statistics */
   printf ("  \"tag\":[\n");
+
+  /* show reader statistics */
   g_first = true;
   g_map_tag.IterateLocked (&ThreadIterateForceCalculate, timestamp, realtime);
   printf ("\n    ],\n  \"reader\":[\n");
@@ -416,7 +456,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 		     sizeof (env.pkt) - sizeof (env.pkt.crc)) ==
 	      ntohs (env.pkt.crc))
 	    {
-	      key_id = j;
+	      key_id = j+1;
 	      break;
 	    }
 	}
@@ -430,12 +470,21 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	key_id = 0;
     }
 
+
   if (key_id < 0)
     {
+      g_total_crc_errors++;
       fprintf (stderr, "CRC[0x%04X] error from reader 0x%08X\n",
-	       (int) crc16 ((const unsigned char *) data, len), reader_id);
+	(int) crc16 ((const unsigned char *) data, len), reader_id);
       hex_dump (data, 0, len);
       return;
+    }
+  else
+    {
+      /* maintain total packet count */
+      g_valid_packets++;
+      /* maintain statistics per key */
+      g_tea_key_usage[key_id]++;
     }
 
   switch (env.pkt.proto)
@@ -776,6 +825,10 @@ int
 main (int argc, char **argv)
 {
   bool realtime;
+
+  /* initialize statistics */
+  g_valid_packets=g_total_crc_errors=0;
+  memset(&g_tea_key_usage,0,sizeof(g_tea_key_usage));
 
   g_map_reader.SetItemSize (sizeof (TEstimatorItem));
   g_map_tag.SetItemSize (sizeof (TTagItem));
