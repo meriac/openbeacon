@@ -87,6 +87,7 @@ static uint32_t g_valid_packets,g_total_crc_errors;
 #define MAX_AGGREGATION_SECONDS 16
 #define RESET_TAG_POSITION_SECONDS (60*5)
 #define READER_TIMEOUT_SECONDS (60*15)
+#define PACKET_STATISTICS_WINDOW 10
 #define AGGREGATION_TIMEOUT(strength) ((uint32_t)(MIN_AGGREGATION_SECONDS+(((MAX_AGGREGATION_SECONDS-MIN_AGGREGATION_SECONDS)/(STRENGTH_LEVELS_COUNT-1))*(strength))))
 
 typedef struct
@@ -335,7 +336,7 @@ EstimationStep (double timestamp, bool realtime)
   /* maintain packet rate statistics */
   r=microtime();
   delta_t=r-timestamp_prev;
-  if(delta_t>=10)
+  if(delta_t>=PACKET_STATISTICS_WINDOW)
   {
     timestamp_prev=r;
     packet_rate=(g_valid_packets-packet_count_prev)/delta_t;
