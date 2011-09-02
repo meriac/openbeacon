@@ -556,12 +556,19 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
       break;
 
     case RFBPROTO_READER_ANNOUNCE:
-    case RFBPROTO_BEACONTRACKER_STRANGE:
-      /* FIXME */
       tag_strength = -1;
       tag_sequence = 0;
       tag_id = 0;
       g_ignored_protocol++;
+      break;
+
+    case RFBPROTO_BEACONTRACKER_STRANGE:
+      /* FIXME */
+      tag_strength = 3;
+      tag_sequence = 0;
+      tag_sequence = 0;
+      tag_flags = 0;
+      tag_id = ntohs (env.pkt.oid);
       break;
 
     default:
