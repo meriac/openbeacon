@@ -73,7 +73,8 @@ static const long tea_keys[][4] = {
 #define TEA_KEY_COUNT (sizeof(tea_keys)/sizeof(tea_keys[0]))
 
 static uint32_t g_tea_key_usage[TEA_KEY_COUNT + 1];
-static uint32_t g_valid_packets, g_total_crc_errors;
+static uint32_t g_total_crc_ok, g_total_crc_errors;
+static uint32_t g_ignored_protocol,g_invalid_protocol;
 
 #define MX  ( (((z>>5)^(y<<2))+((y>>3)^(z<<4)))^((sum^y)+(tea_key[(p&3)^e]^z)) )
 #define DELTA 0x9e3779b9UL
@@ -325,7 +326,7 @@ EstimationStep (double timestamp, bool realtime)
 	  "  \"packets\":{\n", sequence++, (uint32_t) timestamp);
 
   /* show per-key-statistics */
-  if (g_valid_packets != g_tea_key_usage[0])
+  if (g_total_crc_ok != g_tea_key_usage[0])
     {
       printf ("    \"per_key\":[");
       for (i = 0; i < (int) TEA_KEY_COUNT; i++)
@@ -338,8 +339,8 @@ EstimationStep (double timestamp, bool realtime)
   if (delta_t >= PACKET_STATISTICS_WINDOW)
     {
       timestamp_prev = timestamp;
-      packet_rate = (g_valid_packets - packet_count_prev) / delta_t;
-      packet_count_prev = g_valid_packets;
+      packet_rate = (g_total_crc_ok - packet_count_prev) / delta_t;
+      packet_count_prev = g_total_crc_ok;
     }
 
   /* print packet rate */
@@ -349,8 +350,14 @@ EstimationStep (double timestamp, bool realtime)
   if (g_total_crc_errors)
     printf ("    \"crc_error\":%i,\n", g_total_crc_errors);
 
+  if (g_ignored_protocol)
+    printf ("    \"ignored\":%i,\n", g_ignored_protocol);
+
+  if (g_invalid_protocol)
+    printf ("    \"invalid\":%i,\n", g_invalid_protocol);
+
   /* show total packet count */
-  printf ("    \"valid\":%i\n    },\n", g_valid_packets);
+  printf ("    \"crc_ok\":%i\n    },\n", g_total_crc_ok);
 
   /* show tag statistics */
   printf ("  \"tag\":[\n");
@@ -485,7 +492,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
   else
     {
       /* maintain total packet count */
-      g_valid_packets++;
+      g_total_crc_ok++;
       /* maintain statistics per key */
       g_tea_key_usage[key_id]++;
     }
@@ -554,6 +561,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
       tag_strength = -1;
       tag_sequence = 0;
       tag_id = 0;
+      g_ignored_protocol++;
       break;
 
     default:
@@ -563,6 +571,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
       tag_strength = -1;
       tag_sequence = 0;
       tag_id = 0;
+      g_invalid_protocol++;
     }
 
   if ((tag_strength >= 0)
@@ -832,7 +841,8 @@ main (int argc, char **argv)
   bool realtime;
 
   /* initialize statistics */
-  g_valid_packets = g_total_crc_errors = 0;
+  g_total_crc_ok = g_total_crc_errors = 0;
+  g_ignored_protocol = g_invalid_protocol = 0;
   memset (&g_tea_key_usage, 0, sizeof (g_tea_key_usage));
 
   g_map_reader.SetItemSize (sizeof (TEstimatorItem));
