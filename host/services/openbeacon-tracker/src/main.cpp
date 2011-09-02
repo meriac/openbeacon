@@ -346,15 +346,15 @@ EstimationStep (double timestamp, bool realtime)
   /* print packet rate */
   printf ("    \"rate\":%i,\n", packet_rate);
 
-  /* show CRC errors count */
-  if (g_total_crc_errors)
-    printf ("    \"crc_error\":%i,\n", g_total_crc_errors);
-
   if (g_ignored_protocol)
     printf ("    \"ignored\":%i,\n", g_ignored_protocol);
 
   if (g_invalid_protocol)
     printf ("    \"invalid\":%i,\n", g_invalid_protocol);
+
+  /* show CRC errors count */
+  if (g_total_crc_errors)
+    printf ("    \"crc_error\":%i,\n", g_total_crc_errors);
 
   /* show total packet count */
   printf ("    \"crc_ok\":%i\n    },\n", g_total_crc_ok);
