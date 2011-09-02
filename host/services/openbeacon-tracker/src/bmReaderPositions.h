@@ -165,6 +165,7 @@ static const TReaderItem g_ReaderList[] = {
 
   // BCC: 25C3 Foebud - Level B
   {IPv4 (10, 254, 0, 103), 201, 2,  2, 243, 386},
+  {IPv4 (10, 254, 0, 113), 201, 2,  2, 418, 244},
 
   // BCC: 25C3 Helpdesk - Level B
   {IPv4 (10, 254, 0, 110), 202, 2,  2, 243, 641},
