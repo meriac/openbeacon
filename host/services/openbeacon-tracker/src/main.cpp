@@ -65,13 +65,15 @@ static const long tea_keys[][4] = {
   {0xB4595344, 0xD3E119B6, 0xA814D0EC, 0xEFF5A24E},	/* 24C3 */
   {0xe107341e, 0xab99c57e, 0x48e17803, 0x52fb4d16},	/* 23C3 key */
   {0x8e7d6649, 0x7e82fa5b, 0xddd4541e, 0xe23742cb},	/* Camp 2007 key */
-  {0x9c43725e, 0xad8ec2ab, 0x6ebad8db, 0xf29c3638}	/* The Last Hope - AMD Project (Attendee Metadata Project) */
+  {0x9c43725e, 0xad8ec2ab, 0x6ebad8db, 0xf29c3638},	/* The Last Hope - AMD Project (Attendee Metadata Project) */
+  {0xf6e103d4, 0x77a739f6, 0x65eecead, 0xa40543a9},	/* strange key from 25C3 */
+  {0x00112233, 0x44556677, 0x8899aabb, 0xccddeeff}	/* default key */
 };
 
 #define TEA_KEY_COUNT (sizeof(tea_keys)/sizeof(tea_keys[0]))
 
-static uint32_t g_tea_key_usage[TEA_KEY_COUNT+1];
-static uint32_t g_valid_packets,g_total_crc_errors;
+static uint32_t g_tea_key_usage[TEA_KEY_COUNT + 1];
+static uint32_t g_valid_packets, g_total_crc_errors;
 
 #define MX  ( (((z>>5)^(y<<2))+((y>>3)^(z<<4)))^((sum^y)+(tea_key[(p&3)^e]^z)) )
 #define DELTA 0x9e3779b9UL
@@ -319,38 +321,36 @@ EstimationStep (double timestamp, bool realtime)
 
   /* tracking dump state in JSON format */
   printf ("{\n  \"id\":%u,\n"
-          "  \"time\":%u,\n"
-          "  \"packets\":{\n",
-          sequence++,
-          (uint32_t) timestamp);
+	  "  \"time\":%u,\n"
+	  "  \"packets\":{\n", sequence++, (uint32_t) timestamp);
 
   /* show per-key-statistics */
-  if(g_valid_packets!=g_tea_key_usage[0])
-  {
-    printf ("    \"per_key\":[");
-    for (i = 0; i < (int) TEA_KEY_COUNT; i++)
-      printf ("%s%i",i?",":"",g_tea_key_usage[i]);
-    printf ("],\n");
-  }
+  if (g_valid_packets != g_tea_key_usage[0])
+    {
+      printf ("    \"per_key\":[");
+      for (i = 0; i < (int) TEA_KEY_COUNT; i++)
+	printf ("%s%i", i ? "," : "", g_tea_key_usage[i]);
+      printf ("],\n");
+    }
 
   /* maintain packet rate statistics */
-  delta_t=timestamp-timestamp_prev;
-  if(delta_t>=PACKET_STATISTICS_WINDOW)
-  {
-    timestamp_prev=timestamp;
-    packet_rate=(g_valid_packets-packet_count_prev)/delta_t;
-    packet_count_prev=g_valid_packets;
-  }
+  delta_t = timestamp - timestamp_prev;
+  if (delta_t >= PACKET_STATISTICS_WINDOW)
+    {
+      timestamp_prev = timestamp;
+      packet_rate = (g_valid_packets - packet_count_prev) / delta_t;
+      packet_count_prev = g_valid_packets;
+    }
 
   /* print packet rate */
-  printf ("    \"rate\":%i,\n",packet_rate);
+  printf ("    \"rate\":%i,\n", packet_rate);
 
   /* show CRC errors count */
-  if(g_total_crc_errors)
-    printf ("    \"crc_error\":%i,\n",g_total_crc_errors);
+  if (g_total_crc_errors)
+    printf ("    \"crc_error\":%i,\n", g_total_crc_errors);
 
   /* show total packet count */
-  printf ("    \"valid\":%i\n    },\n",g_valid_packets);
+  printf ("    \"valid\":%i\n    },\n", g_valid_packets);
 
   /* show tag statistics */
   printf ("  \"tag\":[\n");
@@ -362,7 +362,7 @@ EstimationStep (double timestamp, bool realtime)
   j = 0;
   for (i = 0; i < (int) READER_COUNT; i++)
     {
-      if ((timestamp-g_reader_last_seen[i])<READER_TIMEOUT_SECONDS)
+      if ((timestamp - g_reader_last_seen[i]) < READER_TIMEOUT_SECONDS)
 	printf
 	  ("%s    {\"id\":%u,\"px\":%u,\"py\":%u,\"room\":%u,\"floor\":%u,\"group\":%u}",
 	   j++ ? ",\n" : "", reader->id, (int) reader->x, (int) reader->y,
@@ -435,7 +435,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
   int tag_strength, j, key_id;
   TBeaconEnvelope env;
   TTagItemStrength *power;
-  double px,py;
+  double px, py;
 
   if (len != sizeof (env))
     return;
@@ -457,7 +457,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 		     sizeof (env.pkt) - sizeof (env.pkt.crc)) ==
 	      ntohs (env.pkt.crc))
 	    {
-	      key_id = j+1;
+	      key_id = j + 1;
 	      break;
 	    }
 	}
@@ -475,9 +475,11 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
   if (key_id < 0)
     {
       g_total_crc_errors++;
+#ifdef DEBUG
       fprintf (stderr, "CRC[0x%04X] error from reader 0x%08X\n",
-	(int) crc16 ((const unsigned char *) data, len), reader_id);
+	       (int) crc16 ((const unsigned char *) data, len), reader_id);
       hex_dump (data, 0, len);
+#endif
       return;
     }
   else
@@ -547,8 +549,11 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
       break;
 
     case RFBPROTO_READER_ANNOUNCE:
+    case RFBPROTO_BEACONTRACKER_STRANGE:
+      /* FIXME */
       tag_strength = -1;
       tag_sequence = 0;
+      tag_id = 0;
       break;
 
     default:
@@ -569,11 +574,10 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
       /* initialize on first occurence */
       if (!item->tag_id)
 	{
-	  item->tag_id = tag_id;
-
 	  for (t = 0; t < READER_COUNT; t++)
 	    if (g_ReaderList[t].id == reader_id)
 	      break;
+
 	  if (t < READER_COUNT)
 	    {
 	      item->reader = &g_ReaderList[t];
@@ -582,108 +586,108 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	      item->last_seen = 0;
 	    }
 	  else
-	    {
-	      fprintf (stderr, "unknown reader 0x%08X\n", reader_id);
-	      item->reader = NULL;
-	      item->reader_id = 0;
-	      item->reader_index = 0;
-	      reader_id = 0;
-	    }
+	      memset (item, 0, sizeof (*item));
+
+	  item->tag_id = tag_id;
 	}
 
       /* increment reader stats for each packet */
-      if (item->reader_id)
-	g_reader_last_seen[item->reader_index] = timestamp;
-
-      if ((tag = (TTagItem *) g_map_tag.Add (tag_id, &tag_mutex)) == NULL)
-	diep ("can't add tag");
+      if (!item->reader_id)
+	 fprintf (stderr, "unknown reader 0x%08X\n", reader_id);
       else
 	{
-	  /* on first occurence */
-	  if (!tag->id)
-	    {
-	      fprintf (stderr, "new tag %u seen\n", tag_id);
-	      tag->id = tag_id;
-	      tag->last_calculated = timestamp;
-	    }
+	  g_reader_last_seen[item->reader_index] = timestamp;
 
-	  tag->last_reader = item->reader;
-	  tag->last_seen = timestamp;
-	  /* TODO: fix wrapping of 16 bit sequence numbers */
-	  if (tag_flags & TAGSIGHTINGFLAG_SHORT_SEQUENCE)
-	    tag->sequence = (tag->sequence & ~0xFFFF) | tag_sequence;
-
-	  item->tag = tag;
-	  pthread_mutex_unlock (tag_mutex);
-	}
-
-      /* get time difference since last run */
-      delta_t = timestamp - item->last_seen;
-
-      if (delta_t)
-	{
-	  item->last_seen = timestamp;
-
-	  if (delta_t >= MAX_AGGREGATION_SECONDS)
-	  {
-	    memset (&item->levels, 0, sizeof (item->levels));
-	    memset (&item->strength, 0, sizeof (item->strength));
-	    item->fifo_pos = 0;
-
-	    if(delta_t >= RESET_TAG_POSITION_SECONDS)
-	    {
-	      /* reset tag origin to first reader seen */
-	      px = item->reader->x;
-	      py = item->reader->y;
-	      tag->px = px;
-	      tag->py = py;
-	      power = tag->power;
-
-	      for(t=0;t<STRENGTH_LEVELS_COUNT;t++)
-	      {
-		power->px = px;
-		power->py = py;
-		power++;
-	      }
-	    }
-
-	    delta_t = 0;
-	  }
+	  if ((tag = (TTagItem *) g_map_tag.Add (tag_id, &tag_mutex)) == NULL)
+	    diep ("can't add tag");
 	  else
-	  {
-	    item->fifo_pos++;
-	    if (item->fifo_pos >= MAX_AGGREGATION_SECONDS)
-	      item->fifo_pos = 0;
-	  }
-	}
-
-      /* get current aggregation position */
-      aggregation = &item->levels[item->fifo_pos];
-
-      /* reset values to zero */
-      if (delta_t)
-	{
-	  memset (aggregation, 0, sizeof (*aggregation));
-	  aggregation->time = timestamp;
-	}
-      aggregation->strength[tag_strength]++;
-
-      if (delta_t)
-	{
-	  memset (&item->strength, 0, sizeof (item->strength));
-	  aggregation = item->levels;
-	  for (t = 0; t < MAX_AGGREGATION_SECONDS; t++)
 	    {
-	      for (j = 0; j < STRENGTH_LEVELS_COUNT; j++)
-		if ((timestamp - aggregation->time) <=
-		    AGGREGATION_TIMEOUT (j))
-		  item->strength[j] += aggregation->strength[j];
-	      aggregation++;
-	    }
-	}
+	      /* on first occurence */
+	      if (!tag->id)
+		{
+		  fprintf (stderr, "new tag %u seen\n", tag_id);
+		  tag->id = tag_id;
+		  tag->last_calculated = timestamp;
+		}
 
-      if (tag_flags & TAGSIGHTINGFLAG_BUTTON_PRESS)
-	tag->button = TAGSIGHTING_BUTTON_TIME;
+	      tag->last_reader = item->reader;
+	      tag->last_seen = timestamp;
+	      /* TODO: fix wrapping of 16 bit sequence numbers */
+	      if (tag_flags & TAGSIGHTINGFLAG_SHORT_SEQUENCE)
+		tag->sequence = (tag->sequence & ~0xFFFF) | tag_sequence;
+
+	      item->tag = tag;
+	      pthread_mutex_unlock (tag_mutex);
+	    }
+
+	  /* get time difference since last run */
+	  delta_t = timestamp - item->last_seen;
+
+	  if (delta_t)
+	    {
+	      item->last_seen = timestamp;
+
+	      if (delta_t >= MAX_AGGREGATION_SECONDS)
+		{
+		  memset (&item->levels, 0, sizeof (item->levels));
+		  memset (&item->strength, 0, sizeof (item->strength));
+		  item->fifo_pos = 0;
+
+		  if (delta_t >= RESET_TAG_POSITION_SECONDS)
+		    {
+		      /* reset tag origin to first reader seen */
+		      px = item->reader->x;
+		      py = item->reader->y;
+		      tag->px = px;
+		      tag->py = py;
+		      power = tag->power;
+
+		      for (t = 0; t < STRENGTH_LEVELS_COUNT; t++)
+			{
+			  power->px = px;
+			  power->py = py;
+			  power++;
+			}
+		    }
+
+		  delta_t = 0;
+		}
+	      else
+		{
+		  item->fifo_pos++;
+		  if (item->fifo_pos >= MAX_AGGREGATION_SECONDS)
+		    item->fifo_pos = 0;
+		}
+	    }
+
+	  /* get current aggregation position */
+	  aggregation = &item->levels[item->fifo_pos];
+
+	  /* reset values to zero */
+	  if (delta_t)
+	    {
+	      memset (aggregation, 0, sizeof (*aggregation));
+	      aggregation->time = timestamp;
+	    }
+	  aggregation->strength[tag_strength]++;
+
+	  if (delta_t)
+	    {
+	      memset (&item->strength, 0, sizeof (item->strength));
+	      aggregation = item->levels;
+	      for (t = 0; t < MAX_AGGREGATION_SECONDS; t++)
+		{
+		  for (j = 0; j < STRENGTH_LEVELS_COUNT; j++)
+		    if ((timestamp - aggregation->time) <=
+			AGGREGATION_TIMEOUT (j))
+		      item->strength[j] += aggregation->strength[j];
+		  aggregation++;
+		}
+	    }
+
+	  if (tag_flags & TAGSIGHTINGFLAG_BUTTON_PRESS)
+	    tag->button = TAGSIGHTING_BUTTON_TIME;
+	}
 
       pthread_mutex_unlock (item_mutex);
     }
@@ -828,8 +832,8 @@ main (int argc, char **argv)
   bool realtime;
 
   /* initialize statistics */
-  g_valid_packets=g_total_crc_errors=0;
-  memset(&g_tea_key_usage,0,sizeof(g_tea_key_usage));
+  g_valid_packets = g_total_crc_errors = 0;
+  memset (&g_tea_key_usage, 0, sizeof (g_tea_key_usage));
 
   g_map_reader.SetItemSize (sizeof (TEstimatorItem));
   g_map_tag.SetItemSize (sizeof (TTagItem));
