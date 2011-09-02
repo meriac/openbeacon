@@ -66,86 +66,163 @@ static const TReaderItem g_ReaderList[] = {
   {IPv4 (10, 110, 0, 223), 301, 3, 10, 750, 233},
   {IPv4 (10, 110, 0, 222), 303, 3, 10,  20, 230},
 
-  // BCC: Hackcenter - Level A
+  // BCC: 24C3 Hackcenter - Level A
   {IPv4 (10, 254, 3,   3), 101, 1,  2, 414, 434},
   {IPv4 (10, 254, 3,  11), 101, 1,  2, 188, 539},
   {IPv4 (10, 254, 3,  10), 101, 1,  2, 387, 681},
   {IPv4 (10, 254, 4,   6), 101, 1,  2, 742, 500},
 
-  // BCC: Lounge - Level A
+  // BCC: 24C3 Lounge - Level A
   {IPv4 (10, 254, 4,  13), 102, 1,  2, 497, 922},
   {IPv4 (10, 254, 4,  17), 102, 1,  2, 633, 832},
 
-  // BCC: Hardware Lab - Level A
+  // BCC: 24C3 Hardware Lab - Level A
   {IPv4 (10, 254, 2,   7), 103, 1,  2, 370, 814},
 
-  // BCC: Workshop - Level A
+  // BCC: 24C3 Workshop - Level A
   {IPv4 (10, 254, 3,  21), 104, 1,  2, 212, 782},
 
-  // BCC: Angel Heaven - Level A
+  // BCC: 24C3 Angel Heaven - Level A
   {IPv4 (10, 254, 5,   2), 105, 1,  2, 763, 195},
 
-  // BCC: Foebud - Level B
+  // BCC: 24C3 Foebud - Level B
   {IPv4 (10, 254, 5,  12), 201, 2,  2, 252, 387},
 
-  // BCC: Helpdesk - Level B
+  // BCC: 24C3 Helpdesk - Level B
   {IPv4 (10, 254, 5,  17), 202, 2,  2, 252, 640},
 
-  // BCC: Entrance - Level B
+  // BCC: 24C3 Entrance - Level B
   {IPv4 (10, 254, 6,   2), 203, 2,  2, 252, 798},
 
-  // BCC: Checkroom - Level B
+  // BCC: 24C3 Checkroom - Level B
   {IPv4 (10, 254, 1,   7), 204, 2,  2, 664, 896},
 
-  // BCC: Stairs Speakers - Level B
+  // BCC: 24C3 Stairs Speakers - Level B
   {IPv4 (10, 254, 1,   1), 205, 2,  2, 734, 831},
 
-  // BCC: Stairs CERT - Level B
+  // BCC: 24C3 Stairs CERT - Level B
   {IPv4 (10, 254, 4,  21), 206, 2,  2, 734, 342},
 
-  // BCC: Saal 2 - Level B
+  // BCC: 24C3 Saal 2 - Level B
   {IPv4 (10, 254, 3,   5), 207, 2,  2, 314,  78},
   {IPv4 (10, 254, 3,  15), 207, 2,  2,  92, 201},
 
-  // BCC: Saal 3 - Level B
+  // BCC: 24C3 Saal 3 - Level B
   {IPv4 (10, 254, 2,   5), 208, 2,  2, 549,  78},
   {IPv4 (10, 254, 2,  23), 208, 2,  2, 800,  78},
   {IPv4 (10, 254, 2, 150), 208, 2,  2, 662, 214},
 
-  // BCC: Canteen - Level B
+  // BCC: 24C3 Canteen - Level B
   {IPv4 (10, 254, 2,  12), 209, 2,  2, 412, 590},
   {IPv4 (10, 254, 2,   6), 209, 2,  2, 578, 590},
   {IPv4 (10, 254, 3,   1), 209, 2,  2, 573, 430},
   {IPv4 (10, 254, 2,  15), 209, 2,  2, 480, 734},
 
-  // BCC: Saal 1 - Level C
+  // BCC: 24C3 Saal 1 - Level C
   {IPv4 (10, 254, 6,  16), 301, 3,  2, 528, 520},
   {IPv4 (10, 254, 6,  22), 301, 3,  2, 528, 650},
   {IPv4 (10, 254, 5,  11), 301, 3,  2, 722, 432},
   {IPv4 (10, 254, 6,  21), 301, 3,  2, 722, 742},
   {IPv4 (10, 254, 0, 100), 301, 3,  2, 722, 586},
 
-  // BCC: Debian - Level C
+  // BCC: 24C3 Debian - Level C
   {IPv4 (10, 254, 8,   1), 302, 3,  2, 426, 330},
 
-  // BCC: Stairs Press - Level C
+  // BCC: 24C3 Stairs Press - Level C
   {IPv4 (10, 254, 8,   5), 303, 3,  2, 669, 310},
 
-  // BCC: Chaoswelle CAcert - Level C
+  // BCC: 24C3 Chaoswelle CAcert - Level C
   {IPv4 (10, 254, 8,  14), 304, 3,  2, 585, 249},
 
-  // BCC: Wikipedia - Level C
+  // BCC: 24C3 Wikipedia - Level C
   {IPv4 (10, 254, 7,  11), 305, 3,  2, 432, 838},
   {IPv4 (10, 254, 9,  13), 305, 3,  2, 465, 910},
 
-  // BCC: POC Helpdesk VOIP - Level C
+  // BCC: 24C3 POC Helpdesk VOIP - Level C
   {IPv4 (10, 254, 7,  17), 306, 3,  2, 292, 668},
 
-  // BCC: NOC Helpdesk - Level C
+  // BCC: 24C3 NOC Helpdesk - Level C
   {IPv4 (10, 254, 7,  19), 307, 3,  2, 286, 492},
 
-  // BCC: Stairs Hinterzimmer - Level C
+  // BCC: 24C3 Stairs Hinterzimmer - Level C
   {IPv4 (10, 254, 9,  19), 308, 3,  2, 676, 858},
+
+
+
+  // BCC: 25C3 Hackcenter - Level A
+  {IPv4 (10, 254, 0, 111), 101, 1,  2, 433, 682},
+  {IPv4 (10, 254, 0, 115), 101, 1,  2, 743, 512},
+  {IPv4 (10, 254, 0, 116), 101, 1,  2, 253, 501},
+
+  // BCC: 25C3 Lounge - Level A
+  {IPv4 (10, 254, 0, 117), 102, 1,  2, 467, 924},
+
+  // BCC: 25C3 Hardware Lab - Level A
+  {IPv4 (10, 254, 0, 118), 103, 1,  2, 372, 783},
+
+  // BCC: 25C3 Workshop - Level A
+  {IPv4 (10, 254, 0, 119), 104, 1,  2, 263, 814},
+
+  // BCC: 25C3 Foebud - Level B
+  {IPv4 (10, 254, 0, 103), 201, 2,  2, 243, 386},
+
+  // BCC: 25C3 Helpdesk - Level B
+  {IPv4 (10, 254, 0, 110), 202, 2,  2, 243, 641},
+
+  // BCC: 25C3 Entrance - Level B
+  {IPv4 (10, 254, 0, 102), 203, 2,  2, 380, 916},
+
+  // BCC: 25C3 Checkroom - Level B
+  {IPv4 (10, 254, 0, 112), 204, 2,  2, 602, 871},
+
+  // BCC: 25C3 Stairs Speakers - Level B
+  {IPv4 (10, 254, 0, 108), 205, 2,  2, 749, 816},
+
+  // BCC: 25C3 Stairs CERT - Level B
+  {IPv4 (10, 254, 0, 109), 206, 2,  2, 730, 344},
+
+  // BCC: 25C3 Saal 2 - Level B
+  {IPv4 (10, 254, 0, 135), 207, 2,  2, 538,  72},
+  {IPv4 (10, 254, 0, 136), 207, 2,  2, 798,  72},
+  {IPv4 (10, 254, 0, 137), 207, 2,  2, 701, 218},
+
+  // BCC: 25C3 Saal 3 - Level B
+  {IPv4 (10, 254, 0, 131), 208, 2,  2, 478, 210},
+  {IPv4 (10, 254, 0, 133), 208, 2,  2, 256,  72},
+  {IPv4 (10, 254, 0, 134), 208, 2,  2,  85, 200},
+
+  // BCC: 25C3 Canteen - Level B
+  {IPv4 (10, 254, 0, 105), 209, 2,  2, 105, 596},
+  {IPv4 (10, 254, 0, 107), 209, 2,  2, 659, 589},
+  {IPv4 (10, 254, 0, 114), 209, 2,  2, 563, 425},
+  {IPv4 (10, 254, 0, 138), 209, 2,  2, 527, 682},
+
+  // BCC: 25C3 Saal 1 - Level C
+  {IPv4 (10, 254, 0, 101), 301, 3,  2, 491, 588},
+  {IPv4 (10, 254, 0, 125), 301, 3,  2, 728, 745},
+  {IPv4 (10, 254, 0, 126), 301, 3,  2, 728, 432},
+  {IPv4 (10, 254, 0, 127), 301, 3,  2, 398, 721},
+  {IPv4 (10, 254, 0, 128), 301, 3,  2, 402, 448},
+
+  // BCC: 25C3 Debian - Level C
+  {IPv4 (10, 254, 0, 123), 302, 3,  2, 417, 344},
+
+  // BCC: 25C3 Stairs Press - Level C
+  {IPv4 (10, 254, 0, 124), 303, 3,  2, 675, 318},
+
+  // BCC: 25C3 Chaoswelle CAcert - Level C
+  {IPv4 (10, 254, 0, 132), 304, 3,  2, 245, 295},
+
+  // BCC: 25C3 Wikipedia - Level C
+  {IPv4 (10, 254, 0, 122), 305, 3,  2, 408, 823},
+  {IPv4 (10, 254, 0, 121), 305, 3,  2, 587, 916},
+
+  // BCC: 25C3 NOC Helpdesk - Level C
+  {IPv4 (10, 254, 0, 120), 307, 3,  2, 293, 529},
+
+  // BCC: 25C3 Stairs Hinterzimmer - Level C
+  {IPv4 (10, 254, 0, 129), 308, 3,  2, 743, 817},
+
 };
 
 #define READER_COUNT (sizeof(g_ReaderList)/sizeof(g_ReaderList[0]))
