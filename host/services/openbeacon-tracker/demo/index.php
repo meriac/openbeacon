@@ -25,7 +25,7 @@
  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-    define('DATA_FILE','../logs/sightings.json');
+    define('DATA_FILE','../get/sighting.json');
 
     error_reporting(E_ALL);
 
@@ -48,8 +48,8 @@
     /* specify colors */
     $inactive_color = imagecolorallocate($im, 150, 150, 150);
     $reader_color   = imagecolorallocate($im, 255,  64,  32);
-    $tag_color      = imagecolorallocate($im,  64, 128, 255);
-    $text_color     = imagecolorallocate($im,  32,  64, 128);
+    $tag_color      = imagecolorallocate($im,  32,  64, 128);
+    $tag_color_high = imagecolorallocate($im, 255, 128,  64);
 
     if(($data=@file_get_contents(DATA_FILE))===FALSE)
 	die('can\'t open data file');
@@ -57,9 +57,12 @@
     if(!($track=json_decode($data)))
 	die('can\'t decode JSON tracking state');
 
+    /* create associative list for reader id for current floor */
+    $reader_list = array();
     foreach($track->reader as $reader)
-	if($reader->group==2 && $reader->floor==$floor)
+	if($reader->floor==$floor)
 	{
+	    $reader_list[intval($reader->id)] = true;
 	    /* for BCC reader ID/IP is derieved from switch port number */
 	    $reader_id=sprintf("%s%03u",chr(ord('A')+(($reader->id>>8)&0x1F)),$reader->id&0xFF);
 
@@ -68,9 +71,11 @@
 	}
 
     foreach($track->tag as $tag)
+	if(isset($tag->reader) && isset($reader_list[$tag->reader]))
 	{
-	    imagefilledellipse($im, $tag->px, $tag->py, 6, 6, $tag_color);
-	    imagestring($im, 4, $tag->px,$tag->py+4, $tag->id, $text_color);
+	    $color = $tag->button ? $tag_color_high :$tag_color;
+	    imagefilledellipse($im, $tag->px, $tag->py, 6, 6, $color);
+	    imagestring($im, 4, $tag->px,$tag->py+4, $tag->id, $color);
 	}
 
     // timestamp
