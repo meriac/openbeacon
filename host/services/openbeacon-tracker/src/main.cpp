@@ -101,6 +101,8 @@ typedef struct
 
 typedef struct
 {
+  const TReaderItem *reader;
+  int count;
   double px, py, Fx, Fy;
 } TTagItemStrength;
 
@@ -210,6 +212,8 @@ ThreadIterateForceReset (void *Context, double timestamp, bool realtime)
   for (i = 0; i < STRENGTH_LEVELS_COUNT; i++)
     {
       power->Fx = power->Fy = 0;
+      power->count = 0;
+      power->reader = NULL;
       power++;
     }
 }
@@ -242,6 +246,12 @@ ThreadIterateLocked (void *Context, double timestamp, bool realtime)
       power->Fx += dx * strength;
       power->Fy += dy * strength;
 
+      if ((strength > power->count) && (item->reader))
+	{
+	  power->reader = item->reader;
+	  power->count = strength;
+	}
+
       power++;
     }
 }
@@ -250,6 +260,7 @@ static inline void
 ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
 {
   int i;
+  bool found;
   double delta_t, r, px, py, F;
   TTagItem *tag = (TTagItem *) Context;
 
@@ -271,6 +282,7 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
   if (tag->button)
     tag->button--;
 
+  found = false;
   for (i = 0; i < STRENGTH_LEVELS_COUNT; i++)
     {
       r =
@@ -284,6 +296,13 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
 
       px += power->px;
       py += power->py;
+
+      /* get reader at weakest power level */
+      if (!found && (power->count>0))
+      {
+	found = true;
+	tag->last_reader = power->reader;
+      }
 
       power++;
     }
@@ -299,11 +318,15 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
   tag->vy += (F * delta_t) / TAG_MASS;
   tag->py += F * delta_t * delta_t / (TAG_MASS * 2.0);
 
-  printf ("%s    {\"id\":%u,\"px\":%i,\"py\":%i}",
-	  g_first ? "" : ",\n", tag->id, (int) tag->px, (int) tag->py);
-
+  printf ("%s    {\"id\":%u,\"px\":%i,\"py\":%i",
+    g_first ? "" : ",\n", tag->id, (int) tag->px, (int) tag->py);
+  if(tag->last_reader)
+    printf(",\"reader\":%i}",tag->last_reader->id);
+  else
+    printf ("}");
   g_first = false;
 }
+
 
 static void
 EstimationStep (double timestamp, bool realtime)
@@ -513,8 +536,8 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	    tag_id = ntohl (env.old.oid);
 	    tag_sequence = ntohl (env.old.seq);
 	    tag_strength = env.old.strength / 0x55;
-	    if(tag_strength>=STRENGTH_LEVELS_COUNT)
-	      tag_strength=STRENGTH_LEVELS_COUNT-1;
+	    if (tag_strength >= STRENGTH_LEVELS_COUNT)
+	      tag_strength = STRENGTH_LEVELS_COUNT - 1;
 	    tag_flags = (env.old.flags & RFBFLAGS_SENSOR) ?
 	      TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
 	  }
@@ -526,8 +549,8 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	tag_id = ntohs (env.pkt.oid);
 	tag_sequence = ntohl (env.pkt.p.tracker.seq);
 	tag_strength = env.pkt.p.tracker.strength;
-	if(tag_strength>=STRENGTH_LEVELS_COUNT)
-	    tag_strength=STRENGTH_LEVELS_COUNT-1;
+	if (tag_strength >= STRENGTH_LEVELS_COUNT)
+	  tag_strength = STRENGTH_LEVELS_COUNT - 1;
 	tag_flags = (env.pkt.flags & RFBFLAGS_SENSOR) ?
 	  TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
       }
@@ -538,11 +561,11 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	tag_id = ntohs (env.pkt.oid);
 	tag_sequence = ntohl (env.pkt.p.tracker.seq);
 	tag_strength = env.pkt.p.tracker.strength;
-	if(tag_strength>=STRENGTH_LEVELS_COUNT)
-	    tag_strength=STRENGTH_LEVELS_COUNT-1;
+	if (tag_strength >= STRENGTH_LEVELS_COUNT)
+	  tag_strength = STRENGTH_LEVELS_COUNT - 1;
 	tag_flags =
 	  (env.pkt.flags & RFBFLAGS_SENSOR) ?
-	    TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
+	  TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
       }
       break;
 
@@ -643,7 +666,6 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 		  tag->last_calculated = timestamp;
 		}
 
-	      tag->last_reader = item->reader;
 	      tag->last_seen = timestamp;
 	      /* TODO: fix wrapping of 16 bit sequence numbers */
 	      if (tag_flags & TAGSIGHTINGFLAG_SHORT_SEQUENCE)
@@ -679,6 +701,8 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 			{
 			  power->px = px;
 			  power->py = py;
+			  power->reader = item->reader;
+			  power->count = 0;
 			  power++;
 			}
 		    }
