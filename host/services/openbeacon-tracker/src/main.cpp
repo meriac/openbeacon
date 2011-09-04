@@ -91,7 +91,7 @@ static uint32_t g_ignored_protocol, g_invalid_protocol;
 #define RESET_TAG_POSITION_SECONDS (60*5)
 #define READER_TIMEOUT_SECONDS (60*15)
 #define PACKET_STATISTICS_WINDOW 10
-#define PACKET_STATISTICS_READER 10
+#define PACKET_STATISTICS_READER 15
 #define AGGREGATION_TIMEOUT(strength) ((uint32_t)(MIN_AGGREGATION_SECONDS+(((MAX_AGGREGATION_SECONDS-MIN_AGGREGATION_SECONDS)/(STRENGTH_LEVELS_COUNT-1))*(strength))))
 
 typedef struct
@@ -213,8 +213,6 @@ ThreadIterateForceReset (void *Context, double timestamp, bool realtime)
   for (i = 0; i < STRENGTH_LEVELS_COUNT; i++)
     {
       power->Fx = power->Fy = 0;
-      power->count = 0;
-      power->reader = NULL;
       power++;
     }
 }
@@ -333,6 +331,8 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
 
   printf ("%s    {\"id\":%u,\"px\":%i,\"py\":%i",
 	  g_first ? "" : ",\n", tag->id, (int) tag->px, (int) tag->py);
+  if (tag->button)
+    printf (",\"button\":true");
   if (tag->last_reader)
     printf (",\"reader\":%i}", tag->last_reader->id);
   else
