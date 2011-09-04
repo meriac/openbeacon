@@ -74,7 +74,7 @@ static const long tea_keys[][4] = {
 
 static uint32_t g_tea_key_usage[TEA_KEY_COUNT + 1];
 static uint32_t g_total_crc_ok, g_total_crc_errors;
-static uint32_t g_ignored_protocol,g_invalid_protocol;
+static uint32_t g_ignored_protocol, g_invalid_protocol;
 
 #define MX  ( (((z>>5)^(y<<2))+((y>>3)^(z<<4)))^((sum^y)+(tea_key[(p&3)^e]^z)) )
 #define DELTA 0x9e3779b9UL
@@ -530,55 +530,67 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
       break;
 
     case RFBPROTO_PROXTRACKER:
-      tag_id = ntohs (env.pkt.oid);
-      tag_sequence = ntohl (env.pkt.p.tracker.seq);
-      tag_strength = env.pkt.p.tracker.strength & (STRENGTH_LEVELS_COUNT - 1);
-      tag_flags = (env.pkt.flags & RFBFLAGS_SENSOR) ?
-	TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
+      {
+	tag_id = ntohs (env.pkt.oid);
+	tag_sequence = ntohl (env.pkt.p.tracker.seq);
+	tag_strength =
+	  env.pkt.p.tracker.strength & (STRENGTH_LEVELS_COUNT - 1);
+	tag_flags =
+	  (env.pkt.
+	   flags & RFBFLAGS_SENSOR) ? TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
+      }
       break;
 
     case RFBPROTO_PROXREPORT:
-      tag_id = ntohs (env.pkt.oid);
-      tag_flags = (env.pkt.flags & RFBFLAGS_SENSOR) ?
-	TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
+      {
+	tag_id = ntohs (env.pkt.oid);
+	tag_flags = (env.pkt.flags & RFBFLAGS_SENSOR) ?
+	  TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
 
-      tag_sequence = ntohs (env.pkt.p.prox.seq);
-      tag_strength = (STRENGTH_LEVELS_COUNT - 1);
-      tag_flags |= TAGSIGHTINGFLAG_SHORT_SEQUENCE;
+	tag_sequence = ntohs (env.pkt.p.prox.seq);
+	tag_strength = (STRENGTH_LEVELS_COUNT - 1);
+	tag_flags |= TAGSIGHTINGFLAG_SHORT_SEQUENCE;
 
-      for (j = 0; j < PROX_MAX; j++)
-	{
-	  tag_sighting = (ntohs (env.pkt.p.prox.oid_prox[j]));
-	  if (tag_sighting)
-	    {
-	    }
-	}
+	for (j = 0; j < PROX_MAX; j++)
+	  {
+	    tag_sighting = (ntohs (env.pkt.p.prox.oid_prox[j]));
+	    if (tag_sighting)
+	      {
+	      }
+	  }
+      }
       break;
 
     case RFBPROTO_READER_ANNOUNCE:
-      tag_strength = -1;
-      tag_sequence = 0;
-      tag_id = 0;
-      g_ignored_protocol++;
+      {
+	tag_strength = -1;
+	tag_sequence = 0;
+	tag_id = 0;
+	g_ignored_protocol++;
+      }
       break;
 
     case RFBPROTO_BEACONTRACKER_STRANGE:
-      /* FIXME */
-      tag_strength = 3;
-      tag_sequence = 0;
-      tag_sequence = 0;
-      tag_flags = 0;
-      tag_id = ntohs (env.pkt.oid);
+      {
+	/* FIXME */
+	tag_strength = 3;
+	tag_sequence = 0;
+	tag_sequence = 0;
+	tag_flags = 0;
+	tag_id = ntohs (env.pkt.oid);
+      }
       break;
 
     default:
-      fprintf (stderr, "unknown packet protocol[%03i] key[%i] ",
-	       env.pkt.proto, key_id);
-      hex_dump (&env, 0, sizeof (env));
-      tag_strength = -1;
-      tag_sequence = 0;
-      tag_id = 0;
-      g_invalid_protocol++;
+      {
+	fprintf (stderr, "unknown packet protocol[%03i] key[%i] ",
+		 env.pkt.proto, key_id);
+	hex_dump (&env, 0, sizeof (env));
+	tag_strength = -1;
+	tag_sequence = 0;
+	tag_id = 0;
+	g_invalid_protocol++;
+      }
     }
 
   if ((tag_strength >= 0)
@@ -602,14 +614,14 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	      item->last_seen = 0;
 	    }
 	  else
-	      memset (item, 0, sizeof (*item));
+	    memset (item, 0, sizeof (*item));
 
 	  item->tag_id = tag_id;
 	}
 
       /* increment reader stats for each packet */
       if (!item->reader_id)
-	 fprintf (stderr, "unknown reader 0x%08X\n", reader_id);
+	fprintf (stderr, "unknown reader 0x%08X\n", reader_id);
       else
 	{
 	  g_reader_last_seen[item->reader_index] = timestamp;
