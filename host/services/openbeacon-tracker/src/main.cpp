@@ -283,25 +283,25 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
   if (tag->button)
     tag->button--;
 
-  if((timestamp - tag->last_reader_statistics)>=PACKET_STATISTICS_READER)
-  {
-    tag->last_reader_statistics = timestamp;
-
-    /* get reader at weakest power level */
-    found = false;
-    power = tag->power;
-    for (i = 0; i < STRENGTH_LEVELS_COUNT; i++)
+  if ((timestamp - tag->last_reader_statistics) >= PACKET_STATISTICS_READER)
     {
-      if (!found && power->count)
-      {
-	found = true;
-	tag->last_reader = power->reader;
-      }
-      power->reader = NULL;
-      power->count = 0;
-      power++;
+      tag->last_reader_statistics = timestamp;
+
+      /* get reader at weakest power level */
+      found = false;
+      power = tag->power;
+      for (i = 0; i < STRENGTH_LEVELS_COUNT; i++)
+	{
+	  if (!found && power->count)
+	    {
+	      found = true;
+	      tag->last_reader = power->reader;
+	    }
+	  power->reader = NULL;
+	  power->count = 0;
+	  power++;
+	}
     }
-  }
 
   power = tag->power;
   for (i = 0; i < STRENGTH_LEVELS_COUNT; i++)
@@ -332,9 +332,9 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
   tag->py += F * delta_t * delta_t / (TAG_MASS * 2.0);
 
   printf ("%s    {\"id\":%u,\"px\":%i,\"py\":%i",
-    g_first ? "" : ",\n", tag->id, (int) tag->px, (int) tag->py);
-  if(tag->last_reader)
-    printf(",\"reader\":%i}",tag->last_reader->id);
+	  g_first ? "" : ",\n", tag->id, (int) tag->px, (int) tag->py);
+  if (tag->last_reader)
+    printf (",\"reader\":%i}", tag->last_reader->id);
   else
     printf ("}");
   g_first = false;
@@ -677,9 +677,32 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 		  fprintf (stderr, "new tag %u seen\n", tag_id);
 		  tag->id = tag_id;
 		  tag->last_calculated = timestamp;
+		  tag->last_reader_statistics = timestamp;
 		}
 
+	      /* get time difference since last run */
+	      delta_t = timestamp - tag->last_seen;
 	      tag->last_seen = timestamp;
+
+	      if (delta_t >= RESET_TAG_POSITION_SECONDS)
+		{
+		  /* reset tag origin to first reader seen */
+		  px = item->reader->x;
+		  py = item->reader->y;
+		  tag->px = px;
+		  tag->py = py;
+		  power = tag->power;
+
+		  for (t = 0; t < STRENGTH_LEVELS_COUNT; t++)
+		    {
+		      power->px = px;
+		      power->py = py;
+		      power->reader = item->reader;
+		      power->count = 0;
+		      power++;
+		    }
+		}
+
 	      /* TODO: fix wrapping of 16 bit sequence numbers */
 	      if (tag_flags & TAGSIGHTINGFLAG_SHORT_SEQUENCE)
 		tag->sequence = (tag->sequence & ~0xFFFF) | tag_sequence;
@@ -690,7 +713,6 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 
 	  /* get time difference since last run */
 	  delta_t = timestamp - item->last_seen;
-
 	  if (delta_t)
 	    {
 	      item->last_seen = timestamp;
@@ -700,26 +722,6 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 		  memset (&item->levels, 0, sizeof (item->levels));
 		  memset (&item->strength, 0, sizeof (item->strength));
 		  item->fifo_pos = 0;
-
-		  if (delta_t >= RESET_TAG_POSITION_SECONDS)
-		    {
-		      /* reset tag origin to first reader seen */
-		      px = item->reader->x;
-		      py = item->reader->y;
-		      tag->px = px;
-		      tag->py = py;
-		      power = tag->power;
-
-		      for (t = 0; t < STRENGTH_LEVELS_COUNT; t++)
-			{
-			  power->px = px;
-			  power->py = py;
-			  power->reader = item->reader;
-			  power->count = 0;
-			  power++;
-			}
-		    }
-
 		  delta_t = 0;
 		}
 	      else
