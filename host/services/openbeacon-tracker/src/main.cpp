@@ -91,7 +91,7 @@ static uint32_t g_ignored_protocol, g_invalid_protocol;
 #define RESET_TAG_POSITION_SECONDS (60*5)
 #define READER_TIMEOUT_SECONDS (60*15)
 #define PACKET_STATISTICS_WINDOW 10
-#define PACKET_STATISTICS_READER 5
+#define PACKET_STATISTICS_READER 10
 #define AGGREGATION_TIMEOUT(strength) ((uint32_t)(MIN_AGGREGATION_SECONDS+(((MAX_AGGREGATION_SECONDS-MIN_AGGREGATION_SECONDS)/(STRENGTH_LEVELS_COUNT-1))*(strength))))
 
 typedef struct
@@ -292,7 +292,7 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
       power = tag->power;
       for (i = 0; i < STRENGTH_LEVELS_COUNT; i++)
 	{
-	  if (!found && power->count)
+	  if (!found && (power->count>1))
 	    {
 	      found = true;
 	      tag->last_reader = power->reader;
