@@ -91,6 +91,7 @@ static uint32_t g_ignored_protocol, g_invalid_protocol;
 #define RESET_TAG_POSITION_SECONDS (60*5)
 #define READER_TIMEOUT_SECONDS (60*15)
 #define PACKET_STATISTICS_WINDOW 10
+#define PACKET_STATISTICS_READER 5
 #define AGGREGATION_TIMEOUT(strength) ((uint32_t)(MIN_AGGREGATION_SECONDS+(((MAX_AGGREGATION_SECONDS-MIN_AGGREGATION_SECONDS)/(STRENGTH_LEVELS_COUNT-1))*(strength))))
 
 typedef struct
@@ -109,7 +110,7 @@ typedef struct
 typedef struct
 {
   uint32_t id, sequence, button;
-  double last_seen, last_calculated;
+  double last_seen, last_calculated, last_reader_statistics;
   double px, py, vx, vy;
   const TReaderItem *last_reader;
   TTagItemStrength power[STRENGTH_LEVELS_COUNT];
@@ -264,7 +265,7 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
   double delta_t, r, px, py, F;
   TTagItem *tag = (TTagItem *) Context;
 
-  TTagItemStrength *power = tag->power;
+  TTagItemStrength *power;
 
   /* maintain delta time since last calculation */
   delta_t = timestamp - tag->last_calculated;
@@ -282,7 +283,27 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
   if (tag->button)
     tag->button--;
 
-  found = false;
+  if((timestamp - tag->last_reader_statistics)>=PACKET_STATISTICS_READER)
+  {
+    tag->last_reader_statistics = timestamp;
+
+    /* get reader at weakest power level */
+    found = false;
+    power = tag->power;
+    for (i = 0; i < STRENGTH_LEVELS_COUNT; i++)
+    {
+      if (!found && power->count)
+      {
+	found = true;
+	tag->last_reader = power->reader;
+      }
+      power->reader = NULL;
+      power->count = 0;
+      power++;
+    }
+  }
+
+  power = tag->power;
   for (i = 0; i < STRENGTH_LEVELS_COUNT; i++)
     {
       r =
@@ -296,14 +317,6 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
 
       px += power->px;
       py += power->py;
-
-      /* get reader at weakest power level */
-      if (!found && (power->count>0))
-      {
-	found = true;
-	tag->last_reader = power->reader;
-      }
-
       power++;
     }
 
