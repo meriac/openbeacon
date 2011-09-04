@@ -109,11 +109,11 @@ bmMapHandleToItem::Find (bmHandle handle, pthread_mutex_t ** mutex)
 		  pthread_mutex_lock (&map->mutex);
 		  *mutex = &map->mutex;
 		}
-
+#ifdef  DEBUG
 	      if (i)
-		printf ("found %lu after %i items\n",
+		fprintf (stderr,"found %lu after %i items\n",
 			(long unsigned int) handle, i);
-
+#endif/*DEBUG*/
 	      return (m_ItemSize <= (int) sizeof (map->data)) ? &map->data
 		: map->data;
 	    }
@@ -122,8 +122,9 @@ bmMapHandleToItem::Find (bmHandle handle, pthread_mutex_t ** mutex)
 	  if (map >= &m_Map[HASH_MAP_INDEX_SIZE])
 	    map = m_Map;
 	};
-
-      printf ("can't find %lu\n", (long unsigned int) handle);
+#ifdef  DEBUG
+      fprintf (stderr,"can't find %lu\n", (long unsigned int) handle);
+#endif/*DEBUG*/
     }
   return NULL;
 }
