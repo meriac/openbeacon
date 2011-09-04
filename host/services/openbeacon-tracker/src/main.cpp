@@ -331,12 +331,15 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
 
   printf ("%s    {\"id\":%u,\"px\":%i,\"py\":%i",
 	  g_first ? "" : ",\n", tag->id, (int) tag->px, (int) tag->py);
-  if (tag->button)
-    printf (",\"button\":true");
+
   if (tag->last_reader)
-    printf (",\"reader\":%i}", tag->last_reader->id);
+    printf (",\"reader\":%i", tag->last_reader->id);
+
+  if (tag->button)
+    printf (",\"button\":true}");
   else
     printf ("}");
+
   g_first = false;
 }
 
