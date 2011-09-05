@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <zlib.h>
 
+#define BUFFER_SIZE (64)
 #define LOG "FILTER_SINGULARSIGHTING "
 
 static FILE *g_ftextlog;
@@ -43,6 +44,7 @@ static char *g_file_gztarget_tmp, *g_file_gztarget;
 static char *g_file_target_tmp, *g_file_target;
 static const char g_gz_suffix[] = ".gz";
 static const char g_tmp_suffix[] = ".tmp";
+static uint8_t g_buffer[BUFFER_SIZE];
 
 #define GZ_SUFFIX_SIZE (sizeof(g_gz_suffix)-1)
 #define TMP_SUFFIX_SIZE (sizeof(g_tmp_suffix)-1)
@@ -76,8 +78,8 @@ start_new_fileset (void)
 int
 main (int argc, char *argv[])
 {
-  int data, len, size, res;
-  uint8_t c[3];
+  int len, size, res;
+  uint8_t c[3], *p;
 
   g_ftextlog = NULL;
   g_fgzlog = NULL;
@@ -119,30 +121,37 @@ main (int argc, char *argv[])
     {
       c[1] = c[2] = 0;
       start_new_fileset ();
-      while ((data = getchar ()) != EOF)
+      while (!feof (stdin))
 	{
-	  /* convert to 8 bits */
-	  c[0] = (uint8_t) data;
-
-	  /* echo everything to maintain pipe chain */
-	  putchar (c[0]);
-
-	  /* find start of new object */
-	  if (c[2] == '\n' && c[1] == '}' && c[0] == ',')
-	    start_new_fileset ();
-	  else
+	  len = fread (&g_buffer, 1, sizeof (g_buffer), stdin);
+	  if (len > 0 && 0)
 	    {
-	      /* echo to zip file */
-	      if (g_fgzlog)
-		gzwrite (g_fgzlog, c, 1);
-	      /* echo to text file */
-	      if (g_ftextlog)
-		fwrite (c, 1, 1, g_ftextlog);
-	    }
+	      fwrite (&g_buffer, 1, len, stdout);
 
-	  /* remember last two characters */
-	  c[2] = c[1];
-	  c[1] = c[0];
+	      p = g_buffer;
+	      while (len--)
+		{
+		  /* process byte per byte */
+		  c[0] = *p++;
+
+		  /* find start of new object */
+		  if (c[2] == '\n' && c[1] == '}' && c[0] == ',')
+		    start_new_fileset ();
+		  else
+		    {
+		      /* echo to zip file */
+		      if (g_fgzlog)
+			gzwrite (g_fgzlog, c, 1);
+		      /* echo to text file */
+		      if (g_ftextlog)
+			fwrite (c, 1, 1, g_ftextlog);
+		    }
+
+		  /* remember last two characters */
+		  c[2] = c[1];
+		  c[1] = c[0];
+		}
+	    }
 	}
       /* close files */
       gzclose (g_fgzlog);
