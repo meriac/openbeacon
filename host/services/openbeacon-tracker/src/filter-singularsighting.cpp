@@ -34,7 +34,7 @@
 #include <stdio.h>
 #include <zlib.h>
 
-#define BUFFER_SIZE (64)
+#define BUFFER_SIZE (1024)
 #define LOG "FILTER_SINGULARSIGHTING "
 
 static FILE *g_ftextlog;
@@ -124,7 +124,7 @@ main (int argc, char *argv[])
       while (!feof (stdin))
 	{
 	  len = fread (&g_buffer, 1, sizeof (g_buffer), stdin);
-	  if (len > 0 && 0)
+	  if (len > 0)
 	    {
 	      fwrite (&g_buffer, 1, len, stdout);
 
