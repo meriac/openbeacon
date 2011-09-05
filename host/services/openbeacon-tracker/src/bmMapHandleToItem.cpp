@@ -36,8 +36,9 @@
 
 bmMapHandleToItem::bmMapHandleToItem (void)
 {
-  m_ItemSize = 0;
+  m_ItemSize = m_MapIteratePos = 0;
   memset (&m_Map, 0, sizeof (m_Map));
+  memset (&m_MapIterate, 0, sizeof (m_MapIterate));
 }
 
 bmMapHandleToItem::~bmMapHandleToItem (void)
@@ -152,6 +153,9 @@ bmMapHandleToItem::Add (bmHandle handle, pthread_mutex_t ** mutex)
 		}
 	      map->handle = handle;
 
+	      /* store object into m_MapIterate for quick interation */
+	      m_MapIterate[m_MapIteratePos++] = map;
+
 	      if (m_ItemSize <= (int) sizeof (map->data))
 		return &map->data;
 	      else
@@ -184,28 +188,25 @@ bmMapHandleToItem::Add (bmHandle handle, pthread_mutex_t ** mutex)
 int
 bmMapHandleToItem::IterateLocked (bmIterationCallback cb, double timestamp, bool realtime)
 {
-  int i, count;
-  bmHandleMap *map;
+  int count;
+  bmHandleMap **p,*map;
 
   if (cb && m_ItemSize)
     {
-      count = 0;
-      map = m_Map;
-      for (i = 0; i < HASH_MAP_INDEX_SIZE; i++)
+      p = m_MapIterate;
+      count = m_MapIteratePos;
+      while (count--)
 	{
-	  if (map->handle)
-	    {
-	      count++;
+	      map = *p++;
 	      pthread_mutex_lock (&map->mutex);
 	      cb ((m_ItemSize <= (int) sizeof (map->data)) ? &map->data
 		  : map->data, timestamp, realtime);
 	      pthread_mutex_unlock (&map->mutex);
-	    }
-	  map++;
 	}
+	  map++;
+      return m_MapIteratePos;
     }
   else
-    count = -1;
+    return -1;
 
-  return count;
 }

@@ -44,7 +44,9 @@ class bmMapHandleToItem
 {
 private:
   int m_ItemSize;
+  int m_MapIteratePos;
   bmHandleMap m_Map[HASH_MAP_INDEX_SIZE];
+  bmHandleMap *m_MapIterate[HASH_MAP_INDEX_SIZE];
   bmHandleMap *HashMap (bmHandle handle);
 public:
     bmMapHandleToItem (void);
