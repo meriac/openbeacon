@@ -39,8 +39,8 @@
 static FILE *g_ftextlog;
 static gzFile g_fgzlog;
 
-static char *g_file_gztarget_tmp,*g_file_gztarget_new,*g_file_gztarget;
-static char *g_file_target_tmp,*g_file_target_new,*g_file_target;
+static char *g_file_gztarget_tmp,*g_file_gztarget;
+static char *g_file_target_tmp,*g_file_target;
 static const char g_gz_suffix[]=".gz";
 static const char g_tmp_suffix[]=".tmp";
 
