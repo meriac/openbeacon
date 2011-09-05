@@ -1,4 +1,5 @@
 .depend
 openbeacon-tracker
 filter-singularsighting
+callgrind.out.*
 *.o
