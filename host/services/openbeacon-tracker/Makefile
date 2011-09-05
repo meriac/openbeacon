@@ -26,12 +26,17 @@ run: $(TARGET)
 install: $(TARGET) $(FILTER)
 	install $(TARGET) $(FILTER) $(PREFIX)/bin/
 
-demo_realtime: $(TARGET) $(LOGFILE) $(FILTER)
+demo-realtime: $(TARGET) $(LOGFILE) $(FILTER)
+	rm -f $(FILTERFILE_PREFIX)*
 	./$(TARGET) $(LOGFILE) 1 | ./$(FILTER) $(FILTERFILE_PREFIX) | bzip2 -9 >$(LOGJSON)
 
-demo_fastest: $(TARGET) $(LOGFILE)
+demo-logfile: $(TARGET) $(LOGFILE)
 	rm -f $(FILTERFILE_PREFIX)*
 	./$(TARGET) $(LOGFILE) 0 | bzip2 -9 >$(LOGJSON)
+
+demo-fastest: $(TARGET) $(LOGFILE)
+	rm -f $(FILTERFILE_PREFIX)*
+	time ./$(TARGET) $(LOGFILE) 0 > /dev/null
 
 logfile: $(LOGFILE)
 
@@ -44,7 +49,7 @@ $(LOGFILE).bz2:
 filters: $(FILTER)
 
 $(FILTER): src/$(FILTER).cpp
-	$(CXX) -lz $^ -o $@
+	$(CXX) $(CXXFLAGS) $(CXXOPT) $(LDOPT) -lz $^ -o $@
 
 indent: $(SOURCES)
 	indent $+
