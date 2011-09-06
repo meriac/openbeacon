@@ -28,6 +28,7 @@
 #include "openbeacon-proto.h"
 
 static uint32_t g_sysahbclkctrl;
+static volatile uint8_t g_sleeping;
 
 #define MAINCLKSEL_IRC 0
 #define MAINCLKSEL_SYSPLL_IN 1
@@ -52,6 +53,8 @@ WAKEUP_IRQHandlerPIO0_8 (void)
   LPC_IOCON->PIO0_8 = 1;
   /* set PMU to high power mode */
   GPIOSetValue (0, 5, 0);
+  /* did we awake? */
+  g_sleeping = FALSE;
   /* vodoo -NOP */
   __NOP ();
 }
@@ -107,7 +110,9 @@ pmu_sleep_ms (uint16_t ms)
   LPC_TMR16B0->TCR = 1;
 
   /* sleep */
-  __WFI ();
+  g_sleeping = TRUE;
+  while(g_sleeping)
+    __WFI ();
 }
 
 void
