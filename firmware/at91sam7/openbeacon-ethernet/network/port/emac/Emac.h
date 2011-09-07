@@ -19,13 +19,13 @@
 
 
 /* Number of receive buffers */
-#define NB_RX_BUFFERS			4
+#define NB_RX_BUFFERS			( MEMP_NUM_PBUF/2 )
 
 /* Size of each receive buffer - DO NOT CHANGE. */
 #define ETH_RX_BUFFER_SIZE		128
 
 /* Number of Transmit buffers */
-#define NB_TX_BUFFERS			( MEMP_NUM_PBUF - NB_RX_BUFFERS )
+#define NB_TX_BUFFERS			( MEMP_NUM_PBUF/2 )
 
 /* Size of each Transmit buffer. */
 #define ETH_TX_BUFFER_SIZE		128
