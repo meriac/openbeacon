@@ -19,16 +19,16 @@
 
 
 /* Number of receive buffers */
-#define NB_RX_BUFFERS			20
+#define NB_RX_BUFFERS			4
 
 /* Size of each receive buffer - DO NOT CHANGE. */
 #define ETH_RX_BUFFER_SIZE		128
 
 /* Number of Transmit buffers */
-#define NB_TX_BUFFERS			( MEMP_NUM_PBUF / 2 )
+#define NB_TX_BUFFERS			( MEMP_NUM_PBUF - NB_RX_BUFFERS )
 
 /* Size of each Transmit buffer. */
-#define ETH_TX_BUFFER_SIZE		( PBUF_POOL_BUFSIZE  )
+#define ETH_TX_BUFFER_SIZE		128
 
 /* Receive Transfer descriptor structure */
 typedef struct _AT91S_RxTdDescriptor
