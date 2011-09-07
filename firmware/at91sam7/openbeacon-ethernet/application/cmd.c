@@ -71,6 +71,7 @@ vCmdDumpStatistics (void)
 
   debug_printf ("\nSystem Statistics:\n");
   debug_printf ("\tuptime      = %03uh:%02um:%02us\n", h, m, s);
+  debug_printf ("\tfree heap   = %u kByte\n",xPortGetFreeHeapSize()/1024);
   debug_printf ("\n");
 }
 
