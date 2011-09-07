@@ -148,7 +148,7 @@ storage_status (void)
 }
 
 void
-storage_init (uint16_t device_id)
+storage_init (uint8_t usb_enabled, uint16_t device_id)
 {
   /* last entry in file chain is volume label */
   static const TDiskFile f_volume_label = {
@@ -204,7 +204,8 @@ storage_init (uint16_t device_id)
   };
 
   /* init virtual file system */
-  vfs_init (&f_autorun);
+  if(usb_enabled)
+    vfs_init (&f_autorun);
 
 #ifdef  ENABLE_FLASH
   /* setup SPI chipselect pin */

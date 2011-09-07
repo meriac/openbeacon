@@ -355,10 +355,10 @@ main (void)
 
     /* Init 3D acceleration sensor */
     acc_init (1);
-    /* Init Flash Storage */
-    storage_init (tag_id);
+    /* Init Flash Storage with USB */
+    storage_init (TRUE, tag_id);
     /* Init Bluetooth */
-    bt_init (1, tag_id);
+    bt_init (TRUE, tag_id);
 
     /* switch to LED 2 */
     GPIOSetValue (1, 1, 0);
@@ -416,8 +416,13 @@ main (void)
     }
   }
 
+  /* Init Bluetooth */
+  bt_init (FALSE, tag_id);
+
   /* erase flash storage on first boot */
   storage_pos=0;
+  /* Init Flash Storage without USB */
+  storage_init (FALSE, tag_id);
   storage_erase ();
 
   /* initialize power management */
