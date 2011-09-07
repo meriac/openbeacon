@@ -53,7 +53,7 @@ static unsigned char nrf_powerlevel_current, nrf_powerlevel_last;
 static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] =
   { 1, 2, 3, 2, 1 };
 
-TBeaconEnvelopeLog g_Beacon;
+TBeaconLogSighting g_Beacon;
 
 /**********************************************************************/
 void
@@ -202,8 +202,11 @@ vnRF_ProcessDevice (u_int8_t device)
       rf_rec[device]++;
 
       // posting packet to log file queue
-      g_Beacon.device = device;
+      g_Beacon.hdr.protocol = BEACONLOG_SIGHTING;
+      g_Beacon.hdr.interface = device;
+      g_Beacon.hdr.size = sizeof(g_Beacon);
       g_Beacon.reader_id = swaplong(env.e.reader_id);
+      g_Beacon.crc = swapshort(env_crc16 ((u_int8_t*)&g_Beacon, sizeof (g_Beacon) - sizeof (g_Beacon.crc)));
       xQueueSend (xLogfile, &g_Beacon, 0);
 
       // post packet to network via UDP
@@ -387,7 +390,7 @@ vnRFLogFileFileTask (void *parameter)
 {
   UINT written;
   FRESULT res;
-  static TBeaconEnvelopeLog data;
+  static TBeaconLogSighting data;
   static FIL fil;
   static FATFS fatfs;
   static FILINFO filinfo;
@@ -453,14 +456,17 @@ vnRFLogFileFileTask (void *parameter)
 		      logfile);
       }
 
-  // error blinking
+  // error blinking - twice per second with 0.8s spacing
   while (1)
     {
       led_set_red (1);
-      vTaskDelay (250 / portTICK_RATE_MS);
-
+      vTaskDelay (25 / portTICK_RATE_MS);
       led_set_red (0);
-      vTaskDelay (250 / portTICK_RATE_MS);
+      vTaskDelay (150 / portTICK_RATE_MS);
+      led_set_red (1);
+      vTaskDelay (25 / portTICK_RATE_MS);
+      led_set_red (0);
+      vTaskDelay (800 / portTICK_RATE_MS);
     }
 }
 
@@ -477,8 +483,9 @@ PtInitProtocol (void)
   rf_rec[1] = rf_rec_old[1] = rf_decrypt[1] = 0;
   rf_crc_ok[1] = rf_crc_err[1] = rf_pkt_per_sec[1] = 0;
 
+  /* xLogfile queue can hold now 4kB of data */
   xLogfile =
-    xQueueCreate ((SECTOR_BUFFER_SIZE * 2) / sizeof (g_Beacon),
+    xQueueCreate ((4*1024) / sizeof (g_Beacon),
 		  sizeof (g_Beacon));
 
   xTaskCreate (vnRFtaskRxTx, (signed portCHAR *) "nRF_RxTx", TASK_NRF_STACK,

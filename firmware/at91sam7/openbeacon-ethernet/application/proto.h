@@ -27,7 +27,7 @@
 
 #define NRF_POWERLEVEL_MAX 3
 
-extern TBeaconEnvelopeLog g_Beacon;
+extern TBeaconLogSighting g_Beacon;
 
 static inline unsigned short
 PtSwapShort (unsigned short src)
