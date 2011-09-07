@@ -71,6 +71,7 @@ task.h is included from an application file. */
 #define MPU_WRAPPERS_INCLUDED_FROM_API_FILE
 
 #include "FreeRTOS.h"
+#include "board.h"
 #include "task.h"
 
 #undef MPU_WRAPPERS_INCLUDED_FROM_API_FILE
@@ -114,4 +115,52 @@ vPortFree (void *pv)
       }
       xTaskResumeAll ();
     }
+}
+
+/*-----------------------------------------------------------*/
+/* "malloc clue function" from newlib-lpc/Keil-Demo/"generic" */
+/**** Locally used variables. ****/
+// mt: "cleaner": extern char* end;
+extern char end[];              /*  end is set in the linker command 	*/
+				/* file and is the end of statically 	*/
+				/* allocated data (thus start of heap).	*/
+
+static char *heap_ptr;		/* Points to current end of the heap.	*/
+
+/************************** _sbrk_r *************************************
+ * Support function. Adjusts end of heap to provide more memory to
+ * memory allocator. Simple and dumb with no sanity checks.
+
+ *  struct _reent *r -- re-entrancy structure, used by newlib to
+ *                      support multiple threads of operation.
+ *  ptrdiff_t nbytes -- number of bytes to add.
+ *                      Returns pointer to start of new heap area.
+ *
+ *  Note:  This implementation is not thread safe (despite taking a
+ *         _reent structure as a parameter).
+ *         Since _s_r is not used in the current implementation,
+ *         the following messages must be suppressed.
+ */
+void * _sbrk_r(
+    struct _reent *_s_r,
+    ptrdiff_t nbytes)
+{
+	char  *base;		/*  errno should be set to  ENOMEM on error  */
+	(void)_s_r;
+
+	if (!heap_ptr) {	/*  Initialize if first time through.  */
+		heap_ptr = end;
+	}
+	base = heap_ptr;	/*  Point to end of heap.  */
+	heap_ptr += nbytes;	/*  Increase heap.  */
+
+	return base;		/*  Return pointer to start of new heap area.  */
+}
+
+/*-----------------------------------------------------------*/
+
+size_t
+xPortGetFreeHeapSize (void)
+{
+  return AT91C_ISRAM_SIZE-((int)heap_ptr-(int)AT91C_ISRAM);
 }
