@@ -37,7 +37,7 @@
 	$floor=2;
 
     /* open floor specific image */
-    $imgfile = sprintf('bcc_map_level%c.png',ord('A')-1+$floor);
+    $imgfile = sprintf('../images/bcc_map_level%c.png',ord('A')-1+$floor);
     $im = imagecreatefrompng($imgfile)
 	or die('Cannot Initialize new GD image stream with file '.$imgfile);
 
