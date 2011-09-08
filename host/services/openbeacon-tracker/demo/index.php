@@ -73,7 +73,7 @@
     foreach($track->tag as $tag)
 	if(isset($tag->reader) && isset($reader_list[$tag->reader]))
 	{
-	    $color = $tag->button ? $tag_color_high :$tag_color;
+	    $color = isset($tag->button) ? $tag_color_high :$tag_color;
 	    imagefilledellipse($im, $tag->px, $tag->py, 6, 6, $color);
 	    imagestring($im, 4, $tag->px,$tag->py+4, $tag->id, $color);
 	}
