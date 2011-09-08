@@ -1,3 +1,31 @@
+/***************************************************************
+ *
+ * OpenBeacon.org - JavaScript example code for
+ *                  openbeacon-tracker JSON server interface
+ *
+ * uses a physical model and statistical analysis to calculate
+ * positions of tags and the JavaScript D3 library for
+ * visualizatzion - see http://mbostock.github.com/d3/api/
+ *
+ * Copyright 2011 Milosch Meriac <milosch@openbeacon.de>
+ *
+ ***************************************************************/
+
+/*
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU Affero General Public License as published
+ by the Free Software Foundation; version 3.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU Affero General Public License
+ along with this program; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
+
 var w = 1024,
     h = 1024,
     fill = d3.scale.category20();
