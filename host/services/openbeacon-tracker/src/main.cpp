@@ -329,8 +329,8 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
   tag->vy += (F * delta_t) / TAG_MASS;
   tag->py += F * delta_t * delta_t / (TAG_MASS * 2.0);
 
-  printf ("%s    {\"id\":%u,\"px\":%i,\"py\":%i",
-	  g_first ? "" : ",\n", tag->id, (int) tag->px, (int) tag->py);
+  printf ("%s    \"%u\":{\"id\":%u,\"px\":%i,\"py\":%i",
+	  g_first ? "" : ",\n", tag->id, tag->id, (int) tag->px, (int) tag->py);
 
   if (tag->last_reader)
     printf (",\"reader\":%i", tag->last_reader->id);
@@ -399,23 +399,23 @@ EstimationStep (double timestamp, bool realtime)
   printf ("    \"crc_ok\":%i\n    },\n", g_total_crc_ok);
 
   /* show tag statistics */
-  printf ("  \"tag\":[\n");
+  printf ("  \"tag\":{\n");
 
   /* show reader statistics */
   g_first = true;
   g_map_tag.IterateLocked (&ThreadIterateForceCalculate, timestamp, realtime);
-  printf ("\n    ],\n  \"reader\":[\n");
+  printf ("\n    },\n  \"reader\":{\n");
   j = 0;
   for (i = 0; i < (int) READER_COUNT; i++)
     {
       if ((timestamp - g_reader_last_seen[i]) < READER_TIMEOUT_SECONDS)
 	printf
-	  ("%s    {\"id\":%u,\"px\":%u,\"py\":%u,\"room\":%u,\"floor\":%u,\"group\":%u}",
-	   j++ ? ",\n" : "", reader->id, (int) reader->x, (int) reader->y,
+	  ("%s    \"%u\":{\"id\":%u,\"px\":%u,\"py\":%u,\"room\":%u,\"floor\":%u,\"group\":%u}",
+	   j++ ? ",\n" : "", reader->id, reader->id, (int) reader->x, (int) reader->y,
 	   (int) reader->room, (int) reader->floor, (int) reader->group);
       reader++;
     }
-  printf ("\n    ]\n},");
+  printf ("\n    }\n},");
 
   /* propagate object on stdout */
   fflush (stdout);
