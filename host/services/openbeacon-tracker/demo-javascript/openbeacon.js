@@ -5,7 +5,7 @@
  *
  * uses a physical model and statistical analysis to calculate
  * positions of tags and the JavaScript D3 library for
- * visualizatzion - see http://mbostock.github.com/d3/api/
+ * visualization - see http://mbostock.github.com/d3/api/
  *
  * Copyright 2011 Milosch Meriac <milosch@openbeacon.de>
  *
