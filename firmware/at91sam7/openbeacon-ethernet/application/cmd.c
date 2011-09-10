@@ -37,7 +37,7 @@
 static inline void
 vCmdHelp (void)
 {
-  debug_printf ("\n\nOpenBeacon.org PoE Ethernet II command line help\n"
+  debug_printf ("\n\nOpenBeacon.org PoE Ethernet II v%s\n"
 		"(C) 2010 Milosch Meriac <meriac@bitmanufaktur.de>\n"
 		"\t'a' - set reader address ('t10.254.0.100' for 10.254.0.100)\n"
 		"\t'b' - boot again\n"
@@ -54,7 +54,7 @@ vCmdHelp (void)
 		"\t's' - store configuration\n"
 		"\t't' - set target server ip ('t1.2.3.4')\n"
 		"\t'u' - reset reader to firmware update mode\n"
-		"\t'x' - show system statistics\n" "\n\n");
+		"\t'x' - show system statistics\n" "\n\n", PROGRAM_VERSION);
 
 }
 
@@ -140,7 +140,12 @@ vCmdProcess (const char *cmdline)
     case 'C':
       vNetworkDumpConfig ();
       debug_printf ("System configuration:\n"
-		    "\tReader ID:%i\n" "\n", env.e.reader_id);
+		    "\tFirmware Version: v%s\n"
+		    "\tReader ID: %i\n"
+		    "\tRF packet duplicate filter: %s\n\n",
+		    PROGRAM_VERSION,
+		    env.e.reader_id, env.e.filter_duplicates?"ON":"OFF"
+		    );
       break;
 
     case 'D':
