@@ -263,6 +263,7 @@ vNetworkResetDefaultSettings (void)
   env.e.reader_id = 0;
   env.e.ip_autoconfig = IP_AUTOCONFIG_READER_ID;
   env.e.ip_server_port = 2342;
+  env.e.filter_duplicates = pdTRUE;
   IP4_ADDR (&env.e.ip_host, 10, 254, 0, 0);
   IP4_ADDR (&env.e.ip_netmask, 255, 255, 0, 0);
   IP4_ADDR (&env.e.ip_gateway, 10, 254, 0, 1);

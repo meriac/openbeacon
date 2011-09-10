@@ -148,6 +148,7 @@ typedef struct
 {
   unsigned int magic, size, crc16;
   unsigned int reader_id,ip_autoconfig,ip_server_port;
+  unsigned int filter_duplicates;
   struct ip_addr ip_host,ip_netmask,ip_server,ip_gateway;
 } TEnvironment __attribute__ ((aligned (4)));
 

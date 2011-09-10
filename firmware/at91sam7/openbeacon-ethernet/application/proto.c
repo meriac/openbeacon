@@ -41,12 +41,15 @@
 #include "rnd.h"
 
 /**********************************************************************/
-#define SECTOR_BUFFER_SIZE 1024
+#define DUPLICATES_BACKLOG_SIZE 8
 /**********************************************************************/
 static xQueueHandle xLogfile;
 /**********************************************************************/
+static unsigned short duplicate_backlog[DUPLICATES_BACKLOG_SIZE];
+static unsigned int duplicate_backlog_pos, rf_duplicates[NRFCMD_DEVICES];
 static unsigned int rf_decrypt[NRFCMD_DEVICES], rf_crc_ok[NRFCMD_DEVICES];
-static unsigned int rf_crc_err[NRFCMD_DEVICES], rf_pkt_per_sec[NRFCMD_DEVICES];
+static unsigned int rf_crc_err[NRFCMD_DEVICES],
+  rf_pkt_per_sec[NRFCMD_DEVICES];
 static unsigned int rf_rec[NRFCMD_DEVICES], rf_rec_old[NRFCMD_DEVICES];
 static int pt_debug_level = 0;
 static unsigned char nrf_powerlevel_current, nrf_powerlevel_last;
@@ -171,7 +174,7 @@ swaplong (unsigned long src)
 static unsigned char
 vnRF_ProcessDevice (u_int8_t device)
 {
-  u_int8_t status;
+  u_int8_t status, duplicate;
   u_int16_t crc, oid;
   u_int8_t strength, t;
   u_int32_t seconds_since_boot;
@@ -188,6 +191,12 @@ vnRF_ProcessDevice (u_int8_t device)
 
   led_set_rx (device, 1);
 
+  /* Setup log file header */
+  g_Beacon.hdr.protocol = BEACONLOG_SIGHTING;
+  g_Beacon.hdr.interface = device;
+  g_Beacon.hdr.size = swapshort (sizeof (g_Beacon));
+  g_Beacon.reader_id = swaplong (env.e.reader_id);
+
   do
     {
 #ifndef DISABLE_WATCHDOG
@@ -195,43 +204,71 @@ vnRF_ProcessDevice (u_int8_t device)
       AT91F_WDTRestart (AT91C_BASE_WDTC);
 #endif /*DISABLE_WATCHDOG */
 
-      // read packet from nRF chip
+      /* read packet from nRF chip */
       nRFCMD_RegReadBuf (device, RD_RX_PLOAD, g_Beacon.log.byte,
 			 sizeof (g_Beacon.log));
 
       rf_rec[device]++;
 
-      // posting packet to log file queue
-      g_Beacon.hdr.protocol = BEACONLOG_SIGHTING;
-      g_Beacon.hdr.interface = device;
-      g_Beacon.hdr.size = swapshort(sizeof(g_Beacon));
-      g_Beacon.reader_id = swaplong(env.e.reader_id);
-      g_Beacon.crc = swapshort(env_crc16 ((u_int8_t*)&g_Beacon, sizeof (g_Beacon) - sizeof (g_Beacon.crc)));
-      xQueueSend (xLogfile, &g_Beacon, 0);
+      /* calculate checkum to check for duplicates */
+      crc =
+	env_crc16 ((u_int8_t *) & g_Beacon,
+		   sizeof (g_Beacon) - sizeof (g_Beacon.crc));
 
-      // post packet to network via UDP
-      vNetworkSendBeaconToServer ();
+      /* check for duplicates */
+      duplicate =pdFALSE;
+      if (!env.e.filter_duplicates)
+	/* reset rf_duplicates if detection is disabled */
+	rf_duplicates[device] = 0;
+      else
+	{
+	  for (t = 0; t < DUPLICATES_BACKLOG_SIZE; t++)
+	    if (duplicate_backlog[t] == crc)
+	      {
+		duplicate = pdTRUE;
+		rf_duplicates[device]++;
+		break;
+	      }
+
+	  /* add non-duplicates to CRC backlog */
+	  if (!duplicate)
+	    {
+	      duplicate_backlog[duplicate_backlog_pos++] = crc;
+	      if (duplicate_backlog_pos >= DUPLICATES_BACKLOG_SIZE)
+		duplicate_backlog_pos = 0;
+	    }
+	}
+
+      if (!duplicate)
+	{
+	  /* posting packet to log file queue */
+	  g_Beacon.crc = swapshort (crc);
+	  xQueueSend (xLogfile, &g_Beacon, 0);
+
+	  /* post packet to network via UDP */
+	  vNetworkSendBeaconToServer ();
+	}
 
       if (pt_debug_level)
 	{
-	  // adjust byte order and decode
+	  /* adjust byte order and decode */
 	  shuffle_tx_byteorder ();
 	  xxtea_decode ();
 	  shuffle_tx_byteorder ();
 
 	  rf_decrypt[device]++;
 
-	  // verify the crc checksum
+	  /* verify the crc checksum */
 	  crc = env_crc16 (g_Beacon.log.byte,
 			   sizeof (g_Beacon.log) - sizeof (u_int16_t));
 
 	  seconds_since_boot = xTaskGetTickCount () / 1000;
 
 	  if (swapshort (g_Beacon.log.pkt.crc) != crc)
-	  {
-	    rf_crc_err[device]++;
-	    debug_printf ("@%07u[%u] CRC error\n", seconds_since_boot, device);
-	  }
+	    {
+	      rf_crc_err[device]++;
+	      debug_printf ("@%07u[%u] CRC error\n", seconds_since_boot, device);
+	    }
 	  else
 	    {
 	      rf_crc_ok[device]++;
@@ -349,21 +386,25 @@ vnRFtaskRxTx (void *parameter)
 	  nrf_powerlevel_last = nrf_powerlevel_current;
 	}
 
-      if(!(vnRF_ProcessDevice(NRFCMD_DEV0) || vnRF_ProcessDevice(NRFCMD_DEV1)))
-	nRFCMD_WaitRx(200);
-  }
+      if (!
+	  (vnRF_ProcessDevice (NRFCMD_DEV0)
+	   || vnRF_ProcessDevice (NRFCMD_DEV1)))
+	nRFCMD_WaitRx (200);
+    }
 }
 
 /**********************************************************************/
 void
 PtStatusRxTxDevice (u_int8_t device)
 {
-  if(device>NRFCMD_DEV_MAX)
+  if (device > NRFCMD_DEV_MAX)
     return;
 
-  debug_printf ("\nOpenBeacon Interface[%u] Status:\n",device);
+  debug_printf ("\nOpenBeacon Interface[%u] Status:\n", device);
   debug_printf ("\treceived    = %u\n", rf_rec[device]);
   debug_printf ("\treceive rate= %u packets/second\n", rf_pkt_per_sec[device]);
+  if (env.e.filter_duplicates)
+    debug_printf ("\tduplicates  = %u\n", rf_duplicates[device]);
 
   if (pt_debug_level)
     {
@@ -380,7 +421,7 @@ PtStatusRxTx (void)
 {
   u_int8_t device;
 
-  for(device=0; device<=NRFCMD_DEV_MAX; device++)
+  for (device = 0; device <= NRFCMD_DEV_MAX; device++)
     PtStatusRxTxDevice (device);
 }
 
@@ -456,7 +497,7 @@ vnRFLogFileFileTask (void *parameter)
 		      logfile);
       }
 
-  // error blinking - twice per second with 0.8s spacing
+  /* error blinking - twice per second with 0.8s spacing */
   while (1)
     {
       led_set_red (1);
@@ -474,7 +515,7 @@ vnRFLogFileFileTask (void *parameter)
 void
 PtInitProtocol (void)
 {
-  // turn off LEDs
+  /* turn off LEDs */
   AT91F_PIO_CfgOutput (LED_BEACON_PIO, LED_BEACON_MASK);
   AT91F_PIO_SetOutput (LED_BEACON_PIO, LED_BEACON_MASK);
 
@@ -483,10 +524,11 @@ PtInitProtocol (void)
   rf_rec[1] = rf_rec_old[1] = rf_decrypt[1] = 0;
   rf_crc_ok[1] = rf_crc_err[1] = rf_pkt_per_sec[1] = 0;
 
+  duplicate_backlog_pos = rf_duplicates[0] = rf_duplicates[1] = 0;
+  memset (&duplicate_backlog, 0, sizeof (duplicate_backlog));
+
   /* xLogfile queue can hold now 4kB of data */
-  xLogfile =
-    xQueueCreate ((4*1024) / sizeof (g_Beacon),
-		  sizeof (g_Beacon));
+  xLogfile = xQueueCreate ((4 * 1024) / sizeof (g_Beacon), sizeof (g_Beacon));
 
   xTaskCreate (vnRFtaskRxTx, (signed portCHAR *) "nRF_RxTx", TASK_NRF_STACK,
 	       NULL, TASK_NRF_PRIORITY, NULL);
