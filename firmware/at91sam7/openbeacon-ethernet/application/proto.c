@@ -216,7 +216,7 @@ vnRF_ProcessDevice (u_int8_t device)
 		   sizeof (g_Beacon) - sizeof (g_Beacon.crc));
 
       /* check for duplicates */
-      duplicate =pdFALSE;
+      duplicate = pdFALSE;
       if (!env.e.filter_duplicates)
 	/* reset rf_duplicates if detection is disabled */
 	rf_duplicates[device] = 0;
