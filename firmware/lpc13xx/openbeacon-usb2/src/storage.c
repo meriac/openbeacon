@@ -176,7 +176,8 @@ storage_init (uint8_t usb_enabled, uint16_t device_id)
   /* read-me.htm file that redirects to project page */
   static const char readme[] =
     "<html><head><meta HTTP-EQUIV=\"REFRESH\" content=\"0; "
-    "url=http://openbeacon.org/OpenBeacon_USB_2\"></head></html>";
+    "url=http://openbeacon.org/OpenBeacon_USB_2?ver="
+    PROGRAM_VERSION "\"></head></html>";
 
   static const TDiskFile f_readme = {
     .length = sizeof (readme) - 1,
@@ -190,6 +191,18 @@ storage_init (uint8_t usb_enabled, uint16_t device_id)
 #endif/*ENABLE_FLASH*/
   };
 
+  /* version information */
+  static const char version[] =
+    PROGRAM_VERSION;
+
+  static const TDiskFile f_version = {
+    .length = sizeof (version) - 1,
+    .handler = NULL,
+    .data = &version,
+    .name = "VERSION TXT",
+    .next = &f_readme
+  };
+
   /* autorun.inf file that redirects to READ-ME.HTM */
   static const char autorun_inf[] =
     "[AutoRun]\n"
@@ -200,8 +213,10 @@ storage_init (uint8_t usb_enabled, uint16_t device_id)
     .handler = NULL,
     .data = &autorun_inf,
     .name = "AUTORUN INF",
-    .next = &f_readme,
+    .next = &f_version,
   };
+
+
 
   /* init virtual file system */
   if(usb_enabled)

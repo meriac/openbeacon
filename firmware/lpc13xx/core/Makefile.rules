@@ -6,6 +6,12 @@ OBJDUMP=$(CROSS)objdump
 AR=$(CROSS)ar
 LDSCRIPT=$(CORE)linker/$(CPU).ld
 
+# determine program version
+PROGRAM_VERSION:=$(shell git describe --tags --abbrev=4 --dirty 2>/dev/null | sed s/^v//)
+ifeq ("$(PROGRAM_VERSION)","")
+    PROGRAM_VERSION:='unknown'
+endif
+
 CORE=../core/
 
 #
@@ -14,6 +20,7 @@ CORE=../core/
 CFLAGS= \
 -D __$(CPU)__ \
 -D __$(ARCH)xx__ \
+-D PROGRAM_VERSION=\"$(PROGRAM_VERSION)\" \
 -Iconfig \
 -I$(CORE)cmsis/inc \
 -I$(CORE)openbeacon/inc \
