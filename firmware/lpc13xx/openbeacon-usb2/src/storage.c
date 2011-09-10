@@ -193,7 +193,7 @@ storage_init (uint8_t usb_enabled, uint16_t device_id)
 
   /* version information */
   static const char version[] =
-    PROGRAM_VERSION;
+    PROGRAM_NAME ":v" PROGRAM_VERSION;
 
   static const TDiskFile f_version = {
     .length = sizeof (version) - 1,

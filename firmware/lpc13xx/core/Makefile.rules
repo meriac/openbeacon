@@ -21,6 +21,7 @@ CFLAGS= \
 -D __$(CPU)__ \
 -D __$(ARCH)xx__ \
 -D PROGRAM_VERSION=\"$(PROGRAM_VERSION)\" \
+-D PROGRAM_NAME=\"$(TARGET)\" \
 -Iconfig \
 -I$(CORE)cmsis/inc \
 -I$(CORE)openbeacon/inc \
