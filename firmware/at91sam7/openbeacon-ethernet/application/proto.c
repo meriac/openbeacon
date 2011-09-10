@@ -204,7 +204,7 @@ vnRF_ProcessDevice (u_int8_t device)
       // posting packet to log file queue
       g_Beacon.hdr.protocol = BEACONLOG_SIGHTING;
       g_Beacon.hdr.interface = device;
-      g_Beacon.hdr.size = sizeof(g_Beacon);
+      g_Beacon.hdr.size = swapshort(sizeof(g_Beacon));
       g_Beacon.reader_id = swaplong(env.e.reader_id);
       g_Beacon.crc = swapshort(env_crc16 ((u_int8_t*)&g_Beacon, sizeof (g_Beacon) - sizeof (g_Beacon.crc)));
       xQueueSend (xLogfile, &g_Beacon, 0);
