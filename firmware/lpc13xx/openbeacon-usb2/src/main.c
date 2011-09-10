@@ -248,8 +248,9 @@ main_menue (uint8_t cmd)
     case 'H':
       debug_printf ("\n"
 		    " *****************************************************\n"
-		    " * OpenBeacon Tag - Bluetooth Console                *\n"
-		    " * (C) 2011 Milosch Meriac <meriac@openbeacon.de>    *\n"
+		    " * OpenBeacon Tag - Bluetooth Console\n"
+		    " *                  Version v" PROGRAM_VERSION "\n"
+		    " * (C) 2011 Milosch Meriac <meriac@openbeacon.de>\n"
 		    " *****************************************************\n"
 		    " * H,?          - this help screen\n"
 		    " * S            - Show device status\n"
