@@ -67,6 +67,9 @@ debug: .depend $(SOURCES)
 .cpp.o:
 	$(CXX) $(CXXFLAGS) $(CXXOPT) -c $< -o $@
 
+dependencies-fedora:
+	sudo yum install libpcap libpcap-devel zlib zlib-devel gcc-c++
+
 cleanall: clean
 	rm -rf .depend
 
