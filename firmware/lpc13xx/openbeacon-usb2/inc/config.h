@@ -44,10 +44,10 @@
 
 /* SPI_CS(io_port, io_pin, CPSDVSR frequency, mode) */
 #ifdef  ENABLE_FLASH
-#define SPI_CS_FLASH SPI_CS( 1, 8, 1, SPI_CS_MODE_SKIP_TX )	/*  12.0MHz */
+#define SPI_CS_FLASH SPI_CS( 1, 8, 6, SPI_CS_MODE_SKIP_TX )	/*  2.0 MHz */
 #endif/*ENABLE_FLASH*/
-#define SPI_CS_NRF   SPI_CS( 1,10, 1, SPI_CS_MODE_NORMAL )	/*  12.0MHz */
-#define SPI_CS_ACC3D SPI_CS( 0, 4, 1, SPI_CS_MODE_NORMAL )	/*  12.0MHz */
+#define SPI_CS_NRF   SPI_CS( 1,10, 6, SPI_CS_MODE_NORMAL )	/*  2.0 MHz */
+#define SPI_CS_ACC3D SPI_CS( 0, 4, 6, SPI_CS_MODE_NORMAL )	/*  2.0 MHz */
 
 #define NRF_MAX_MAC_SIZE 5
 

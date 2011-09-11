@@ -75,7 +75,7 @@ void
 pmu_sleep_ms (uint16_t ms)
 {
   if (ms < 2)
-    ms = 1;
+    ms = 2;
 
   /* set PMU to low power mode */
   GPIOSetValue (0, 5, 1);
