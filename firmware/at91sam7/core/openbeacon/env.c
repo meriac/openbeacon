@@ -91,7 +91,7 @@ env_flash_to (const void *addr)
   flash_cmd_wait ();
 }
 
-unsigned short
+unsigned short RAMFUNC
 env_crc16 (const unsigned char *buffer, int size)
 {
   unsigned short crc = 0xFFFF;

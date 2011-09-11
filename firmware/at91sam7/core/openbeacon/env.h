@@ -33,7 +33,7 @@ extern TEnvironmentBlock env;
 extern void env_store (void);
 extern int env_load (void);
 extern void env_init (void);
-extern unsigned short env_crc16 (const unsigned char *buffer, int size);
+extern unsigned short env_crc16 (const unsigned char *buffer, int size) RAMFUNC;
 extern void env_flash_to (const void *addr) RAMFUNC;
 
 #if defined(__AT91SAM7X__) || defined(__AT91SAM7SE__)
