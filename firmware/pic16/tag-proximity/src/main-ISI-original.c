@@ -274,7 +274,7 @@ main (void)
 
       nRFCMD_Stop ();
 
-      while ((nRFCMD_RegGet (FIFO_STATUS) & NRF_FIFO_RX_EMPTY) == 0)
+      while ((nRFCMD_RegGet (NRF_REG_FIFO_STATUS) & NRF_FIFO_RX_EMPTY) == 0)
 	{
 	  // receive raw data
 	  nRFCMD_RegRead (RD_RX_PLOAD, pkt.byte, sizeof (pkt.byte));
@@ -295,14 +295,14 @@ main (void)
 	{
 	  CONFIG_PIN_ANT_SWITCH = 1;
 	  rf_setup = NRF_RFOPTIONS | (((i & 0x07) < 6) ? 0x02 : 0x04);
-	  nRFCMD_RegReadWrite (RF_CH | WRITE_REG, CONFIG_PROX_CHANNEL);
+	  nRFCMD_RegReadWrite (NRF_REG_RF_CH | WRITE_REG, CONFIG_PROX_CHANNEL);
 	  pkt.tracker.proto = RFBPROTO_PROXTRACKER;
 	}
       else
 	{
 	  CONFIG_PIN_ANT_SWITCH = 0;
 	  rf_setup = NRF_RFOPTIONS | ((i >> 2) & 0x06);
-	  nRFCMD_RegReadWrite (RF_CH | WRITE_REG, CONFIG_TRACKER_CHANNEL);
+	  nRFCMD_RegReadWrite (NRF_REG_RF_CH | WRITE_REG, CONFIG_TRACKER_CHANNEL);
 	  pkt.tracker.proto = RFBPROTO_BEACONTRACKER;
 	  pkt.tracker.oid_last_seen = htons (oid_last_seen);
 	  oid_last_seen = 0;
@@ -336,7 +336,7 @@ main (void)
       protocol_encode ();
 
       // transmit data to nRF24L01 chip
-      nRFCMD_RegReadWrite (RF_SETUP | WRITE_REG, rf_setup);
+      nRFCMD_RegReadWrite (NRF_REG_RF_SETUP | WRITE_REG, rf_setup);
       nRFCMD_RegWrite (WR_TX_PLOAD | WRITE_REG, (unsigned char *) &pkt,
 		       sizeof (pkt));
       // send data away
