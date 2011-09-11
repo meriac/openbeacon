@@ -213,9 +213,7 @@ vnRF_ProcessDevice (u_int8_t device)
       rf_rec[device]++;
 
       /* calculate checkum to check for duplicates */
-      crc =
-	env_crc16 ((u_int8_t *) & g_Beacon,
-		   sizeof (g_Beacon) - sizeof (g_Beacon.crc));
+      crc = env_crc16 ( g_Beacon.log.byte, sizeof (g_Beacon.log.byte));
 
       /* check for duplicates */
       duplicate = pdFALSE;
@@ -251,7 +249,9 @@ vnRF_ProcessDevice (u_int8_t device)
 	    rf_lastblink[device] = time + LED_ON_RX_BLINK_DURATION_MS;
 	  }
 
-	  /* posting packet to log file queue */
+	  /* post packet to log file queue with CRC */
+	  crc = env_crc16 ( (u_int8_t*)&g_Beacon,
+	    sizeof (g_Beacon) - sizeof(g_Beacon.crc));
 	  g_Beacon.crc = swapshort (crc);
 	  xQueueSend (xLogfile, &g_Beacon, 0);
 
