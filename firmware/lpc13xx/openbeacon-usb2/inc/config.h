@@ -36,8 +36,7 @@
 #endif/*USB_DISK_SUPPORT*/
 
 /* Treshold for detecting 3D accelerometer movement */
-#define ACC_TRESHOLD 3
-#define ACC_MOVING_TRESHOLD 20
+#define ACC_TRESHOLD 5
 
 /* Clock Definition */
 #define SYSTEM_CRYSTAL_CLOCK 12000000
@@ -45,10 +44,10 @@
 
 /* SPI_CS(io_port, io_pin, CPSDVSR frequency, mode) */
 #ifdef  ENABLE_FLASH
-#define SPI_CS_FLASH SPI_CS( 1, 8, 2, SPI_CS_MODE_SKIP_TX )	/*  6.0MHz */
+#define SPI_CS_FLASH SPI_CS( 1, 8, 1, SPI_CS_MODE_SKIP_TX )	/*  12.0MHz */
 #endif/*ENABLE_FLASH*/
-#define SPI_CS_NRF   SPI_CS( 1,10, 2, SPI_CS_MODE_NORMAL )	/*  6.0MHz */
-#define SPI_CS_ACC3D SPI_CS( 0, 4, 2, SPI_CS_MODE_NORMAL )	/*  6.0MHz */
+#define SPI_CS_NRF   SPI_CS( 1,10, 1, SPI_CS_MODE_NORMAL )	/*  12.0MHz */
+#define SPI_CS_ACC3D SPI_CS( 0, 4, 1, SPI_CS_MODE_NORMAL )	/*  12.0MHz */
 
 #define NRF_MAX_MAC_SIZE 5
 

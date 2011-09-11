@@ -32,6 +32,12 @@
 #include "xxtea.h"
 #include "openbeacon-proto.h"
 
+#define FIFO_DEPTH 10
+typedef struct
+{
+  int x, y, z;
+} TFifoEntry;
+
 /* device UUID */
 static uint16_t tag_id;
 static TDeviceUID device_uuid;
@@ -319,10 +325,18 @@ main_menue (uint8_t cmd)
 int
 main (void)
 {
+  /* accelerometer readings fifo */
+  TFifoEntry acc_lowpass;
+  TFifoEntry fifo_buf[FIFO_DEPTH];
+  int fifo_pos;
+  TFifoEntry *fifo;
+
   uint32_t SSPdiv;
   uint16_t crc, oid_last_seen;
-  uint8_t status, seen_low, seen_high, cmd_buffer[64], cmd_pos,*cmd,c;
+  uint8_t status, seen_low, seen_high;
+  uint8_t cmd_buffer[64], cmd_pos,*cmd,c;
   uint8_t volatile *uart;
+  int x, y, z, firstrun_done, moving;
   volatile int t;
   int i;
 
@@ -455,33 +469,99 @@ main (void)
   i = 0;
   seen_low = seen_high = 0;
   oid_last_seen = 0;
+
+  /*initialize FIFO */
+  fifo_pos=0;
+  bzero (&acc_lowpass, sizeof(acc_lowpass));
+  bzero (&fifo_buf, sizeof(fifo_buf));
+  firstrun_done=0;
+  moving = 0;
+
   while (1)
     {
-      /* transmit every 50-150ms */
-      pmu_sleep_ms (50 + rnd (100));
+      /* transmit every 50-150ms when moving
+         or 1550-1650 ms while still */
+      pmu_sleep_ms ((moving?50:1550) + rnd (100));
 
       /* getting SPI back up again */
       LPC_SYSCON->SSPCLKDIV = SSPdiv;
 
       /* blink every 16th packet transmitted */
-      if ((i & 0xF) == 0)
+      if ( !moving || ((i & 0xF) == 0) )
 	{
 	  /* switch to RX mode */
-	  nRFAPI_SetRxMode (1);
-	  nRFCMD_CE (1);
+	  if(moving)
+	    nRFAPI_SetRxMode (1);
+	  /* turn on 3D acceleration sensor */
+	  acc_power (1);
+	  if(moving)
+	    nRFCMD_CE (1);
 	  pmu_sleep_ms (20);
-	  /* turn RX/CE off */
-	  nRFCMD_CE (0);
-	  /* fire up LED */
-	  GPIOSetValue (1, 2, 1);
-	  /* wait till RX stops */
-	  pmu_sleep_ms (2);
-	  /* turn LED off */
-	  GPIOSetValue (1, 2, 0);
-	  /* turn RX register off */
-	  nRFAPI_SetRxMode (0);
+	  /* read acceleration */
+	  acc_xyz_read (&x, &y, &z);
+	  /* power down acceleration sensor again */
+	  acc_power (0);
 
-	  if (nRFCMD_IRQ ())
+	  /* turn RX/CE off */
+	  if(moving)
+	    nRFCMD_CE (0);
+
+	  /* only blink while moving */
+	  if(moving || !firstrun_done)
+	  {
+	    /* fire up LED */
+	    GPIOSetValue (1, 2, 1);
+	    /* wait till RX stops */
+	    pmu_sleep_ms (firstrun_done?2:100);
+	    /* turn LED off */
+	    GPIOSetValue (1, 2, 0);
+	  }
+
+	  if (!firstrun_done)
+	  {
+	    pmu_sleep_ms (100);
+	    /* fire up LED */
+	    GPIOSetValue (1, 2, 1);
+	    /* blink a second time during firstrun_done */
+	    pmu_sleep_ms (100);
+	    /* turn LED off */
+	    GPIOSetValue (1, 2, 0);
+	  }
+
+	  /* turn RX register off */
+	  if(moving)
+	    nRFAPI_SetRxMode (0);
+
+	  /* add new accelerometer values to lowpass */
+	  fifo = &fifo_buf[fifo_pos];
+	  if (fifo_pos >= (FIFO_DEPTH - 1))
+	    fifo_pos = 0;
+	  else
+	    fifo_pos++;
+
+	  acc_lowpass.x += x - fifo->x;
+	  fifo->x = x;
+	  acc_lowpass.y += y - fifo->y;
+	  fifo->y = y;
+	  acc_lowpass.z += z - fifo->z;
+	  fifo->z = z;
+
+	  if (firstrun_done)
+	  {
+	    if ((abs (acc_lowpass.x / FIFO_DEPTH - x) >= ACC_TRESHOLD) ||
+		(abs (acc_lowpass.y / FIFO_DEPTH - y) >= ACC_TRESHOLD) ||
+		(abs (acc_lowpass.z / FIFO_DEPTH - z) >= ACC_TRESHOLD))
+		moving = 20;
+	    else
+		if(moving)
+		    moving--;
+	  }
+	  else
+	    /* make sure to initialize FIFO buffer first */
+	    if(!fifo_pos)
+		firstrun_done = TRUE;
+
+	  if (moving && nRFCMD_IRQ ())
 	    {
 	      do
 		{
@@ -539,13 +619,14 @@ main (void)
 	  /* prepare packet */
 	  bzero (&g_Beacon.e, sizeof (g_Beacon.e));
 	  g_Beacon.e.pkt.proto = RFBPROTO_BEACONTRACKER;
+	  g_Beacon.e.pkt.flags = moving ? RFBFLAGS_MOVING : 0;
 	  g_Beacon.e.pkt.oid = htons (tag_id);
 	  g_Beacon.e.pkt.p.tracker.strength = (i & 1) + TX_STRENGTH_OFFSET;
 	  g_Beacon.e.pkt.p.tracker.seq = htonl (LPC_TMR32B0->TC);
 	  g_Beacon.e.pkt.p.tracker.oid_last_seen = oid_last_seen;
 	  g_Beacon.e.pkt.p.tracker.seen_low = seen_low;
 	  g_Beacon.e.pkt.p.tracker.seen_high = seen_high;
-	  g_Beacon.e.pkt.p.tracker.reserved = 0;
+	  g_Beacon.e.pkt.p.tracker.battery = 0;
 	  g_Beacon.e.pkt.crc =
 	    htons (crc16
 		   (g_Beacon.e.byte,

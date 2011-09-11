@@ -40,6 +40,8 @@
 #define RFBFLAGS_ACK			0x01
 #define RFBFLAGS_SENSOR			0x02
 #define RFBFLAGS_INFECTED		0x04
+#define RFBFLAGS_MOVING			0x08
+#define RFBFLAGS_SENSOR2		0x10
 
 /* RFBPROTO_READER_COMMAND related opcodes */
 #define READER_CMD_NOP			0x00
@@ -63,7 +65,7 @@ typedef struct
   uint16_t oid_last_seen;
   uint8_t seen_low;
   uint8_t seen_high;
-  uint8_t reserved;
+  uint8_t battery;
   uint32_t seq;
 } PACKED TBeaconTracker;
 
