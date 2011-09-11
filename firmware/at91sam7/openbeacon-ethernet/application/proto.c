@@ -41,15 +41,16 @@
 #include "rnd.h"
 
 /**********************************************************************/
+#define LED_ON_RX_BLINK_DURATION_MS 100
 #define DUPLICATES_BACKLOG_SIZE 8
 /**********************************************************************/
 static xQueueHandle xLogfile;
 /**********************************************************************/
 static unsigned short duplicate_backlog[DUPLICATES_BACKLOG_SIZE];
 static unsigned int duplicate_backlog_pos, rf_duplicates[NRFCMD_DEVICES];
+static unsigned int rf_lastblink[NRFCMD_DEVICES];
 static unsigned int rf_decrypt[NRFCMD_DEVICES], rf_crc_ok[NRFCMD_DEVICES];
-static unsigned int rf_crc_err[NRFCMD_DEVICES],
-  rf_pkt_per_sec[NRFCMD_DEVICES];
+static unsigned int rf_crc_err[NRFCMD_DEVICES], rf_pkt_per_sec[NRFCMD_DEVICES];
 static unsigned int rf_rec[NRFCMD_DEVICES], rf_rec_old[NRFCMD_DEVICES];
 static int pt_debug_level = 0;
 static unsigned char nrf_powerlevel_current, nrf_powerlevel_last;
@@ -177,7 +178,15 @@ vnRF_ProcessDevice (u_int8_t device)
   u_int8_t status, duplicate;
   u_int16_t crc, oid;
   u_int8_t strength, t;
-  u_int32_t seconds_since_boot;
+  u_int32_t seconds_since_boot, time;
+
+  /* handle RX off-blink */
+  time = xTaskGetTickCount () / portTICK_RATE_MS;
+  if( rf_lastblink[device] && (rf_lastblink[device] <= time) )
+  {
+    rf_lastblink[device] = 0;
+    led_set_rx (device, 0);
+  }
 
   status = nRFAPI_GetFifoStatus (device);
 
@@ -189,8 +198,6 @@ vnRF_ProcessDevice (u_int8_t device)
   if (status & FIFO_RX_EMPTY)
     return 0;
 
-  led_set_rx (device, 1);
-
   /* Setup log file header */
   g_Beacon.hdr.protocol = BEACONLOG_SIGHTING;
   g_Beacon.hdr.interface = device;
@@ -199,11 +206,6 @@ vnRF_ProcessDevice (u_int8_t device)
 
   do
     {
-#ifndef DISABLE_WATCHDOG
-      /* Restart watchdog, has been enabled in Cstartup_SAM7.c */
-      AT91F_WDTRestart (AT91C_BASE_WDTC);
-#endif /*DISABLE_WATCHDOG */
-
       /* read packet from nRF chip */
       nRFCMD_RegReadBuf (device, RD_RX_PLOAD, g_Beacon.log.byte,
 			 sizeof (g_Beacon.log));
@@ -217,6 +219,7 @@ vnRF_ProcessDevice (u_int8_t device)
 
       /* check for duplicates */
       duplicate = pdFALSE;
+
       if (!env.e.filter_duplicates)
 	/* reset rf_duplicates if detection is disabled */
 	rf_duplicates[device] = 0;
@@ -241,6 +244,13 @@ vnRF_ProcessDevice (u_int8_t device)
 
       if (!duplicate)
 	{
+	  /* blink for LED_ON_RX_BLINK_DURATION_MS milliseconds */
+	  if(!rf_lastblink[device])
+	  {
+	    led_set_rx (device, 1);
+	    rf_lastblink[device] = time + LED_ON_RX_BLINK_DURATION_MS;
+	  }
+
 	  /* posting packet to log file queue */
 	  g_Beacon.crc = swapshort (crc);
 	  xQueueSend (xLogfile, &g_Beacon, 0);
@@ -262,7 +272,7 @@ vnRF_ProcessDevice (u_int8_t device)
 	  crc = env_crc16 (g_Beacon.log.byte,
 			   sizeof (g_Beacon.log) - sizeof (u_int16_t));
 
-	  seconds_since_boot = xTaskGetTickCount () / 1000;
+	  seconds_since_boot = time / 1000;
 
 	  if (swapshort (g_Beacon.log.pkt.crc) != crc)
 	    {
@@ -324,9 +334,6 @@ vnRF_ProcessDevice (u_int8_t device)
     }
   while ((nRFAPI_GetFifoStatus (device) & FIFO_RX_EMPTY) == 0);
 
-  /* wait in case a packet is currently received */
-  led_set_rx (device, 0);
-
   /* did I already mention this paranoid world thing? */
   nRFAPI_ClearIRQ (device, MASK_IRQ_FLAGS);
 
@@ -361,6 +368,8 @@ vnRFtaskRxTx (void *parameter)
 
   time_old = xTaskGetTickCount () * portTICK_RATE_MS;
 
+  vLedSetGreen (1);
+
   for (;;)
     {
       /* gather statistics */
@@ -386,10 +395,21 @@ vnRFtaskRxTx (void *parameter)
 	  nrf_powerlevel_last = nrf_powerlevel_current;
 	}
 
-      if (!
-	  (vnRF_ProcessDevice (NRFCMD_DEV0)
-	   || vnRF_ProcessDevice (NRFCMD_DEV1)))
-	nRFCMD_WaitRx (200);
+#ifndef DISABLE_WATCHDOG
+      /* Restart watchdog, has been enabled in Cstartup_SAM7.c */
+      AT91F_WDTRestart (AT91C_BASE_WDTC);
+#endif /*DISABLE_WATCHDOG */
+
+      if(vnRF_ProcessDevice (NRFCMD_DEV0))
+      {
+	vnRF_ProcessDevice (NRFCMD_DEV1);
+	vTaskDelay(0);
+      }
+      else
+        if(vnRF_ProcessDevice (NRFCMD_DEV1))
+	  vTaskDelay(0);
+	else
+	  nRFCMD_WaitRx (200);
     }
 }
 
@@ -523,6 +543,7 @@ PtInitProtocol (void)
   rf_crc_ok[0] = rf_crc_err[0] = rf_pkt_per_sec[0] = 0;
   rf_rec[1] = rf_rec_old[1] = rf_decrypt[1] = 0;
   rf_crc_ok[1] = rf_crc_err[1] = rf_pkt_per_sec[1] = 0;
+  rf_lastblink[0] = rf_lastblink[1] = 0;
 
   duplicate_backlog_pos = rf_duplicates[0] = rf_duplicates[1] = 0;
   memset (&duplicate_backlog, 0, sizeof (duplicate_backlog));

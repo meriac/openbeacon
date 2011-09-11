@@ -235,22 +235,18 @@ vNetworkThread (void *pvParameters)
     {
       int cnt = 0;
 
+      vTaskDelay (DHCP_FINE_TIMER_MSECS / portTICK_RATE_MS);
+
       if (env.e.ip_autoconfig == IP_AUTOCONFIG_DHCP)
 	{
-	  vTaskDelay (DHCP_FINE_TIMER_MSECS / portTICK_RATE_MS);
 	  dhcp_fine_tmr ();
 	  cnt += DHCP_FINE_TIMER_MSECS;
-	  if (cnt >= DHCP_COARSE_TIMER_SECS * 1000)
+	  if (cnt >= (DHCP_COARSE_TIMER_SECS * 1000))
 	    {
 	      dhcp_coarse_tmr ();
 	      cnt = 0;
 	    }
 	}
-
-      vTaskDelay (50 / portTICK_RATE_MS);
-      vLedSetGreen (0);
-      vTaskDelay (50 / portTICK_RATE_MS);
-      vLedSetGreen (1);
     }
 }
 
