@@ -516,7 +516,7 @@ main (void)
 	    /* turn LED off */
 	    GPIOSetValue (1, 2, 0);
 	  }
-
+	  /* second blink during initialization */
 	  if (!firstrun_done)
 	  {
 	    pmu_sleep_ms (100);
