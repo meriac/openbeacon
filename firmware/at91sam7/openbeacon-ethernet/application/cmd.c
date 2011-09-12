@@ -43,6 +43,8 @@ vCmdHelp (void)
 		"\t'b' - boot again\n"
 		"\t'c' - show configuration\n"
 		"\t'd' - enable debug output ('d[disable=0,enable=1]')\n"
+		"\t'f' - enable/disable RF packet duplicate filtering\n"
+		"\t      ('f[disabled=0,enabled=1]')\n"
 		"\t'g' - set gateway ip\n"
 		"\t'h' - show help\n"
 		"\t'i' - set reader id ('i123')\n"
@@ -157,6 +159,19 @@ vCmdProcess (const char *cmdline)
       else
 	debug_printf
 	  ("usage: 'd' - set debug level ('d[disable=0, lowest=1]')\n");
+      break;
+
+    case 'F':
+      if (assign)
+	{
+	  t = atoiEx (cmdline)?1:0;
+	  debug_printf ("%s duplicate filtering\n", t?"enabled":"disabled");
+	  env.e.filter_duplicates = t;
+	}
+      else
+	debug_printf
+	  ("usage: 'f' - set RF packet duplicate filtering\n"
+	   "             ('f[disable=0, enable=1]')\n");
       break;
 
     case 'G':
