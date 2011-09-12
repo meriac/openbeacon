@@ -128,6 +128,7 @@ typedef struct
 {
   BeaconEnvelopeLogHdr hdr;
   u_int32_t reader_id;
+  u_int32_t reader_timestamp;
   TBeaconEnvelope log;
   u_int16_t crc;
 } PACKED TBeaconLogSighting;

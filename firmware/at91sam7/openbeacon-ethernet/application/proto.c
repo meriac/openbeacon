@@ -212,6 +212,9 @@ vnRF_ProcessDevice (u_int8_t device)
 
       rf_rec[device]++;
 
+      /* get latest time */
+      time = xTaskGetTickCount () / portTICK_RATE_MS;
+
       /* blink for LED_ON_RX_BLINK_DURATION_MS milliseconds */
       if(!rf_lastblink[device])
 	{
@@ -253,6 +256,7 @@ vnRF_ProcessDevice (u_int8_t device)
 	  crc = env_crc16 ( (u_int8_t*)&g_Beacon,
 	    sizeof (g_Beacon) - sizeof(g_Beacon.crc));
 	  g_Beacon.crc = swapshort (crc);
+	  g_Beacon.reader_timestamp = swaplong (time);
 	  xQueueSend (xLogfile, &g_Beacon, 0);
 
 	  /* post packet to network via UDP */
