@@ -109,6 +109,12 @@ env_crc16 (const unsigned char *buffer, int size)
   return crc;
 }
 
+unsigned short
+env_icrc16 (const unsigned char *buffer, int size)
+{
+  return env_crc16(buffer,size)^0xFFFF;
+}
+
 #if defined(__AT91SAM7X__)
 void RAMFUNC
 env_reboot_to_update (void)
