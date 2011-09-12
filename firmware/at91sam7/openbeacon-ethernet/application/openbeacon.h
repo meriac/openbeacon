@@ -118,19 +118,20 @@ typedef union
 
 typedef struct
 {
+  u_int16_t icrc16;
   u_int8_t protocol;
   u_int8_t interface;
+  u_int16_t reader_id;
   u_int16_t size;
-} PACKED BeaconEnvelopeLogHdr;
+} PACKED TBeaconNetworkHdr;
 
 /* BEACONLOG_SIGHTING */
 typedef struct
 {
-  BeaconEnvelopeLogHdr hdr;
-  u_int32_t reader_id;
-  u_int32_t reader_timestamp;
+  TBeaconNetworkHdr hdr;
+  u_int32_t sequence;
+  u_int32_t timestamp;
   TBeaconEnvelope log;
-  u_int16_t crc;
 } PACKED TBeaconLogSighting;
 
 #endif/*__OPENBEACON_H__*/

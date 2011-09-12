@@ -46,15 +46,15 @@
 /**********************************************************************/
 static xQueueHandle xLogfile;
 /**********************************************************************/
-static unsigned short duplicate_backlog[DUPLICATES_BACKLOG_SIZE];
-static unsigned int duplicate_backlog_pos, rf_duplicates[NRFCMD_DEVICES];
-static unsigned int rf_lastblink[NRFCMD_DEVICES];
-static unsigned int rf_decrypt[NRFCMD_DEVICES], rf_crc_ok[NRFCMD_DEVICES];
-static unsigned int rf_crc_err[NRFCMD_DEVICES], rf_pkt_per_sec[NRFCMD_DEVICES];
-static unsigned int rf_rec[NRFCMD_DEVICES], rf_rec_old[NRFCMD_DEVICES];
+static u_int32_t duplicate_backlog[DUPLICATES_BACKLOG_SIZE];
+static u_int32_t duplicate_backlog_pos, rf_duplicates[NRFCMD_DEVICES];
+static u_int32_t rf_lastblink[NRFCMD_DEVICES];
+static u_int32_t rf_decrypt[NRFCMD_DEVICES], rf_crc_ok[NRFCMD_DEVICES];
+static u_int32_t rf_crc_err[NRFCMD_DEVICES], rf_pkt_per_sec[NRFCMD_DEVICES];
+static u_int32_t rf_rec[NRFCMD_DEVICES], rf_rec_old[NRFCMD_DEVICES];
 static int pt_debug_level = 0;
-static unsigned char nrf_powerlevel_current, nrf_powerlevel_last;
-static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] =
+static u_int8_t nrf_powerlevel_current, nrf_powerlevel_last;
+static const u_int8_t broadcast_mac[NRF_MAX_MAC_SIZE] =
   { 1, 2, 3, 2, 1 };
 
 TBeaconLogSighting g_Beacon;
@@ -176,9 +176,10 @@ static unsigned char
 vnRF_ProcessDevice (u_int8_t device)
 {
   u_int8_t status, duplicate;
-  u_int16_t crc, oid;
-  u_int8_t strength, t;
-  u_int32_t seconds_since_boot, time;
+  u_int16_t crc, oid, prox;
+  u_int8_t strength;
+  u_int32_t unique, t, seconds_since_boot, time;
+  static unsigned int reader_sequence = 0;
 
   /* handle RX off-blink */
   time = xTaskGetTickCount () / portTICK_RATE_MS;
@@ -201,8 +202,8 @@ vnRF_ProcessDevice (u_int8_t device)
   /* Setup log file header */
   g_Beacon.hdr.protocol = BEACONLOG_SIGHTING;
   g_Beacon.hdr.interface = device;
+  g_Beacon.hdr.reader_id = swapshort ((u_int16_t)env.e.reader_id);
   g_Beacon.hdr.size = swapshort (sizeof (g_Beacon));
-  g_Beacon.reader_id = swaplong (env.e.reader_id);
 
   do
     {
@@ -223,7 +224,7 @@ vnRF_ProcessDevice (u_int8_t device)
 	}
 
       /* calculate checkum to check for duplicates */
-      crc = env_crc16 ( g_Beacon.log.byte, sizeof (g_Beacon.log.byte));
+      unique = crc32 ( g_Beacon.log.byte, sizeof (g_Beacon.log.byte));
 
       /* check for duplicates */
       duplicate = pdFALSE;
@@ -234,7 +235,7 @@ vnRF_ProcessDevice (u_int8_t device)
       else
 	{
 	  for (t = 0; t < DUPLICATES_BACKLOG_SIZE; t++)
-	    if (duplicate_backlog[t] == crc)
+	    if (duplicate_backlog[t] == unique)
 	      {
 		duplicate = pdTRUE;
 		rf_duplicates[device]++;
@@ -244,7 +245,7 @@ vnRF_ProcessDevice (u_int8_t device)
 	  /* add non-duplicates to CRC backlog */
 	  if (!duplicate)
 	    {
-	      duplicate_backlog[duplicate_backlog_pos++] = crc;
+	      duplicate_backlog[duplicate_backlog_pos++] = unique;
 	      if (duplicate_backlog_pos >= DUPLICATES_BACKLOG_SIZE)
 		duplicate_backlog_pos = 0;
 	    }
@@ -252,11 +253,13 @@ vnRF_ProcessDevice (u_int8_t device)
 
       if (!duplicate)
 	{
+	  /* add time stamp & sequence number */
+	  g_Beacon.sequence = swaplong (reader_sequence++);
+	  g_Beacon.timestamp = swaplong (time);
 	  /* post packet to log file queue with CRC */
-	  crc = env_crc16 ( (u_int8_t*)&g_Beacon,
-	    sizeof (g_Beacon) - sizeof(g_Beacon.crc));
-	  g_Beacon.crc = swapshort (crc);
-	  g_Beacon.reader_timestamp = swaplong (time);
+	  crc = env_icrc16 ( (u_int8_t*)&g_Beacon.hdr.protocol,
+	    sizeof (g_Beacon) - sizeof(g_Beacon.hdr.icrc16));
+	  g_Beacon.hdr.icrc16 = swapshort (crc);
 	  xQueueSend (xLogfile, &g_Beacon, 0);
 
 	  /* post packet to network via UDP */
@@ -308,14 +311,14 @@ vnRF_ProcessDevice (u_int8_t device)
 		case RFBPROTO_PROXREPORT:
 		  for (t = 0; t < PROX_MAX; t++)
 		    {
-		      crc = (swapshort (g_Beacon.log.pkt.p.prox.oid_prox[t]));
-		      if (crc)
+		      prox = (swapshort (g_Beacon.log.pkt.p.prox.oid_prox[t]));
+		      if (prox)
 			debug_printf ("@%07u[%u] PX: %u={%u,%u,%u}\n",
 				      seconds_since_boot,
 				      device,
 				      oid,
-				      (crc >> 0) & 0x7FF,
-				      (crc >> 14) & 0x3, (crc >> 11) & 0x7);
+				      (prox >> 0) & 0x7FF,
+				      (prox >> 14) & 0x3, (prox >> 11) & 0x7);
 		      else
 			debug_printf
 			  ("@%07u[%u] RX: %u,          ,3,0x%02X\n",
