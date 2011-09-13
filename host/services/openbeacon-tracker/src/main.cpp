@@ -701,7 +701,6 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	  tag_strength = PROX_TAG_STRENGTH_MASK;
 	  tag_flags |= TAGSIGHTINGFLAG_SHORT_SEQUENCE;
 
-	  fprintf(stderr, "tag=%04u:",tag_id);
 	  for (j = 0; j < PROX_MAX; j++)
 	    {
 	      tag_sighting = ntohs (env.pkt.p.prox.oid_prox[j]);
@@ -713,12 +712,11 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 		  /* add proximity tag sightings to table */
 		  prox_tag_sighting(timestamp, tag_id, prox_tag_id, prox_tag_strength, prox_tag_count);
 #ifdef DEBUG
-		  fprintf(stderr, " %04u->%04u [strength=%u,count=%u]",
+		  fprintf(stderr, "tag:%04u->%04u [strength=%u,count=%u]\n",
 		    tag_id, prox_tag_id, prox_tag_strength, prox_tag_count);
 #endif
 		}
 	    }
-	  fprintf(stderr, "\n");
 	}
       }
       break;
