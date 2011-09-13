@@ -184,6 +184,10 @@ protocol_process_packet (void)
 
   oid_last_seen = htons (pkt.tracker.oid);
 
+  /* ignore OIDs outside of mask */
+  if(oid_last_seen>PROX_TAG_ID_MASK)
+    return;
+
   for (j = 0; (j < seen_count) && (oid_seen[j] != oid_last_seen); j++);
 
   if (j < seen_count)
@@ -192,7 +196,7 @@ protocol_process_packet (void)
       if (pkt.tracker.strength < oid_seen_pwr[j])
 	insert = 1;
       else if ((pkt.tracker.strength == oid_seen_pwr[j])
-	       && (oid_seen_count[j] < 3))
+	       && (oid_seen_count[j] < PROX_TAG_COUNT_MASK))
 	oid_seen_count[j]++;
 
     }
@@ -219,7 +223,8 @@ protocol_process_packet (void)
     {
       oid_seen[j] = oid_last_seen;
       oid_seen_count[j] = 1;
-      oid_seen_pwr[j] = pkt.tracker.strength;
+      oid_seen_pwr[j] = (pkt.tracker.strength>PROX_TAG_STRENGTH_MASK) ?
+	PROX_TAG_STRENGTH_MASK:pkt.tracker.strength;
     }
 }
 
@@ -322,13 +327,17 @@ main (void)
       // turn all strong packets to proximity announcements
       if (pkt.tracker.strength == 3)
 	{
-	  pkt.prox.proto = RFBPROTO_PROXREPORT;
+	  pkt.prox.proto = RFBPROTO_PROXREPORT_EXT;
 	  pkt.prox.seq = htons ((u_int16_t) seq);
 
 	  for (j = 0; j < PROX_MAX; j++)
 	    pkt.prox.oid_prox[j] =
 	      (j < seen_count) ?
-		(htons (oid_seen[j] | (oid_seen_pwr[j] << 14) | (oid_seen_count[j] << 11))) : 0;
+		(htons (
+		    (oid_seen[j]) |
+		    (oid_seen_count[j] << PROX_TAG_ID_BITS) |
+		    (oid_seen_pwr[j] << (PROX_TAG_ID_BITS+PROX_TAG_COUNT_BITS))
+		    )) : 0;
 	  seen_count = 0;
 	}
 

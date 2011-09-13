@@ -38,8 +38,8 @@ clean:
 flash: $(PROG_TARGET)
 	$(PK2) -A5 -PPIC$(CHIP) -F$^ -M -YP
 
-publish: counted
-	cp $(PROGNAME).hex ~/Share/OpenBeacon/
+publish: $(PROG_TARGET)
+	cp $^ ~/Share/OpenBeacon/
 
 counted: $(PROG_TARGET)
 
