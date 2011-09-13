@@ -1,4 +1,3 @@
-VERSION :=0.1
 CXX     :=g++
 TARGET  :=openbeacon-tracker
 SOURCES :=src/bmMapHandleToItem.cpp src/main.cpp
@@ -10,8 +9,14 @@ FILTERFILE_PREFIX:=logs/sightings.json
 MIRROR  :=http://mirror.openbeacon.net
 LIBS    :=-lm -lpthread -lpcap
 
+# determine program version
+PROGRAM_VERSION:=$(shell git describe --tags --abbrev=4 --dirty 2>/dev/null | sed s/^v//)
+ifeq ("$(PROGRAM_VERSION)","")
+    PROGRAM_VERSION:='unknown'
+endif
+
 CXXOPT  :=-O3 -ffunction-sections -fdata-sections
-CXXFLAGS:=-Werror -Wall -std=gnu++0x -D_REENTRANT -DVERSION=\"$(VERSION)\"
+CXXFLAGS:=-Werror -Wall -std=gnu++0x -D_REENTRANT -DPROGRAM_VERSION=\"$(PROGRAM_VERSION)\" -D PROGRAM_NAME=\"$(TARGET)\"
 LDOPT   :=-Wl,--gc-sections
 LDFLAGS :=$(LIBS)
 OBJS    :=$(SOURCES:%.cpp=%.o)

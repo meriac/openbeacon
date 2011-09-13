@@ -369,6 +369,7 @@ EstimationStep (double timestamp, bool realtime)
 
   /* tracking dump state in JSON format */
   printf ("{\n  \"id\":%u,\n"
+	  "  \"api\":{\"name\":\"" PROGRAM_NAME "\",\"ver\":\"" PROGRAM_VERSION "\"},\n"
 	  "  \"time\":%u,\n"
 	  "  \"packets\":{\n", sequence++, (uint32_t) timestamp);
 
