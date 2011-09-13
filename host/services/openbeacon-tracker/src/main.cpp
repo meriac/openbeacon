@@ -668,8 +668,8 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 
     default:
       {
-	fprintf (stderr, "\t\tunknown packet protocol[%03i] [key=%i] ",
-		 env.pkt.proto, key_id);
+	fprintf (stderr, "\t\tunknown packet protocol[%03i] [key=%i] [reader=0x%08X] ",
+		 env.pkt.proto, key_id, reader_id);
 	hex_dump (&env, 0, sizeof (env));
 	tag_strength = -1;
 	tag_sequence = 0;
