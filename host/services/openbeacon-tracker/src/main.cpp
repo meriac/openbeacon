@@ -515,10 +515,12 @@ prox_tag_sighting(double timestamp, uint32_t tag1, uint32_t tag2, uint8_t tag_st
   }
 
   item->last_seen = timestamp;
-
   if(tag_strength>=STRENGTH_LEVELS_COUNT)
     tag_strength=STRENGTH_LEVELS_COUNT-1;
   item->sightings_total[tag_strength]++;
+
+  /* release proximity mutex */
+  pthread_mutex_unlock (item_mutex);
 }
 
 static int
