@@ -1,4 +1,7 @@
 .depend
+.cproject
+.project
+.settings
 openbeacon-tracker
 filter-singularsighting
 callgrind.out.*
