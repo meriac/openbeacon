@@ -27,6 +27,8 @@
 #define CONFIG_TRACKER_CHANNEL 81
 #define CONFIG_PROX_CHANNEL 76
 
+#define BEACONLOG_SIGHTING 0x01
+
 #define XXTEA_BLOCK_COUNT 4
 
 #define RFBPROTO_BEACONTRACKER_OLD      16
@@ -128,5 +130,23 @@ typedef struct
   u_int32_t ip;
   TBeaconEnvelope env;
 } PACKED TBeaconEnvelopeLog;
+
+typedef struct
+{
+  u_int16_t icrc16;
+  u_int8_t protocol;
+  u_int8_t interface;
+  u_int16_t reader_id;
+  u_int16_t size;
+} PACKED TBeaconNetworkHdr;
+
+/* BEACONLOG_SIGHTING */
+typedef struct
+{
+  TBeaconNetworkHdr hdr;
+  u_int32_t sequence;
+  u_int32_t timestamp;
+  TBeaconEnvelope log;
+} PACKED TBeaconLogSighting;
 
 #endif/*__OPENBEACON_H__*/

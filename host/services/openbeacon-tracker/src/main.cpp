@@ -59,7 +59,7 @@ static bool g_first;
 #define XXTEA_KEY_LASTHOPE 6
 
 /* proximity tag TEA encryption key */
-static const long tea_keys[][4] = {
+static const long tea_keys[][XXTEA_BLOCK_COUNT] = {
   {0x7013F569, 0x4417CA7E, 0x07AAA968, 0x822D7554},	/* 25C3 free beta version key */
   {0xbf0c3a08, 0x1d4228fc, 0x4244b2b0, 0x0b4492e9},	/* 25C3 final key  */
   {0xB4595344, 0xD3E119B6, 0xA814D0EC, 0xEFF5A24E},	/* 24C3 */
@@ -74,7 +74,9 @@ static const long tea_keys[][4] = {
 
 static uint32_t g_tea_key_usage[TEA_KEY_COUNT + 1];
 static uint32_t g_total_crc_ok, g_total_crc_errors;
-static uint32_t g_ignored_protocol, g_invalid_protocol;
+static uint32_t g_ignored_protocol, g_invalid_protocol, g_invalid_reader;
+static uint8_t g_decrypted_one;
+
 
 #define MX  ( (((z>>5)^(y<<2))+((y>>3)^(z<<4)))^((sum^y)+(tea_key[(p&3)^e]^z)) )
 #define DELTA 0x9e3779b9UL
@@ -137,7 +139,7 @@ diep (const char *fmt, ...)
   exit (EXIT_FAILURE);
 }
 
-static inline u_int16_t
+static u_int16_t
 crc16 (const unsigned char *buffer, int size)
 {
   u_int16_t crc = 0xFFFF;
@@ -153,6 +155,12 @@ crc16 (const unsigned char *buffer, int size)
       }
 
   return crc;
+}
+
+static inline u_int16_t
+icrc16 (const unsigned char *buffer, int size)
+{
+    return crc16(buffer,size)^0xFFFF;
 }
 
 static inline void
@@ -365,10 +373,10 @@ EstimationStep (double timestamp, bool realtime)
 	  "  \"packets\":{\n", sequence++, (uint32_t) timestamp);
 
   /* show per-key-statistics */
-  if (g_total_crc_ok != g_tea_key_usage[0])
+  if (g_decrypted_one)
     {
       printf ("    \"per_key\":[");
-      for (i = 0; i < (int) TEA_KEY_COUNT; i++)
+      for (i = 0; i < (int) (sizeof(g_tea_key_usage)/sizeof(g_tea_key_usage[0])); i++)
 	printf ("%s%i", i ? "," : "", g_tea_key_usage[i]);
       printf ("],\n");
     }
@@ -389,7 +397,10 @@ EstimationStep (double timestamp, bool realtime)
     printf ("    \"ignored\":%i,\n", g_ignored_protocol);
 
   if (g_invalid_protocol)
-    printf ("    \"invalid\":%i,\n", g_invalid_protocol);
+    printf ("    \"invalid_protocol\":%i,\n", g_invalid_protocol);
+
+  if (g_invalid_reader)
+    printf ("    \"invalid_reader\":%i,\n", g_invalid_reader);
 
   /* show CRC errors count */
   if (g_total_crc_errors)
@@ -468,7 +479,7 @@ hex_dump (const void *data, unsigned int addr, unsigned int len)
     }
 }
 
-static void
+static int
 parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	      bool decrypt)
 {
@@ -478,17 +489,41 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
   uint32_t tag_id, tag_flags, tag_sequence;
   uint32_t delta_t, t, tag_sighting;
   pthread_mutex_t *item_mutex, *tag_mutex;
-  int tag_strength, j, key_id;
+  int tag_strength, j, key_id, res;
   TBeaconEnvelope env;
+  TBeaconLogSighting *log;
   TTagItemStrength *power;
   double px, py;
 
-  if (len != sizeof (env))
-    return;
-
   key_id = -1;
+  res = 0;
+
   if (decrypt)
     {
+      /* check for new log file format */
+      if( (len>=(int)sizeof(TBeaconLogSighting)) && ((len % sizeof(TBeaconLogSighting))==0) )
+	{
+	  log = (TBeaconLogSighting*)data;
+	  if(	(log->hdr.protocol == BEACONLOG_SIGHTING) &&
+		(ntohs(log->hdr.size) == sizeof(TBeaconLogSighting)) &&
+		(icrc16 ((uint8_t*)&log->hdr.protocol,sizeof(*log) - sizeof(log->hdr.icrc16)) == ntohs(log->hdr.icrc16)))
+	  {
+	    reader_id = ntohs(log->hdr.reader_id);
+	    data = &log->log;
+	    len = sizeof(log->log);
+	    res = sizeof(TBeaconLogSighting);
+	  }
+	}
+
+      /* else if old log file format */
+      if(!res)
+      {
+	if(len < (int)sizeof(env))
+	  return 0;
+	else
+	  len = res = sizeof (env);
+      }
+
       for (j = 0; j < (int) TEA_KEY_COUNT; j++)
 	{
 	  memcpy (&env, data, len);
@@ -500,42 +535,43 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 
 	  /* verify CRC */
 	  if (crc16 (env.byte,
-		     sizeof (env.pkt) - sizeof (env.pkt.crc)) ==
-	      ntohs (env.pkt.crc))
+	    sizeof (env.pkt) - sizeof (env.pkt.crc)) == ntohs (env.pkt.crc))
 	    {
 	      key_id = j + 1;
 	      break;
 	    }
 	}
     }
-  else
+
+  if(key_id<0)
     {
+      if (len < (int)sizeof (env))
+	return 0;
+      else
+        len = sizeof (env);
+
       memcpy (&env, data, len);
       if (crc16 (env.byte,
-		 sizeof (env.pkt) - sizeof (env.pkt.crc)) ==
-	  ntohs (env.pkt.crc))
+	sizeof (env.pkt) - sizeof (env.pkt.crc)) == ntohs (env.pkt.crc))
+      {
+	if(!res)
+	  res = len;
 	key_id = 0;
-    }
-
-
-  if (key_id < 0)
-    {
-      g_total_crc_errors++;
+      }
+      else
+      {
+	g_total_crc_errors++;
 #ifdef DEBUG
-      fprintf (stderr, "CRC[0x%04X] error from reader 0x%08X\n",
-	       (int) crc16 ((const unsigned char *) data, len), reader_id);
-      hex_dump (data, 0, len);
+	fprintf (stderr, "CRC[0x%04X] error from reader 0x%08X\n",
+	    (int) crc16 ((const unsigned char *) data, len), reader_id);
+	hex_dump (data, 0, len);
 #endif
-      return;
-    }
-  else
-    {
-      /* maintain total packet count */
-      g_total_crc_ok++;
-      /* maintain statistics per key */
-      g_tea_key_usage[key_id]++;
+	return 0;
+      }
     }
 
+  /* maintain total packet count */
+  g_total_crc_ok++;
   switch (env.pkt.proto)
     {
     case RFBPROTO_BEACONTRACKER_OLD:
@@ -634,6 +670,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	tag_sequence = 0;
 	tag_id = 0;
 	g_invalid_protocol++;
+	res = 0;
       }
     }
 
@@ -643,7 +680,13 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	  g_map_reader.Add ((((uint64_t) reader_id) << 32) |
 			    tag_id, &item_mutex)) != NULL)
     {
-      /* initialize on first occurence */
+      /* maintain statistics per key */
+      g_tea_key_usage[key_id]++;
+      /* mark at least one packet as decrypted */
+      if(key_id>0)
+	g_decrypted_one=1;
+
+      /* initialize on first occurrence */
       if (!item->tag_id)
 	{
 	  for (t = 0; t < READER_COUNT; t++)
@@ -665,7 +708,10 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 
       /* increment reader stats for each packet */
       if (!item->reader_id)
-	fprintf (stderr, "unknown reader 0x%08X\n", reader_id);
+      {
+	fprintf (stderr,"unknown reader 0x%08X\n", reader_id);
+	g_invalid_reader++;
+      }
       else
 	{
 	  g_reader_last_seen[item->reader_index] = timestamp;
@@ -674,7 +720,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	    diep ("can't add tag");
 	  else
 	    {
-	      /* on first occurence */
+	      /* on first occurrence */
 	      if (!tag->id)
 		{
 		  fprintf (stderr, "new tag %u seen\n", tag_id);
@@ -766,12 +812,14 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 
       pthread_mutex_unlock (item_mutex);
     }
+
+    return res;
 }
 
-static int
+static void
 parse_pcap (const char *file, bool realtime)
 {
-  int len, items;
+  int len, res;
   FILE *f;
   pcap_t *h;
   char error[PCAP_ERRBUF_SIZE];
@@ -809,10 +857,10 @@ parse_pcap (const char *file, bool realtime)
     {
       /* iterate over all IPv4 UDP packets */
       while ((packet = (const uint8_t *) pcap_next (h, &header)) != NULL)
-	/* check for ethernet protocol */
+	/* check for Ethernet protocol */
 	if ((((uint32_t) (packet[12]) << 8) | packet[13]) == 0x0800)
 	  {
-	    /* skip ethernet header */
+	    /* skip Ethernet header */
 	    packet += 14;
 	    ip_hdr = (const ip *) packet;
 
@@ -827,11 +875,6 @@ parse_pcap (const char *file, bool realtime)
 		len = ntohs (udp_hdr->len) - sizeof (udphdr);
 		packet += sizeof (udphdr);
 
-		/* calculate amount of OpenBeacon packets */
-		items = len / sizeof (TBeaconEnvelope);
-		if (!items)
-		  continue;
-
 		/* run estimation every second */
 		timestamp = microtime_calc (&header.ts);
 		if ((timestamp - timestamp_old) >= 1)
@@ -842,25 +885,25 @@ parse_pcap (const char *file, bool realtime)
 
 		/* process all packets in this packet */
 		reader_id = ntohl (ip_hdr->ip_src.s_addr);
-		while (items--)
-		  {
-		    parse_packet (timestamp, reader_id,
-				  packet, sizeof (TBeaconEnvelope), true);
-		    packet += sizeof (TBeaconEnvelope);
-		  }
+
+		/* iterate over all packets */
+		while((res = parse_packet (timestamp, reader_id, packet, len, true))>0)
+		{
+		  len -= res;
+		  packet += res;
+		}
 	      }
 	  }
     }
-  return 0;
 }
 
 static int
 listen_packets (void)
 {
-  int sock, items;
+  int sock, size, res;
   uint32_t reader_id;
   double timestamp;
-  TBeaconEnvelope beacons[100], *pkt;
+  uint8_t buffer[1500], *pkt;
   struct sockaddr_in si_me, si_other;
   socklen_t slen = sizeof (si_other);
   pthread_t thread_handle;
@@ -881,20 +924,23 @@ listen_packets (void)
 
       while (1)
 	{
-	  if ((items = recvfrom (sock, &beacons, sizeof (beacons), 0,
+	  if ((size = recvfrom (sock, &buffer, sizeof (buffer), 0,
 				 (sockaddr *) & si_other, &slen)) == -1)
 	    diep (NULL, "recvfrom()");
 
-	  items /= sizeof (TBeaconEnvelope);
-	  if (!items)
-	    continue;
+	  /* orderly shutdown */
+	  if(!size)
+	    break;
 
-	  pkt = beacons;
+	  pkt = buffer;
 	  reader_id = ntohl (si_other.sin_addr.s_addr);
 
 	  timestamp = microtime ();
-	  while (items--)
-	    parse_packet (timestamp, reader_id, pkt++, sizeof (*pkt), true);
+	  while((res = parse_packet (timestamp, reader_id, pkt, size, true))>0)
+	  {
+	    size -= res;
+	    pkt += res;
+	  }
 	}
     }
 
@@ -907,6 +953,8 @@ main (int argc, char **argv)
   bool realtime;
 
   /* initialize statistics */
+  g_invalid_reader = 0;
+  g_decrypted_one = 0;
   g_total_crc_ok = g_total_crc_errors = 0;
   g_ignored_protocol = g_invalid_protocol = 0;
   memset (&g_tea_key_usage, 0, sizeof (g_tea_key_usage));
@@ -920,6 +968,7 @@ main (int argc, char **argv)
   else
     {
       realtime = (argc >= 3) ? (atoi (argv[2]) ? true : false) : false;
-      return parse_pcap (argv[1], realtime);
+      parse_pcap (argv[1], realtime);
     }
+  return 0;
 }
