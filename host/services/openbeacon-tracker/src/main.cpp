@@ -60,14 +60,14 @@ static bool g_first;
 
 /* proximity tag TEA encryption key */
 static const long tea_keys[][XXTEA_BLOCK_COUNT] = {
-  {0x7013F569, 0x4417CA7E, 0x07AAA968, 0x822D7554},	/* 25C3 free beta version key */
-  {0xbf0c3a08, 0x1d4228fc, 0x4244b2b0, 0x0b4492e9},	/* 25C3 final key  */
-  {0xB4595344, 0xD3E119B6, 0xA814D0EC, 0xEFF5A24E},	/* 24C3 */
-  {0xe107341e, 0xab99c57e, 0x48e17803, 0x52fb4d16},	/* 23C3 key */
-  {0x8e7d6649, 0x7e82fa5b, 0xddd4541e, 0xe23742cb},	/* Camp 2007 key */
-  {0x9c43725e, 0xad8ec2ab, 0x6ebad8db, 0xf29c3638},	/* The Last Hope - AMD Project (Attendee Metadata Project) */
-  {0xf6e103d4, 0x77a739f6, 0x65eecead, 0xa40543a9},	/* strange key from 25C3 */
-  {0x00112233, 0x44556677, 0x8899aabb, 0xccddeeff}	/* default key */
+  {0x7013F569, 0x4417CA7E, 0x07AAA968, 0x822D7554},	/* 1: 25C3 free beta version key */
+  {0xbf0c3a08, 0x1d4228fc, 0x4244b2b0, 0x0b4492e9},	/* 2: 25C3 final key  */
+  {0xB4595344, 0xD3E119B6, 0xA814D0EC, 0xEFF5A24E},	/* 3: 24C3 */
+  {0xe107341e, 0xab99c57e, 0x48e17803, 0x52fb4d16},	/* 4: 23C3 key */
+  {0x8e7d6649, 0x7e82fa5b, 0xddd4541e, 0xe23742cb},	/* 5: Camp 2007 key */
+  {0x9c43725e, 0xad8ec2ab, 0x6ebad8db, 0xf29c3638},	/* 6: The Last Hope - AMD Project (Attendee Metadata Project) */
+  {0xf6e103d4, 0x77a739f6, 0x65eecead, 0xa40543a9},	/* 7: strange key from 25C3 */
+  {0x00112233, 0x44556677, 0x8899aabb, 0xccddeeff}	/* 8: default key */
 };
 
 #define TEA_KEY_COUNT (sizeof(tea_keys)/sizeof(tea_keys[0]))
@@ -112,6 +112,7 @@ typedef struct
 typedef struct
 {
   uint32_t id, sequence, button;
+  int key_id;
   double last_seen, last_calculated, last_reader_statistics;
   double px, py, vx, vy;
   const TReaderItem *last_reader;
@@ -340,6 +341,9 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
   printf ("%s    {\"id\":%u,\"px\":%i,\"py\":%i",
 	  g_first ? "" : ",\n",tag->id, (int) tag->px, (int) tag->py);
 
+  if (tag->key_id)
+    printf (",\"key\":%i", tag->key_id);
+
   if (tag->last_reader)
     printf (",\"reader\":%i", tag->last_reader->id);
 
@@ -563,7 +567,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
       {
 	g_total_crc_errors++;
 #ifdef DEBUG
-	fprintf (stderr, "CRC[0x%04X] error from reader 0x%08X\n",
+	fprintf (stderr, "\t\tCRC[0x%04X] error from reader 0x%08X\n",
 	    (int) crc16 ((const unsigned char *) data, len), reader_id);
 	hex_dump (data, 0, len);
 #endif
@@ -581,7 +585,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	  {
 	    tag_strength = -1;
 	    tag_sequence = 0;
-	    fprintf (stderr, "unknown old packet protocol2[%i] key[%i] ",
+	    fprintf (stderr, "\t\tunknown old packet protocol2[%i] key[%i] ",
 		     env.old.proto2, key_id);
 	  }
 	else
@@ -664,7 +668,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 
     default:
       {
-	fprintf (stderr, "unknown packet protocol[%03i] key[%i] ",
+	fprintf (stderr, "\t\tunknown packet protocol[%03i] [key=%i] ",
 		 env.pkt.proto, key_id);
 	hex_dump (&env, 0, sizeof (env));
 	tag_strength = -1;
@@ -710,7 +714,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
       /* increment reader stats for each packet */
       if (!item->reader_id)
       {
-	fprintf (stderr,"unknown reader 0x%08X\n", reader_id);
+	fprintf (stderr,"\t\tunknown reader 0x%08X\n", reader_id);
 	g_invalid_reader++;
       }
       else
@@ -724,8 +728,9 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	      /* on first occurrence */
 	      if (!tag->id)
 		{
-		  fprintf (stderr, "new tag %u seen\n", tag_id);
+		  fprintf (stderr, "new tag %8u [key=%u] seen\n", tag_id, key_id);
 		  tag->id = tag_id;
+		  tag->key_id = key_id;
 		  tag->last_calculated = timestamp;
 		  tag->last_reader_statistics = timestamp;
 		}
@@ -733,6 +738,11 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	      /* get time difference since last run */
 	      delta_t = timestamp - tag->last_seen;
 	      tag->last_seen = timestamp;
+	      if(tag->key_id != key_id)
+	      {
+		fprintf (stderr, "\t\ttag %u changed encryption key id from [key=%u]->[key=%u]\n", tag_id, tag->key_id, key_id);
+		tag->key_id = key_id;
+	      }
 
 	      if (delta_t >= RESET_TAG_POSITION_SECONDS)
 		{
