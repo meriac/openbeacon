@@ -683,41 +683,29 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
     case RFBPROTO_PROXREPORT_EXT:
       {
 	tag_id = ntohs (env.pkt.oid);
+	tag_strength = PROX_TAG_STRENGTH_MASK;
+	tag_sequence = ntohs (env.pkt.p.prox.seq);
 
-	if( tag_id>PROX_TAG_ID_MASK )
-	{
-	  fprintf(stderr, "\t\tout of range error for proximity tag id 0x%04X\n",tag_id);
-	  tag_strength = -1;
-	  tag_sequence = 0;
-	  tag_id = 0;
-	  g_invalid_protocol++;
-	}
-	else
-	{
-	  tag_flags = (env.pkt.flags & RFBFLAGS_SENSOR) ?
-	    TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
+	tag_flags = TAGSIGHTINGFLAG_SHORT_SEQUENCE;
+	if(env.pkt.flags & RFBFLAGS_SENSOR)
+	    tag_flags |= TAGSIGHTINGFLAG_BUTTON_PRESS;
 
-	  tag_sequence = ntohs (env.pkt.p.prox.seq);
-	  tag_strength = PROX_TAG_STRENGTH_MASK;
-	  tag_flags |= TAGSIGHTINGFLAG_SHORT_SEQUENCE;
-
-	  for (j = 0; j < PROX_MAX; j++)
-	    {
-	      tag_sighting = ntohs (env.pkt.p.prox.oid_prox[j]);
-	      if (tag_sighting)
-		{
-		  prox_tag_id = tag_sighting & PROX_TAG_ID_MASK;
-		  prox_tag_count = (tag_sighting>>PROX_TAG_ID_BITS) & PROX_TAG_COUNT_MASK;
-		  prox_tag_strength = (tag_sighting>>(PROX_TAG_ID_BITS+PROX_TAG_COUNT_BITS)) & PROX_TAG_STRENGTH_MASK;
-		  /* add proximity tag sightings to table */
-		  prox_tag_sighting(timestamp, tag_id, prox_tag_id, prox_tag_strength, prox_tag_count);
+	for (j = 0; j < PROX_MAX; j++)
+	  {
+	    tag_sighting = ntohs (env.pkt.p.prox.oid_prox[j]);
+	    if (tag_sighting)
+	      {
+		prox_tag_id = tag_sighting & PROX_TAG_ID_MASK;
+		prox_tag_count = (tag_sighting>>PROX_TAG_ID_BITS) & PROX_TAG_COUNT_MASK;
+		prox_tag_strength = (tag_sighting>>(PROX_TAG_ID_BITS+PROX_TAG_COUNT_BITS)) & PROX_TAG_STRENGTH_MASK;
+		/* add proximity tag sightings to table */
+		prox_tag_sighting(timestamp, tag_id, prox_tag_id, prox_tag_strength, prox_tag_count);
 #ifdef DEBUG
-		  fprintf(stderr, "tag:%04u->%04u [strength=%u,count=%u]\n",
-		    tag_id, prox_tag_id, prox_tag_strength, prox_tag_count);
+		fprintf(stderr, "tag-proximity:%04u->%04u [strength=%u,count=%u]\n",
+		  tag_id, prox_tag_id, prox_tag_strength, prox_tag_count);
 #endif
-		}
-	    }
-	}
+	      }
+	  }
       }
       break;
 
@@ -765,6 +753,11 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
       /* mark at least one packet as decrypted */
       if(key_id>0)
 	g_decrypted_one=1;
+
+#ifdef DEBUG
+      fprintf(stderr, "tag:%04u [reader=%04u,strength=%u,sequence=0x%08X]\n",
+	tag_id, reader_id, tag_strength, tag_sequence);
+#endif
 
       /* initialize on first occurrence */
       if (!item->tag_id)
