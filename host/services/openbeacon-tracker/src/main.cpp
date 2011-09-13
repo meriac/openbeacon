@@ -84,7 +84,7 @@ static uint8_t g_decrypted_one;
 #define STRENGTH_LEVELS_COUNT 4
 #define TAGSIGHTINGFLAG_SHORT_SEQUENCE 0x01
 #define TAGSIGHTINGFLAG_BUTTON_PRESS 0x02
-#define TAGSIGHTING_BUTTON_TIME 5
+#define TAGSIGHTING_BUTTON_TIME_SECONDS 5
 #define TAG_MASS 3.0
 
 #define MIN_AGGREGATION_SECONDS 5
@@ -293,9 +293,6 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
 
   px = py = 0;
 
-  if (tag->button)
-    tag->button--;
-
   if ((timestamp - tag->last_reader_statistics) >= PACKET_STATISTICS_READER)
     {
       tag->last_reader_statistics = timestamp;
@@ -353,10 +350,13 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
   if (tag->last_reader)
     printf (",\"reader\":%i", tag->last_reader->id);
 
-  if (tag->button)
+  if (tag->button > timestamp)
     printf (",\"button\":true}");
   else
+  {
+    tag->button = 0;
     printf ("}");
+  }
 
   g_first = false;
 }
@@ -886,7 +886,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	    }
 
 	  if (tag_flags & TAGSIGHTINGFLAG_BUTTON_PRESS)
-	    tag->button = TAGSIGHTING_BUTTON_TIME;
+	    tag->button = timestamp + TAGSIGHTING_BUTTON_TIME_SECONDS;
 	}
 
       pthread_mutex_unlock (item_mutex);
