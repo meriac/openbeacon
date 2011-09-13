@@ -45,7 +45,7 @@
 #include "bmReaderPositions.h"
 #include "openbeacon.h"
 
-static bmMapHandleToItem g_map_reader, g_map_tag;
+static bmMapHandleToItem g_map_reader, g_map_tag, g_map_proximity;
 static int g_DoEstimation = 1;
 static uint32_t g_reader_last_seen[READER_COUNT];
 static bool g_first;
@@ -76,7 +76,6 @@ static uint32_t g_tea_key_usage[TEA_KEY_COUNT + 1];
 static uint32_t g_total_crc_ok, g_total_crc_errors;
 static uint32_t g_ignored_protocol, g_invalid_protocol, g_invalid_reader;
 static uint8_t g_decrypted_one;
-
 
 #define MX  ( (((z>>5)^(y<<2))+((y>>3)^(z<<4)))^((sum^y)+(tea_key[(p&3)^e]^z)) )
 #define DELTA 0x9e3779b9UL
@@ -128,6 +127,13 @@ typedef struct
   uint8_t strength[STRENGTH_LEVELS_COUNT];
   TAggregation levels[MAX_AGGREGATION_SECONDS];
 } TEstimatorItem;
+
+typedef struct
+{
+  uint32_t tag1, tag2;
+  uint32_t last_seen;
+  uint32_t sightings_total[STRENGTH_LEVELS_COUNT];
+} TTagProximity;
 
 static void
 diep (const char *fmt, ...)
@@ -355,7 +361,6 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
   g_first = false;
 }
 
-
 static void
 EstimationStep (double timestamp, bool realtime)
 {
@@ -484,6 +489,38 @@ hex_dump (const void *data, unsigned int addr, unsigned int len)
     }
 }
 
+static void
+prox_tag_sighting(double timestamp, uint32_t tag1, uint32_t tag2, uint8_t tag_strength, uint16_t tag_count)
+{
+  uint32_t t;
+  TTagProximity *item;
+  pthread_mutex_t *item_mutex;
+
+  /* sort tag IDs in ascending order */
+  if( tag1 > tag2 )
+  {
+    t    = tag1;
+    tag1 = tag2;
+    tag2 = t;
+  }
+
+  if( (item = (TTagProximity*)
+	g_map_reader.Add ((((uint64_t) tag1) << 32) | tag2, &item_mutex)) == NULL)
+	diep ("can't add tag proximity sighting");
+
+  if(!item->tag1)
+  {
+    item->tag1 = tag1;
+    item->tag2 = tag2;
+  }
+
+  item->last_seen = timestamp;
+
+  if(tag_strength>=STRENGTH_LEVELS_COUNT)
+    tag_strength=STRENGTH_LEVELS_COUNT-1;
+  item->sightings_total[tag_strength]++;
+}
+
 static int
 parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	      bool decrypt)
@@ -493,7 +530,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
   TAggregation *aggregation;
   uint32_t tag_id, tag_flags, tag_sequence;
   uint32_t delta_t, t, tag_sighting;
-  uint16_t prox_tag_id;
+  uint16_t prox_tag_id, prox_tag_count, prox_tag_strength;
   pthread_mutex_t *item_mutex, *tag_mutex;
   int tag_strength, j, key_id, res;
   TBeaconEnvelope env;
@@ -659,7 +696,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	    TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
 
 	  tag_sequence = ntohs (env.pkt.p.prox.seq);
-	  tag_strength = (STRENGTH_LEVELS_COUNT - 1);
+	  tag_strength = PROX_TAG_STRENGTH_MASK;
 	  tag_flags |= TAGSIGHTINGFLAG_SHORT_SEQUENCE;
 
 	  fprintf(stderr, "tag=%04u:",tag_id);
@@ -669,13 +706,14 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	      if (tag_sighting)
 		{
 		  prox_tag_id = tag_sighting & PROX_TAG_ID_MASK;
-
-		  fprintf(stderr, " %04u->%04u [count=%u,strength=%u]",
-		    tag_id,
-		    prox_tag_id,
-		    (tag_sighting>>PROX_TAG_ID_BITS) & PROX_TAG_COUNT_MASK,
-		    (tag_sighting>>(PROX_TAG_ID_BITS+PROX_TAG_COUNT_BITS)) & PROX_TAG_STRENGTH_MASK
-		    );
+		  prox_tag_count = (tag_sighting>>PROX_TAG_ID_BITS) & PROX_TAG_COUNT_MASK;
+		  prox_tag_strength = (tag_sighting>>(PROX_TAG_ID_BITS+PROX_TAG_COUNT_BITS)) & PROX_TAG_STRENGTH_MASK;
+		  /* add proximity tag sightings to table */
+		  prox_tag_sighting(timestamp, tag_id, prox_tag_id, prox_tag_strength, prox_tag_count);
+#ifdef DEBUG
+		  fprintf(stderr, " %04u->%04u [strength=%u,count=%u]",
+		    tag_id, prox_tag_id, prox_tag_strength, prox_tag_count);
+#endif
 		}
 	    }
 	  fprintf(stderr, "\n");
@@ -1009,6 +1047,7 @@ main (int argc, char **argv)
 
   g_map_reader.SetItemSize (sizeof (TEstimatorItem));
   g_map_tag.SetItemSize (sizeof (TTagItem));
+  g_map_proximity.SetItemSize (sizeof (TTagProximity));
 
   /* check command line arguments */
   if (argc <= 1)
