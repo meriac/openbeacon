@@ -26,6 +26,11 @@ PREFIX  :=/usr/local
 
 all: $(TARGET) filters
 
+.PHONY: all version run install demo-realtime demo-logfile demo-fastest logfile filters indent debug dependencies-fedora cleanall clean
+
+version:
+	@echo "$(TARGET) version $(PROGRAM_VERSION)"
+
 run: $(TARGET)
 	./$(TARGET)
 
