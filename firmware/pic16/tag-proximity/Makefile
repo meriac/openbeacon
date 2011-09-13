@@ -26,11 +26,13 @@ LDFLAGS=$(COMMON_FLAGS) --summary=mem,file --asmlist --output=+intel --output=+m
 
 all: $(PROGNAME).hex
 
+.PHONY: $(PROGNAME).hex clean flash publish counted
+
 obj/%.p1: src/%.c src/*.h
 	$(CC) $(CFLAGS) -c $(filter-out %.h,$^)
 
-$(PROGNAME).hex: $(OBJ_OUT)
-	$(CC) $(LDFLAGS) -Oobj/$@ $^
+obj/$(PROGNAME).hex: $(OBJ_OUT)
+	$(CC) $(LDFLAGS) -O$@ $^
 
 clean:
 	rm -f $(CLEANS)
@@ -38,11 +40,10 @@ clean:
 flash: $(PROG_TARGET)
 	$(PK2) -A5 -PPIC$(CHIP) -F$^ -M -YP
 
-publish: $(PROG_TARGET)
-	cp $^ ~/Share/OpenBeacon/
+publish: $(PROGNAME).hex
+	mv $^ ~/Share/OpenBeacon/$(PROG_TARGET)
 
-counted: $(PROG_TARGET)
+counted: $(PROGNAME).hex
 
-$(PROG_TARGET): $(PROGNAME).hex
+$(PROGNAME).hex: obj/$(PROGNAME).hex
 	php ./create_counted_firmware.php
-	mv $(PROGNAME).hex $(PROG_TARGET)
