@@ -493,6 +493,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
   TAggregation *aggregation;
   uint32_t tag_id, tag_flags, tag_sequence;
   uint32_t delta_t, t, tag_sighting;
+  uint16_t prox_tag_id;
   pthread_mutex_t *item_mutex, *tag_mutex;
   int tag_strength, j, key_id, res;
   TBeaconEnvelope env;
@@ -636,13 +637,49 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	tag_strength = (STRENGTH_LEVELS_COUNT - 1);
 	tag_flags |= TAGSIGHTINGFLAG_SHORT_SEQUENCE;
 
-	for (j = 0; j < PROX_MAX; j++)
-	  {
-	    tag_sighting = (ntohs (env.pkt.p.prox.oid_prox[j]));
-	    if (tag_sighting)
-	      {
-	      }
-	  }
+	/* FIXME: add support for old proximity format */
+      }
+      break;
+
+    case RFBPROTO_PROXREPORT_EXT:
+      {
+	tag_id = ntohs (env.pkt.oid);
+
+	if( tag_id>PROX_TAG_ID_MASK )
+	{
+	  fprintf(stderr, "\t\tout of range error for proximity tag id 0x%04X\n",tag_id);
+	  tag_strength = -1;
+	  tag_sequence = 0;
+	  tag_id = 0;
+	  g_invalid_protocol++;
+	}
+	else
+	{
+	  tag_flags = (env.pkt.flags & RFBFLAGS_SENSOR) ?
+	    TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
+
+	  tag_sequence = ntohs (env.pkt.p.prox.seq);
+	  tag_strength = (STRENGTH_LEVELS_COUNT - 1);
+	  tag_flags |= TAGSIGHTINGFLAG_SHORT_SEQUENCE;
+
+	  fprintf(stderr, "tag=%04u:",tag_id);
+	  for (j = 0; j < PROX_MAX; j++)
+	    {
+	      tag_sighting = ntohs (env.pkt.p.prox.oid_prox[j]);
+	      if (tag_sighting)
+		{
+		  prox_tag_id = tag_sighting & PROX_TAG_ID_MASK;
+
+		  fprintf(stderr, " %04u->%04u [count=%u,strength=%u]",
+		    tag_id,
+		    prox_tag_id,
+		    (tag_sighting>>PROX_TAG_ID_BITS) & PROX_TAG_COUNT_MASK,
+		    (tag_sighting>>(PROX_TAG_ID_BITS+PROX_TAG_COUNT_BITS)) & PROX_TAG_STRENGTH_MASK
+		    );
+		}
+	    }
+	  fprintf(stderr, "\n");
+	}
       }
       break;
 
