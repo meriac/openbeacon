@@ -350,6 +350,20 @@ uint32_t get_log_size(void)
   return LOGFILE_STORAGE_SIZE;
 }
 
+void blink (uint8_t times)
+{
+  while(times)
+  {
+    times--;
+
+    GPIOSetValue (1, 1, 1);
+    pmu_sleep_ms (100);
+    GPIOSetValue (1, 1, 0);
+    pmu_sleep_ms (200);
+  }
+  pmu_sleep_ms (500);
+}
+
 int
 main (void)
 {
@@ -465,17 +479,24 @@ main (void)
   /* Init Bluetooth */
   bt_init (FALSE, tag_id);
 
-  /* initialize power management */
-  pmu_init ();
+  /* shut down up LED 1 */
+  GPIOSetValue (1, 1, 0);
 
   /* Init Flash Storage without USB */
   storage_init (FALSE, tag_id);
-  pmu_sleep_ms (500);
+
   /* get current FLASH storage write postition */
   storage_pos = get_log_size ();
 
+  /* initialize power management */
+  pmu_init ();
+
+  /* blink once to show initialized flash */
+  blink(1);
+
   /* Init 3D acceleration sensor */
   acc_init (0);
+  blink(2);
 
   /* Initialize OpenBeacon nRF24L01 interface */
   if (!nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0))
@@ -488,6 +509,9 @@ main (void)
   }
   /* set tx power power to high */
   nRFCMD_Power (1);
+
+  /* blink three times to show flash initialized RF interface */
+  blink(3);
 
   /* blink LED for 1s to show readyness */
   GPIOSetValue (1, 1, 0);
