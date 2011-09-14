@@ -21,7 +21,7 @@
 
 */
 #include <openbeacon.h>
-#ifndef DISABLE_PERSISTENT_INITIALIZATION
+#ifdef ENABLE_PERSISTENT_INITIALIZATION
 #include <persistent.h>
 
 extern uint8_t __persistent_beg__;
@@ -56,4 +56,4 @@ persistent_init (void)
   }
 }
 
-#endif /*DISABLE_PERSISTENT_INITIALIZATION */
+#endif /*ENABLE_PERSISTENT_INITIALIZATION */

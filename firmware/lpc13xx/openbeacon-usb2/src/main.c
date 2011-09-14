@@ -44,7 +44,7 @@ static TDeviceUID device_uuid;
 /* random seed */
 static uint32_t random_seed;
 /* logfile position */
-static uint32_t storage_pos PERSISTENT;
+static uint32_t storage_pos;
 
 #define TX_STRENGTH_OFFSET 2
 
@@ -597,7 +597,6 @@ main (void)
 
 		      /* increment and store RAM persistent storage position */
 		      storage_pos+=sizeof(g_Beacon);
-		      persistent_update();
 
 		      /* fire up LED to indicate rx */
 		      GPIOSetValue (1, 1, 1);

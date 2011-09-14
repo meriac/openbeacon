@@ -278,9 +278,9 @@ Reset_Handler(void)
 	  "        cmp     r0, r1\n" "        it      lt\n"
 	  "        strlt   r2, [r0], #4\n" "        blt     zero_loop");
 
-#ifndef DISABLE_PERSISTENT_INITIALIZATION
+#ifdef ENABLE_PERSISTENT_INITIALIZATION
     persistent_init();
-#endif /*DISABLE_PERSISTENT_INITIALIZATION */
+#endif /*ENABLE_PERSISTENT_INITIALIZATION*/
 
 #ifdef __USE_CMSIS
     SystemInit();
