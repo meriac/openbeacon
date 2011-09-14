@@ -96,6 +96,9 @@ $(TARGET).elf : $(ARM_OBJ) $(CRT0) $(BOOTLOADER) $(APP_ADDITIONAL) Makefile
 $(ARM_OBJ) : %.o : %.c $(LDSCRIPT) Makefile
 	$(CC) -c $(CFLAGS) $< -o $@
 
+version:
+	@echo "$(TARGET) version $(PROGRAM_VERSION)"
+
 flash : $(TARGET).bin
 	lpc-flash $(TARGET).bin /media/CRP\ DISABLD/firmware.bin
 
