@@ -44,7 +44,7 @@ static TDeviceUID device_uuid;
 /* random seed */
 static uint32_t random_seed;
 /* logfile position */
-static uint32_t storage_pos;
+static uint32_t storage_pos PERSISTENT;
 
 #define TX_STRENGTH_OFFSET 2
 
@@ -434,8 +434,6 @@ main (void)
   /* Init Bluetooth */
   bt_init (FALSE, tag_id);
 
-  /* erase flash storage on first boot */
-  storage_pos=0;
   /* Init Flash Storage without USB */
   storage_init (FALSE, tag_id);
   storage_erase ();
@@ -596,7 +594,10 @@ main (void)
 		      /* calculate CRC over whole logfile entry */
 		      g_Beacon.e.pkt.crc = htons (crc16((uint8_t *)&g_Beacon, sizeof (g_Beacon) - sizeof (g_Beacon.e.pkt.crc)));
 		      storage_write (storage_pos,sizeof(g_Beacon),&g_Beacon);
+
+		      /* increment and store RAM persistent storage position */
 		      storage_pos+=sizeof(g_Beacon);
+		      persistent_update();
 
 		      /* fire up LED to indicate rx */
 		      GPIOSetValue (1, 1, 1);

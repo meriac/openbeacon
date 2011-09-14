@@ -22,6 +22,7 @@
 */
 #include <openbeacon.h>
 #ifndef DISABLE_PERSISTENT_INITIALIZATION
+#include <persistent.h>
 
 extern uint8_t __persistent_beg__;
 extern uint8_t __persistent_end__;
