@@ -28,6 +28,7 @@
 #include "spi.h"
 
 #ifdef  ENABLE_FLASH
+
 uint8_t
 storage_flags (void)
 {
@@ -147,30 +148,36 @@ storage_status (void)
 #endif/*ENABLE_FLASH*/
 }
 
-void
-storage_init (uint8_t usb_enabled, uint16_t device_id)
-{
-  /* last entry in file chain is volume label */
-  static const TDiskFile f_volume_label = {
+/* declare last entry in file chain is volume label */
+static const TDiskFile f_volume_label = {
     .name = DiskBPB.BS_VolLab,
-  };
+};
 
-#ifdef  ENABLE_FLASH
-  static char storage_logfile_name[] = "LOG-0000BIN";
-
-  /* update string device id */
-  storage_logfile_name[4] = hex_char ( device_id >> 12 );
-  storage_logfile_name[5] = hex_char ( device_id >>  8 );
-  storage_logfile_name[6] = hex_char ( device_id >>  4 );
-  storage_logfile_name[7] = hex_char ( device_id >>  0 );
-
-  static const TDiskFile f_logfile = {
+/* declare log file entry */
+static char storage_logfile_name[] = "LOG-0000BIN";
+static TDiskFile f_logfile = {
     .length = LOGFILE_STORAGE_SIZE,
     .handler = storage_logfile_read_raw,
     .data = &f_logfile,
     .name = storage_logfile_name,
     .next = &f_volume_label,
-  };
+};
+
+void
+storage_set_logfile_length (uint32_t size)
+{
+    f_logfile.length = size;
+}
+
+void
+storage_init (uint8_t usb_enabled, uint16_t device_id)
+{
+#ifdef  ENABLE_FLASH
+  /* update string device id */
+  storage_logfile_name[4] = hex_char ( device_id >> 12 );
+  storage_logfile_name[5] = hex_char ( device_id >>  8 );
+  storage_logfile_name[6] = hex_char ( device_id >>  4 );
+  storage_logfile_name[7] = hex_char ( device_id >>  0 );
 #endif/*ENABLE_FLASH*/
 
   /* read-me.htm file that redirects to project page */

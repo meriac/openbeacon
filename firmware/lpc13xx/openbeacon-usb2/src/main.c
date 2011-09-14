@@ -284,6 +284,7 @@ main_menue (uint8_t cmd)
     case 'E':
       debug_printf ("\nErasing Storage...\n\n");
       storage_erase ();
+      storage_pos = 0;
       break;
 
     case 'W':
@@ -320,6 +321,33 @@ main_menue (uint8_t cmd)
 		    cmd);
     }
   debug_printf ("\n# ");
+}
+
+uint32_t get_log_size(void)
+{
+  uint32_t t, pos;
+  uint8_t *p;
+
+  pos = 0;
+  while(pos <= (LOGFILE_STORAGE_SIZE-sizeof(g_Beacon)))
+  {
+    storage_read(pos, sizeof(g_Beacon), &g_Beacon);
+
+    /* verify if block is empty */
+    p = (uint8_t*)&g_Beacon;
+    for(t=0;t<sizeof(g_Beacon);t++)
+      if((*p++)!=0xFF)
+        break;
+
+    /* return first empty block */
+    if(t==sizeof(g_Beacon))
+	return pos;
+
+    /* verify next block */
+    pos+=sizeof(g_Beacon);
+  }
+
+  return LOGFILE_STORAGE_SIZE;
 }
 
 int
@@ -374,6 +402,9 @@ main (void)
     storage_init (TRUE, tag_id);
     /* Init Bluetooth */
     bt_init (TRUE, tag_id);
+    /* get current FLASH storage write postition */
+    storage_pos = get_log_size ();
+    storage_set_logfile_length (storage_pos);
 
     /* switch to LED 2 */
     GPIOSetValue (1, 1, 0);
@@ -434,12 +465,13 @@ main (void)
   /* Init Bluetooth */
   bt_init (FALSE, tag_id);
 
-  /* Init Flash Storage without USB */
-  storage_init (FALSE, tag_id);
-  storage_erase ();
-
   /* initialize power management */
   pmu_init ();
+
+  /* Init Flash Storage without USB */
+  storage_init (FALSE, tag_id);
+  /* get current FLASH storage write postition */
+  storage_pos = get_log_size ();
 
   /* Init 3D acceleration sensor */
   acc_init (0);
@@ -593,10 +625,14 @@ main (void)
 		      g_Beacon.time = htonl (LPC_TMR32B0->TC);
 		      /* calculate CRC over whole logfile entry */
 		      g_Beacon.e.pkt.crc = htons (crc16((uint8_t *)&g_Beacon, sizeof (g_Beacon) - sizeof (g_Beacon.e.pkt.crc)));
-		      storage_write (storage_pos,sizeof(g_Beacon),&g_Beacon);
 
-		      /* increment and store RAM persistent storage position */
-		      storage_pos+=sizeof(g_Beacon);
+		      /* store data if space left on FLASH */
+		      if(storage_pos<=(LOGFILE_STORAGE_SIZE-sizeof(g_Beacon)))
+		      {
+			storage_write (storage_pos,sizeof(g_Beacon),&g_Beacon);
+			/* increment and store RAM persistent storage position */
+			storage_pos+=sizeof(g_Beacon);
+		      }
 
 		      /* fire up LED to indicate rx */
 		      GPIOSetValue (1, 1, 1);
