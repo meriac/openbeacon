@@ -18,6 +18,16 @@ SECTIONS
 
 	__end_of_text__ = .;
 
+	.persistent :
+	{
+		__persistent_beg__ = .;
+		*(.persistent)
+		*(.persistent.*)
+		__persistent_end__ = .;
+		*(.persistent_manage)
+		*(.persistent_manage.*)
+	} >ram
+
 	.data : 
 	{
 		__data_beg__ = .;
@@ -36,7 +46,7 @@ SECTIONS
   } >ram AT>flash
   __exidx_end = .;
 
-	.bss : 
+	.bss :
 	{
 		__bss_beg__ = .;
 		*(.bss)

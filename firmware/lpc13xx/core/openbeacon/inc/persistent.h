@@ -1,8 +1,8 @@
 /***************************************************************
  *
- * OpenBeacon.org - CRC16 routine
+ * OpenBeacon.org - MSD ROM function code for LPC13xx
  *
- * Copyright 2007 Milosch Meriac <meriac@openbeacon.de>
+ * Copyright 2010 Milosch Meriac <meriac@openbeacon.de>
  *
  ***************************************************************
 
@@ -20,30 +20,12 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 */
+#ifndef __PERSISTENT_H__
+#define __PERSISTENT_H__
 
-#include <openbeacon.h>
-#include "crc16.h"
+#ifndef DISABLE_PERSISTENT_INITIALIZATION
+extern void persistent_update(void);
+extern void persistent_init (void);
+#endif /*DISABLE_PERSISTENT_INITIALIZATION */
 
-uint16_t
-crc16 (const uint8_t * buffer, uint32_t size)
-{
-  uint16_t crc = 0xFFFF;
-
-  if (buffer && size)
-    while (size--)
-      {
-	crc = (crc >> 8) | (crc << 8);
-	crc ^= *buffer++;
-	crc ^= ((unsigned char) crc) >> 4;
-	crc ^= crc << 12;
-	crc ^= (crc & 0xFF) << 5;
-      }
-
-  return crc;
-}
-
-uint16_t
-icrc16 (const uint8_t * buffer, uint32_t size)
-{
-  return crc16 (buffer, size) ^ 0xFFFF;
-}
+#endif/*__PERISTENT_H__*/

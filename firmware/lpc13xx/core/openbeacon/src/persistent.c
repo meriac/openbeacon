@@ -1,8 +1,8 @@
 /***************************************************************
  *
- * OpenBeacon.org - CRC16 routine
+ * OpenBeacon.org - persistent RAM support
  *
- * Copyright 2007 Milosch Meriac <meriac@openbeacon.de>
+ * Copyright 2010 Milosch Meriac <meriac@openbeacon.de>
  *
  ***************************************************************
 
@@ -20,30 +20,39 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 */
-
 #include <openbeacon.h>
-#include "crc16.h"
+#ifndef DISABLE_PERSISTENT_INITIALIZATION
 
-uint16_t
-crc16 (const uint8_t * buffer, uint32_t size)
+extern uint8_t __persistent_beg__;
+extern uint8_t __persistent_end__;
+
+static uint16_t g_crc16 __attribute__ ((section (".persistent_manage")));
+
+void
+persistent_update(void)
 {
-  uint16_t crc = 0xFFFF;
+  uint32_t length;
 
-  if (buffer && size)
-    while (size--)
-      {
-	crc = (crc >> 8) | (crc << 8);
-	crc ^= *buffer++;
-	crc ^= ((unsigned char) crc) >> 4;
-	crc ^= crc << 12;
-	crc ^= (crc & 0xFF) << 5;
-      }
+  length = ((uint32_t) & __persistent_end__) -
+    ((uint32_t) & __persistent_beg__);
 
-  return crc;
+  g_crc16 = icrc16 (&__persistent_beg__, length);
 }
 
-uint16_t
-icrc16 (const uint8_t * buffer, uint32_t size)
+void
+persistent_init (void)
 {
-  return crc16 (buffer, size) ^ 0xFFFF;
+  uint32_t length;
+
+  length = ((uint32_t) & __persistent_end__) -
+    ((uint32_t) & __persistent_beg__);
+
+  /* initialize RAM if CRC is wrong */
+  if (length && (g_crc16 != icrc16 (&__persistent_beg__, length)))
+  {
+    g_crc16 = 0;
+    bzero (&__persistent_beg__, length);
+  }
 }
+
+#endif /*DISABLE_PERSISTENT_INITIALIZATION */

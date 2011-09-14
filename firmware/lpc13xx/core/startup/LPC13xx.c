@@ -34,6 +34,8 @@
 #include "system_LPC13xx.h"
 #endif
 
+#include "persistent.h"
+
 //*****************************************************************************
 //
 // Forward declaration of the default handlers. These are aliased.
@@ -275,6 +277,10 @@ Reset_Handler(void)
 	  "    mov     r2, #0\n" "    .thumb_func\n" "zero_loop:\n"
 	  "        cmp     r0, r1\n" "        it      lt\n"
 	  "        strlt   r2, [r0], #4\n" "        blt     zero_loop");
+
+#ifndef DISABLE_PERSISTENT_INITIALIZATION
+    persistent_init();
+#endif /*DISABLE_PERSISTENT_INITIALIZATION */
 
 #ifdef __USE_CMSIS
     SystemInit();
