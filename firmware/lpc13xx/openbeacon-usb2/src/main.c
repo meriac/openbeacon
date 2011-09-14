@@ -470,6 +470,7 @@ main (void)
 
   /* Init Flash Storage without USB */
   storage_init (FALSE, tag_id);
+  pmu_sleep_ms (500);
   /* get current FLASH storage write postition */
   storage_pos = get_log_size ();
 
