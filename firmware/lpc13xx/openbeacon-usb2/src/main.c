@@ -644,7 +644,7 @@ main (void)
 			  seen_high++;
 			  break;
 			}
-		      /* store RX'ed packe into log file */
+		      /* store RX'ed packed into log file */
 		      g_Beacon.type = LOGFILETYPE_BEACONPACKET;
 		      g_Beacon.size = sizeof(g_Beacon);
 		      g_Beacon.time = htonl (LPC_TMR32B0->TC);
