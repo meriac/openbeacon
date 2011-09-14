@@ -103,7 +103,7 @@ int spi_txrx(spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
 
 void spi_status(void)
 {
-	debug_printf(" * SPI: CLK:%uMHz\n", (SystemCoreClock / LPC_SSP->CPSR)
+	debug_printf(" * SPI: CLK:%uMHz\n", (SystemCoreClock / (LPC_SYSCON->SSPCLKDIV * LPC_SSP->CPSR))
 			/ 1000000);
 }
 
