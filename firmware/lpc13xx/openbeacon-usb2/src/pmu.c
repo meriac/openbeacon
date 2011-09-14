@@ -132,8 +132,9 @@ pmu_init (void)
   LPC_SYSCON->MAINCLKUEN = 0;
   LPC_SYSCON->MAINCLKUEN = 1;
   while (!(LPC_SYSCON->MAINCLKUEN & 1));
-  /* set system clock to 6MHz */
-  LPC_SYSCON->SYSAHBCLKDIV = 2;
+  /* update system clock to 3 MHz */
+  LPC_SYSCON->SYSAHBCLKDIV = 4;
+  LPC_SYSCON->SSPCLKDIV = LPC_SYSCON->SYSAHBCLKDIV/2;
 
   /* enable 16B0/32B0 timers */
   LPC_SYSCON->SYSAHBCLKCTRL |= EN_CT16B0|EN_CT32B0;
