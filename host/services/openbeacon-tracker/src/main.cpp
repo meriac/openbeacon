@@ -274,7 +274,7 @@ ThreadIterateProxCalculate (void *Context, double timestamp, bool realtime)
     for(s=STRENGTH_LEVELS_COUNT;s>0;s--)
       t+=((*pl++)*s);
 
-    printf ("%s    {\"tag\":[%i,%i],\"strength\":%i}",
+    printf ("%s    {\"tag\":[%i,%i],\"power\":%i}",
       g_first ? "" : ",\n",item->tag1,item->tag2, (int)(round(sqrt(t))));
     g_first = false;
   }
