@@ -130,6 +130,12 @@ bmMapHandleToItem::Find (bmHandle handle, pthread_mutex_t ** mutex)
   return NULL;
 }
 
+int
+bmMapHandleToItem::GetItemCount (void)
+{
+  return m_MapIteratePos;
+}
+
 void *
 bmMapHandleToItem::Add (bmHandle handle, pthread_mutex_t ** mutex)
 {

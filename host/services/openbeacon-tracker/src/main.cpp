@@ -504,12 +504,18 @@ EstimationStep (double timestamp, bool realtime)
 	   (int) reader->room, (int) reader->floor, (int) reader->group);
       reader++;
     }
-  printf ("\n    ],\n  \"edges\":[\n");
+  printf ("\n    ]");
 
-  g_first = true;
-  g_map_proximity.IterateLocked (&ThreadIterateProxCalculate, timestamp, realtime);
+  if(g_map_proximity.GetItemCount ())
+  {
+    printf (",\n  \"edges\":[\n");
 
-  printf ("\n    ]\n},");
+    g_first = true;
+    g_map_proximity.IterateLocked (&ThreadIterateProxCalculate, timestamp, realtime);
+
+    printf ("\n    ]");
+  }
+  printf ("\n},");
 
   /* propagate object on stdout */
   fflush (stdout);

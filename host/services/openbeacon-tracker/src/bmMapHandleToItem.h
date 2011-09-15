@@ -53,6 +53,7 @@ public:
    ~bmMapHandleToItem (void);
   bool SetItemSize (int ItemSize);
   int GetItemSize (void);
+  int GetItemCount (void);
   void *Find (bmHandle handle, pthread_mutex_t ** mutex);
   void *Add (bmHandle handle, pthread_mutex_t ** mutex);
   int IterateLocked (bmIterationCallback Callback, double timestamp, bool realtime);
