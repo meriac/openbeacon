@@ -275,7 +275,7 @@ ThreadIterateProxCalculate (void *Context, double timestamp, bool realtime)
       t+=((*pl++)*s);
 
     printf ("%s    {\"tag\":[%i,%i],\"strength\":%i}",
-      g_first ? "" : ",\n",item->tag1,item->tag2, t);
+      g_first ? "" : ",\n",item->tag1,item->tag2, (int)(round(sqrt(t))));
     g_first = false;
   }
   else
