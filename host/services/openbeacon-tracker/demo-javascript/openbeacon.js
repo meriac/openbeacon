@@ -62,7 +62,8 @@ var force = d3.layout.force()
 
 	if(visnode)
 	  visnode.attr('cx', function(d) { return d.x; })
-	    .attr('cy', function(d) { return d.y; });
+	    .attr('cy', function(d) { return d.y; })
+	    .style('fill', function(d) { return fill(d.group); });
     });
 
 vis.style('opacity', 1e-6)
@@ -129,6 +130,13 @@ function process_server(json) {
 	    if(node)
 	    {
 	      i = nodes_reader[tag.reader].index;
+
+	      group = tag.button ? 3:1;
+	      if(node.group != group)
+	      {
+		changed = true;
+		node.group = group;
+	      }
 
 	      if(node.link.target!=i)
 	      {
@@ -207,7 +215,7 @@ function refresh_svg()
 {
   d3.json('http://api.openbeacon.net/get/sighting.json', process_server);
 
-  window.setTimeout(refresh_svg, 1000);
+  window.setTimeout(refresh_svg, 500);
 }
 
 refresh_svg();
