@@ -869,11 +869,6 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
       if(key_id>0)
 	g_decrypted_one=1;
 
-#ifdef DEBUG
-      fprintf(stderr, "tag:%04u [reader=%04u,strength=%u,sequence=0x%08X]\n",
-	tag_id, reader_id, tag_strength, tag_sequence);
-#endif
-
       /* initialize on first occurrence */
       if (!item->tag_id)
 	{
@@ -949,9 +944,15 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	      /* TODO: fix wrapping of 16 bit sequence numbers */
 	      if (tag_flags & TAGSIGHTINGFLAG_SHORT_SEQUENCE)
 		tag->sequence = (tag->sequence & ~0xFFFF) | tag_sequence;
+	      else
+	        tag->sequence = tag_sequence;
 
 	      item->tag = tag;
 	      pthread_mutex_unlock (tag_mutex);
+#ifdef DEBUG
+	      fprintf(stderr, "tag:%04u [reader=%04u,strength=%u,sequence=0x%08X]\n",
+		tag_id, reader_id, tag_strength, tag->sequence);
+#endif
 	    }
 
 	  /* get time difference since last run */
