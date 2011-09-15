@@ -69,9 +69,6 @@ indent: $(SOURCES)
 $(TARGET): .depend $(OBJS)
 	$(CXX) $(LDFLAGS) $(LDOPT) $(OBJS) -o $@
 
-debug: .depend $(SOURCES)
-	$(CXX) $(CXXFLAGS) -DDEBUG -g $(SOURCES) $(LDFLAGS) -o $(TARGET)
-
 .depend: $(SOURCES) $(FILTERS)
 	$(CXX) $(CXXFLAGS) $(CXXOPT) -MM $^ > $@
 

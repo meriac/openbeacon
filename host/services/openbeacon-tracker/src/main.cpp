@@ -87,6 +87,10 @@ static uint8_t g_decrypted_one;
 #define TAGSIGHTING_BUTTON_TIME_SECONDS 5
 #define TAG_MASS 3.0
 
+#define PROXAGGREGATION_TIME_SLOT_SECONDS 2
+#define PROXAGGREGATION_TIME_SLOTS 10
+#define PROXAGGREGATION_TIME (PROXAGGREGATION_TIME_SLOT_SECONDS*PROXAGGREGATION_TIME_SLOTS)
+
 #define MIN_AGGREGATION_SECONDS 5
 #define MAX_AGGREGATION_SECONDS 16
 #define RESET_TAG_POSITION_SECONDS (60*5)
@@ -130,9 +134,11 @@ typedef struct
 
 typedef struct
 {
+  uint32_t fifo_pos, last_seen;
   uint32_t tag1, tag2;
-  uint32_t last_seen;
   uint32_t sightings_total[STRENGTH_LEVELS_COUNT];
+  uint32_t sightings_local[STRENGTH_LEVELS_COUNT];
+  TAggregation levels[PROXAGGREGATION_TIME_SLOTS];
 } TTagProximity;
 
 static void
@@ -217,6 +223,68 @@ microtime (void)
     return microtime_calc (&tv);
   else
     return 0;
+}
+
+static inline void
+ThreadIterateProxCalculate (void *Context, double timestamp, bool realtime)
+{
+  uint8_t *ps, strength, active;
+  uint32_t t,s,*pl;
+  TAggregation *agg;
+  TTagProximity *item = (TTagProximity*)Context;
+
+  /* if sighting expired - return */
+  if(!item->last_seen)
+    return;
+
+  /* calculate delta time since last sighting - expired ? */
+  if((timestamp - item->last_seen)>=PROXAGGREGATION_TIME)
+  {
+    item->last_seen = item->fifo_pos = 0;
+    bzero(&item->levels,sizeof(item->levels));
+    return;
+  }
+
+  /* recalculate */
+  active = false;
+  bzero(&item->sightings_local, sizeof(item->sightings_local));
+  agg = item->levels;
+  for(t=0;t<PROXAGGREGATION_TIME_SLOTS;t++)
+  {
+    if((timestamp - agg->time)<=PROXAGGREGATION_TIME)
+    {
+      ps = agg->strength;
+      pl = item->sightings_local;
+      for(s=0;s<STRENGTH_LEVELS_COUNT;s++)
+      {
+	strength = *ps++;
+	if(strength)
+	    active = true;
+	*pl++ += strength;
+      }
+    }
+    agg++;
+  }
+
+  if(active)
+  {
+    /* aggregate power levels */
+    t = 0;
+    pl = item->sightings_local;
+    for(s=STRENGTH_LEVELS_COUNT;s>0;s--)
+      t+=((*pl++)*s);
+
+    printf ("%s    {\"tag\":[%i,%i],\"strength\":%i}",
+      g_first ? "" : ",\n",item->tag1,item->tag2, t);
+    g_first = false;
+  }
+  else
+  {
+    /* didn't find a single sighting */
+    item->last_seen = item->fifo_pos = 0;
+    bzero(&item->levels,sizeof(item->levels));
+  }
+
 }
 
 static inline void
@@ -436,6 +504,11 @@ EstimationStep (double timestamp, bool realtime)
 	   (int) reader->room, (int) reader->floor, (int) reader->group);
       reader++;
     }
+  printf ("\n    ],\n  \"edges\":[\n");
+
+  g_first = true;
+  g_map_proximity.IterateLocked (&ThreadIterateProxCalculate, timestamp, realtime);
+
   printf ("\n    ]\n},");
 
   /* propagate object on stdout */
@@ -492,9 +565,15 @@ hex_dump (const void *data, unsigned int addr, unsigned int len)
 static void
 prox_tag_sighting(double timestamp, uint32_t tag1, uint32_t tag2, uint8_t tag_strength, uint16_t tag_count)
 {
-  uint32_t t;
+  uint32_t t, delta_t;
   TTagProximity *item;
+  TAggregation *agg;
   pthread_mutex_t *item_mutex;
+
+#ifdef DEBUG
+  fprintf(stderr, "tag-proximity:%04u->%04u [strength=%u,count=%u]\n",
+    tag1, tag2, tag_strength, tag_count);
+#endif
 
   /* sort tag IDs in ascending order */
   if( tag1 > tag2 )
@@ -504,20 +583,54 @@ prox_tag_sighting(double timestamp, uint32_t tag1, uint32_t tag2, uint8_t tag_st
     tag2 = t;
   }
 
+  /* look up connection */
   if( (item = (TTagProximity*)
-	g_map_reader.Add ((((uint64_t) tag1) << 32) | tag2, &item_mutex)) == NULL)
+	g_map_proximity.Add ((((uint64_t) tag1) << 32) | tag2, &item_mutex)) == NULL)
 	diep ("can't add tag proximity sighting");
 
+  /* first sighting ? */
   if(!item->tag1)
   {
     item->tag1 = tag1;
     item->tag2 = tag2;
   }
 
-  item->last_seen = timestamp;
+  /* aggregate overall sightings */
   if(tag_strength>=STRENGTH_LEVELS_COUNT)
     tag_strength=STRENGTH_LEVELS_COUNT-1;
   item->sightings_total[tag_strength]++;
+
+  /* calculate delta time since last sighting */
+  delta_t = timestamp - item->last_seen;
+
+  /*remember last sighting */
+  item->last_seen = timestamp;
+
+  /* if expired FIFO */
+  if(delta_t >= PROXAGGREGATION_TIME)
+  {
+    item->fifo_pos = 0;
+    bzero(&item->levels,sizeof(item->levels));
+    agg = item->levels;
+    agg->time = timestamp;
+  }
+  else
+    /* switch every PROXAGGREGATION_TIME_SLOT_SECONDS to next slot */
+    if(delta_t >= PROXAGGREGATION_TIME_SLOT_SECONDS)
+    {
+      item->fifo_pos++;
+      if( item->fifo_pos >= PROXAGGREGATION_TIME_SLOTS )
+	item->fifo_pos = 0;
+      agg = &item->levels[item->fifo_pos];
+      agg->time = timestamp;
+      bzero(&agg->strength,sizeof(agg->strength));
+    }
+    else
+      agg = &item->levels[item->fifo_pos];
+
+  /* aggregate sightings */
+  if(agg->strength[tag_strength]<0xFF)
+    agg->strength[tag_strength]++;
 
   /* release proximity mutex */
   pthread_mutex_unlock (item_mutex);
@@ -700,10 +813,6 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 		prox_tag_strength = (tag_sighting>>(PROX_TAG_ID_BITS+PROX_TAG_COUNT_BITS)) & PROX_TAG_STRENGTH_MASK;
 		/* add proximity tag sightings to table */
 		prox_tag_sighting(timestamp, tag_id, prox_tag_id, prox_tag_strength, prox_tag_count);
-#ifdef DEBUG
-		fprintf(stderr, "tag-proximity:%04u->%04u [strength=%u,count=%u]\n",
-		  tag_id, prox_tag_id, prox_tag_strength, prox_tag_count);
-#endif
 	      }
 	  }
       }
@@ -988,7 +1097,7 @@ listen_packets (void)
   pthread_t thread_handle;
 
   if ((sock = socket (AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
-    diep (NULL, "socket");
+    diep ("socket");
   else
     {
       memset ((char *) &si_me, 0, sizeof (si_me));
@@ -997,7 +1106,7 @@ listen_packets (void)
       si_me.sin_addr.s_addr = htonl (INADDR_ANY);
 
       if (bind (sock, (sockaddr *) & si_me, sizeof (si_me)) == -1)
-	diep (NULL, "bind");
+	diep ("bind");
 
       pthread_create (&thread_handle, NULL, &ThreadEstimation, NULL);
 
@@ -1005,7 +1114,7 @@ listen_packets (void)
 	{
 	  if ((size = recvfrom (sock, &buffer, sizeof (buffer), 0,
 				 (sockaddr *) & si_other, &slen)) == -1)
-	    diep (NULL, "recvfrom()");
+	    diep ("recvfrom()");
 
 	  /* orderly shutdown */
 	  if(!size)
