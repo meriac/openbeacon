@@ -508,7 +508,7 @@ EstimationStep (double timestamp, bool realtime)
 
   if(g_map_proximity.GetItemCount ())
   {
-    printf (",\n  \"edges\":[\n");
+    printf (",\n  \"edge\":[\n");
 
     g_first = true;
     g_map_proximity.IterateLocked (&ThreadIterateProxCalculate, timestamp, realtime);
