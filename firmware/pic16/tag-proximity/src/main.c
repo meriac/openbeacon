@@ -182,7 +182,7 @@ protocol_process_packet (void)
 {
   u_int8_t j, insert = 0;
 
-  oid_last_seen = htons (pkt.tracker.oid);
+  oid_last_seen = htons (pkt.hdr.oid);
 
   /* ignore OIDs outside of mask */
   if(oid_last_seen>PROX_TAG_ID_MASK)
@@ -231,7 +231,7 @@ protocol_process_packet (void)
 void
 main (void)
 {
-  u_int8_t j;
+  u_int8_t j, strength;
   u_int16_t crc;
   u_int8_t clicked = 0;
 
@@ -299,47 +299,52 @@ main (void)
 	    }
 	}
 
+      /* populate common fields */
+      pkt.hdr.oid = htons ((u_int16_t) oid);
+      pkt.hdr.flags = clicked ? RFBFLAGS_SENSOR : 0;
+
       /* --------- perform TX ----------------------- */
       if (((unsigned char) seq) & 1)
 	{
 	  CONFIG_PIN_ANT_SWITCH = 1;
-	  pkt.tracker.strength = ((((unsigned char) seq) >> 1) & 1) ? 1 : 2;
+	  strength = (seq & 2) ? 1 : 2;
 	  nRFCMD_RegReadWrite (NRF_REG_RF_CH | WRITE_REG,
 			       CONFIG_PROX_CHANNEL);
-	  pkt.tracker.proto = RFBPROTO_PROXTRACKER;
+	  pkt.hdr.proto = RFBPROTO_PROXTRACKER;
+	  pkt.tracker.oid_last_seen = 0;
 	}
       else
 	{
-	  pkt.tracker.strength = (((unsigned char) seq) >> 1) & 0x03;
 	  nRFCMD_RegReadWrite (NRF_REG_RF_CH | WRITE_REG,
 			       CONFIG_TRACKER_CHANNEL);
-	  pkt.tracker.proto = RFBPROTO_BEACONTRACKER;
+	  strength = (((unsigned char) seq) >> 1) & 0x03;
+
+	  pkt.hdr.proto = RFBPROTO_BEACONTRACKER;
 	  pkt.tracker.oid_last_seen = htons (oid_last_seen);
 	  oid_last_seen = 0;
 	}
 
-      pkt.tracker.oid = htons ((u_int16_t) oid);
-      pkt.tracker.seq = htonl (seq);
-      pkt.tracker.powerup_count = htons (code_block);
-      pkt.tracker.flags = (clicked) ? RFBFLAGS_SENSOR : 0;
-      pkt.tracker.reserved = 0;
-
-      // turn all strong packets to proximity announcements
-      if (pkt.tracker.strength == 3)
-	{
-	  pkt.prox.proto = RFBPROTO_PROXREPORT_EXT;
-	  pkt.prox.seq = htons ((u_int16_t) seq);
-
-	  for (j = 0; j < PROX_MAX; j++)
-	    pkt.prox.oid_prox[j] =
-	      (j < seen_count) ?
-		(htons (
-		    (oid_seen[j]) |
+      /* for lower strength send normal tracking packet */
+      if(strength<3)
+      {
+	pkt.tracker.strength = strength;
+	pkt.tracker.powerup_count = htons (code_block);
+	pkt.tracker.reserved = 0;
+	pkt.tracker.seq = htonl (seq);
+      }
+      else
+      /* for highest strength send proximity report */
+      {
+	pkt.hdr.proto = RFBPROTO_PROXREPORT_EXT;
+	for (j = 0; j < PROX_MAX; j++)
+	    pkt.prox.oid_prox[j] = (j < seen_count) ? (htons (
+		(oid_seen[j]) |
 		    (oid_seen_count[j] << PROX_TAG_ID_BITS) |
 		    (oid_seen_pwr[j] << (PROX_TAG_ID_BITS+PROX_TAG_COUNT_BITS))
 		    )) : 0;
-	  seen_count = 0;
-	}
+	pkt.prox.short_seq = htons ((u_int16_t) seq);
+	seen_count = 0;
+      }
 
       // add CRC to packet
       crc = crc16 (pkt.byte, sizeof (pkt.tracker) - sizeof (pkt.tracker.crc));
@@ -347,7 +352,7 @@ main (void)
 
       // adjust transmit strength
       nRFCMD_RegReadWrite (NRF_REG_RF_SETUP | WRITE_REG,
-			   NRF_RFOPTIONS | ((pkt.tracker.strength & 0x03) << 1));
+			   NRF_RFOPTIONS | (strength << 1));
 
       // encrypt the data
       protocol_encode ();
@@ -366,37 +371,27 @@ main (void)
 	store_incremented_codeblock ();
 
       /* --------- blinking pattern ----------------------- */
-      if (clicked || ((((unsigned char) seq) & 0xF) == 0))
+      if (( seq & ( clicked ? 1 : 0x1F ) ) == 0)
 	CONFIG_PIN_LED = 1;
 
       // blink for 1ms
       sleep_jiffies (JIFFIES_PER_MS (1));
 
-      // disable LED if set
-      if (!clicked)
-	CONFIG_PIN_LED = 0;
+      // disable LED
+      CONFIG_PIN_LED = 0;
 
       /* --------- handle click ----------------------- */
       if (!CONFIG_PIN_SENSOR)
 	{
-	  clicked = 0x8;
+	  clicked = 16;
 	  // reset touch sensor pin
 	  TRISA = CONFIG_CPU_TRISA & ~0x02;
-	  CONFIG_PIN_SENSOR = 0;
+	  CONFIG_PIN_SENSOR = 1;
 	  TRISA = CONFIG_CPU_TRISA;
 	}
 
       if (clicked > 0)
-	{
 	  clicked--;
-	  if (!clicked)
-	    {
-	      CONFIG_PIN_LED = 0;
-	      TRISA = CONFIG_CPU_TRISA & ~0x02;
-	      CONFIG_PIN_SENSOR = 1;
-	      TRISA = CONFIG_CPU_TRISA;
-	    }
-	}
 
       // finally increase sequence number
       seq++;
