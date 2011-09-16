@@ -751,9 +751,13 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	  {
 	    tag_id = ntohl (env.old.oid);
 	    tag_sequence = ntohl (env.old.seq);
-	    tag_strength = env.old.strength / 0x55;
-	    if (tag_strength >= STRENGTH_LEVELS_COUNT)
-	      tag_strength = STRENGTH_LEVELS_COUNT - 1;
+	    if(env.old.strength>=0x55)
+		tag_strength = env.old.strength / 0x55;
+	    else
+		if (env.old.strength >= STRENGTH_LEVELS_COUNT)
+		    tag_strength = STRENGTH_LEVELS_COUNT - 1;
+		else
+		    tag_strength = env.old.strength;
 	    tag_flags = (env.old.flags & RFBFLAGS_SENSOR) ?
 	      TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
 	  }
@@ -950,8 +954,9 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	      item->tag = tag;
 	      pthread_mutex_unlock (tag_mutex);
 #ifdef DEBUG
-	      fprintf(stderr, "tag:%04u [reader=%04u,strength=%u,sequence=0x%08X]\n",
+	      fprintf(stderr, "tag:%04u [reader=%04u,strength=%u,sequence=0x%08X] ",
 		tag_id, reader_id, tag_strength, tag->sequence);
+	      hex_dump (&env, 0, sizeof(env));
 #endif
 	    }
 
