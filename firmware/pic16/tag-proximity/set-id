@@ -13,9 +13,7 @@ echo -en "\nEnter one tag id per line and press enter: "
 while read TAG_ID; do
     echo $TAG_ID > firmware_counter
     ./create_counted_firmware.php
-    if [ -d "$1" ]; then
-	cp $PROJECT.hex $1
-	echo "copied $PROJECT.hex to '$1'"
-    fi
+    echo "copying $PROJECT.hex to '$1'"
+    cp $PROJECT.hex $1
     echo -en "\nenter next tag id: "
 done
