@@ -60,4 +60,4 @@ $(PROG_TARGET).zip: obj/$(PROGNAME).hex
 	zip $@ $^ obj/$(PROGNAME).sym create_counted_firmware.php set-id
 
 publish: production
-	scp $(PROG_TARGET).zip meri@bitmanufaktur.net:/home/wwwrun/open.bitmanufaktur.com/web/www/people/milosch/pictag/
+	scp $(PROG_TARGET).zip meri@bitmanufaktur.net:/home/wwwrun/open.bitmanufaktur.com/web/www/people/milosch/firmware/pic16/
