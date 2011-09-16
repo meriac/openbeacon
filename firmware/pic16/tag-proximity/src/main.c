@@ -271,7 +271,7 @@ main (void)
 
       // random delay to make opaque tracking based on
       // timer deviation difficult
-      sleep_jiffies (JIFFIES_PER_MS (50 + (rand () % 100)));
+      sleep_jiffies (JIFFIES_PER_MS (50 + (rand () % 42)));
 
       /* --------- perform RX ----------------------- */
       if ( ((u_int8_t)seq) & 1)
