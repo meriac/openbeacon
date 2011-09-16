@@ -26,7 +26,7 @@ LDFLAGS=$(COMMON_FLAGS) --summary=mem,file --asmlist --output=+intel --output=+m
 
 all: $(PROGNAME).hex
 
-.PHONY: $(PROGNAME).hex clean flash publish counted
+.PHONY: $(PROGNAME).hex clean flash publish counted production
 
 obj/%.p1: src/%.c src/*.h
 	$(CC) $(CFLAGS) -c $(filter-out %.h,$^)
@@ -47,3 +47,8 @@ counted: $(PROGNAME).hex
 
 $(PROGNAME).hex: obj/$(PROGNAME).hex
 	php ./create_counted_firmware.php
+
+production: clean $(PROGNAME).zip
+
+$(PROGNAME).zip: obj/$(PROGNAME).hex
+	zip $@ $^ obj/$(PROGNAME).sym create_counted_firmware.php set-id
