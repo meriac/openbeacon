@@ -271,10 +271,10 @@ main (void)
 
       // random delay to make opaque tracking based on
       // timer deviation difficult
-      sleep_jiffies (JIFFIES_PER_MS (32 + (rand () % 50)));
+      sleep_jiffies (JIFFIES_PER_MS (50 + (rand () % 100)));
 
       /* --------- perform RX ----------------------- */
-      if (seq & 1)
+      if ( ((u_int8_t)seq) & 1)
 	{
 	  nRFCMD_StartRX ();
 	  CONFIG_PIN_CE = 1;
@@ -304,7 +304,7 @@ main (void)
       pkt.hdr.flags = clicked ? RFBFLAGS_SENSOR : 0;
 
       /* --------- perform TX ----------------------- */
-      if (((unsigned char) seq) & 1)
+      if ( ((u_int8_t)seq) & 1 )
 	{
 	  CONFIG_PIN_ANT_SWITCH = 1;
 	  strength = (seq & 2) ? 1 : 2;
