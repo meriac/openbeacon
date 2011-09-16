@@ -37,7 +37,7 @@ obj/$(PROGNAME).hex: $(OBJ_OUT)
 clean:
 	rm -f $(CLEANS)
 
-flash: $(PROG_TARGET)
+flash: $(PROGNAME).hex
 	$(PK2) -A5 -PPIC$(CHIP) -F$^ -M -YP
 
 publish: $(PROGNAME).hex
