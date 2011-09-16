@@ -51,6 +51,11 @@ static uint32_t g_reader_last_seen[READER_COUNT];
 static bool g_first;
 
 #define XXTEA_KEY_NONE 0
+
+#ifdef  CUSTOM_ENCRYPTION_KEYS
+#include "custom-encryption-keys.h"
+#else /*CUSTOM_ENCRYPTION_KEYS*/
+
 #define XXTEA_KEY_25C3_BETA 1
 #define XXTEA_KEY_25C3_FINAL 2
 #define XXTEA_KEY_24C3 3
@@ -58,7 +63,7 @@ static bool g_first;
 #define XXTEA_KEY_CAMP07 5
 #define XXTEA_KEY_LASTHOPE 6
 
-/* proximity tag TEA encryption key */
+/* proximity tag TEA encryption keys */
 static const long tea_keys[][XXTEA_BLOCK_COUNT] = {
   {0x7013F569, 0x4417CA7E, 0x07AAA968, 0x822D7554},	/* 1: 25C3 free beta version key */
   {0xbf0c3a08, 0x1d4228fc, 0x4244b2b0, 0x0b4492e9},	/* 2: 25C3 final key  */
@@ -69,6 +74,7 @@ static const long tea_keys[][XXTEA_BLOCK_COUNT] = {
   {0xf6e103d4, 0x77a739f6, 0x65eecead, 0xa40543a9},	/* 7: strange key from 25C3 */
   {0x00112233, 0x44556677, 0x8899aabb, 0xccddeeff}	/* 8: default key */
 };
+#endif/*CUSTOM_ENCRYPTION_KEYS*/
 
 #define TEA_KEY_COUNT (sizeof(tea_keys)/sizeof(tea_keys[0]))
 

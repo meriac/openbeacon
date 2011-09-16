@@ -15,9 +15,16 @@ ifeq ("$(PROGRAM_VERSION)","")
     PROGRAM_VERSION:='unknown'
 endif
 
+# determine if we have custom encryption keys
+ifeq ("$(wildcard src/custom-encryption-keys.h)","")
+    ENCRYPTION_KEYS:=
+else
+    ENCRYPTION_KEYS:=-DCUSTOM_ENCRYPTION_KEYS
+endif
+
 DEBUG   :=-O3
 CXXOPT  :=$(DEBUG) -ffunction-sections -fdata-sections
-CXXFLAGS:=-Werror -Wall -std=gnu++0x -D_REENTRANT -DPROGRAM_VERSION=\"$(PROGRAM_VERSION)\" -D PROGRAM_NAME=\"$(TARGET)\"
+CXXFLAGS:=-Werror -Wall -std=gnu++0x -D_REENTRANT -DPROGRAM_VERSION=\"$(PROGRAM_VERSION)\" -D PROGRAM_NAME=\"$(TARGET)\" $(ENCRYPTION_KEYS)
 LDOPT   :=-Wl,--gc-sections
 LDFLAGS :=$(LIBS)
 OBJS    :=$(SOURCES:%.cpp=%.o)
