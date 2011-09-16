@@ -26,7 +26,7 @@ LDFLAGS=$(COMMON_FLAGS) --summary=mem,file --asmlist --output=+intel --output=+m
 
 all: $(PROGNAME).hex
 
-.PHONY: $(PROGNAME).hex clean flash publish counted production
+.PHONY: $(PROGNAME).hex clean flash vmware publish counted production
 
 obj/%.p1: src/%.c src/*.h
 	$(CC) $(CFLAGS) -c $(filter-out %.h,$^)
@@ -40,7 +40,7 @@ clean:
 flash: $(PROGNAME).hex
 	$(PK2) -A5 -PPIC$(CHIP) -F$^ -M -YP
 
-publish: $(PROGNAME).hex
+vmware: $(PROGNAME).hex
 	mv $^ ~/Share/OpenBeacon/$(PROG_TARGET)
 
 counted: $(PROGNAME).hex
@@ -52,3 +52,6 @@ production: clean $(PROGNAME).zip
 
 $(PROGNAME).zip: obj/$(PROGNAME).hex
 	zip $@ $^ obj/$(PROGNAME).sym create_counted_firmware.php set-id
+
+publish: production
+	scp $(PROGNAME).zip meri@bitmanufaktur.net:/home/wwwrun/open.bitmanufaktur.com/web/www/people/milosch/pictag/$(PROGNAME)-PIC$(CHIP)-$(MODE).zip
