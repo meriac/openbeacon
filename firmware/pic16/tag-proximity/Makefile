@@ -17,7 +17,7 @@ endif
 
 PROG_EXTS=cof hxl map mum sym as sdb lst rlf obj
 PROG_FILES=$(patsubst %, obj/$(PROGNAME).%, $(PROG_EXTS))
-PROG_TARGET=$(PROGNAME)-PIC$(CHIP)-firmware-$(PROGRAM_VERSION)-$(MODE)
+PROG_TARGET=$(PROGNAME)-PIC$(CHIP)-v$(PROGRAM_VERSION)
 
 OBJ_EXTS=p1 rlf sdb lst pre as
 OBJ_TMP=$(foreach T, $(OBJ_EXTS), $(patsubst %.c, obj/%.$(T), $(SRCS)))
