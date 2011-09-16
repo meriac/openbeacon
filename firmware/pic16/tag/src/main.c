@@ -241,8 +241,7 @@ main (void)
 	// reset touch sensor pin
 	TRISA = CONFIG_CPU_TRISA & ~0x02;
 	CONFIG_PIN_SENSOR = 0;
-	sleep_jiffies (JIFFIES_PER_MS (10) +
-		(rand () % JIFFIES_PER_MS (180)));
+	sleep_jiffies (JIFFIES_PER_MS (32 + (rand () % 80 )));
 	CONFIG_PIN_SENSOR = 1;
 	TRISA = CONFIG_CPU_TRISA;
 
@@ -254,7 +253,7 @@ main (void)
 	// send it away
 	nRFCMD_Macro ((unsigned char *) &g_MacroBeacon);
 
-	if (!i && ((((unsigned char)seq) & 0x7) == 0))
+	if (!i && ((((unsigned char)seq) & 0xF) == 0))
 	  CONFIG_PIN_LED = 1;
 	nRFCMD_Execute ();
 	CONFIG_PIN_LED = 0;

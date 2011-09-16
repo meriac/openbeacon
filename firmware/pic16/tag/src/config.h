@@ -19,13 +19,12 @@
     You should have received a copy of the GNU General Public License along
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-    	
 */
 
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define	CONFIG_DEBUG_LED
+#define CONFIG_DEBUG_LED
 #define CONFIG_DELAYUS
 
 /***************************************************************
@@ -77,7 +76,7 @@
 
 #define CONFIG_DEFAULT_CHANNEL 81
 
-#define CONFIG_HIRES_LOCATION
+#undef  CONFIG_HIRES_LOCATION
 
 #ifdef  CONFIG_HIRES_LOCATION
 #define CONFIG_MAX_POWER_LEVELS 8
