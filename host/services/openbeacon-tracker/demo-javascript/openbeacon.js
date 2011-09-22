@@ -36,6 +36,9 @@ var nodes_tag = new Array(),
     nodes = new Array(),
     links = new Array();
 
+var replay_date_string = d3.select('#date');
+    replay_date = new Date();
+
 var vis = d3.select('#chart')
   .attr('style', 'background-image: url(../images/bcc_map_level'+String.fromCharCode(64+floor)+'.png); background-repeat: no-repeat;')
   .append('svg:svg')
@@ -92,6 +95,12 @@ function process_server(json) {
 
     t = oldcount = nodes.length;
     changed = false;
+
+    if(json.time)
+    {
+	replay_date.setTime(parseInt(json.time)*1000);
+	replay_date_string.text(replay_date.toGMTString());
+    }
 
     for (i in json.reader) {
 
@@ -215,7 +224,7 @@ function refresh_svg()
 {
   d3.json('http://api.openbeacon.net/get/sighting.json', process_server);
 
-  window.setTimeout(refresh_svg, 500);
+  window.setTimeout(refresh_svg, 1000);
 }
 
 refresh_svg();
