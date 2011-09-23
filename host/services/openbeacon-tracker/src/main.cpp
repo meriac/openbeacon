@@ -1022,6 +1022,39 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
     return res;
 }
 
+static inline void
+dump_sighting_statistics_all_tags (void *Context, double timestamp, bool realtime)
+{
+  uint32_t s, t, *pl;
+  TTagProximity *item = (TTagProximity*)Context;
+
+  /* aggregate power levels */
+  t = 0;
+  pl = item->sightings_total;
+  for(s=STRENGTH_LEVELS_COUNT;s>0;s--)
+    t+=((*pl++)*s);
+
+  fprintf (stderr,"%s    {\"tag\":[%i,%i],\"power\":%i}",
+    g_first ? "" : ",\n",item->tag1,item->tag2, (int)(round(sqrt(t))));
+  g_first = false;
+
+}
+
+static void
+dump_sighting_statistics(void)
+{
+
+  if(g_map_proximity.GetItemCount ())
+  {
+    fprintf (stderr,"\n\nDumping all tag sighting edges:\n{\n  \"total_edges\":[\n");
+
+    g_first = true;
+    g_map_proximity.IterateLocked (&dump_sighting_statistics_all_tags, 0, false);
+
+    fprintf (stderr,"\n    ]\n}");
+  }
+}
+
 static void
 parse_pcap (const char *file, bool realtime)
 {
@@ -1101,6 +1134,8 @@ parse_pcap (const char *file, bool realtime)
 	      }
 	  }
     }
+
+    dump_sighting_statistics();
 }
 
 static int
