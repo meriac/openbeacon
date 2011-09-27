@@ -56,6 +56,8 @@ README: .readme
 app_clean:
 	find application network config -name '*.o' -exec rm \{\} \;
 	find application network config -name '*~'  -exec rm \{\} \;
+
+clean_all: clean
 	rm -f README
 
 include ../core/Makefile.rules
