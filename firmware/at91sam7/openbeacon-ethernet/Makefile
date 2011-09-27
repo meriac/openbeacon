@@ -48,10 +48,14 @@ APP_SRC= \
   $(CORE)/openbeacon/rnd.c \
   $(NETWORK_SRC)
 
-all: $(TARGET).bin
+all: README $(TARGET).bin
+
+README: .readme
+	groff -Tascii $< >$@
 
 app_clean:
 	find application network config -name '*.o' -exec rm \{\} \;
 	find application network config -name '*~'  -exec rm \{\} \;
+	rm -f README
 
 include ../core/Makefile.rules
