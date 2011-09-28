@@ -19,7 +19,7 @@ In this directory you can find the OpenBeacon EasyReaderPoE base station firmwar
 
 Although the code contributions are acknowledged in the source code headers and history log files of the GIT repository (http://goo.gl/bE8Ig), this project lives from invaluable user contributions like rigorous testing, constant suggestion of new features and regular real-life deployments in the field.
 
-The OpenBeacon Team especially wants to thank Ciro Cattuto and Luca Cappa from ISI Foundation for the enriching collaboration, the ongoing moral support, helpful and innovative suggestions, tireless testing and innovative deployments of our RDID readers.
+The OpenBeacon Team especially wants to thank Ciro Cattuto and Luca Cappa from ISI Foundation for the enriching collaboration, the ongoing moral support, helpful and innovative suggestions, tireless testing and innovative deployments of our RFID readers.
 
 We also want to thank the SocioPatterns project for providing the scientific background for our platform, the media exposure and the deployments needed for the survival of our project.
 
@@ -66,4 +66,3 @@ The SocioPatterns project is a collaboration between researchers and developers 
 - ENS Lyon - Laboratoire de Physique -- Lyon, France
 
 - Bitmanufaktur -- Berlin, Germany
-
