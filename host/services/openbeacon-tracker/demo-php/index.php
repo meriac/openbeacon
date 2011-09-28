@@ -50,6 +50,9 @@ function draw_tag($im, $x, $y, $id, $button)
 
 function main()
 {
+    global $tag_color;
+    global $tag_color_high;
+
     $time_start = microtime(TRUE);
 
     /* only display tags on this particular floor */
