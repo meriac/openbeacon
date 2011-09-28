@@ -25,31 +25,65 @@
  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-    define('DATA_FILE','../get/sighting.json');
+define('DATA_FILE','../get/brucon.json');
+define('MAX_PROX_COLORS',16);
+error_reporting(E_ALL);
 
-    error_reporting(E_ALL);
+function draw_tag($im, $x, $y, $id, $button)
+{
+    global $tag_color;
+    global $tag_color_high;
 
+    $avatar = @imagecreatefrompng('avatars/'.intval($id).'.png');
+    if($avatar)
+    {
+	/* get image size */
+	$av_width = imagesx($avatar);
+	$av_height = imagesy($avatar);
+	imagecopyresampled($im, $avatar, $x-6, $y-6, 0, 0, 12, 12, $av_width, $av_height);
+    }
+    else
+	imagefilledellipse($im, $x, $y, 12, 12, $button?$tag_color_high:$tag_color);
+    imagestring($im, 4, $x,$y+8, $id, $button?$tag_color_high:$tag_color);
+}
+
+
+function main()
+{
     $time_start = microtime(TRUE);
 
     /* only display tags on this particular floor */
     $floor=isset($_GET['floor'])?intval($_GET['floor']):0;
     if($floor<1 || $floor>3)
-	$floor=2;
+	$floor=1;
 
     /* open floor specific image */
-    $imgfile = sprintf('../images/bcc_map_level%c.png',ord('A')-1+$floor);
-    $im = imagecreatefrompng($imgfile)
+    $imgfile = '../images/brucon.png';
+    $im_png = imagecreatefrompng($imgfile)
 	or die('Cannot Initialize new GD image stream with file '.$imgfile);
 
     /* get image size */
-    $im_width = imagesx($im);
-    $im_height = imagesy($im);
+    $im_width = imagesx($im_png);
+    $im_height = imagesy($im_png);
+
+    $im = imagecreatetruecolor($im_width, $im_height)
+	or die('Cannot initialize new GD image');
+    /* enable antialiasing */
+    imageantialias ($im , true );
 
     /* specify colors */
+    $bg_color       = imagecolorallocate($im,0x10,0x10,0x10);
     $inactive_color = imagecolorallocate($im, 150, 150, 150);
     $reader_color   = imagecolorallocate($im, 255,  64,  32);
+    $prox_color     = imagecolorallocate($im, 128,  32,  16);
     $tag_color      = imagecolorallocate($im,  32,  64, 128);
     $tag_color_high = imagecolorallocate($im, 255, 128,  64);
+
+    $prox_color = array();
+    for($i=1;$i<=MAX_PROX_COLORS;$i++)
+	$prox_color[$i] = imagecolorallocate($im, (255/MAX_PROX_COLORS)*$i, (64/MAX_PROX_COLORS)*$i, (32/MAX_PROX_COLORS)*$i);
+
+    imagecopy($im, $im_png, 0, 0, 0, 0, $im_width, $im_height);
 
     if(($data=@file_get_contents(DATA_FILE))===FALSE)
 	die('can\'t open data file');
@@ -70,13 +104,33 @@
 	    imagestring($im, 4, $reader->px, $reader->py-18, $reader_id, $inactive_color);
 	}
 
+    $tag_list = array();
     foreach($track->tag as $tag)
-	if(isset($tag->reader) && isset($reader_list[$tag->reader]))
+	$tag_list[intval($tag->id)]=$tag;
+
+    /* draw all edges */
+    foreach($track->edge as $edge)
+    {
+	$tag_id1 = intval($edge->tag[0]);
+	$tag_id2 = intval($edge->tag[1]);
+	if(isset($tag_list[$tag_id1])&&isset($tag_list[$tag_id2]))
 	{
-	    $color = isset($tag->button) ? $tag_color_high :$tag_color;
-	    imagefilledellipse($im, $tag->px, $tag->py, 6, 6, $color);
-	    imagestring($im, 4, $tag->px,$tag->py+4, $tag->id, $color);
+	    $tag1 = $tag_list[$tag_id1];
+	    $tag2 = $tag_list[$tag_id2];
+	    $power = ($edge->power<=MAX_PROX_COLORS) ? $edge->power : MAX_PROX_COLORS;
+	    imageline($im, $tag1->px, $tag1->py, $tag2->px, $tag2->py, $prox_color[$power]);
 	}
+    }
+
+    /* draw all non-button-pressed tags */
+    foreach($track->tag as $tag)
+	if(!isset($tag->button) && isset($tag->reader) && isset($reader_list[$tag->reader]))
+	    draw_tag($im, $tag->px, $tag->py, $tag->id, false);
+
+    /* draw all button-pressed tags */
+    foreach($track->tag as $tag)
+	if(isset($tag->button) && isset($tag->reader) && isset($reader_list[$tag->reader]))
+	    draw_tag($im, $tag->px, $tag->py, $tag->id, true);
 
     // timestamp
     $duration = sprintf(" [rate=%u/s, render=%ums]",$track->packets->rate,round((microtime(TRUE)-$time_start)*1000,1));
@@ -86,5 +140,8 @@
     header('Refresh: 1');
     imagepng($im);
     imagedestroy($im);
-    exit;
+}
+
+main();
+exit;
 ?>
