@@ -47,7 +47,7 @@ flash: $(PROGNAME).hex
 	$(PK2) -A5 -PPIC$(CHIP) -F$^ -M -YP
 
 vmware: $(PROGNAME).hex
-	mv $^ ~/Share/OpenBeacon/$(PROG_TARGET).hex
+	mv $^ ~/Share/OpenBeacon/$(PROGNAME).hex
 
 counted: $(PROGNAME).hex
 
