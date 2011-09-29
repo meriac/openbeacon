@@ -583,8 +583,8 @@ prox_tag_sighting(double timestamp, uint32_t tag1, uint32_t tag2, uint8_t tag_st
   pthread_mutex_t *item_mutex;
 
 #ifdef DEBUG
-  fprintf(stderr, "tag-proximity:%04u->%04u [strength=%u,count=%u]\n",
-    tag1, tag2, tag_strength, tag_count);
+  fprintf(stderr, "tag-proximity[%u]:%04u->%04u [strength=%u,count=%u]\n",
+    (uint32_t)timestamp,tag1, tag2, tag_strength, tag_count);
 #endif
 
   /* sort tag IDs in ascending order */
