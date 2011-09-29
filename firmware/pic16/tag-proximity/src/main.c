@@ -38,8 +38,14 @@
 #define XXTEA_ROUNDS (6UL + 52UL / XXTEA_BLOCK_COUNT)
 #define DELTA 0x9E3779B9UL
 
+/* EEPROM location definitions */
+#define EEPROM_CODE_BLOCK_H 0
+#define EEPROM_CODE_BLOCK_L 1
+#define EEPROM_OID_H 2
+#define EEPROM_OID_L 3
+
 __CONFIG (0x0314);
-__EEPROM_DATA (0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
+__EEPROM_DATA (0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF);
 
 // key is set in create_counted_firmware.php while patching firmware hex file
 volatile const u_int32_t oid = 0xFFFFFFFF;
@@ -47,7 +53,9 @@ volatile const u_int32_t seed = 0xFFFFFFFF;
 const u_int32_t xxtea_key[4] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
 
 static u_int32_t seq = 0;
+static u_int16_t oid_ram = 0;
 static u_int16_t code_block;
+static u_int8_t global_flags = 0;
 
 static u_int16_t oid_seen[PROX_MAX], oid_last_seen;
 static u_int8_t oid_seen_count[PROX_MAX], oid_seen_pwr[PROX_MAX];
@@ -89,10 +97,8 @@ static void
 store_incremented_codeblock (void)
 {
   code_block++;
-  EEPROM_WRITE (0, (unsigned char) (code_block));
-  sleep_jiffies (JIFFIES_PER_MS (10));
-  EEPROM_WRITE (1, (unsigned char) (code_block >> 8));
-  sleep_jiffies (JIFFIES_PER_MS (10));
+  eeprom_write(EEPROM_CODE_BLOCK_L, (unsigned char) (code_block));
+  eeprom_write(EEPROM_CODE_BLOCK_H, (unsigned char) (code_block >> 8));
 }
 
 static u_int16_t
@@ -181,8 +187,28 @@ static void
 protocol_process_packet (void)
 {
   u_int8_t j, insert = 0;
+  u_int16_t tmp_oid;
 
   oid_last_seen = htons (pkt.hdr.oid);
+
+  /* assign new OID if a write request has been seen for our ID */
+  if((pkt.hdr.flags & RFBFLAGS_OID_WRITE) && (oid_last_seen==oid_ram))
+  {
+    tmp_oid = ntohs(pkt.tracker.oid_last_seen);
+    /* only write to EEPROM if the ID actually changed */
+    if(tmp_oid!=oid_ram)
+    {
+      oid_ram = tmp_oid;
+      eeprom_write(EEPROM_OID_L, (u_int8_t)(oid_ram>>0) );
+      eeprom_write(EEPROM_OID_H, (u_int8_t)(oid_ram>>8) );
+      global_flags |= RFBFLAGS_OID_UPDATED;
+    }
+
+    /* reset counters */
+    seq = 0;
+    code_block = 0;
+    store_incremented_codeblock();
+  }
 
   /* ignore OIDs outside of mask */
   if(oid_last_seen>PROX_TAG_ID_MASK)
@@ -251,13 +277,23 @@ main (void)
 
   nRFCMD_Stop ();
 
+  // get tag OID out of EEPROM or FLASH
+  oid_ram =
+    (((u_int16_t)(EEPROM_READ (EEPROM_OID_H)))<<8) |
+    EEPROM_READ (EEPROM_OID_L);
+  if(oid_ram!=0xFFFF)
+    global_flags|=RFBFLAGS_OID_UPDATED;
+  else
+    oid_ram = (u_int16_t)oid;
+
   // increment code block after power cycle
-  ((unsigned char *) &code_block)[0] = EEPROM_READ (0);
-  ((unsigned char *) &code_block)[1] = EEPROM_READ (1);
+  code_block =
+    (((u_int16_t)(EEPROM_READ (EEPROM_CODE_BLOCK_H)))<<8) |
+    EEPROM_READ (EEPROM_CODE_BLOCK_L);
   store_incremented_codeblock ();
 
   // update random seed
-  seq = code_block ^ oid ^ seed;
+  seq = code_block ^ oid_ram ^ seed;
   srand (crc16 ((unsigned char *) &seq, sizeof (seq)));
 
   // increment code blocks to make sure that seq is
@@ -294,14 +330,17 @@ main (void)
 
 	      // verify the crc checksum
 	      crc = crc16 (pkt.byte, sizeof (pkt.tracker) - sizeof (pkt.tracker.crc));
-	      if (htons (crc) == pkt.tracker.crc)
+	      // only handle RFBPROTO_PROXTRACKER packets
+	      if (htons (crc) == pkt.tracker.crc && (pkt.hdr.proto == RFBPROTO_PROXTRACKER))
 		protocol_process_packet ();
 	    }
 	}
 
       /* populate common fields */
-      pkt.hdr.oid = htons ((u_int16_t) oid);
-      pkt.hdr.flags = clicked ? RFBFLAGS_SENSOR : 0;
+      pkt.hdr.oid = htons (oid_ram);
+      pkt.hdr.flags = global_flags;
+      if(clicked)
+        pkt.hdr.flags |= RFBFLAGS_SENSOR;
 
       /* --------- perform TX ----------------------- */
       if ( ((u_int8_t)seq) & 1 )
