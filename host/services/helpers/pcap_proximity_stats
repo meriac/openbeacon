@@ -1,0 +1,3 @@
+#!/bin/bash
+
+../openbeacon-tracker/openbeacon-tracker $1 2>&1 | grep tag-proximity | sed 's/^.*tag-proximity\[\([0-9]\+\)\]:\([0-9]\+\)->\([0-9]\+\)[^=]*=\([0-9]\+\)[^=]*=\([0-9]\+\).*$/\1,\2,\3,\4,\5/g'
