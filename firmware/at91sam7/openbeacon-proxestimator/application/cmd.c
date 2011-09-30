@@ -142,6 +142,12 @@ prvExecCommand (u_int32_t cmd, portCHAR * args)
       DumpStringToUSB (" * switched to RX mode\n\r");
       break;
 
+    case 'DBG':
+      i = PtDebugLevel(atoiEx (args));
+      DumpStringToUSB (i?"Enabled":"Disabled");
+      DumpStringToUSB (" debug output\n\r");
+      break;
+
     case 'S':
       env_store ();
       DumpStringToUSB (" * Stored environment variables\n\r");
@@ -262,9 +268,10 @@ prvExecCommand (u_int32_t cmd, portCHAR * args)
     case '?':
       DumpStringToUSB
 	(" *****************************************************\n\r"
-	 " * OpenBeacon USB terminal                           *\n\r"
-	 " * (C) 2007 Milosch Meriac <meriac@openbeacon.de>    *\n\r"
+	 " * OpenBeacon USB terminal v" PROGRAM_VERSION "\n\r"
+	 " * (C) 2007-2011 Milosch Meriac <meriac@openbeacon.de>\n\r"
 	 " *****************************************************\n\r" " *\n\r"
+	 " * DBG [0,1]  - enable/disable debug output\n\r"
 	 " * S          - store transmitter settings\n\r"
 	 " * C          - print configuration\n\r"
 	 " * N [id]     - set own node id\n\r"

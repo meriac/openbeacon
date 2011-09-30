@@ -37,6 +37,7 @@ typedef struct
 extern TBeaconEnvelope g_Beacon;
 
 extern void vInitProtocolLayer (void);
+extern int PtDebugLevel (int DebugLevel);
 extern int PtSetFifoLifetimeSeconds (int Seconds);
 extern int PtGetFifoLifetimeSeconds (void);
 extern void tx_tag_command (unsigned int tag_id,

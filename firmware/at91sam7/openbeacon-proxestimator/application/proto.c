@@ -67,6 +67,8 @@ volatile u_int32_t g_BeaconCacheHead;
 TBeaconEnvelope g_Beacon,g_BeaconTx;
 xSemaphoreHandle PtSemaphore;
 TBeaconReaderCommand reader_command;
+int g_debuglevel;
+
 
 /**********************************************************************/
 #define SHUFFLE(a,b)    tmp=g_Beacon.byte[a];\
@@ -92,7 +94,7 @@ shuffle_tx_byteorder (void)
 static inline s_int8_t
 PtInitNRF (void)
 {
-  if (!nRFAPI_Init (DEFAULT_DEV, 81, broadcast_mac, sizeof (broadcast_mac), 0))
+  if (!nRFAPI_Init (DEFAULT_DEV, CONFIG_TRACKER_CHANNEL, broadcast_mac, sizeof (broadcast_mac), 0))
     return 0;
 
   nRFAPI_SetPipeSizeRX (DEFAULT_DEV, 0, 16);
@@ -211,6 +213,13 @@ vnRFUpdateRating (void)
 }
 
 int
+PtDebugLevel (int DebugLevel)
+{
+  g_debuglevel = DebugLevel;
+  return g_debuglevel;
+}
+
+int
 PtSetFifoLifetimeSeconds (int Seconds)
 {
   if ((Seconds < 1) || (Seconds > 30))
@@ -248,7 +257,7 @@ vnRFCopyRating (TBeaconSort * Sort, int Items)
 }
 
 static inline void
-wifi_tx (unsigned char power)
+wifi_tx (unsigned char power, unsigned char channel )
 {
   /* update crc */
   g_Beacon.pkt.crc = swapshort (env_crc16 (g_Beacon.byte,
@@ -271,6 +280,10 @@ wifi_tx (unsigned char power)
   /* set TX power */
   nRFAPI_SetTxPower (DEFAULT_DEV, power);
 
+  /* set TX channel */
+  if(channel!=CONFIG_TRACKER_CHANNEL)
+    nRFAPI_SetChannel (DEFAULT_DEV, channel);
+
   /* upload data to nRF24L01 */
   nRFAPI_TX (DEFAULT_DEV, g_Beacon.byte, sizeof (g_Beacon));
 
@@ -278,13 +291,17 @@ wifi_tx (unsigned char power)
   nRFCMD_CE (DEFAULT_DEV, 1);
 
   /* wait until packet is transmitted */
-  vTaskDelay (2 / portTICK_RATE_MS);
+  vTaskDelay (3 / portTICK_RATE_MS);
+
+  /* set RX channel */
+  if(channel!=CONFIG_TRACKER_CHANNEL)
+    nRFAPI_SetChannel (DEFAULT_DEV, CONFIG_TRACKER_CHANNEL);
 
   /* switch to RX mode again */
   nRFAPI_SetRxMode (DEFAULT_DEV, 1);
 
   /* blink LED longer */
-  vTaskDelay (20 / portTICK_RATE_MS);
+  vTaskDelay (5 / portTICK_RATE_MS);
 
   vLedSetGreen (1);
 }
@@ -312,12 +329,12 @@ tx_tag_command (unsigned int tag_id, unsigned int tag_id_new)
     g_BeaconTx.pkt.p.tracker.oid_last_seen = swapshort((u_int16_t)tag_id_new);
     g_BeaconTx.pkt.p.tracker.powerup_count = 0;
     g_BeaconTx.pkt.p.tracker.reserved = 0;
-    g_BeaconTx.pkt.p.tracker.seq++;
 }
 
 void
 vnRFtaskRxTx (void *parameter)
 {
+  int i;
   TBeaconCache *pcache;
   u_int16_t crc, oid;
   u_int8_t strength, t;
@@ -351,7 +368,7 @@ vnRFtaskRxTx (void *parameter)
 	      if (swapshort (g_Beacon.pkt.crc) == crc)
 		{
 		  oid = swapshort (g_Beacon.pkt.oid);
-		  if (g_Beacon.pkt.flags & RFBFLAGS_SENSOR)
+		  if (g_debuglevel && ((g_Beacon.pkt.flags & RFBFLAGS_SENSOR)>0))
 		      debug_printf("BUTTON: %i\n",oid);
 
 		  switch (g_Beacon.pkt.proto)
@@ -363,7 +380,8 @@ vnRFtaskRxTx (void *parameter)
 
 		    case RFBPROTO_BEACONTRACKER:
 		      strength = g_Beacon.pkt.p.tracker.strength;
-		      debug_printf(" R: %04i={%i,0x%08X}\n",
+		      if(g_debuglevel)
+			debug_printf(" R: %04i={%i,0x%08X}\n",
 			(int)oid,
 			(int)strength,
 			swaplong(g_Beacon.pkt.p.tracker.seq)
@@ -371,8 +389,10 @@ vnRFtaskRxTx (void *parameter)
 		      break;
 
 		    case RFBPROTO_PROXREPORT:
+		    case RFBPROTO_PROXREPORT_EXT:
 		      strength = 3;
-		      debug_printf(" P: %04i={%i,0x%04X}\n",
+		      if(g_debuglevel)
+			debug_printf(" P: %04i={%i,0x%04X}\n",
 			(int)oid,
 			(int)strength,
 			(int)swapshort(g_Beacon.pkt.p.prox.seq)
@@ -392,7 +412,8 @@ vnRFtaskRxTx (void *parameter)
 
 		    default:
 		      strength = 0xFF;
-		      debug_printf("Unknown Protocol: %i\n",(int)g_Beacon.pkt.proto);
+		      if(g_debuglevel)
+			debug_printf("Unknown Protocol: %i\n",(int)g_Beacon.pkt.proto);
 		    }
 
 		  if (strength < 0xFF)
@@ -423,15 +444,20 @@ vnRFtaskRxTx (void *parameter)
 	  g_Beacon.pkt.oid = swapshort (last_reader_id);
 	  g_Beacon.pkt.proto = RFBPROTO_READER_COMMAND;
 	  g_Beacon.pkt.p.reader_command = reader_command;
-	  wifi_tx (3);
+	  wifi_tx (3, CONFIG_TRACKER_CHANNEL);
 	  reader_command.opcode = 0;
 	  vLedSetGreen (0);
 	}
 
       if( g_BeaconTx.pkt.proto )
 	{
-	  memcpy(&g_Beacon, &g_BeaconTx, sizeof (g_Beacon));
-	  wifi_tx ( g_Beacon.pkt.p.tracker.strength );
+	  for(i=0;i<400;i++)
+	  {
+	    memcpy(&g_Beacon, &g_BeaconTx, sizeof (g_Beacon));
+	    g_BeaconTx.pkt.p.tracker.seq++;
+	    wifi_tx ( g_Beacon.pkt.p.tracker.strength, CONFIG_PROX_CHANNEL );
+	    vTaskDelay (10 / portTICK_RATE_MS);
+	  }
 	  g_BeaconTx.pkt.proto = 0;
 	}
 
@@ -453,13 +479,16 @@ vnRFtaskRating (void *parameter)
 
   for (;;)
     {
-      debug_printf("DIST:");
+      if(g_debuglevel)
+	debug_printf("DIST:");
 
       count = vnRFCopyRating (g_BeaconSortPrint, SORT_PRINT_DEPTH);
-      for (i = 0; i < count; i++)
-	debug_printf(" %i,%04i",(int)g_BeaconSortPrint[i].tag_strength,(int)g_BeaconSortPrint[i].tag_oid);
+      if(g_debuglevel)
+	for (i = 0; i < count; i++)
+	  debug_printf(" %i,%04i",(int)g_BeaconSortPrint[i].tag_strength,(int)g_BeaconSortPrint[i].tag_oid);
 
-      debug_printf("\n");
+      if(g_debuglevel)
+	debug_printf("\n");
       vTaskDelay (portTICK_RATE_MS * 950);
     }
 }
@@ -468,7 +497,9 @@ void
 vInitProtocolLayer (void)
 {
   PtSetFifoLifetimeSeconds (20);
+  vLedSetGreen (1);
 
+  g_debuglevel = 0;
   g_BeaconCacheHead = 0;
   memset (&g_Beacon, 0, sizeof (g_Beacon));
   memset (&g_BeaconTx, 0,sizeof(g_BeaconTx));
