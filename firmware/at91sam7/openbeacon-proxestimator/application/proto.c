@@ -383,7 +383,7 @@ vnRFtaskRxTx (void *parameter)
 		      /* check for updated Tag ID */
 		      if(g_BeaconTx.pkt.proto && (g_BeaconTx.pkt.oid == g_Beacon.pkt.oid))
 		      {
-			debug_printf(" Successfully updated Tag ID to %i\n",(int)oid);
+			debug_printf("[OK] Successfully updated Tag ID to %i\n",(int)oid);
 			memset(&g_BeaconTx,0,sizeof(g_BeaconTx));
 		      }
 
