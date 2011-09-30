@@ -64,7 +64,7 @@ TBeaconSort g_BeaconSortPrint[SORT_PRINT_DEPTH];
 unsigned int g_BeaconSortTmp[FIFO_DEPTH];
 unsigned int g_BeaconFifoLifeTime;
 volatile u_int32_t g_BeaconCacheHead;
-TBeaconEnvelope g_Beacon;
+TBeaconEnvelope g_Beacon,g_BeaconTx;
 xSemaphoreHandle PtSemaphore;
 TBeaconReaderCommand reader_command;
 
@@ -300,6 +300,22 @@ wifi_tx_reader_command (unsigned int reader_id, unsigned char opcode,
 }
 
 void
+tx_tag_command (unsigned int tag_id, unsigned int tag_id_new)
+{
+    while(g_BeaconTx.pkt.proto)
+      vTaskDelay (portTICK_RATE_MS * 100);
+
+    g_BeaconTx.pkt.proto = RFBPROTO_BEACONTRACKER;
+    g_BeaconTx.pkt.oid = swapshort((u_int16_t)tag_id);
+    g_BeaconTx.pkt.flags = RFBFLAGS_OID_WRITE;
+    g_BeaconTx.pkt.p.tracker.strength = 0;
+    g_BeaconTx.pkt.p.tracker.oid_last_seen = swapshort((u_int16_t)tag_id_new);
+    g_BeaconTx.pkt.p.tracker.powerup_count = 0;
+    g_BeaconTx.pkt.p.tracker.reserved = 0;
+    g_BeaconTx.pkt.p.tracker.seq++;
+}
+
+void
 vnRFtaskRxTx (void *parameter)
 {
   TBeaconCache *pcache;
@@ -412,6 +428,13 @@ vnRFtaskRxTx (void *parameter)
 	  vLedSetGreen (0);
 	}
 
+      if( g_BeaconTx.pkt.proto )
+	{
+	  memcpy(&g_Beacon, &g_BeaconTx, sizeof (g_Beacon));
+	  wifi_tx ( g_Beacon.pkt.p.tracker.strength );
+	  g_BeaconTx.pkt.proto = 0;
+	}
+
       // update regularly
       if (((Ticks =
 	    xTaskGetTickCount ()) - LastUpdateTicks) > UPDATE_INTERVAL_MS)
@@ -448,6 +471,7 @@ vInitProtocolLayer (void)
 
   g_BeaconCacheHead = 0;
   memset (&g_Beacon, 0, sizeof (g_Beacon));
+  memset (&g_BeaconTx, 0,sizeof(g_BeaconTx));
 
   PtSemaphore = NULL;
   vSemaphoreCreateBinary (PtSemaphore);

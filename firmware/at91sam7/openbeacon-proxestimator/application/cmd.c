@@ -137,13 +137,16 @@ prvExecCommand (u_int32_t cmd, portCHAR * args)
       DumpUIntToUSB (env.e.mode);
       DumpStringToUSB ("\n\r");
       break;
+
     case '0':
       DumpStringToUSB (" * switched to RX mode\n\r");
       break;
+
     case 'S':
       env_store ();
       DumpStringToUSB (" * Stored environment variables\n\r");
       break;
+
     case 'FIFO':
       i = PtSetFifoLifetimeSeconds (atoiEx (args));
       if (i < 0)
@@ -155,6 +158,7 @@ prvExecCommand (u_int32_t cmd, portCHAR * args)
 	  DumpStringToUSB ("\n\r");
 	}
       break;
+
     case 'RST':
       i = atoiEx (args);
       DumpStringToUSB ("Resetting remote reader ");
@@ -180,6 +184,7 @@ prvExecCommand (u_int32_t cmd, portCHAR * args)
       DumpStringToUSB ("\n\r");
       wifi_tx_reader_command (last_reader_oid, i, 0, 0);
       break;
+
     case 'N':
       i = atoiEx (args);
       env.e.reader_id = i;
@@ -187,23 +192,37 @@ prvExecCommand (u_int32_t cmd, portCHAR * args)
       DumpUIntToUSB (env.e.reader_id);
       DumpStringToUSB ("\n\r");
       break;
+
     case 'I':
       i = atoiEx (args);
       DumpStringToUSB ("Changed reader ID from [");
       DumpUIntToUSB (last_reader_oid);
-      DumpStringToUSB ("] set to [");
+      DumpStringToUSB ("] to [");
       DumpUIntToUSB (i);
       DumpStringToUSB ("]\n\r");
 
       wifi_tx_reader_command (last_reader_oid, READER_CMD_SET_OID, i, 0);
       break;
+
     case 'R':
       i = atoiEx (args);
       last_reader_oid = i;
-      DumpStringToUSB ("Reader address set to ");
+      DumpStringToUSB ("Reader/Tag address set to ");
       DumpUIntToUSB (last_reader_oid);
       DumpStringToUSB ("\n\r");
       break;
+
+    case 'TAG':
+      i = atoiEx (args);
+      DumpStringToUSB ("Changed tag ID from [");
+      DumpUIntToUSB (last_reader_oid);
+      DumpStringToUSB ("] to [");
+      DumpUIntToUSB (i);
+      DumpStringToUSB ("]\n\r");
+
+      tx_tag_command (last_reader_oid, i);
+      break;
+
     case 'C':
       DumpStringToUSB
 	(" *****************************************************\n\r"
@@ -238,6 +257,7 @@ prvExecCommand (u_int32_t cmd, portCHAR * args)
       DumpStringToUSB (" *\n\r"
 		       " *****************************************************\n\r");
       break;
+
     case 'H':
     case '?':
       DumpStringToUSB
@@ -247,9 +267,11 @@ prvExecCommand (u_int32_t cmd, portCHAR * args)
 	 " *****************************************************\n\r" " *\n\r"
 	 " * S          - store transmitter settings\n\r"
 	 " * C          - print configuration\n\r"
-	 " * N [id]     - set node id\n\r"
-	 " * R [id]     - set reader address\n\r"
+	 " * N [id]     - set own node id\n\r"
+	 " * R [id]     - set reader/tag address\n\r"
 	 " * I [id]     - set reader ID\n\r"
+	 " * RST [id]   - reset remote reader\n\r"
+	 " * TAG [id]   - set tag id\n\r"
 	 " * FIFO [sec] - set FIFO cache lifetime in seconds\n\r"
 	 " * 0          - receive only mode\n\r"
 	 " * 1..4       - automatic transmit at selected power levels\n\r"

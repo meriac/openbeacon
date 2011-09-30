@@ -39,6 +39,8 @@ extern TBeaconEnvelope g_Beacon;
 extern void vInitProtocolLayer (void);
 extern int PtSetFifoLifetimeSeconds (int Seconds);
 extern int PtGetFifoLifetimeSeconds (void);
+extern void tx_tag_command (unsigned int tag_id,
+			    unsigned int tag_id_new);
 extern void wifi_tx_reader_command (unsigned int reader_id,
 				    unsigned char opcode,
 				    unsigned int data0, unsigned int data1);
