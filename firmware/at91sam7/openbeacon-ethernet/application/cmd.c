@@ -39,7 +39,7 @@ vCmdHelp (void)
 {
   debug_printf ("\n\nOpenBeacon.org PoE Ethernet II v" PROGRAM_VERSION "\n"
 		"(C) 2010 Milosch Meriac <meriac@bitmanufaktur.de>\n"
-		"\t'a' - set reader address ('t10.254.0.100' for 10.254.0.100)\n"
+		"\t'a' - set reader address ('a10.254.0.100' for 10.254.0.100)\n"
 		"\t'b' - boot again\n"
 		"\t'c' - show configuration\n"
 		"\t'd' - enable debug output ('d[disable=0,enable=1]')\n"
@@ -50,7 +50,7 @@ vCmdHelp (void)
 		"\t'i' - set reader id ('i123')\n"
 		"\t'l' - red LED ('l[enable=0, disable=1]')\n"
 		"\t'm' - netmask config ('m255.255.0.0')\n"
-		"\t'n' - network config ('a[static_ip=0, reader_id=1, dhcp=2]')\n"
+		"\t'n' - network config ('n[static_ip=0, reader_id=1, dhcp=2]')\n"
 		"\t'p' - set target server UDP port ('p2342')\n"
 		"\t'r' - restore original network settings\n"
 		"\t's' - store configuration\n"
