@@ -220,7 +220,7 @@ prvExecCommand (u_int32_t cmd, portCHAR * args)
 
     case 'TAG':
       i = atoiEx (args);
-      DumpStringToUSB ("Changed tag ID from [");
+      DumpStringToUSB ("Initiating tag ID change from [");
       DumpUIntToUSB (last_reader_oid);
       DumpStringToUSB ("] to [");
       DumpUIntToUSB (i);
