@@ -381,7 +381,8 @@ vnRFtaskRxTx (void *parameter)
 
 		    case RFBPROTO_BEACONTRACKER:
 		      /* check for updated Tag ID */
-		      if(g_BeaconTx.pkt.proto && (g_BeaconTx.pkt.oid == g_Beacon.pkt.oid))
+		      if(	(g_BeaconTx.pkt.proto==RFBPROTO_PROXTRACKER) &&
+				(g_BeaconTx.pkt.p.tracker.oid_last_seen == g_Beacon.pkt.oid))
 		      {
 			debug_printf("[OK] Successfully updated Tag ID to %i\n",(int)oid);
 			memset(&g_BeaconTx,0,sizeof(g_BeaconTx));
@@ -466,6 +467,7 @@ vnRFtaskRxTx (void *parameter)
 	  g_BeaconTx.pkt.p.tracker.seq++;
 	  g_Beacon.pkt.p.tracker.seq = swaplong (g_BeaconTx.pkt.p.tracker.seq);
 	  wifi_tx ( g_Beacon.pkt.p.tracker.strength, CONFIG_PROX_CHANNEL );
+	  memset( &g_Beacon, 0, sizeof(g_Beacon) );
 	}
 
       // update regularly
