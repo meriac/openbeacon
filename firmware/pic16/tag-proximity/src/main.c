@@ -208,6 +208,15 @@ protocol_process_packet (void)
     seq = 0;
     code_block = 0;
     store_incremented_codeblock();
+
+    /* confirmation-blink for 0.5s */
+    CONFIG_PIN_LED = 1;
+    sleep_jiffies (JIFFIES_PER_MS (333));
+    CONFIG_PIN_LED = 0;
+    sleep_jiffies (JIFFIES_PER_MS (333));
+    CONFIG_PIN_LED = 1;
+    sleep_jiffies (JIFFIES_PER_MS (333));
+    CONFIG_PIN_LED = 0;
   }
 
   /* ignore OIDs outside of mask */
