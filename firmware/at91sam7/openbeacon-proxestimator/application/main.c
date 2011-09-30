@@ -92,8 +92,6 @@ void __attribute__((noreturn)) mainloop (void)
 
     vInitProtocolLayer();
 
-    vLedSetGreen(0);
-
     vTaskStartScheduler ();
 
     while(1);

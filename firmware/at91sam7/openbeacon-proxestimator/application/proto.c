@@ -319,22 +319,23 @@ wifi_tx_reader_command (unsigned int reader_id, unsigned char opcode,
 void
 tx_tag_command (unsigned int tag_id, unsigned int tag_id_new)
 {
-    while(g_BeaconTx.pkt.proto)
-      vTaskDelay (portTICK_RATE_MS * 100);
-
-    g_BeaconTx.pkt.proto = RFBPROTO_BEACONTRACKER;
-    g_BeaconTx.pkt.oid = swapshort((u_int16_t)tag_id);
-    g_BeaconTx.pkt.flags = RFBFLAGS_OID_WRITE;
-    g_BeaconTx.pkt.p.tracker.strength = 0;
-    g_BeaconTx.pkt.p.tracker.oid_last_seen = swapshort((u_int16_t)tag_id_new);
-    g_BeaconTx.pkt.p.tracker.powerup_count = 0;
-    g_BeaconTx.pkt.p.tracker.reserved = 0;
+    if(!tag_id_new)
+	memset(&g_BeaconTx,0,sizeof(g_BeaconTx));
+    else
+    {
+	g_BeaconTx.pkt.proto = RFBPROTO_PROXTRACKER;
+	g_BeaconTx.pkt.oid = swapshort((u_int16_t)tag_id);
+	g_BeaconTx.pkt.flags = RFBFLAGS_OID_WRITE;
+	g_BeaconTx.pkt.p.tracker.strength = 0;
+	g_BeaconTx.pkt.p.tracker.oid_last_seen = swapshort((u_int16_t)tag_id_new);
+	g_BeaconTx.pkt.p.tracker.powerup_count = 0;
+	g_BeaconTx.pkt.p.tracker.reserved = 0;
+    }
 }
 
 void
 vnRFtaskRxTx (void *parameter)
 {
-  int i;
   TBeaconCache *pcache;
   u_int16_t crc, oid;
   u_int8_t strength, t;
@@ -391,13 +392,22 @@ vnRFtaskRxTx (void *parameter)
 		    case RFBPROTO_PROXREPORT:
 		    case RFBPROTO_PROXREPORT_EXT:
 		      strength = 3;
+
+		      /* check for updated Tag ID */
+		      if(g_BeaconTx.pkt.proto && (g_BeaconTx.pkt.oid == g_Beacon.pkt.oid))
+		      {
+			debug_printf(" Successfully updated Tag ID to %i\n",(int)oid);
+			memset(&g_BeaconTx,0,sizeof(g_BeaconTx));
+		      }
+
 		      if(g_debuglevel)
+		      {
 			debug_printf(" P: %04i={%i,0x%04X}\n",
 			(int)oid,
 			(int)strength,
 			(int)swapshort(g_Beacon.pkt.p.prox.seq)
 			);
-		      for (t = 0; t < PROX_MAX; t++)
+		        for (t = 0; t < PROX_MAX; t++)
 			{
 			  crc = (swapshort (g_Beacon.pkt.p.prox.oid_prox[t]));
 			  if (crc)
@@ -408,6 +418,7 @@ vnRFtaskRxTx (void *parameter)
 				(int)((crc >> 11) & 0x7)
 				);
 			}
+		      }
 		      break;
 
 		    default:
@@ -451,14 +462,10 @@ vnRFtaskRxTx (void *parameter)
 
       if( g_BeaconTx.pkt.proto )
 	{
-	  for(i=0;i<400;i++)
-	  {
-	    memcpy(&g_Beacon, &g_BeaconTx, sizeof (g_Beacon));
-	    g_BeaconTx.pkt.p.tracker.seq++;
-	    wifi_tx ( g_Beacon.pkt.p.tracker.strength, CONFIG_PROX_CHANNEL );
-	    vTaskDelay (10 / portTICK_RATE_MS);
-	  }
-	  g_BeaconTx.pkt.proto = 0;
+	  memcpy(&g_Beacon, &g_BeaconTx, sizeof (g_Beacon));
+	  g_BeaconTx.pkt.p.tracker.seq++;
+	  g_Beacon.pkt.p.tracker.seq = swaplong (g_BeaconTx.pkt.p.tracker.seq);
+	  wifi_tx ( g_Beacon.pkt.p.tracker.strength, CONFIG_PROX_CHANNEL );
 	}
 
       // update regularly
