@@ -380,6 +380,13 @@ vnRFtaskRxTx (void *parameter)
 		      break;
 
 		    case RFBPROTO_BEACONTRACKER:
+		      /* check for updated Tag ID */
+		      if(g_BeaconTx.pkt.proto && (g_BeaconTx.pkt.oid == g_Beacon.pkt.oid))
+		      {
+			debug_printf(" Successfully updated Tag ID to %i\n",(int)oid);
+			memset(&g_BeaconTx,0,sizeof(g_BeaconTx));
+		      }
+
 		      strength = g_Beacon.pkt.p.tracker.strength;
 		      if(g_debuglevel)
 			debug_printf(" R: %04i={%i,0x%08X}\n",
@@ -392,13 +399,6 @@ vnRFtaskRxTx (void *parameter)
 		    case RFBPROTO_PROXREPORT:
 		    case RFBPROTO_PROXREPORT_EXT:
 		      strength = 3;
-
-		      /* check for updated Tag ID */
-		      if(g_BeaconTx.pkt.proto && (g_BeaconTx.pkt.oid == g_Beacon.pkt.oid))
-		      {
-			debug_printf(" Successfully updated Tag ID to %i\n",(int)oid);
-			memset(&g_BeaconTx,0,sizeof(g_BeaconTx));
-		      }
 
 		      if(g_debuglevel)
 		      {
