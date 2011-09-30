@@ -199,7 +199,7 @@ protocol_process_packet (void)
     if(tmp_oid!=oid_ram)
     {
       oid_ram = tmp_oid;
-      eeprom_write(EEPROM_OID_L, (u_int8_t)(oid_ram>>0) );
+      eeprom_write(EEPROM_OID_L, (u_int8_t)(oid_ram) );
       eeprom_write(EEPROM_OID_H, (u_int8_t)(oid_ram>>8) );
       global_flags |= RFBFLAGS_OID_UPDATED;
     }
@@ -209,14 +209,16 @@ protocol_process_packet (void)
     code_block = 0;
     store_incremented_codeblock();
 
-    /* confirmation-blink for 0.5s */
+    /* confirmation-blink for 0.3s */
     CONFIG_PIN_LED = 1;
-    sleep_jiffies (JIFFIES_PER_MS (333));
+    sleep_jiffies (JIFFIES_PER_MS (100));
     CONFIG_PIN_LED = 0;
-    sleep_jiffies (JIFFIES_PER_MS (333));
+    sleep_jiffies (JIFFIES_PER_MS (100));
     CONFIG_PIN_LED = 1;
-    sleep_jiffies (JIFFIES_PER_MS (333));
+    sleep_jiffies (JIFFIES_PER_MS (100));
     CONFIG_PIN_LED = 0;
+
+    return;
   }
 
   /* ignore OIDs outside of mask */
@@ -288,17 +290,17 @@ main (void)
 
   // get tag OID out of EEPROM or FLASH
   oid_ram =
-    (((u_int16_t)(EEPROM_READ (EEPROM_OID_H)))<<8) |
-    EEPROM_READ (EEPROM_OID_L);
-  if(oid_ram!=0xFFFF)
-    global_flags|=RFBFLAGS_OID_UPDATED;
-  else
+    (((u_int16_t)(eeprom_read (EEPROM_OID_H)))<<8) |
+    eeprom_read (EEPROM_OID_L);
+  if(oid_ram==0xFFFF)
     oid_ram = (u_int16_t)oid;
+  else
+    global_flags|=RFBFLAGS_OID_UPDATED;
 
   // increment code block after power cycle
   code_block =
-    (((u_int16_t)(EEPROM_READ (EEPROM_CODE_BLOCK_H)))<<8) |
-    EEPROM_READ (EEPROM_CODE_BLOCK_L);
+    (((u_int16_t)(eeprom_read (EEPROM_CODE_BLOCK_H)))<<8) |
+    eeprom_read (EEPROM_CODE_BLOCK_L);
   store_incremented_codeblock ();
 
   // update random seed
