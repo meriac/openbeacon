@@ -1,4 +1,4 @@
-TARGET=openbeacon-usb
+TARGET=openbeacon-estimator
 ARCH=AT91SAM7S
 CPU=$(ARCH)128
 DEBUG=-g
