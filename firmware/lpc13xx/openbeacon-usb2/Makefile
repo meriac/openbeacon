@@ -3,9 +3,10 @@ ARCH=LPC13
 CPU=$(ARCH)43
 DEBUG=-g
 OPTIM=-Os -mword-relocations
+CUSTOM_KEY=inc/custom-encryption-key.h
 
 # determine if we have custom encryption keys
-ifeq ("$(wildcard inc/custom-encryption-key.h)","")
+ifeq ("$(wildcard $(CUSTOM_KEY))","")
 	ENCRYPTION_KEY:=
 else
 	ENCRYPTION_KEY:=-DCUSTOM_ENCRYPTION_KEY
@@ -40,7 +41,10 @@ app_clean:
 	rm -f $(TARGET).zip $(TARGET)-firmware.bin
 	find src -name '*.o' -exec rm \{\} \;
 
+custom_key:
+	echo -e "static const uint32_t xxtea_key[XXTEA_BLOCK_COUNT] = {\n\t`od -v -t x4 -N 16 /dev/urandom | grep 0000000 | sed 's/^0\+ /0x/g' |  sed 's/ /, 0x/g'`\n};\n" > $(CUSTOM_KEY)
+
 clean_all: clean
-	rm -f README
+	rm -f README $(CUSTOM_KEY)
 
 include ../core/Makefile.rules
