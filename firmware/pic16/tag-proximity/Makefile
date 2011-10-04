@@ -43,6 +43,12 @@ obj/$(PROGNAME).hex: $(OBJ_OUT)
 clean:
 	rm -f $(CLEANS)
 
+README: .readme
+	groff -Tascii $< >$@
+
+clean_all: clean
+	rm -f README
+
 flash: $(PROGNAME).hex
 	$(PK2) -A5 -PPIC$(CHIP) -F$^ -M -YP
 
