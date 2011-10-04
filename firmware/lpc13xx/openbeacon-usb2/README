@@ -1,0 +1,132 @@
+1.  INTRODUCTION
+
+OpenBeacon USB 2 Bluetooth 2.4GHz RFID Reader
+
+Location  tracking  using  OpenBeacon  tags can be implemented by
+running a OpenBeacon USB 2 firmware that regularly transmits bea-
+con  packets.  Such  packets  can  then be received by OpenBeacon
+EasyReader PoE II base stations in the vicinity. Signals received
+by one or more base stations can then be used to estimate the po-
+sition of the tag. Optional encryption can make sure,  that  only
+base stations inside the system can read the packet information.
+
+In  this directory you can find the OpenBeacon USB 2 tag firmware
+source code. You can find more information here:
+
+- http://openbeacon.org/OpenBeacon_USB_2
+  (Active 2.4GHz RFID Bluetooth Reader)
+
+- http://openbeacon.org/EasyReader
+  (Active 2.4GHz RFID Ethernet Reader)
+
+- http://openbeacon.org/OpenBeacon:About
+  (Contact Information)
+
+
+2.  ACKNOWLEDGEMENTS
+
+Although the code contributions are acknowledged  in  the  source
+code  headers  and  history  log  files  of  the  GIT  repository
+(http://goo.gl/bE8Ig), this project lives  from  invaluable  user
+contributions  like  rigorous testing, constant suggestion of new
+features and regular real-life deployments in the field.
+
+The OpenBeacon Team especially wants to thank  Ciro  Cattuto  and
+Luca  Cappa  from ISI Foundation for the enriching collaboration,
+the ongoing moral support, helpful  and  innovative  suggestions,
+tireless testing and innovative deployments of our RFID readers.
+
+We also want to thank the SocioPatterns project for providing the
+scientific background for our platform, the  media  exposure  and
+the deployments needed for the survival of our project.
+
+
+3.  LICENSE INFORMATION
+
+This  program  is  free  software. You can redistribute it and/or
+modify it under the terms of the GNU General  Public  License  as
+published  by  the Free Software Foundation; version 2. This pro-
+gram is distributed in the hope that it will be useful, but WITH-
+OUT  ANY  WARRANTY;  without  even  the  implied warranty of MER-
+CHANTABILITY or FITNESS FOR A PARTICULAR  PURPOSE.  See  the  GNU
+General Public License (../license.txt) for more details.
+
+
+4.  PROJECT DEPENDENCIES
+
+4.1 CMSIS : Cortex Microcontroller Software Interface Standard
+
+CMSIS defines for a Cortex-M Microcontroller System:
+
+- A common way to access peripheral registers and a common way to
+define exception vectors.
+
+- The register names of the Core Peripherals and the names of the
+Core Exception Vectors.
+
+- A device independent interface for RTOS Kernels including a de-
+bug channel.
+
+By using CMSIS compliant software components, the user can easier
+re-use template code. CMSIS is intended to enable the combination
+of software components from multiple middleware vendors. You  can
+find more information at ../core/cmsi/cmsis_readme.txt.
+
+
+5.  BACKGROUND INFORMATION
+
+5.1 OpenBeacon.org
+
+The  http://OpenBeacon.org  project was founded by Milosch Meriac
+and Brita Meriac in 2006 at the Berlin located  company  Bitmanu-
+faktur  GmbH as an open platform for active RFID applications op-
+erating in the license free 2.4GHz ISM band. OpenBeacon is  based
+on  Open Source software and a very flexible and a open design of
+a reprogrammable low cost Open Source Active 2.4GHz RFID hardware
+module.  The  RFID  tag and reader firmware sources are available
+under GPL license the and tag hardware schematics  are  available
+under  the open Creative Commons license. We encourage the devel-
+opment of new ideas for OpenBeacon setups and  firmware  improve-
+ments.
+
+5.2 SocioPatterns
+
+The  http://SocioPatterns.org  sensing  platform employs wearable
+electronic badges to sense sustained face-to-face  proximity  be-
+tween  persons  -  a proxy observable for social contact - with a
+fine spatial and temporal resolution. It has so far been utilized
+in  fourteen  deployments in which the SocioPatterns team was di-
+rectly involved. Further  deployments  are  being  prepared.  The
+platform  has  additionally been adopted by other research groups
+and commercial entities which have deployed it and/or are prepar-
+ing  future  deployments.  Complementing  the development of this
+sensing platform, the SocioPatterns team also works on the devel-
+opment  of tools and techniques to facilitate the representation,
+analysis and visualization of the data obtained from  this  plat-
+form.
+
+SocioPatterns is an interdisciplinary scientific research project
+that adopts this data-driven methodology with the aim of uncover-
+ing fundamental patterns in social dynamics and coordinated human
+activity.
+
+To achieve its scientific goals, the SocioPatterns  project  also
+considers  the  development  of new means for obtaining pertinent
+but unavailable data. The first major result in this  respect  is
+the SocioPatterns sensing platform, which was developed to obtain
+longitudinal datasets on face-to-face contact events with the de-
+sired scale and resolution.
+
+The  SocioPatterns project is a collaboration between researchers
+and developers from the following institutions and companies:
+
+- ISI Foundation -- Turin, Italy
+
+- CNRS - Centre de Physique Theorique -- Marseille, France
+
+- ENS Lyon - Laboratoire de Physique -- Lyon, France
+
+- Bitmanufaktur -- Berlin, Germany
+
+
+
