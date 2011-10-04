@@ -1,4 +1,4 @@
-TARGET=openbeacon-blinkenlights
+TARGET=openbeacon-blinkenlights-dimmer
 ARCH=AT91SAM7S
 CPU=$(ARCH)64
 DEBUG=-g

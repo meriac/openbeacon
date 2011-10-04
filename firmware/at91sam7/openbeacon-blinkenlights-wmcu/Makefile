@@ -1,4 +1,4 @@
-TARGET=openbeacon-network
+TARGET=openbeacon-blinkenlights-wmcu
 ARCH=AT91SAM7X
 CPU=$(ARCH)256
 DEBUG=-g
