@@ -4,7 +4,14 @@ CPU=$(ARCH)43
 DEBUG=-g
 OPTIM=-Os -mword-relocations
 
-APP_CFLAGS=-Iinc -std=gnu99 -fgnu89-inline -D__USE_CMSIS
+# determine if we have custom encryption keys
+ifeq ("$(wildcard inc/custom-encryption-key.h)","")
+	ENCRYPTION_KEY:=
+else
+	ENCRYPTION_KEY:=-DCUSTOM_ENCRYPTION_KEY
+endif
+
+APP_CFLAGS=-Iinc -std=gnu99 -fgnu89-inline -D__USE_CMSIS $(ENCRYPTION_KEY)
 APP_LDFLAGS=-lm
 
 APP_SRC= \

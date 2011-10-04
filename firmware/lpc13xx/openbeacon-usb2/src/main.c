@@ -53,13 +53,17 @@ static uint32_t storage_pos;
 #define MAINCLKSEL_WDT 2
 #define MAINCLKSEL_SYSPLL_OUT 3
 
+#ifdef  CUSTOM_ENCRYPTION_KEY
+#include "custom-encryption-key.h"
+#else /*CUSTOM_ENCRYPTION_KEY*/
 /* Default TEA encryption key of the tag - MUST CHANGE ! */
-static const uint32_t xxtea_key[4] = {
+static const uint32_t xxtea_key[XXTEA_BLOCK_COUNT] = {
   0x00112233,
   0x44556677,
   0x8899AABB,
   0xCCDDEEFF
 };
+#endif/*CUSTOM_ENCRYPTION_KEY*/
 
 /* set nRF24L01 broadcast mac */
 static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = {
@@ -499,7 +503,7 @@ main (void)
   blink(2);
 
   /* Initialize OpenBeacon nRF24L01 interface */
-  if (!nRFAPI_Init (81, broadcast_mac, sizeof (broadcast_mac), 0))
+  if (!nRFAPI_Init (CONFIG_TRACKER_CHANNEL, broadcast_mac, sizeof (broadcast_mac), 0))
   for (;;)
   {
     GPIOSetValue (1, 2, 1);
