@@ -1,12 +1,13 @@
 #
 # VendorID:ProductID,"Description",directory
 #
-16C0:08AC,"OpenBeacon Sniffer",openbeacon-sniffer
-16C0:08AD,"OpenBeacon Estimator",openbeacon-estimator
-16C0:08AE,"OpenBouncer",openbouncer
-16C0:08AF,"OpenBeacon Blinkenlights",openbeacon-blinkenlights-dimmer
-16C0:08B0,"OpenBeacon Network",openbeacon-blinkenlights-wmcu
-16C0:08B1,"txtr.mini",openbeacon-openpicc2
-16C0:08B2,"OpenBeacon Reflasher",bootloader
-16C0:08B3,"OpenBeacon Ethernet PoE II",openbeacon-ethernet
-16C0:08B4,"OpenPCD 2 basic",../lpc13xx/rfid
+# see http://openbeacon.org/USB_PID for latest version
+#
+2366:0001,"Prototyping PID - only used for internal testing, you can use that for your own product development internally",null
+2366:0002,"OpenBeacon USB 2",../lpc13xx/openbeacon-usb2
+2366:0003,"OpenPCD 2 RFID Reader for 13.56MHz",../lpc13xx/rfid
+2366:0004,"OpenBeacon USB",openbeacon-sniffer
+2366:0005,"Blinkenlights WDIM",openbeacon-blinkenlights-dimmer
+2366:0006,"Blinkenlights WMCU",openbeacon-blinkenlights-wmcu
+2366:0007,"OpenBeacon Ethernet EasyReader PoE II - Active 2.4GHz RFID Reader",openbeacon-ethernet
+2366:0008,"OpenBeacon WLAN",openbeacon-wlan
