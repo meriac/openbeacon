@@ -1,13 +1,19 @@
 /***************************************************************
  *
- * OpenBeacon.org - main entry, CRC, behaviour
+ * OpenBeacon.org 2.4GHz proximity tag - main entry, CRC, behaviour
+ *
+ * Copyright (C) 2011 Milosch Meriac <meriac@openbeacon.de>
+ * - Unified Proximity/Tracking-Mode into one Firmware
+ * - Increased Tracking/Proximity rate to 12 packets per second
+ * - Implemented Tag-ID assignment/management via RF interface to
+ *   simplify production process
  *
  * Copyright (C) 2008 Istituto per l'Interscambio Scientifico I.S.I.
- * extended by Ciro Cattuto <ciro.cattuto@gmail.com> by support for
- * SocioPatterns.org platform
+ * - extended by Ciro Cattuto <ciro.cattuto@gmail.com> by support for
+ *   SocioPatterns.org platform
  *
  * Copyright (C) 2006 Milosch Meriac <meriac@openbeacon.de>
- * Optimized en-/decryption routines, CRC's, EEPROM handling
+ * - Optimized en-/decryption routines, CRC's, EEPROM handling
  *
 /***************************************************************
 
