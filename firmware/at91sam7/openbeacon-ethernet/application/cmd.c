@@ -181,10 +181,12 @@ vCmdProcess (const char *cmdline)
     case 'I':
       if (assign)
 	{
+#ifndef ALLOW_READER_ID_CHANGE
 	  if (env.e.reader_id)
 	    debug_printf ("ERROR: reader id already set!\n");
 	  else
 	    {
+#endif/*ALLOW_READER_ID_CHANGE*/
 	      t = atoiEx (cmdline);
 	      if (t > 0 && t < MAC_IAB_MASK)
 		env.e.reader_id = t;
@@ -192,7 +194,9 @@ vCmdProcess (const char *cmdline)
 		debug_printf
 		  ("error: reader_id needs to be between 1 and %u (used '%s')\n",
 		   MAC_IAB_MASK, cmdline);
+#ifndef ALLOW_READER_ID_CHANGE
 	    }
+#endif/*ALLOW_READER_ID_CHANGE*/
 	}
       debug_printf ("reader_id=%i\n", env.e.reader_id);
       break;
