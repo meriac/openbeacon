@@ -18,7 +18,7 @@ APP_SRC= \
 
 APP_SRC+=$(IMAGES_C)
 
-all: $(TARGET).bin
+all: README $(TARGET).bin
 
 publish: clean $(TARGET).bin
 	rm -f $(TARGET).zip
@@ -26,8 +26,14 @@ publish: clean $(TARGET).bin
 	zip $(TARGET).zip $(TARGET)-firmware.bin
 	scp $(TARGET).zip $(TARGET)-firmware.bin meri@bitmanufaktur.net:/home/wwwrun/open.bitmanufaktur.com/web/www/people/milosch/usb2tag/
 
+README: .readme
+	groff -Tascii $< >$@
+
 app_clean:
 	rm -f $(TARGET).zip $(TARGET)-firmware.bin
 	find src -name '*.o' -exec rm \{\} \;
+
+clean_all: clean
+	rm -f README
 
 include ../core/Makefile.rules
