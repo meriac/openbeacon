@@ -100,6 +100,7 @@ extern BOOL default_putchar (uint8_t data);
 
 #include <debug_printf.h>
 #include <string.h>
+#include <crc8.h>
 #include <crc16.h>
 #include <persistent.h>
 
