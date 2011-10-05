@@ -691,8 +691,8 @@ main (void)
 			  /* store RX'ed packed into log file */
 			  g_Log.hdr.type = LOGFILETYPE_BEACONSIGHTING;
 			  g_Log.hdr.size = sizeof (g_Log);
-			  g_Log.hdr.time = ntohl (LPC_TMR32B0->TC);
-			  g_Log.oid = oid_last_seen = ntohs((uint16_t) oid);
+			  g_Log.hdr.time = htonl (LPC_TMR32B0->TC);
+			  g_Log.oid = oid_last_seen = htons ((uint16_t) oid);
 			  /* calculate CRC over whole logfile entry */
 			  g_Log.hdr.crc = htons ( crc16 (
 			    ((uint8_t *) & g_Log)+sizeof (g_Log.hdr.crc),
