@@ -139,17 +139,9 @@ typedef union
 
 typedef struct
 {
-  uint16_t crc;
-  uint8_t type;
-  uint8_t size;
   uint32_t time;
-} PACKED TLogfileBeaconHeader;
-
-typedef struct
-{
-  TLogfileBeaconHeader hdr;
-  uint8_t flags, strength;
   uint16_t oid;
+  uint8_t strength, crc;
 } PACKED TLogfileBeaconPacket;
 
 #endif/*__OPENBEACON_PROTO_H__*/

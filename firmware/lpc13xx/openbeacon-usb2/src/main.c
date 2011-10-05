@@ -397,7 +397,8 @@ main (void)
 
   uint32_t SSPdiv, seq, oid;
   uint16_t crc, oid_last_seen;
-  uint8_t cmd_buffer[64], cmd_pos, *cmd, c, status;
+  uint8_t flags, status;
+  uint8_t cmd_buffer[64], cmd_pos, *cmd, c;
   uint8_t volatile *uart;
   int x, y, z, firstrun_done, moving;
   volatile int t;
@@ -669,8 +670,8 @@ main (void)
 			      RFBPROTO_BEACONTRACKER_OLD2)
 			    {
 			      g_Log.strength = g_Beacon.old.strength / 0x55;
-			      g_Log.flags = g_Beacon.old.flags;
 
+			      flags = g_Beacon.old.flags;
 			      oid = ntohl (g_Beacon.old.oid);
 			      seq = ntohl (g_Beacon.old.seq);
 			    }
@@ -679,8 +680,8 @@ main (void)
 			  g_Log.strength = g_Beacon.pkt.p.tracker.strength;
 			  if (g_Log.strength >= MAX_POWER_LEVELS)
 			    g_Log.strength = (MAX_POWER_LEVELS - 1);
-			  g_Log.flags = g_Beacon.pkt.flags;
 
+			  flags = g_Beacon.pkt.flags;
 			  oid = ntohs (g_Beacon.pkt.oid);
 			  seq = ntohl (g_Beacon.pkt.p.tracker.seq);
 			  break;
@@ -689,14 +690,11 @@ main (void)
 		      if (oid && (oid <= 0xFFFF))
 			{
 			  /* store RX'ed packed into log file */
-			  g_Log.hdr.type = LOGFILETYPE_BEACONSIGHTING;
-			  g_Log.hdr.size = sizeof (g_Log);
-			  g_Log.hdr.time = htonl (LPC_TMR32B0->TC);
+			  g_Log.time = htonl (LPC_TMR32B0->TC);
 			  g_Log.oid = oid_last_seen = htons ((uint16_t) oid);
 			  /* calculate CRC over whole logfile entry */
-			  g_Log.hdr.crc = htons ( crc16 (
-			    ((uint8_t *) & g_Log)+sizeof (g_Log.hdr.crc),
-			    sizeof (g_Log) - sizeof (g_Log.hdr.crc)));
+			  g_Log.crc = crc8 (((uint8_t *) & g_Log),
+			    sizeof (g_Log) - sizeof (g_Log.crc));
 			  /* store data if space left on FLASH */
 			  if (storage_pos <=
 			      (LOGFILE_STORAGE_SIZE - sizeof (g_Log)))
