@@ -250,7 +250,7 @@ show_version (void)
     broadcast_mac[0], broadcast_mac[1], broadcast_mac[2],
     broadcast_mac[3], broadcast_mac[4]);
   debug_printf (" *         Tag ID: %04X\n", tag_id);
-  debug_printf (" * Stored Logfile Items: %i\n",storage_pos/sizeof(g_Beacon));
+  debug_printf (" * Stored Logfile Items: %i\n",storage_pos/sizeof(g_Log));
 }
 
 static inline void
@@ -346,22 +346,22 @@ uint32_t get_log_size(void)
   uint8_t *p;
 
   pos = 0;
-  while(pos <= (LOGFILE_STORAGE_SIZE-sizeof(g_Beacon)))
+  while(pos <= (LOGFILE_STORAGE_SIZE-sizeof(g_Log)))
   {
-    storage_read(pos, sizeof(g_Beacon), &g_Beacon);
+    storage_read(pos, sizeof(g_Log), &g_Log);
 
     /* verify if block is empty */
-    p = (uint8_t*)&g_Beacon;
-    for(t=0;t<sizeof(g_Beacon);t++)
+    p = (uint8_t*)&g_Log;
+    for(t=0;t<sizeof(g_Log);t++)
       if((*p++)!=0xFF)
         break;
 
     /* return first empty block */
-    if(t==sizeof(g_Beacon))
+    if(t==sizeof(g_Log))
 	return pos;
 
     /* verify next block */
-    pos+=sizeof(g_Beacon);
+    pos+=sizeof(g_Log);
   }
 
   return LOGFILE_STORAGE_SIZE;
@@ -647,7 +647,7 @@ main (void)
 		  xxtea_decode (g_Beacon.block, XXTEA_BLOCK_COUNT, xxtea_key);
 
 		  // verify the CRC checksum
-		  crc = crc16 (g_Beacon.byte, sizeof (g_Beacon) - sizeof (uint16_t));
+		  crc = crc16 (g_Beacon.byte, sizeof (g_Beacon) - sizeof (g_Beacon.pkt.crc));
 
 		  if (ntohs (g_Beacon.pkt.crc) == crc)
 		  {
