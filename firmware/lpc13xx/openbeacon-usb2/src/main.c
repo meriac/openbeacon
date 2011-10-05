@@ -57,6 +57,7 @@ static TDeviceUID device_uuid;
 static uint32_t random_seed;
 /* logfile position */
 static uint32_t storage_pos;
+static uint32_t g_sequence;
 
 #define TX_STRENGTH_OFFSET 2
 
@@ -129,7 +130,7 @@ rnd (uint32_t range)
   static uint32_t v2 = 0x6e28014a;
 
   /* reseed random with timer */
-  random_seed += LPC_TMR32B0->TC;
+  random_seed += LPC_TMR32B0->TC ^ g_sequence;
 
   /* MWC generator, period length 1014595583 */
   return ((((v1 = 36969 * (v1 & 0xffff) + (v1 >> 16)) << 16) ^
@@ -558,6 +559,7 @@ main (void)
   bzero (&fifo_buf, sizeof (fifo_buf));
   firstrun_done = 0;
   moving = 0;
+  g_sequence = 0;
 
   while (1)
     {
@@ -730,9 +732,9 @@ main (void)
 	  g_Beacon.pkt.flags = moving ? RFBFLAGS_MOVING : 0;
 	  g_Beacon.pkt.oid = htons (tag_id);
 	  g_Beacon.pkt.p.tracker.strength = (i & 1) + TX_STRENGTH_OFFSET;
-	  g_Beacon.pkt.p.tracker.seq = htonl (LPC_TMR32B0->TC);
+	  g_Beacon.pkt.p.tracker.seq = htonl (g_sequence++);
 	  g_Beacon.pkt.p.tracker.oid_last_seen = oid_last_seen;
-	  g_Beacon.pkt.p.tracker.seen = 0;
+	  g_Beacon.pkt.p.tracker.time = htons ((uint16_t)LPC_TMR32B0->TC);
 	  g_Beacon.pkt.p.tracker.battery = 0;
 	  g_Beacon.pkt.crc = htons (
 	    crc16(g_Beacon.byte, sizeof (g_Beacon) - sizeof (g_Beacon.pkt.crc))
