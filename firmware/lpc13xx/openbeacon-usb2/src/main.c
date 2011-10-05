@@ -701,8 +701,7 @@ main (void)
 			  if (storage_pos <=
 			      (LOGFILE_STORAGE_SIZE - sizeof (g_Log)))
 			    {
-			      storage_write (storage_pos, sizeof (g_Log),
-					     &g_Log);
+			      storage_write (storage_pos, sizeof (g_Log), &g_Log);
 			      /* increment and store RAM persistent storage position */
 			      storage_pos += sizeof (g_Log);
 			    }
