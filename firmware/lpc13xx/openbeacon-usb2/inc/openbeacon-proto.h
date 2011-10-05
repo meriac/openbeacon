@@ -28,12 +28,24 @@
 #define CONFIG_PROX_CHANNEL 76
 
 #define XXTEA_BLOCK_COUNT 4
+#define MAX_POWER_LEVELS 4
 
-#define RFBPROTO_READER_ANNOUNCE 22
-#define RFBPROTO_READER_COMMAND  23
-#define RFBPROTO_BEACONTRACKER   24
-#define RFBPROTO_PROXTRACKER     42
-#define RFBPROTO_PROXREPORT      69
+#define RFBPROTO_BEACONTRACKER_OLD      16
+#define RFBPROTO_READER_ANNOUNCE        22
+#define RFBPROTO_BEACONTRACKER_OLD2     23
+#define RFBPROTO_BEACONTRACKER          24
+#define RFBPROTO_BEACONTRACKER_STRANGE  25
+#define RFBPROTO_PROXTRACKER            42
+#define RFBPROTO_PROXREPORT             69
+#define RFBPROTO_PROXREPORT_EXT         70
+
+#define PROX_MAX 4
+#define PROX_TAG_ID_BITS 12
+#define PROX_TAG_COUNT_BITS 2
+#define PROX_TAG_STRENGTH_BITS 2
+#define PROX_TAG_ID_MASK ((1<<PROX_TAG_ID_BITS)-1)
+#define PROX_TAG_COUNT_MASK ((1<<PROX_TAG_COUNT_BITS)-1)
+#define PROX_TAG_STRENGTH_MASK ((1<<PROX_TAG_STRENGTH_BITS)-1)
 
 #define PROX_MAX 4
 
@@ -57,14 +69,24 @@
 
 #define LOGFILETYPE_EMPTY 0xFF
 #define LOGFILETYPE_RESERVED 0x00
-#define LOGFILETYPE_BEACONPACKET 0x01
+#define LOGFILETYPE_BEACONPACKET	0x01
+#define LOGFILETYPE_BEACONSIGHTING	0x02
+
+typedef struct
+{
+  uint8_t proto, proto2;
+  uint8_t flags, strength;
+  uint32_t seq;
+  uint32_t oid;
+  uint16_t reserved;
+  uint16_t crc;
+} PACKED TBeaconTrackerOld;
 
 typedef struct
 {
   uint8_t strength;
   uint16_t oid_last_seen;
-  uint8_t seen_low;
-  uint8_t seen_high;
+  uint16_t seen;
   uint8_t battery;
   uint32_t seq;
 } PACKED TBeaconTracker;
@@ -108,17 +130,26 @@ typedef struct
 
 typedef union
 {
+  uint8_t proto;
   TBeaconWrapper pkt;
+  TBeaconTrackerOld old;
   uint32_t block[XXTEA_BLOCK_COUNT];
   uint8_t byte[XXTEA_BLOCK_COUNT * 4];
 } PACKED TBeaconEnvelope;
 
 typedef struct
 {
+  uint16_t crc;
   uint8_t type;
   uint8_t size;
   uint32_t time;
-  TBeaconEnvelope e;
+} PACKED TLogfileBeaconHeader;
+
+typedef struct
+{
+  TLogfileBeaconHeader hdr;
+  uint8_t flags, strength;
+  uint16_t oid;
 } PACKED TLogfileBeaconPacket;
 
 #endif/*__OPENBEACON_PROTO_H__*/
