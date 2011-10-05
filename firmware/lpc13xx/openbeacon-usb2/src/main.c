@@ -678,7 +678,7 @@ main (void)
 			      seq = ntohl (g_Beacon.old.seq);
 			    }
 			  break;
-			case RFBPROTO_BEACONTRACKER:
+			case RFBPROTO_BEACONTRACKER_EXT:
 			  g_Log.strength = g_Beacon.pkt.p.tracker.strength;
 			  if (g_Log.strength >= MAX_POWER_LEVELS)
 			    g_Log.strength = (MAX_POWER_LEVELS - 1);
@@ -728,7 +728,7 @@ main (void)
 
 	  /* prepare packet */
 	  bzero (&g_Beacon, sizeof (g_Beacon));
-	  g_Beacon.pkt.proto = RFBPROTO_BEACONTRACKER;
+	  g_Beacon.pkt.proto = RFBPROTO_BEACONTRACKER_EXT;
 	  g_Beacon.pkt.flags = moving ? RFBFLAGS_MOVING : 0;
 	  g_Beacon.pkt.oid = htons (tag_id);
 	  g_Beacon.pkt.p.tracker.strength = (i & 1) + TX_STRENGTH_OFFSET;
