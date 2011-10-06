@@ -663,6 +663,9 @@ main (void)
 			  if (g_Log.strength >= MAX_POWER_LEVELS)
 			    g_Log.strength = (MAX_POWER_LEVELS - 1);
 
+			  /* remember that packet was proximity packet */
+			  g_Log.strength |= LOGFLAG_PROXIMITY;
+
 			  flags = g_Beacon.pkt.flags;
 			  oid = ntohs (g_Beacon.pkt.oid);
 			  seq = ntohl (g_Beacon.pkt.p.tracker.seq);
@@ -671,6 +674,9 @@ main (void)
 
 		      if (oid && (oid <= 0xFFFF))
 			{
+			  /* store status info in upper nibble */
+			  if(flags | RFBFLAGS_SENSOR)
+			    g_Log.strength |= LOGFLAG_BUTTON;
 			  /* store RX'ed packed into log file */
 			  g_Log.time = htonl (LPC_TMR32B0->TC);
 			  g_Log.oid = oid_last_seen = htons ((uint16_t) oid);

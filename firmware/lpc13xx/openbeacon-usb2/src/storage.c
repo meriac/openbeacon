@@ -176,7 +176,7 @@ storage_logtxt_fmt (char* buffer, uint32_t index)
     storage_read (index*sizeof(pkt), sizeof(pkt), &pkt);
 
     if(crc8((uint8_t*)&pkt, sizeof(pkt)-sizeof(pkt.crc)) == pkt.crc)
-      cIO_snprintf(buffer, LOGTXT_ENTRY_SIZE, "T%04X,%07u,T%04X,%u\n", g_device_id, ntohl(pkt.time), ntohs(pkt.oid), pkt.strength);
+      cIO_snprintf(buffer, LOGTXT_ENTRY_SIZE, "P%04X,%07u,%c%04X,%u\n", g_device_id, ntohl(pkt.time), (pkt.strength & LOGFLAG_PROXIMITY) ? 'P':'T',ntohs(pkt.oid), pkt.strength & 0xF);
     else
     {
       memset(buffer, ' ', LOGTXT_ENTRY_SIZE-2);
@@ -249,44 +249,32 @@ storage_status (void)
 #endif/*ENABLE_FLASH*/
 }
 
+void
+storage_init (uint8_t usb_enabled, uint16_t device_id)
+{
 /* declare last entry in file chain is volume label */
 static const TDiskFile f_volume_label = {
     .name = DiskBPB.BS_VolLab,
 };
 
 #ifdef  ENABLE_FLASH
-/* declare log file entry */
-static char storage_logtxt_name[]  = "LOG-0000CSV";
-static TDiskFile f_logtxt = {
-    .length = LOGFILE_STORAGE_SIZE,
+  /* declare log file entry */
+  static char storage_logtxt_name[]  = "LOG-0000CSV";
+  static TDiskFile f_logtxt = {
     .handler = storage_logtxt_read_raw,
     .data = &f_logtxt,
     .name = storage_logtxt_name,
     .next = &f_volume_label,
-};
+  };
 
-static char storage_logfile_name[] = "LOG-0000BIN";
-static TDiskFile f_logfile = {
-    .length = LOGFILE_STORAGE_SIZE,
+  static char storage_logfile_name[] = "LOG-0000BIN";
+  static TDiskFile f_logfile = {
     .handler = storage_logfile_read_raw,
     .data = &f_logfile,
     .name = storage_logfile_name,
     .next = &f_logtxt,
-};
-#endif/*ENABLE_FLASH*/
+  };
 
-void
-storage_set_logfile_items (uint32_t items)
-{
-    g_log_items = items;
-    f_logfile.length = g_log_items * sizeof(TLogfileBeaconPacket);
-    f_logtxt.length = g_log_items * LOGTXT_ENTRY_SIZE;
-}
-
-void
-storage_init (uint8_t usb_enabled, uint16_t device_id)
-{
-#ifdef  ENABLE_FLASH
   /* update string device id */
   g_device_id = device_id;
   storage_logfile_name[4] = hex_char ( device_id >> 12 );
@@ -344,6 +332,9 @@ storage_init (uint8_t usb_enabled, uint16_t device_id)
   spi_init_pin (SPI_CS_FLASH);
   /* determine stored item count */
   storage_scan_items ();
+  /* update file sizes */
+  f_logfile.length = g_log_items * sizeof(TLogfileBeaconPacket);
+  f_logtxt.length = g_log_items * LOGTXT_ENTRY_SIZE;
 #endif/*ENABLE_FLASH*/
 
   /* init virtual file system */

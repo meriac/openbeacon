@@ -68,10 +68,8 @@
 #define READ_RES__DENIED		0x01
 #define READ_RES__UNKNOWN_CMD		0xFF
 
-#define LOGFILETYPE_EMPTY 0xFF
-#define LOGFILETYPE_RESERVED 0x00
-#define LOGFILETYPE_BEACONPACKET	0x01
-#define LOGFILETYPE_BEACONSIGHTING	0x02
+#define LOGFLAG_PROXIMITY               0x10
+#define LOGFLAG_BUTTON                  0x20
 
 typedef struct
 {
