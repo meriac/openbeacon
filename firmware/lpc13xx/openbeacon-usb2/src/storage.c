@@ -169,7 +169,6 @@ storage_scan_items (void)
 static void
 storage_logtxt_fmt (char* buffer, uint32_t index)
 {
-  uint32_t count;
   TLogfileBeaconPacket pkt;
 
   if( index < g_log_items )
@@ -177,11 +176,7 @@ storage_logtxt_fmt (char* buffer, uint32_t index)
     storage_read (index*sizeof(pkt), sizeof(pkt), &pkt);
 
     if(crc8((uint8_t*)&pkt, sizeof(pkt)-sizeof(pkt.crc)) == pkt.crc)
-    {
-      count = cIO_snprintf(buffer, LOGTXT_ENTRY_SIZE, "T%04X,%07u,T%04X,%u\n", g_device_id, ntohl(pkt.time), ntohs(pkt.oid), pkt.strength);
-      if(count<LOGTXT_ENTRY_SIZE)
-        memset(buffer, 'X', LOGTXT_ENTRY_SIZE-count);
-    }
+      cIO_snprintf(buffer, LOGTXT_ENTRY_SIZE, "T%04X,%07u,T%04X,%u\n", g_device_id, ntohl(pkt.time), ntohs(pkt.oid), pkt.strength);
     else
     {
       memset(buffer, ' ', LOGTXT_ENTRY_SIZE-2);
