@@ -21,6 +21,7 @@ APP_SRC= \
   src/nRF_CMD.c \
   src/nRF_API.c \
   src/storage.c \
+  src/customIO.c \
   src/bluetooth.c \
   src/3d_acceleration.c
 
