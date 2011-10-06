@@ -47,9 +47,10 @@ cIO_putchchar (uint8_t data)
     return UARTSendChar (data);
 }
 
-void
+uint32_t
 cIO_snprintf (char *str, uint32_t size, const char *fmt, ...)
 {
+  uint32_t res;
   va_list args;
 
   if(str && size)
@@ -60,8 +61,19 @@ cIO_snprintf (char *str, uint32_t size, const char *fmt, ...)
     va_start (args, fmt);
     tiny_vsprintf (fmt, args);
     va_end (args);
+
+    /* calculate string size without termination */
+    res = size - cIOsize;
+
+    /* add string termination if space left */
+    if(cIOsize)
+      *cIObuffer=0;
   }
+  else
+    res = 0;
 
   cIOsize = 0;
   cIObuffer = NULL;
+
+  return res;
 }

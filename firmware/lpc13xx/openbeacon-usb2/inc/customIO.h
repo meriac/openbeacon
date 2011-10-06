@@ -24,6 +24,7 @@
 #ifndef __CUSTOMIO_H__
 #define __CUSTOMIO_H__
 
-extern void cIO_snprintf (char *str, uint32_t size, const char *fmt, ...);
+/* print formatted string into buffer, return string size without termination */
+extern uint32_t cIO_snprintf (char *str, uint32_t size, const char *fmt, ...);
 
 #endif/*__CUSTOMIO_H__*/
