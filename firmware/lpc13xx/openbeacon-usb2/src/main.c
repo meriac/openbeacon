@@ -684,7 +684,7 @@ main (void)
 			  g_Log.crc = crc8 (((uint8_t *) & g_Log),
 			    sizeof (g_Log) - sizeof (g_Log.crc));
 			  /* store data if space left on FLASH */
-			  if (g_storage_items <= (LOGFILE_STORAGE_SIZE/sizeof (g_Log)))
+			  if (g_storage_items < (LOGFILE_STORAGE_SIZE/sizeof (g_Log)))
 			    {
 			      storage_write (g_storage_items * sizeof (g_Log), sizeof (g_Log), &g_Log);
 			      /* increment and store RAM persistent storage position */
