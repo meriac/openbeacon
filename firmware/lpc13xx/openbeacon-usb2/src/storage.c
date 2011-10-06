@@ -23,12 +23,24 @@
 #include <openbeacon.h>
 #include "vfs.h"
 #include "storage.h"
+#include "customIO.h"
 #include "openbeacon-proto.h"
 
 #if DISK_SIZE>0
 #include "spi.h"
 
 #ifdef  ENABLE_FLASH
+
+#define LOGTXT_ENTRY_SIZE 23
+
+static uint16_t g_device_id;
+static uint32_t g_log_items;
+
+uint32_t
+storage_items (void)
+{
+  return g_log_items;
+}
 
 uint8_t
 storage_flags (void)
@@ -126,15 +138,97 @@ storage_write (uint32_t offset, uint32_t length, const void *src)
 }
 
 static void
+storage_scan_items (void)
+{
+  uint32_t t, pos;
+  uint8_t *p;
+  TLogfileBeaconPacket pkt;
+
+  pos = 0;
+  while (pos <= (LOGFILE_STORAGE_SIZE - sizeof (pkt)))
+    {
+      storage_read (pos, sizeof (pkt), &pkt);
+
+      /* verify if block is empty */
+      p = (uint8_t *) & pkt;
+      for (t = 0; t < sizeof (pkt); t++)
+	if ((*p++) != 0xFF)
+	  break;
+
+      /* return first empty block */
+      if (t == sizeof (pkt))
+	break;
+
+      /* verify next block */
+      pos += sizeof (pkt);
+    }
+
+  g_log_items = pos / sizeof(pkt);
+}
+
+static void
+storage_logtxt_fmt (char* buffer, uint32_t index)
+{
+  uint32_t count;
+  TLogfileBeaconPacket pkt;
+
+  if( index < g_log_items )
+  {
+    storage_read (index*sizeof(pkt), sizeof(pkt), &pkt);
+
+    if(crc8((uint8_t*)&pkt, sizeof(pkt)-sizeof(pkt.crc)) == pkt.crc)
+    {
+      count = cIO_snprintf(buffer, LOGTXT_ENTRY_SIZE, "T%04X,%07u,T%04X,%u\n", g_device_id, ntohl(pkt.time), ntohs(pkt.oid), pkt.strength);
+      if(count<LOGTXT_ENTRY_SIZE)
+        memset(buffer, 'X', LOGTXT_ENTRY_SIZE-count);
+    }
+    else
+    {
+      memset(buffer, ' ', LOGTXT_ENTRY_SIZE-2);
+      buffer[LOGTXT_ENTRY_SIZE-2]='\r';
+      buffer[LOGTXT_ENTRY_SIZE-1]='\n';
+    }
+  }
+  else
+    bzero(buffer, LOGTXT_ENTRY_SIZE);
+}
+
+static void
 storage_logtxt_read_raw (uint32_t offset, uint32_t length, const void *src,
 			  uint8_t * dst)
 {
+  uint32_t i, index, count;
+  char buffer[LOGTXT_ENTRY_SIZE];
   (void) src;
   (void) offset;
 
-  bzero (dst, length);
-}
+  index = offset / LOGTXT_ENTRY_SIZE;
 
+  /* handle remainder from previous block */
+  if(((i = (offset % LOGTXT_ENTRY_SIZE))!=0) && (length>=i))
+  {
+    storage_logtxt_fmt(buffer, index++);
+    count = LOGTXT_ENTRY_SIZE-i;
+    memcpy(dst, &buffer[i], count);
+    dst+=count;
+    length-=count;
+  }
+
+  /* handle full bocks */
+  while(length>=LOGTXT_ENTRY_SIZE)
+  {
+    storage_logtxt_fmt((char*)dst, index++);
+    dst+=LOGTXT_ENTRY_SIZE;
+    length-=LOGTXT_ENTRY_SIZE;
+  }
+
+  /* handle remainder of last block */
+  if(length)
+  {
+    storage_logtxt_fmt(buffer, index);
+    memcpy(dst, buffer, length);
+  }
+}
 
 static void
 storage_logfile_read_raw (uint32_t offset, uint32_t length, const void *src,
@@ -189,7 +283,9 @@ static TDiskFile f_logfile = {
 void
 storage_set_logfile_items (uint32_t items)
 {
-    f_logfile.length = items * sizeof(TLogfileBeaconPacket);
+    g_log_items = items;
+    f_logfile.length = g_log_items * sizeof(TLogfileBeaconPacket);
+    f_logtxt.length = g_log_items * LOGTXT_ENTRY_SIZE;
 }
 
 void
@@ -197,6 +293,7 @@ storage_init (uint8_t usb_enabled, uint16_t device_id)
 {
 #ifdef  ENABLE_FLASH
   /* update string device id */
+  g_device_id = device_id;
   storage_logfile_name[4] = hex_char ( device_id >> 12 );
   storage_logfile_name[5] = hex_char ( device_id >>  8 );
   storage_logfile_name[6] = hex_char ( device_id >>  4 );
@@ -247,14 +344,17 @@ storage_init (uint8_t usb_enabled, uint16_t device_id)
     .next = &f_version,
   };
 
+#ifdef  ENABLE_FLASH
+  /* setup SPI chipselect pin */
+  spi_init_pin (SPI_CS_FLASH);
+  /* determine stored item count */
+  storage_scan_items ();
+#endif/*ENABLE_FLASH*/
+
   /* init virtual file system */
   if(usb_enabled)
     vfs_init (&f_autorun);
 
-#ifdef  ENABLE_FLASH
-  /* setup SPI chipselect pin */
-  spi_init_pin (SPI_CS_FLASH);
-#endif/*ENABLE_FLASH*/
 }
 
 #endif /* DISK_SIZE>0 */

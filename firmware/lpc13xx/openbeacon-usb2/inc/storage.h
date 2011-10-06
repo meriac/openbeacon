@@ -31,7 +31,7 @@
 extern void storage_init (uint8_t usb_enabled, uint16_t device_id);
 extern void storage_read (uint32_t offset, uint32_t length, void *dst);
 extern void storage_write (uint32_t offset, uint32_t length, const void *src);
-extern void storage_set_logfile_items (uint32_t items);
+extern uint32_t storage_items (void);
 extern void storage_erase (void);
 extern void storage_status (void);
 

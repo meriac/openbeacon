@@ -56,7 +56,7 @@ static TDeviceUID device_uuid;
 /* random seed */
 static uint32_t random_seed;
 /* logfile position */
-static uint32_t storage_items;
+static uint32_t g_storage_items;
 static uint32_t g_sequence;
 
 #define TX_STRENGTH_OFFSET 2
@@ -251,12 +251,14 @@ show_version (void)
 		broadcast_mac[0], broadcast_mac[1], broadcast_mac[2],
 		broadcast_mac[3], broadcast_mac[4]);
   debug_printf (" *         Tag ID: %04X\n", tag_id);
-  debug_printf (" * Stored Logfile Items: %i\n", storage_items);
+  debug_printf (" * Stored Logfile Items: %i\n", g_storage_items);
 }
 
 static inline void
 main_menue (uint8_t cmd)
 {
+  TLogfileBeaconPacket pkt;
+
   /* ignore non-printable characters */
   if (cmd <= ' ')
     return;
@@ -302,7 +304,7 @@ main_menue (uint8_t cmd)
     case 'E':
       debug_printf ("\nErasing Storage...\n\n");
       storage_erase ();
-      storage_items = 0;
+      g_storage_items = 0;
       break;
 
     case 'W':
@@ -329,9 +331,17 @@ main_menue (uint8_t cmd)
 	debug_printf ("\nErasing Storage...\n\n");
 	storage_erase ();
 	debug_printf ("\nFilling Storage...\n");
-	for (counter = 0; counter < (LOGFILE_STORAGE_SIZE / sizeof (counter));
-	     counter++)
-	  storage_write (counter * 4, sizeof (counter), &counter);
+	counter = 0;
+	while(counter < LOGFILE_STORAGE_SIZE)
+	{
+	  pkt.time = htonl(counter);
+	  pkt.oid = htons(counter / sizeof(pkt));
+	  pkt.strength = (counter / sizeof(pkt)) % MAX_POWER_LEVELS;
+	  pkt.crc = crc8 (((uint8_t *) & pkt), sizeof (pkt) - sizeof (pkt.crc));
+	  storage_write (counter, sizeof (pkt), &pkt);
+
+	  counter += sizeof(pkt);
+	}
 	debug_printf ("\n[DONE]\n");
 	break;
       }
@@ -341,34 +351,6 @@ main_menue (uint8_t cmd)
 		    cmd);
     }
   debug_printf ("\n# ");
-}
-
-static uint32_t
-get_log_items (void)
-{
-  uint32_t t, pos;
-  uint8_t *p;
-
-  pos = 0;
-  while (pos <= (LOGFILE_STORAGE_SIZE - sizeof (g_Log)))
-    {
-      storage_read (pos, sizeof (g_Log), &g_Log);
-
-      /* verify if block is empty */
-      p = (uint8_t *) & g_Log;
-      for (t = 0; t < sizeof (g_Log); t++)
-	if ((*p++) != 0xFF)
-	  break;
-
-      /* return first empty block */
-      if (t == sizeof (g_Log))
-	return pos / sizeof (g_Log);
-
-      /* verify next block */
-      pos += sizeof (g_Log);
-    }
-
-  return LOGFILE_STORAGE_SIZE;
 }
 
 void
@@ -436,11 +418,10 @@ main (void)
       acc_init (1);
       /* Init Flash Storage with USB */
       storage_init (TRUE, tag_id);
+      g_storage_items = storage_items ();
+
       /* Init Bluetooth */
       bt_init (TRUE, tag_id);
-      /* get current FLASH storage write postition */
-      storage_items = get_log_items ();
-      storage_set_logfile_items (storage_items);
 
       /* switch to LED 2 */
       GPIOSetValue (1, 1, 0);
@@ -509,7 +490,7 @@ main (void)
   storage_init (FALSE, tag_id);
 
   /* get current FLASH storage write postition */
-  storage_items = get_log_items ();
+  g_storage_items = storage_items ();
 
   /* initialize power management */
   pmu_init ();
@@ -697,12 +678,11 @@ main (void)
 			  g_Log.crc = crc8 (((uint8_t *) & g_Log),
 			    sizeof (g_Log) - sizeof (g_Log.crc));
 			  /* store data if space left on FLASH */
-			  if (storage_items <=
-			      ((LOGFILE_STORAGE_SIZE/sizeof (g_Log))-1))
+			  if (g_storage_items <= (LOGFILE_STORAGE_SIZE/sizeof (g_Log)))
 			    {
-			      storage_write (storage_items * sizeof (g_Log), sizeof (g_Log), &g_Log);
+			      storage_write (g_storage_items * sizeof (g_Log), sizeof (g_Log), &g_Log);
 			      /* increment and store RAM persistent storage position */
-			      storage_items ++;
+			      g_storage_items ++;
 			    }
 
 			  /* fire up LED to indicate rx */
