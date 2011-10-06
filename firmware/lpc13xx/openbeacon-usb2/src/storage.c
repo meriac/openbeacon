@@ -23,6 +23,7 @@
 #include <openbeacon.h>
 #include "vfs.h"
 #include "storage.h"
+#include "openbeacon-proto.h"
 
 #if DISK_SIZE>0
 #include "spi.h"
@@ -125,6 +126,17 @@ storage_write (uint32_t offset, uint32_t length, const void *src)
 }
 
 static void
+storage_logtxt_read_raw (uint32_t offset, uint32_t length, const void *src,
+			  uint8_t * dst)
+{
+  (void) src;
+  (void) offset;
+
+  bzero (dst, length);
+}
+
+
+static void
 storage_logfile_read_raw (uint32_t offset, uint32_t length, const void *src,
 			  uint8_t * dst)
 {
@@ -153,20 +165,31 @@ static const TDiskFile f_volume_label = {
     .name = DiskBPB.BS_VolLab,
 };
 
+#ifdef  ENABLE_FLASH
 /* declare log file entry */
+static char storage_logtxt_name[]  = "LOG-0000CSV";
+static TDiskFile f_logtxt = {
+    .length = LOGFILE_STORAGE_SIZE,
+    .handler = storage_logtxt_read_raw,
+    .data = &f_logtxt,
+    .name = storage_logtxt_name,
+    .next = &f_volume_label,
+};
+
 static char storage_logfile_name[] = "LOG-0000BIN";
 static TDiskFile f_logfile = {
     .length = LOGFILE_STORAGE_SIZE,
     .handler = storage_logfile_read_raw,
     .data = &f_logfile,
     .name = storage_logfile_name,
-    .next = &f_volume_label,
+    .next = &f_logtxt,
 };
+#endif/*ENABLE_FLASH*/
 
 void
-storage_set_logfile_length (uint32_t size)
+storage_set_logfile_items (uint32_t items)
 {
-    f_logfile.length = size;
+    f_logfile.length = items * sizeof(TLogfileBeaconPacket);
 }
 
 void
@@ -178,6 +201,7 @@ storage_init (uint8_t usb_enabled, uint16_t device_id)
   storage_logfile_name[5] = hex_char ( device_id >>  8 );
   storage_logfile_name[6] = hex_char ( device_id >>  4 );
   storage_logfile_name[7] = hex_char ( device_id >>  0 );
+  memcpy(&storage_logtxt_name[4],&storage_logfile_name[4],4);
 #endif/*ENABLE_FLASH*/
 
   /* read-me.htm file that redirects to project page */
@@ -222,8 +246,6 @@ storage_init (uint8_t usb_enabled, uint16_t device_id)
     .name = "AUTORUN INF",
     .next = &f_version,
   };
-
-
 
   /* init virtual file system */
   if(usb_enabled)

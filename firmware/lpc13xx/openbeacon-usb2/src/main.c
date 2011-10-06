@@ -56,7 +56,7 @@ static TDeviceUID device_uuid;
 /* random seed */
 static uint32_t random_seed;
 /* logfile position */
-static uint32_t storage_pos;
+static uint32_t storage_items;
 static uint32_t g_sequence;
 
 #define TX_STRENGTH_OFFSET 2
@@ -251,8 +251,7 @@ show_version (void)
 		broadcast_mac[0], broadcast_mac[1], broadcast_mac[2],
 		broadcast_mac[3], broadcast_mac[4]);
   debug_printf (" *         Tag ID: %04X\n", tag_id);
-  debug_printf (" * Stored Logfile Items: %i\n",
-		storage_pos / sizeof (g_Log));
+  debug_printf (" * Stored Logfile Items: %i\n", storage_items);
 }
 
 static inline void
@@ -303,7 +302,7 @@ main_menue (uint8_t cmd)
     case 'E':
       debug_printf ("\nErasing Storage...\n\n");
       storage_erase ();
-      storage_pos = 0;
+      storage_items = 0;
       break;
 
     case 'W':
@@ -344,8 +343,8 @@ main_menue (uint8_t cmd)
   debug_printf ("\n# ");
 }
 
-uint32_t
-get_log_size (void)
+static uint32_t
+get_log_items (void)
 {
   uint32_t t, pos;
   uint8_t *p;
@@ -363,7 +362,7 @@ get_log_size (void)
 
       /* return first empty block */
       if (t == sizeof (g_Log))
-	return pos;
+	return pos / sizeof (g_Log);
 
       /* verify next block */
       pos += sizeof (g_Log);
@@ -440,8 +439,8 @@ main (void)
       /* Init Bluetooth */
       bt_init (TRUE, tag_id);
       /* get current FLASH storage write postition */
-      storage_pos = get_log_size ();
-      storage_set_logfile_length (storage_pos);
+      storage_items = get_log_items ();
+      storage_set_logfile_items (storage_items);
 
       /* switch to LED 2 */
       GPIOSetValue (1, 1, 0);
@@ -510,7 +509,7 @@ main (void)
   storage_init (FALSE, tag_id);
 
   /* get current FLASH storage write postition */
-  storage_pos = get_log_size ();
+  storage_items = get_log_items ();
 
   /* initialize power management */
   pmu_init ();
@@ -698,12 +697,12 @@ main (void)
 			  g_Log.crc = crc8 (((uint8_t *) & g_Log),
 			    sizeof (g_Log) - sizeof (g_Log.crc));
 			  /* store data if space left on FLASH */
-			  if (storage_pos <=
-			      (LOGFILE_STORAGE_SIZE - sizeof (g_Log)))
+			  if (storage_items <=
+			      ((LOGFILE_STORAGE_SIZE/sizeof (g_Log))-1))
 			    {
-			      storage_write (storage_pos, sizeof (g_Log), &g_Log);
+			      storage_write (storage_items * sizeof (g_Log), sizeof (g_Log), &g_Log);
 			      /* increment and store RAM persistent storage position */
-			      storage_pos += sizeof (g_Log);
+			      storage_items ++;
 			    }
 
 			  /* fire up LED to indicate rx */
