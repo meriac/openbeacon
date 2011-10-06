@@ -150,7 +150,7 @@ number (long num, unsigned int base, int size, int precision,
     default_putchar(' ');
 }
 
-static void
+void
 tiny_vsprintf (const char *fmt, va_list args)
 {
   int len;
