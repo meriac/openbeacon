@@ -679,6 +679,7 @@ main (void)
 			    g_Log.strength |= LOGFLAG_BUTTON;
 			  /* store RX'ed packed into log file */
 			  g_Log.time = htonl (LPC_TMR32B0->TC);
+			  g_Log.seq = htonl (seq);
 			  g_Log.oid = oid_last_seen = htons ((uint16_t) oid);
 			  /* calculate CRC over whole logfile entry */
 			  g_Log.crc = crc8 (((uint8_t *) & g_Log),
@@ -717,9 +718,9 @@ main (void)
 	  g_Beacon.pkt.flags = moving ? RFBFLAGS_MOVING : 0;
 	  g_Beacon.pkt.oid = htons (tag_id);
 	  g_Beacon.pkt.p.tracker.strength = (i & 1) + TX_STRENGTH_OFFSET;
-	  g_Beacon.pkt.p.tracker.seq = htonl (g_sequence++);
+	  g_Beacon.pkt.p.tracker.seq = htonl (LPC_TMR32B0->TC);
 	  g_Beacon.pkt.p.tracker.oid_last_seen = oid_last_seen;
-	  g_Beacon.pkt.p.tracker.time = htons ((uint16_t)LPC_TMR32B0->TC);
+	  g_Beacon.pkt.p.tracker.time = htons ((uint16_t)g_sequence++);
 	  g_Beacon.pkt.p.tracker.battery = 0;
 	  g_Beacon.pkt.crc = htons (
 	    crc16(g_Beacon.byte, sizeof (g_Beacon) - sizeof (g_Beacon.pkt.crc))

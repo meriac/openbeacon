@@ -31,7 +31,7 @@
 
 #ifdef  ENABLE_FLASH
 
-#define LOGTXT_ENTRY_SIZE 23
+#define LOGTXT_ENTRY_SIZE 34
 
 static uint16_t g_device_id;
 static uint32_t g_log_items;
@@ -181,9 +181,9 @@ storage_logtxt_fmt (char* buffer, uint32_t index)
       oid = ntohs(pkt.oid);
 
       if((pkt.strength & LOGFLAG_PROXIMITY) || (oid>9999))
-	cIO_snprintf(buffer, LOGTXT_ENTRY_SIZE, "P%04X,%07u,P%04X,%u\n", g_device_id, ntohl(pkt.time), oid, pkt.strength & 0xF);
+	cIO_snprintf(buffer, LOGTXT_ENTRY_SIZE, "P%04X,%07u,P%04X,%u,%010u\n", g_device_id, ntohl(pkt.time), oid, pkt.strength & 0xF, ntohl(pkt.seq));
       else
-	cIO_snprintf(buffer, LOGTXT_ENTRY_SIZE, "P%04X,%07u,T%04u,%u\n", g_device_id, ntohl(pkt.time), oid, pkt.strength & 0xF);
+	cIO_snprintf(buffer, LOGTXT_ENTRY_SIZE, "P%04X,%07u,T%04u,%u,%010u\n", g_device_id, ntohl(pkt.time), oid, pkt.strength & 0xF, ntohl(pkt.seq));
     }
     else
     {

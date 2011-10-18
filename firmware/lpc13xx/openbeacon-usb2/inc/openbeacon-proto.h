@@ -141,6 +141,7 @@ typedef struct
   uint32_t time;
   uint16_t oid;
   uint8_t strength, crc;
+  uint32_t seq;
 } PACKED TLogfileBeaconPacket;
 
 #endif/*__OPENBEACON_PROTO_H__*/
