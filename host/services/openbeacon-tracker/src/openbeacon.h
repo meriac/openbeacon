@@ -36,6 +36,7 @@
 #define RFBPROTO_BEACONTRACKER_OLD2     23
 #define RFBPROTO_BEACONTRACKER          24
 #define RFBPROTO_BEACONTRACKER_STRANGE  25
+#define RFBPROTO_BEACONTRACKER_EXT      26
 #define RFBPROTO_PROXTRACKER            42
 #define RFBPROTO_PROXREPORT             69
 #define RFBPROTO_PROXREPORT_EXT         70
@@ -87,6 +88,15 @@ typedef struct
 
 typedef struct
 {
+  uint8_t strength;
+  uint16_t oid_last_seen;
+  uint16_t time;
+  uint8_t battery;
+  uint32_t seq;
+} PACKED TBeaconTrackerExt;
+
+typedef struct
+{
   u_int16_t oid_prox[PROX_MAX];
   u_int16_t seq;
 } PACKED TBeaconProx;
@@ -107,6 +117,7 @@ typedef union
 {
   TBeaconProx prox;
   TBeaconTracker tracker;
+  TBeaconTrackerExt trackerExt;
   TBeaconReaderCommand reader_command;
   TBeaconReaderAnnounce reader_announce;
 } PACKED TBeaconPayload;

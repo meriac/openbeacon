@@ -770,6 +770,18 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 	break;
       }
 
+    case RFBPROTO_BEACONTRACKER_EXT:
+      {
+	tag_id = ntohs (env.pkt.oid);
+	tag_sequence = ntohl (env.pkt.p.trackerExt.seq);
+	tag_strength = env.pkt.p.trackerExt.strength;
+	if (tag_strength >= STRENGTH_LEVELS_COUNT)
+	  tag_strength = STRENGTH_LEVELS_COUNT - 1;
+	tag_flags = (env.pkt.flags & RFBFLAGS_SENSOR) ?
+	  TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
+      }
+      break;
+
     case RFBPROTO_BEACONTRACKER:
       {
 	tag_id = ntohs (env.pkt.oid);
