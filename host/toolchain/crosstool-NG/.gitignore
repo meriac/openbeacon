@@ -1,0 +1,6 @@
+config
+config.gen
+kconfig
+.config
+.config.old
+.build
