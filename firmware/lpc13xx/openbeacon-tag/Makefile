@@ -1,4 +1,4 @@
-TARGET=openbeacon-sensor
+TARGET=openbeacon-tag
 ARCH=LPC13
 CPU=$(ARCH)42
 DEBUG=-g
