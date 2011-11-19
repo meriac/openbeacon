@@ -1,6 +1,6 @@
 TARGET=openbeacon-tag
 ARCH=LPC13
-CPU=$(ARCH)42
+CPU=$(ARCH)43
 DEBUG=-g
 OPTIM=-Os -mword-relocations
 
