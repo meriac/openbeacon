@@ -310,7 +310,7 @@ static inline void
 ThreadIterateLocked (void *Context, double timestamp, bool realtime)
 {
   int i, strength;
-  double dist, dx, dy;
+  double dx, dy;
   TTagItem *tag;
   TTagItemStrength *power;
   TEstimatorItem *item = (TEstimatorItem *) Context;
@@ -326,9 +326,6 @@ ThreadIterateLocked (void *Context, double timestamp, bool realtime)
     {
       dx = item->reader->x - power->px;
       dy = item->reader->y - power->py;
-      dist = sqrt (dx * dx + dy * dy);
-      dx /= dist;
-      dy /= dist;
 
       strength = item->strength[i];
       power->Fx += dx * strength;
