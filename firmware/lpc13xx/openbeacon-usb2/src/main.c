@@ -380,7 +380,7 @@ main (void)
   uint32_t SSPdiv, seq, oid;
   uint16_t crc, oid_last_seen;
   uint8_t flags, status;
-  uint8_t cmd_buffer[64], cmd_pos, *cmd, c;
+  uint8_t cmd_buffer[64], cmd_pos, c;
   uint8_t volatile *uart;
   int x, y, z, firstrun_done, moving;
   volatile int t;
@@ -429,7 +429,6 @@ main (void)
 
       /* set command buffer to empty */
       cmd_pos = 0;
-      cmd = cmd_buffer;
 
       /* spin in loop */
       while (1)
@@ -466,7 +465,6 @@ main (void)
 
 		      /* set command buffer to empty */
 		      cmd_pos = 0;
-		      cmd = cmd_buffer;
 		    }
 		  else if (cmd_pos < (sizeof (cmd_buffer) - 2))
 		    cmd_buffer[cmd_pos++] = c;
