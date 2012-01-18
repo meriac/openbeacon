@@ -769,8 +769,6 @@ extern "C" {
 #define __LDREXB(ptr)                     ((unsigned char ) __ldrex(ptr))
 #define __LDREXH(ptr)                     ((unsigned short) __ldrex(ptr))
 #define __LDREXW(ptr)                     ((unsigned int  ) __ldrex(ptr))
-#define __STREXB(value, ptr)              __strex(value, ptr)
-#define __STREXH(value, ptr)              __strex(value, ptr)
 #define __STREXW(value, ptr)              __strex(value, ptr)
 
 
@@ -1157,28 +1155,6 @@ extern "C" {
     extern uint32_t __LDREXW(uint32_t * addr);
 
 /**
- * @brief  STR Exclusive (8 bit)
- *
- * @param  value  value to store
- * @param  *addr  address pointer
- * @return        successful / failed
- *
- * Exclusive STR command for 8 bit values
- */
-    extern uint32_t __STREXB(uint8_t value, uint8_t * addr);
-
-/**
- * @brief  STR Exclusive (16 bit)
- *
- * @param  value  value to store
- * @param  *addr  address pointer
- * @return        successful / failed
- *
- * Exclusive STR command for 16 bit values
- */
-    extern uint32_t __STREXH(uint16_t value, uint16_t * addr);
-
-/**
  * @brief  STR Exclusive (32 bit)
  *
  * @param  value  value to store
@@ -1413,28 +1389,6 @@ extern "C" {
  * Exclusive LDR command for 32 bit values
  */
     extern uint32_t __LDREXW(uint32_t * addr);
-
-/**
- * @brief  STR Exclusive (8 bit)
- *
- * @param  value  value to store
- * @param  *addr  address pointer
- * @return        successful / failed
- *
- * Exclusive STR command for 8 bit values
- */
-    extern uint32_t __STREXB(uint8_t value, uint8_t * addr);
-
-/**
- * @brief  STR Exclusive (16 bit)
- *
- * @param  value  value to store
- * @param  *addr  address pointer
- * @return        successful / failed
- *
- * Exclusive STR command for 16 bit values
- */
-    extern uint32_t __STREXH(uint16_t value, uint16_t * addr);
 
 /**
  * @brief  STR Exclusive (32 bit)
