@@ -28,7 +28,7 @@
 #	port sections of the online documentation.
 #	***************************************************************************
 
-CROSS=arm-arm7tdmi-eabi-
+CROSS=arm-none-eabi-
 CC=$(CROSS)gcc
 LD=$(CROSS)ld
 OBJCOPY=$(CROSS)objcopy
