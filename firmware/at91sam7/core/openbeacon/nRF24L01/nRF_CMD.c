@@ -368,7 +368,7 @@ unsigned char nRFCMD_PendingDevice(unsigned char device)
 unsigned char nRFCMD_Init(void)
 {
     static int firstrun = 0;
-    volatile int dummy;
+    volatile int dummy __attribute__((unused));
     const int SCBR = ((int)(MCK / 4e6) + 1)&0xFF;
 
     /* make sure that init runs only once */

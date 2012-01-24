@@ -45,7 +45,7 @@ AT91F_AIC_ConfigureIt (unsigned int irq_id,	// \arg interrupt number to initiali
   //* Clear the interrupt on the interrupt controller
   AT91C_BASE_AIC->AIC_ICCR = mask;
 
-  return (unsigned int) handler;
+  return oldHandler;
 }
 
 //*----------------------------------------------------------------------------
