@@ -177,7 +177,6 @@ vnRF_ProcessDevice (u_int8_t device)
 {
   u_int8_t status, duplicate;
   u_int16_t crc, oid, prox;
-  u_int8_t strength;
   u_int32_t unique, t, seconds_since_boot, time;
   static unsigned int reader_sequence = 0;
 
@@ -305,7 +304,6 @@ vnRF_ProcessDevice (u_int8_t device)
 				swaplong (g_Beacon.log.pkt.p.tracker.seq),
 				g_Beacon.log.pkt.p.tracker.strength,
 				g_Beacon.log.pkt.flags);
-		  strength = g_Beacon.log.pkt.p.tracker.strength;
 		  break;
 
 		case RFBPROTO_PROXREPORT:
@@ -327,11 +325,9 @@ vnRF_ProcessDevice (u_int8_t device)
 			   swapshort (g_Beacon.log.pkt.oid),
 			   g_Beacon.log.pkt.flags);
 		    }
-		  strength = 3;
 		  break;
 
 		default:
-		  strength = 0xFF;
 		  debug_printf ("@%07u[%u] Uknown Protocol: %u\n",
 				seconds_since_boot,
 				device, g_Beacon.log.pkt.proto);

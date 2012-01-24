@@ -394,7 +394,7 @@ DSTATUS
 disk_initialize (BYTE drv	/* Physical drive nmuber (0) */
   )
 {
-  BYTE n, ty, cmd, buf[4];
+  BYTE n, ty, buf[4];
   UINT tmr;
   DSTATUS s;
 
@@ -433,15 +433,10 @@ disk_initialize (BYTE drv	/* Physical drive nmuber (0) */
       else
 	{			/* SDv1 or MMCv3 */
 	  if (send_cmd (ACMD41, 0) <= 1)
-	    {
 	      ty = CT_SD1;
-	      cmd = ACMD41;	/* SDv1 */
-	    }
 	  else
-	    {
 	      ty = CT_MMC;
-	      cmd = CMD1;	/* MMCv3 */
-	    }
+
 	  for (tmr = 1000; tmr; tmr--)
 	    {			/* Wait for leaving idle state */
 	      if (send_cmd (ACMD41, 0) == 0)

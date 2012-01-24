@@ -176,7 +176,7 @@ static void
 vNetworkThread (void *pvParameters)
 {
   (void) pvParameters;
-  struct ip_addr xIpAddr, xNetMask, xGateway, xServer;
+  struct ip_addr xIpAddr, xNetMask, xGateway;
 
   /* Initialize lwIP and its interface layer. */
   lwip_init ();
@@ -188,7 +188,6 @@ vNetworkThread (void *pvParameters)
       xIpAddr = env.e.ip_host;
       xNetMask = env.e.ip_netmask;
       xGateway = env.e.ip_gateway;
-      xServer = env.e.ip_server;
       break;
 
     case IP_AUTOCONFIG_READER_ID:
@@ -197,7 +196,6 @@ vNetworkThread (void *pvParameters)
 	       env.e.reader_id);
       xNetMask = env.e.ip_netmask;
       xGateway = env.e.ip_gateway;
-      xServer = env.e.ip_server;
       break;
 
     default:
@@ -205,7 +203,6 @@ vNetworkThread (void *pvParameters)
       IP4_ADDR (&xIpAddr, 0, 0, 0, 0);
       IP4_ADDR (&xNetMask, 0, 0, 0, 0);
       IP4_ADDR (&xGateway, 0, 0, 0, 0);
-      xServer = env.e.ip_server;
       break;
     }
 
