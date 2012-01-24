@@ -2,7 +2,7 @@ TARGET=openbeacon-usb2
 ARCH=LPC13
 CPU=$(ARCH)43
 DEBUG=-g
-OPTIM=-Os -mword-relocations
+OPTIM=-O3 -mword-relocations
 CUSTOM_KEY=inc/custom-encryption-key.h
 
 # determine if we have custom encryption keys

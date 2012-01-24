@@ -2,7 +2,7 @@ TARGET=openbeacon-sensor
 ARCH=LPC13
 CPU=$(ARCH)42
 DEBUG=-g
-OPTIM=-Os -mword-relocations
+OPTIM=-O3 -mword-relocations
 
 APP_CFLAGS=-Iinc -std=gnu99 -fgnu89-inline -D__USE_CMSIS
 APP_LDFLAGS=-lm
