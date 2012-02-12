@@ -43,6 +43,9 @@ flash: $(PROGNAME).hex
 publish: $(PROGNAME).hex
 	mv $^ ~/Share/OpenBeacon/$(PROG_TARGET)
 
+vmware: $(PROGNAME).hex
+	mv $^ ~/Share/OpenBeacon/$(PROGNAME).hex
+
 counted: $(PROGNAME).hex
 
 $(PROGNAME).hex: obj/$(PROGNAME).hex
