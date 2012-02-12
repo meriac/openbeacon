@@ -213,12 +213,13 @@ main (void)
     while (1)
       {
 	g_MacroBeacon.rf_setup = NRF_RFOPTIONS | ((i & 3) << 1);
-	g_MacroBeacon.env.pkt.hdr.size = sizeof (TBeaconTracker);
 	g_MacroBeacon.env.pkt.hdr.proto = RFBPROTO_BEACONTRACKER;
-	g_MacroBeacon.env.pkt.flags = CONFIG_PIN_SENSOR ? 0 : RFBFLAGS_SENSOR;
+	g_MacroBeacon.env.pkt.hdr.flags = CONFIG_PIN_SENSOR ? 0 : RFBFLAGS_SENSOR;
+	g_MacroBeacon.env.pkt.hdr.oid = htons ((u_int16_t) oid );
+	g_MacroBeacon.env.pkt.oid_last_seen = 0;
+	g_MacroBeacon.env.pkt.powerup_count = htons ((u_int16_t) code_block );
 	g_MacroBeacon.env.pkt.strength = i;
 	g_MacroBeacon.env.pkt.seq = htonl (seq);
-	g_MacroBeacon.env.pkt.oid = htonl (oid);
 	g_MacroBeacon.env.pkt.reserved = 0;
 	crc = crc16 (g_MacroBeacon.env.datab,
 		     sizeof (g_MacroBeacon.env.pkt) -

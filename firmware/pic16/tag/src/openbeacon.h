@@ -29,9 +29,7 @@
 
 #define RFB_RFOPTIONS		0x0F
 
-#define RFBPROTO_BEACONTRACKER	23
-#define RFBPROTO_BEACONNODE	24
-#define RFBPROTO_BEACONVOTESTATS	25
+#define RFBPROTO_BEACONTRACKER	24
 
 #define RFBFLAGS_ACK		0x01
 #define RFBFLAGS_SENSOR		0x02
@@ -44,16 +42,19 @@ typedef unsigned long u_int32_t;
 
 typedef struct
 {
-  u_int8_t size, proto;
+  u_int8_t proto;
+  u_int16_t oid;
+  u_int8_t flags;
 } TBeaconHeader;
 
 typedef struct
 {
   TBeaconHeader hdr;
-  u_int8_t flags, strength;
+  u_int8_t strength;
+  u_int16_t oid_last_seen;
+  u_int16_t powerup_count;
+  u_int8_t reserved;
   u_int32_t seq;
-  u_int32_t oid;
-  u_int16_t reserved;
   u_int16_t crc;
 } TBeaconTracker;
 
