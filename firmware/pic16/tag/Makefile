@@ -38,7 +38,7 @@ clean:
 	rm -f $(CLEANS)
 
 flash: $(PROGNAME).hex
-	$(PK2) -A5 -PPIC$(CHIP) -F$^ -M -YP
+	$(PK2) -B/usr/share/pk2/ -A5 -PPIC$(CHIP) -F$^ -M -YP
 
 publish: $(PROGNAME).hex
 	mv $^ ~/Share/OpenBeacon/$(PROG_TARGET)
