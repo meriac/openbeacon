@@ -50,7 +50,7 @@ clean_all: clean
 	rm -f README
 
 flash: $(PROGNAME).hex
-	$(PK2) -A5 -PPIC$(CHIP) -F$^ -M -YP
+	$(PK2) -B/usr/share/pk2/ -I -A5 -PPIC$(CHIP) -F$^ -M -YP
 
 vmware: $(PROGNAME).hex
 	mv $^ ~/Share/OpenBeacon/$(PROGNAME).hex
