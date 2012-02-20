@@ -325,10 +325,10 @@ main (void)
 
   /* Initialize OpenBeacon nRF24L01 interface */
   blink (1);
-  if (!nRFAPI_Init
+  while (!nRFAPI_Init
       (CONFIG_TRACKER_CHANNEL, broadcast_mac, sizeof (broadcast_mac), 0))
-    for (;;)
-	blink (2);
+     blink (2);
+
   /* set tx power power to high */
   nRFCMD_Power (1);
 
