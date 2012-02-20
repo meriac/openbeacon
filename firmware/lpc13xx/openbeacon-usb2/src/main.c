@@ -333,7 +333,6 @@ main (void)
   nRFCMD_Power (1);
 
   /* Init Bluetooth */
-  blink (3);
   bt_init (TRUE, tag_id);
 
   /* disable unused jobs */
