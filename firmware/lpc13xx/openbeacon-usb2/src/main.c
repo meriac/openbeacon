@@ -87,6 +87,8 @@ static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = {
 static TBeaconEnvelope g_Beacon;
 static TLogfileBeaconPacket g_Log;
 
+#define BEACON_CRC_SIZE (sizeof (g_Beacon) - sizeof (g_Beacon.pkt.crc))
+
 static void
 nRF_tx (uint8_t power)
 {
@@ -720,9 +722,7 @@ main (void)
 	  g_Beacon.pkt.p.tracker.oid_last_seen = oid_last_seen;
 	  g_Beacon.pkt.p.tracker.time = htons ((uint16_t)g_sequence++);
 	  g_Beacon.pkt.p.tracker.battery = 0;
-	  g_Beacon.pkt.crc = htons (
-	    crc16(g_Beacon.byte, sizeof (g_Beacon) - sizeof (g_Beacon.pkt.crc))
-	  );
+	  g_Beacon.pkt.crc = htons ( crc16(g_Beacon.byte, BEACON_CRC_SIZE) );
 
 	  /* set tx power to low */
 	  nRFCMD_Power (0);
