@@ -88,7 +88,7 @@ static TBeaconEnvelope g_Beacon;
 static TLogfileBeaconPacket g_Log;
 
 #define BEACON_CRC_SIZE (sizeof (g_Beacon) - sizeof (g_Beacon.pkt.crc))
-
+#if 0
 static void
 nRF_tx (uint8_t power)
 {
@@ -111,7 +111,7 @@ nRF_tx (uint8_t power)
   /* transmit data */
   nRFCMD_CE (0);
 }
-
+#endif
 void
 nrf_off (void)
 {
@@ -125,6 +125,7 @@ nrf_off (void)
   nRFAPI_SetRxMode (0);
 }
 
+#if 0
 static uint32_t
 rnd (uint32_t range)
 {
@@ -138,6 +139,7 @@ rnd (uint32_t range)
   return ((((v1 = 36969 * (v1 & 0xffff) + (v1 >> 16)) << 16) ^
 	   (v2 = 30963 * (v2 & 0xffff) + (v2 >> 16))) ^ random_seed) % range;
 }
+#endif
 
 static inline void
 pin_init (void)
@@ -280,12 +282,11 @@ main (void)
   TFifoEntry acc_lowpass;
   TFifoEntry fifo_buf[FIFO_DEPTH];
   int fifo_pos;
-  TFifoEntry *fifo;
 
   uint32_t SSPdiv, seq, oid;
   uint16_t crc, oid_last_seen;
   uint8_t flags, status;
-  int x, y, z, firstrun_done, moving;
+  int firstrun_done, moving;
   volatile int t;
   int i;
 
@@ -327,7 +328,7 @@ main (void)
   blink (1);
   while (!nRFAPI_Init
       (CONFIG_TRACKER_CHANNEL, broadcast_mac, sizeof (broadcast_mac), 0))
-     blink (2);
+     blink (3);
 
   /* set tx power power to high */
   nRFCMD_Power (1);
@@ -352,92 +353,15 @@ main (void)
   moving = 0;
   g_sequence = 0;
 
+  /* enable RX mode */
+  nRFAPI_SetRxMode (1);
+  nRFCMD_CE (1);
+
   /* blink three times to show readyness */
-  blink (3);
+  blink (2);
   while (1)
     {
-      /* transmit every 50-150ms when moving
-         or 1550-1650 ms while still */
-      pmu_wait_ms ((moving ? 50 : 1550) + rnd (100));
-
-      /* getting SPI back up again */
-      LPC_SYSCON->SSPCLKDIV = SSPdiv;
-
-      /* blink every 16th packet transmitted */
-      if (!moving || ((i & 0xF) == 0))
-	{
-	  /* switch to RX mode */
-	  if (moving)
-	    nRFAPI_SetRxMode (1);
-	  /* turn on 3D acceleration sensor */
-	  acc_power (1);
-	  if (moving)
-	    nRFCMD_CE (1);
-	  pmu_wait_ms (20);
-	  /* read acceleration */
-	  acc_xyz_read (&x, &y, &z);
-	  /* power down acceleration sensor again */
-	  acc_power (0);
-
-	  /* turn RX/CE off */
-	  if (moving)
-	    nRFCMD_CE (0);
-
-	  /* only blink while moving */
-	  if (moving || !firstrun_done)
-	    {
-	      /* fire up LED */
-	      GPIOSetValue (1, 2, 1);
-	      /* wait till RX stops */
-	      pmu_wait_ms (firstrun_done ? 2 : 100);
-	      /* turn LED off */
-	      GPIOSetValue (1, 2, 0);
-	    }
-	  /* second blink during initialization */
-	  if (!firstrun_done)
-	    {
-	      pmu_wait_ms (100);
-	      /* fire up LED */
-	      GPIOSetValue (1, 2, 1);
-	      /* blink a second time during firstrun_done */
-	      pmu_wait_ms (100);
-	      /* turn LED off */
-	      GPIOSetValue (1, 2, 0);
-	    }
-
-	  /* turn RX register off */
-	  if (moving)
-	    nRFAPI_SetRxMode (0);
-
-	  /* add new accelerometer values to lowpass */
-	  fifo = &fifo_buf[fifo_pos];
-	  if (fifo_pos >= (FIFO_DEPTH - 1))
-	    fifo_pos = 0;
-	  else
-	    fifo_pos++;
-
-	  acc_lowpass.x += x - fifo->x;
-	  fifo->x = x;
-	  acc_lowpass.y += y - fifo->y;
-	  fifo->y = y;
-	  acc_lowpass.z += z - fifo->z;
-	  fifo->z = z;
-
-	  if (firstrun_done)
-	    {
-	      if ((abs (acc_lowpass.x / FIFO_DEPTH - x) >= ACC_TRESHOLD) ||
-		  (abs (acc_lowpass.y / FIFO_DEPTH - y) >= ACC_TRESHOLD) ||
-		  (abs (acc_lowpass.z / FIFO_DEPTH - z) >= ACC_TRESHOLD))
-		moving = 20;
-	      else if (moving)
-		moving--;
-	    }
-	  else
-	    /* make sure to initialize FIFO buffer first */
-	  if (!fifo_pos)
-	    firstrun_done = TRUE;
-
-	  if (moving && nRFCMD_IRQ ())
+	  if (nRFCMD_IRQ ())
 	    {
 	      do
 		{
@@ -504,8 +428,11 @@ main (void)
 	    }
 	  nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
 	}
-      else
+
+
+#if 0
 	{
+	  nRFCMD_CE (0);
 	  /* powering up nRF24L01 */
 	  nRFAPI_SetRxMode (0);
 
@@ -527,13 +454,9 @@ main (void)
 	  nRF_tx (g_Beacon.pkt.p.tracker.strength);
 	  nRFCMD_Power (1);
 	}
-
-      /* powering down */
-      nRFAPI_PowerDown ();
-      LPC_SYSCON->SSPCLKDIV = 0x00;
+#endif
 
       /* increment counter */
       i++;
-    }
   return 0;
 }
