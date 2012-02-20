@@ -98,7 +98,7 @@ nRFAPI_Init (uint8_t channel,
   nRFCMD_Init ();
 
   /* wait for nRF to boot */
-  pmu_sleep_ms(10);
+  pmu_wait_ms(10);
 
   // check validity
   if (mac_size < 3 || mac_size > 5 || !nRFAPI_DetectChip ())

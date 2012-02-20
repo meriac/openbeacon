@@ -88,7 +88,7 @@ static TBeaconEnvelope g_Beacon;
 static TLogfileBeaconPacket g_Log;
 
 #define BEACON_CRC_SIZE (sizeof (g_Beacon) - sizeof (g_Beacon.pkt.crc))
-#if 0
+
 static void
 nRF_tx (uint8_t power)
 {
@@ -111,7 +111,7 @@ nRF_tx (uint8_t power)
   /* transmit data */
   nRFCMD_CE (0);
 }
-#endif
+
 void
 nrf_off (void)
 {
@@ -283,7 +283,8 @@ main (void)
   TFifoEntry fifo_buf[FIFO_DEPTH];
   int fifo_pos;
 
-  uint32_t SSPdiv, seq, oid;
+  uint32_t SSPdiv, seq, oid, packets;
+  uint32_t time, last_time, delta_time;
   uint16_t crc, oid_last_seen;
   uint8_t flags, status;
   int firstrun_done, moving;
@@ -315,7 +316,7 @@ main (void)
   spi_init ();
 
   /* Init 3D acceleration sensor */
-  acc_init (1);
+//  acc_init (1);
 
   /* read device UUID */
   bzero (&device_uuid, sizeof (device_uuid));
@@ -327,7 +328,7 @@ main (void)
   /* Initialize OpenBeacon nRF24L01 interface */
   blink (1);
   while (!nRFAPI_Init
-	 (CONFIG_TRACKER_CHANNEL, broadcast_mac, sizeof (broadcast_mac), 0))
+	 (72, broadcast_mac, sizeof (broadcast_mac), 0))
     blink (3);
 
   /* set tx power power to high */
@@ -359,12 +360,19 @@ main (void)
 
   /* blink three times to show readyness */
   blink (2);
+  /* remember last time */
+  last_time = LPC_TMR32B0->TC;
+  packets = 0;
   while (1)
     {
+      pmu_wait_ms (100);
+
       if (nRFCMD_IRQ ())
 	{
 	  do
 	    {
+	      packets++;
+
 	      // read packet from nRF chip
 	      nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.byte,
 				 sizeof (g_Beacon));
@@ -420,19 +428,35 @@ main (void)
 		      GPIOSetValue (1, 1, 0);
 		    }
 		}
+
+	      /* fire up LED to indicate rx */
+	      GPIOSetValue (1, 2, 1);
+	      /* light LED for 2ms */
+	      pmu_wait_ms (2);
+	      /* turn LED off */
+	      GPIOSetValue (1, 2, 0);
+
 	      /* get status */
 	      status = nRFAPI_GetFifoStatus ();
 	    }
 	  while ((status & FIFO_RX_EMPTY) == 0);
+	  nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
 	}
-      nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
-    }
 
-  if (0)
+
+  time = LPC_TMR32B0->TC;
+  delta_time = time - last_time;
+  if (delta_time>10)
     {
-      nRFCMD_CE (0);
-      /* powering up nRF24L01 */
-      nRFAPI_SetRxMode (0);
+      /* switch to TX mode */
+      nrf_off ();
+
+      last_time = time;
+
+      debug_printf("@%08u: rx'ed %03u pkt/s\n", time, (packets*10)/delta_time);
+      packets = 0;
+
+      debug_printf("@%08u: nRF status=0x%02X\n", time, nRFAPI_GetFifoStatus ());
 
       /* prepare packet */
       bzero (&g_Beacon, sizeof (g_Beacon));
@@ -440,20 +464,22 @@ main (void)
       g_Beacon.pkt.flags = moving ? RFBFLAGS_MOVING : 0;
       g_Beacon.pkt.oid = htons (tag_id);
       g_Beacon.pkt.p.tracker.strength = (i & 1) + TX_STRENGTH_OFFSET;
-      g_Beacon.pkt.p.tracker.seq = htonl (LPC_TMR32B0->TC);
+      g_Beacon.pkt.p.tracker.seq = htonl (time);
       g_Beacon.pkt.p.tracker.oid_last_seen = oid_last_seen;
       g_Beacon.pkt.p.tracker.time = htons ((uint16_t) g_sequence++);
       g_Beacon.pkt.p.tracker.battery = 0;
       g_Beacon.pkt.crc = htons (crc16 (g_Beacon.byte, BEACON_CRC_SIZE));
 
-      /* set tx power to low */
-      nRFCMD_Power (0);
       /* transmit packet */
       nRF_tx (g_Beacon.pkt.p.tracker.strength);
-      nRFCMD_Power (1);
+
+      /* switch to RX mode */
+      nRFAPI_SetRxMode (1);
+      nRFCMD_CE (1);
     }
 
   /* increment counter */
   i++;
+  }
   return 0;
 }
