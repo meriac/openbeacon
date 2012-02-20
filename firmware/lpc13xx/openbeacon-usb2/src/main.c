@@ -327,8 +327,8 @@ main (void)
   /* Initialize OpenBeacon nRF24L01 interface */
   blink (1);
   while (!nRFAPI_Init
-      (CONFIG_TRACKER_CHANNEL, broadcast_mac, sizeof (broadcast_mac), 0))
-     blink (3);
+	 (CONFIG_TRACKER_CHANNEL, broadcast_mac, sizeof (broadcast_mac), 0))
+    blink (3);
 
   /* set tx power power to high */
   nRFCMD_Power (1);
@@ -361,102 +361,99 @@ main (void)
   blink (2);
   while (1)
     {
-	  if (nRFCMD_IRQ ())
-	    {
-	      do
-		{
-		  // read packet from nRF chip
-		  nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.byte,
-				     sizeof (g_Beacon));
-
-		  // adjust byte order and decode
-		  xxtea_decode (g_Beacon.block, XXTEA_BLOCK_COUNT, xxtea_key);
-
-		  // verify the CRC checksum
-		  crc =
-		    crc16 (g_Beacon.byte,
-			   sizeof (g_Beacon) - sizeof (g_Beacon.pkt.crc));
-
-		  if (ntohs (g_Beacon.pkt.crc) == crc)
-		    {
-		      seq = 0;
-		      oid = 0;
-
-		      switch (g_Beacon.proto)
-			{
-			case RFBPROTO_BEACONTRACKER_OLD:
-			  if (g_Beacon.old.proto2 ==
-			      RFBPROTO_BEACONTRACKER_OLD2)
-			    {
-			      g_Log.strength = g_Beacon.old.strength / 0x55;
-
-			      flags = g_Beacon.old.flags;
-			      oid = ntohl (g_Beacon.old.oid);
-			      seq = ntohl (g_Beacon.old.seq);
-			    }
-			  break;
-			case RFBPROTO_BEACONTRACKER_EXT:
-			  g_Log.strength = g_Beacon.pkt.p.tracker.strength;
-			  if (g_Log.strength >= MAX_POWER_LEVELS)
-			    g_Log.strength = (MAX_POWER_LEVELS - 1);
-
-			  /* remember that packet was proximity packet */
-			  g_Log.strength |= LOGFLAG_PROXIMITY;
-
-			  flags = g_Beacon.pkt.flags;
-			  oid = ntohs (g_Beacon.pkt.oid);
-			  seq = ntohl (g_Beacon.pkt.p.tracker.seq);
-			  break;
-			}
-
-		      if (oid)
-			{
-			  /* INSERT RX CODE HERE */
-
-			  /* fire up LED to indicate rx */
-			  GPIOSetValue (1, 1, 1);
-			  /* light LED for 2ms */
-			  pmu_wait_ms (2);
-			  /* turn LED off */
-			  GPIOSetValue (1, 1, 0);
-			}
-		    }
-		  /* get status */
-		  status = nRFAPI_GetFifoStatus ();
-		}
-	      while ((status & FIFO_RX_EMPTY) == 0);
-	    }
-	  nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
-	}
-
-
-#if 0
+      if (nRFCMD_IRQ ())
 	{
-	  nRFCMD_CE (0);
-	  /* powering up nRF24L01 */
-	  nRFAPI_SetRxMode (0);
+	  do
+	    {
+	      // read packet from nRF chip
+	      nRFCMD_RegReadBuf (RD_RX_PLOAD, g_Beacon.byte,
+				 sizeof (g_Beacon));
 
-	  /* prepare packet */
-	  bzero (&g_Beacon, sizeof (g_Beacon));
-	  g_Beacon.pkt.proto = RFBPROTO_BEACONTRACKER_EXT;
-	  g_Beacon.pkt.flags = moving ? RFBFLAGS_MOVING : 0;
-	  g_Beacon.pkt.oid = htons (tag_id);
-	  g_Beacon.pkt.p.tracker.strength = (i & 1) + TX_STRENGTH_OFFSET;
-	  g_Beacon.pkt.p.tracker.seq = htonl (LPC_TMR32B0->TC);
-	  g_Beacon.pkt.p.tracker.oid_last_seen = oid_last_seen;
-	  g_Beacon.pkt.p.tracker.time = htons ((uint16_t)g_sequence++);
-	  g_Beacon.pkt.p.tracker.battery = 0;
-	  g_Beacon.pkt.crc = htons ( crc16(g_Beacon.byte, BEACON_CRC_SIZE) );
+	      // adjust byte order and decode
+	      xxtea_decode (g_Beacon.block, XXTEA_BLOCK_COUNT, xxtea_key);
 
-	  /* set tx power to low */
-	  nRFCMD_Power (0);
-	  /* transmit packet */
-	  nRF_tx (g_Beacon.pkt.p.tracker.strength);
-	  nRFCMD_Power (1);
+	      // verify the CRC checksum
+	      crc =
+		crc16 (g_Beacon.byte,
+		       sizeof (g_Beacon) - sizeof (g_Beacon.pkt.crc));
+
+	      if (ntohs (g_Beacon.pkt.crc) == crc)
+		{
+		  seq = 0;
+		  oid = 0;
+
+		  switch (g_Beacon.proto)
+		    {
+		    case RFBPROTO_BEACONTRACKER_OLD:
+		      if (g_Beacon.old.proto2 == RFBPROTO_BEACONTRACKER_OLD2)
+			{
+			  g_Log.strength = g_Beacon.old.strength / 0x55;
+
+			  flags = g_Beacon.old.flags;
+			  oid = ntohl (g_Beacon.old.oid);
+			  seq = ntohl (g_Beacon.old.seq);
+			}
+		      break;
+		    case RFBPROTO_BEACONTRACKER_EXT:
+		      g_Log.strength = g_Beacon.pkt.p.tracker.strength;
+		      if (g_Log.strength >= MAX_POWER_LEVELS)
+			g_Log.strength = (MAX_POWER_LEVELS - 1);
+
+		      /* remember that packet was proximity packet */
+		      g_Log.strength |= LOGFLAG_PROXIMITY;
+
+		      flags = g_Beacon.pkt.flags;
+		      oid = ntohs (g_Beacon.pkt.oid);
+		      seq = ntohl (g_Beacon.pkt.p.tracker.seq);
+		      break;
+		    }
+
+		  if (oid)
+		    {
+		      /* INSERT RX CODE HERE */
+
+		      /* fire up LED to indicate rx */
+		      GPIOSetValue (1, 1, 1);
+		      /* light LED for 2ms */
+		      pmu_wait_ms (2);
+		      /* turn LED off */
+		      GPIOSetValue (1, 1, 0);
+		    }
+		}
+	      /* get status */
+	      status = nRFAPI_GetFifoStatus ();
+	    }
+	  while ((status & FIFO_RX_EMPTY) == 0);
 	}
-#endif
+      nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
+    }
 
-      /* increment counter */
-      i++;
+  if (0)
+    {
+      nRFCMD_CE (0);
+      /* powering up nRF24L01 */
+      nRFAPI_SetRxMode (0);
+
+      /* prepare packet */
+      bzero (&g_Beacon, sizeof (g_Beacon));
+      g_Beacon.pkt.proto = RFBPROTO_BEACONTRACKER_EXT;
+      g_Beacon.pkt.flags = moving ? RFBFLAGS_MOVING : 0;
+      g_Beacon.pkt.oid = htons (tag_id);
+      g_Beacon.pkt.p.tracker.strength = (i & 1) + TX_STRENGTH_OFFSET;
+      g_Beacon.pkt.p.tracker.seq = htonl (LPC_TMR32B0->TC);
+      g_Beacon.pkt.p.tracker.oid_last_seen = oid_last_seen;
+      g_Beacon.pkt.p.tracker.time = htons ((uint16_t) g_sequence++);
+      g_Beacon.pkt.p.tracker.battery = 0;
+      g_Beacon.pkt.crc = htons (crc16 (g_Beacon.byte, BEACON_CRC_SIZE));
+
+      /* set tx power to low */
+      nRFCMD_Power (0);
+      /* transmit packet */
+      nRF_tx (g_Beacon.pkt.p.tracker.strength);
+      nRFCMD_Power (1);
+    }
+
+  /* increment counter */
+  i++;
   return 0;
 }
