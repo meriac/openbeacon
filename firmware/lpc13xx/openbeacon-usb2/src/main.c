@@ -314,7 +314,7 @@ main (void)
   spi_init ();
 
   /* Init 3D acceleration sensor */
-//  acc_init (1);
+  acc_init (1);
 
   /* read device UUID */
   bzero (&device_uuid, sizeof (device_uuid));
