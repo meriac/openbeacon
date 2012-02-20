@@ -1,8 +1,8 @@
 /***************************************************************
  *
- * OpenBeacon.org - LPC13xx Power Management Functions
+ * OpenBeacon.org - application specific USB functionality
  *
- * Copyright 2011 Milosch Meriac <meriac@openbeacon.de>
+ * Copyright 2010 Milosch Meriac <meriac@openbeacon.de>
  *
  ***************************************************************
 
@@ -21,12 +21,11 @@
 
  */
 
-#ifndef __PMU_H__
-#define __PMU_H__
+#ifndef __USBSERIAL_H__
+#define __USBSERIAL_H__
 
-extern void pmu_wait_ms (uint16_t ms);
-extern void pmu_sleep_ms (uint16_t ms);
-extern void pmu_cancel_timer (void);
-extern void pmu_init (void);
+#ifdef  ENABLE_USB_FULLFEATURED
+extern void init_usbserial (void);
+#endif/*ENABLE_USB_FULLFEATURED*/
 
-#endif/*__PMU_H__*/
+#endif/*__USBSERIAL_H__*/

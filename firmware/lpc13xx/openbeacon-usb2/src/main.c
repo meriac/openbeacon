@@ -22,7 +22,7 @@
  */
 #include <openbeacon.h>
 #include "3d_acceleration.h"
-#include "storage.h"
+#include "usbserial.h"
 #include "bluetooth.h"
 #include "pmu.h"
 #include "iap.h"
@@ -106,7 +106,7 @@ nRF_tx (uint8_t power)
   nRFCMD_CE (1);
 
   /* wait for packet to be transmitted */
-  pmu_sleep_ms (2);
+  pmu_wait_ms (2);
 
   /* transmit data */
   nRFCMD_CE (0);
@@ -119,7 +119,7 @@ nrf_off (void)
   nRFCMD_CE (0);
 
   /* wait till RX is done */
-  pmu_sleep_ms (5);
+  pmu_wait_ms (5);
 
   /* switch to TX mode */
   nRFAPI_SetRxMode (0);
@@ -256,118 +256,21 @@ show_version (void)
   debug_printf (" * Stored Logfile Items: %i\n", g_storage_items);
 }
 
-static inline void
-main_menue (uint8_t cmd)
-{
-  TLogfileBeaconPacket pkt;
-
-  /* ignore non-printable characters */
-  if (cmd <= ' ')
-    return;
-  /* show key pressed */
-  debug_printf ("%c\n", cmd);
-  /* map lower case to upper case */
-  if (cmd > 'a' && cmd < 'z')
-    cmd -= ('a' - 'A');
-
-  switch (cmd)
-    {
-    case '?':
-    case 'H':
-      debug_printf ("\n"
-		    " *****************************************************\n"
-		    " * OpenBeacon Tag - Bluetooth Console\n"
-		    " *                  Version v" PROGRAM_VERSION "\n"
-		    " * (C) 2011 Milosch Meriac <meriac@openbeacon.de>\n"
-		    " *****************************************************\n"
-		    " * H,?          - this help screen\n"
-		    " * S            - Show device status\n"
-		    " *\n"
-		    " * E            - Erase Storage\n"
-		    " * W            - Test Write Storage\n"
-		    " * R            - Test Read Storage\n"
-		    " * F            - Test WriteFill Storage\n"
-		    " *****************************************************\n"
-		    "\n");
-      break;
-    case 'S':
-      debug_printf ("\n"
-		    " *****************************************************\n"
-		    " * OpenBeacon Status Information                     *\n"
-		    " *****************************************************\n");
-      show_version ();
-      spi_status ();
-      acc_status ();
-      storage_status ();
-      debug_printf (" *****************************************************\n"
-		    "\n");
-      break;
-
-    case 'E':
-      debug_printf ("\nErasing Storage...\n\n");
-      storage_erase ();
-      g_storage_items = 0;
-      break;
-
-    case 'W':
-      {
-	const char hello[] = "Hello World!";
-	debug_printf ("\n * writing '%s' (%i bytes)\n", hello,
-		      sizeof (hello));
-	storage_write (0, sizeof (hello), &hello);
-      }
-      break;
-
-    case 'R':
-      {
-	const uint8_t buffer[32];
-	debug_printf ("\n * reading %i bytes\n", sizeof (buffer));
-	storage_read (0, sizeof (buffer), &buffer);
-	hex_dump (buffer, 0, sizeof (buffer));
-      }
-      break;
-
-    case 'F':
-      {
-	uint32_t counter;
-	debug_printf ("\nErasing Storage...\n\n");
-	storage_erase ();
-	debug_printf ("\nFilling Storage...\n");
-	counter = 0;
-	while(counter < LOGFILE_STORAGE_SIZE)
-	{
-	  pkt.time = htonl(counter);
-	  pkt.oid = htons(counter / sizeof(pkt));
-	  pkt.strength = (counter / sizeof(pkt)) % MAX_POWER_LEVELS;
-	  pkt.crc = crc8 (((uint8_t *) & pkt), sizeof (pkt) - sizeof (pkt.crc));
-	  storage_write (counter, sizeof (pkt), &pkt);
-
-	  counter += sizeof(pkt);
-	}
-	debug_printf ("\n[DONE]\n");
-	break;
-      }
-
-    default:
-      debug_printf ("Unknown command '%c' - please press 'H' for help \n",
-		    cmd);
-    }
-  debug_printf ("\n# ");
-}
-
 void
 blink (uint8_t times)
 {
+  GPIOSetValue (1, 1, 0);
+  pmu_wait_ms (500);
   while (times)
     {
       times--;
 
       GPIOSetValue (1, 1, 1);
-      pmu_sleep_ms (100);
+      pmu_wait_ms (100);
       GPIOSetValue (1, 1, 0);
-      pmu_sleep_ms (200);
+      pmu_wait_ms (200);
     }
-  pmu_sleep_ms (500);
+  pmu_wait_ms (500);
 }
 
 int
@@ -382,8 +285,6 @@ main (void)
   uint32_t SSPdiv, seq, oid;
   uint16_t crc, oid_last_seen;
   uint8_t flags, status;
-  uint8_t cmd_buffer[64], cmd_pos, c;
-  uint8_t volatile *uart;
   int x, y, z, firstrun_done, moving;
   volatile int t;
   int i;
@@ -400,8 +301,20 @@ main (void)
   /* fire up LED 1 */
   GPIOSetValue (1, 1, 1);
 
+  /* Power Management Unit Initialization */
+  pmu_init ();
+
+  /* UART setup */
+  UARTInit (115200, 0);
+
+  /* CDC USB Initialization */
+  init_usbserial ();
+
   /* initialize SPI */
   spi_init ();
+
+  /* Init 3D acceleration sensor */
+//  acc_init (1);
 
   /* read device UUID */
   bzero (&device_uuid, sizeof (device_uuid));
@@ -410,119 +323,18 @@ main (void)
   random_seed =
     device_uuid[0] ^ device_uuid[1] ^ device_uuid[2] ^ device_uuid[3];
 
-  /* Plugged to computer upon reset ? */
-  if (GPIOGetValue (0, 3))
-    {
-      /* wait some time till Bluetooth is off */
-      for (t = 0; t < 2000000; t++);
-
-      /* Init 3D acceleration sensor */
-      acc_init (1);
-      /* Init Flash Storage with USB */
-      storage_init (TRUE, tag_id);
-      g_storage_items = storage_items ();
-
-      /* Init Bluetooth */
-      bt_init (TRUE, tag_id);
-
-      /* switch to LED 2 */
-      GPIOSetValue (1, 1, 0);
-      GPIOSetValue (1, 2, 1);
-
-      /* set command buffer to empty */
-      cmd_pos = 0;
-
-      /* spin in loop */
-      while (1)
-	{
-	  /* reset after USB unplug */
-	  if (!GPIOGetValue (0, 3))
-	    NVIC_SystemReset ();
-
-	  /* if UART rx send to menue */
-	  if (UARTCount)
-	    {
-	      /* blink LED1 upon Bluetooth command */
-	      GPIOSetValue (1, 1, 1);
-	      /* execute menue command with last character received */
-
-	      /* scan through whole UART buffer */
-	      uart = UARTBuffer;
-	      for (i = UARTCount; i > 0; i--)
-		{
-		  UARTCount--;
-		  c = *uart++;
-		  if ((c < ' ') && cmd_pos)
-		    {
-		      /* if one-character command - execute */
-		      if (cmd_pos == 1)
-			main_menue (cmd_buffer[0]);
-		      else
-			{
-			  cmd_buffer[cmd_pos] = 0;
-			  debug_printf
-			    ("Unknown command '%s' - please press H+[Enter] for help\n# ",
-			     cmd_buffer);
-			}
-
-		      /* set command buffer to empty */
-		      cmd_pos = 0;
-		    }
-		  else if (cmd_pos < (sizeof (cmd_buffer) - 2))
-		    cmd_buffer[cmd_pos++] = c;
-		}
-
-	      /* reset UART buffer */
-	      UARTCount = 0;
-	      /* un-blink LED1 */
-	      GPIOSetValue (1, 1, 0);
-	    }
-	}
-    }
-
-  /* Init Bluetooth */
-  bt_init (FALSE, tag_id);
-
-  /* shut down up LED 1 */
-  GPIOSetValue (1, 1, 0);
-
-  /* Init Flash Storage without USB */
-  storage_init (FALSE, tag_id);
-
-  /* get current FLASH storage write postition */
-  g_storage_items = storage_items ();
-
-  /* initialize power management */
-  pmu_init ();
-
-  /* blink once to show initialized flash */
-  blink (1);
-
-  /* Init 3D acceleration sensor */
-  acc_init (0);
-  blink (2);
-
   /* Initialize OpenBeacon nRF24L01 interface */
+  blink (1);
   if (!nRFAPI_Init
       (CONFIG_TRACKER_CHANNEL, broadcast_mac, sizeof (broadcast_mac), 0))
     for (;;)
-      {
-	GPIOSetValue (1, 2, 1);
-	pmu_sleep_ms (500);
-	GPIOSetValue (1, 2, 0);
-	pmu_sleep_ms (500);
-      }
+	blink (2);
   /* set tx power power to high */
   nRFCMD_Power (1);
 
-  /* blink three times to show flash initialized RF interface */
+  /* Init Bluetooth */
   blink (3);
-
-  /* blink LED for 1s to show readyness */
-  GPIOSetValue (1, 1, 0);
-  GPIOSetValue (1, 2, 1);
-  pmu_sleep_ms (1000);
-  GPIOSetValue (1, 2, 0);
+  bt_init (TRUE, tag_id);
 
   /* disable unused jobs */
   SSPdiv = LPC_SYSCON->SSPCLKDIV;
@@ -541,11 +353,13 @@ main (void)
   moving = 0;
   g_sequence = 0;
 
+  /* blink three times to show readyness */
+  blink (3);
   while (1)
     {
       /* transmit every 50-150ms when moving
          or 1550-1650 ms while still */
-      pmu_sleep_ms ((moving ? 50 : 1550) + rnd (100));
+      pmu_wait_ms ((moving ? 50 : 1550) + rnd (100));
 
       /* getting SPI back up again */
       LPC_SYSCON->SSPCLKDIV = SSPdiv;
@@ -560,7 +374,7 @@ main (void)
 	  acc_power (1);
 	  if (moving)
 	    nRFCMD_CE (1);
-	  pmu_sleep_ms (20);
+	  pmu_wait_ms (20);
 	  /* read acceleration */
 	  acc_xyz_read (&x, &y, &z);
 	  /* power down acceleration sensor again */
@@ -576,18 +390,18 @@ main (void)
 	      /* fire up LED */
 	      GPIOSetValue (1, 2, 1);
 	      /* wait till RX stops */
-	      pmu_sleep_ms (firstrun_done ? 2 : 100);
+	      pmu_wait_ms (firstrun_done ? 2 : 100);
 	      /* turn LED off */
 	      GPIOSetValue (1, 2, 0);
 	    }
 	  /* second blink during initialization */
 	  if (!firstrun_done)
 	    {
-	      pmu_sleep_ms (100);
+	      pmu_wait_ms (100);
 	      /* fire up LED */
 	      GPIOSetValue (1, 2, 1);
 	      /* blink a second time during firstrun_done */
-	      pmu_sleep_ms (100);
+	      pmu_wait_ms (100);
 	      /* turn LED off */
 	      GPIOSetValue (1, 2, 0);
 	    }
@@ -672,30 +486,14 @@ main (void)
 			  break;
 			}
 
-		      if (oid && (oid <= 0xFFFF))
+		      if (oid)
 			{
-			  /* store status info in upper nibble */
-			  if(flags | RFBFLAGS_SENSOR)
-			    g_Log.strength |= LOGFLAG_BUTTON;
-			  /* store RX'ed packed into log file */
-			  g_Log.time = htonl (LPC_TMR32B0->TC);
-			  g_Log.seq = htonl (seq);
-			  g_Log.oid = oid_last_seen = htons ((uint16_t) oid);
-			  /* calculate CRC over whole logfile entry */
-			  g_Log.crc = crc8 (((uint8_t *) & g_Log),
-			    sizeof (g_Log) - sizeof (g_Log.crc));
-			  /* store data if space left on FLASH */
-			  if (g_storage_items < (LOGFILE_STORAGE_SIZE/sizeof (g_Log)))
-			    {
-			      storage_write (g_storage_items * sizeof (g_Log), sizeof (g_Log), &g_Log);
-			      /* increment and store RAM persistent storage position */
-			      g_storage_items ++;
-			    }
+			  /* INSERT RX CODE HERE */
 
 			  /* fire up LED to indicate rx */
 			  GPIOSetValue (1, 1, 1);
 			  /* light LED for 2ms */
-			  pmu_sleep_ms (2);
+			  pmu_wait_ms (2);
 			  /* turn LED off */
 			  GPIOSetValue (1, 1, 0);
 			}
