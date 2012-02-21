@@ -37,6 +37,7 @@
 #define RFBFLAGS_REQUEST_VOTE_TRANSMISSION  0x20
 
 typedef unsigned char u_int8_t;
+typedef signed short s_int16_t;
 typedef unsigned short u_int16_t;
 typedef unsigned long u_int32_t;
 

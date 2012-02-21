@@ -204,7 +204,8 @@ read_adc (void)
 void
 main (void)
 {
-  u_int8_t i, status, data, last_data, tx_count;
+  u_int8_t i, status, last_data, tx_count;
+  s_int16_t data;
   u_int16_t crc;
 
   /* configure CPU peripherals */

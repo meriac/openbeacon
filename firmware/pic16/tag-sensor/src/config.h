@@ -86,6 +86,6 @@
  ***************************************************************/
 #define ADC_TX_TRESHOLD 3
 #define ADC_TX_MIN      10
-#define ADC_TX_MAX      0x250
+#define ADC_TX_MAX      255
 
 #endif
