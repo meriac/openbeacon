@@ -316,7 +316,9 @@ main (void)
   spi_init ();
 
   /* Init 3D acceleration sensor */
-//  acc_init (1);
+  GPIOSetValue (1, 1, 1);
+  acc_init (1);
+  GPIOSetValue (1, 1, 0);
 
   /* read device UUID */
   bzero (&device_uuid, sizeof (device_uuid));
@@ -328,7 +330,7 @@ main (void)
   /* Initialize OpenBeacon nRF24L01 interface */
   blink (1);
   while (!nRFAPI_Init
-	 (72, broadcast_mac, sizeof (broadcast_mac), 0))
+	 (CONFIG_TRACKER_CHANNEL, broadcast_mac, sizeof (broadcast_mac), 0))
     blink (3);
 
   /* set tx power power to high */
