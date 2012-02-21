@@ -22,6 +22,7 @@
 */
 #include <openbeacon.h>
 #include "bluetooth.h"
+#include "pmu.h"
 #ifdef  ENABLE_BLUETOOTH
 
 #define CPU_WAKEUP_BLT_PORT 1
@@ -71,6 +72,10 @@ bt_init (uint8_t enabled, uint16_t device_id)
   /* Set CPU_ON-OFF_BLT port pin to output */
   LPC_IOCON->JTAG_TMS_PIO1_0 = 0x81;
   GPIOSetDir (CPU_ON_OFF_BLT_PORT, CPU_ON_OFF_BLT_PIN, 1);
+
+  /* make sure to power-cycle bluetooth */
+  GPIOSetValue (CPU_ON_OFF_BLT_PORT, CPU_ON_OFF_BLT_PIN, 0);
+  pmu_wait_ms (500);
   GPIOSetValue (CPU_ON_OFF_BLT_PORT, CPU_ON_OFF_BLT_PIN, enabled ? 1 : 0);
 
   /* update string device id */

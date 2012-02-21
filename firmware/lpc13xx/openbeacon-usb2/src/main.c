@@ -306,8 +306,12 @@ main (void)
   /* Power Management Unit Initialization */
   pmu_init ();
 
-  /* UART setup */
+#ifdef  ENABLE_BLUETOOTH
+  /* Init Bluetooth */
+  bt_init (TRUE, tag_id);
+#else
   UARTInit (115200, 0);
+#endif/*ENABLE_BLUETOOTH*/
 
   /* CDC USB Initialization */
   init_usbserial ();
@@ -335,9 +339,6 @@ main (void)
 
   /* set tx power power to high */
   nRFCMD_Power (1);
-
-  /* Init Bluetooth */
-  bt_init (TRUE, tag_id);
 
   /* disable unused jobs */
   SSPdiv = LPC_SYSCON->SSPCLKDIV;
