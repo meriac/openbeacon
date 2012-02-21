@@ -195,7 +195,7 @@ WAKEUP_IRQHandlerPIO1_9 (void)
   LPC_SYSCON->STARTRSRP0CLR = STARTxPRP0_PIO1_9;
 
   /* cancel pending timer operation */
-  pmu_cancel_timer();
+  /* FIXME: mu_cancel_timer(); */
 }
 
 void
