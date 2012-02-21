@@ -1,2 +1,2 @@
 #!/bin/sh
-make MODE=lite clean all
+make MODE=std clean all
