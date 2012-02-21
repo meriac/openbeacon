@@ -446,40 +446,41 @@ main (void)
 	}
 
 
-  time = LPC_TMR32B0->TC;
-  delta_time = time - last_time;
-  if (delta_time>10)
-    {
-      /* switch to TX mode */
-      nrf_off ();
+      time = LPC_TMR32B0->TC;
+      delta_time = time - last_time;
+      if (delta_time > 10)
+	{
+	  /* switch to TX mode */
+	  nrf_off ();
 
-      last_time = time;
+	  last_time = time;
 
-      debug_printf("@%08u: rx'ed %03u pkt/s\n", time, (packets*10)/delta_time);
-      packets = 0;
+	  debug_printf ("@%08u: rx'ed %03u pkt/s\n", time,
+			(packets * 10) / delta_time);
+	  packets = 0;
 
-      /* prepare packet */
-      bzero (&g_Beacon, sizeof (g_Beacon));
-      g_Beacon.pkt.proto = RFBPROTO_BEACONTRACKER_EXT;
-      g_Beacon.pkt.flags = moving ? RFBFLAGS_MOVING : 0;
-      g_Beacon.pkt.oid = htons (tag_id);
-      g_Beacon.pkt.p.tracker.strength = (i & 1) + TX_STRENGTH_OFFSET;
-      g_Beacon.pkt.p.tracker.seq = htonl (time);
-      g_Beacon.pkt.p.tracker.oid_last_seen = oid_last_seen;
-      g_Beacon.pkt.p.tracker.time = htons ((uint16_t) g_sequence++);
-      g_Beacon.pkt.p.tracker.battery = 0;
-      g_Beacon.pkt.crc = htons (crc16 (g_Beacon.byte, BEACON_CRC_SIZE));
+	  /* prepare packet */
+	  bzero (&g_Beacon, sizeof (g_Beacon));
+	  g_Beacon.pkt.proto = RFBPROTO_BEACONTRACKER_EXT;
+	  g_Beacon.pkt.flags = moving ? RFBFLAGS_MOVING : 0;
+	  g_Beacon.pkt.oid = htons (tag_id);
+	  g_Beacon.pkt.p.tracker.strength = (i & 1) + TX_STRENGTH_OFFSET;
+	  g_Beacon.pkt.p.tracker.seq = htonl (time);
+	  g_Beacon.pkt.p.tracker.oid_last_seen = oid_last_seen;
+	  g_Beacon.pkt.p.tracker.time = htons ((uint16_t) g_sequence++);
+	  g_Beacon.pkt.p.tracker.battery = 0;
+	  g_Beacon.pkt.crc = htons (crc16 (g_Beacon.byte, BEACON_CRC_SIZE));
 
-      /* transmit packet */
-      nRF_tx (g_Beacon.pkt.p.tracker.strength);
+	  /* transmit packet */
+	  nRF_tx (g_Beacon.pkt.p.tracker.strength);
 
-      /* switch to RX mode */
-      nRFAPI_SetRxMode (1);
-      nRFCMD_CE (1);
+	  /* switch to RX mode */
+	  nRFAPI_SetRxMode (1);
+	  nRFCMD_CE (1);
+	}
+
+      /* increment counter */
+      i++;
     }
-
-  /* increment counter */
-  i++;
-  }
   return 0;
 }
