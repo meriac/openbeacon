@@ -306,6 +306,13 @@ main (void)
   /* Power Management Unit Initialization */
   pmu_init ();
 
+  /* read device UUID */
+  bzero (&device_uuid, sizeof (device_uuid));
+  iap_read_uid (&device_uuid);
+  tag_id = crc16 ((uint8_t *) & device_uuid, sizeof (device_uuid));
+  random_seed =
+    device_uuid[0] ^ device_uuid[1] ^ device_uuid[2] ^ device_uuid[3];
+
 #ifdef  ENABLE_BLUETOOTH
   /* Init Bluetooth */
   bt_init (TRUE, tag_id);
@@ -324,13 +331,6 @@ main (void)
 
   /* Init 3D acceleration sensor */
   acc_init (1);
-
-  /* read device UUID */
-  bzero (&device_uuid, sizeof (device_uuid));
-  iap_read_uid (&device_uuid);
-  tag_id = crc16 ((uint8_t *) & device_uuid, sizeof (device_uuid));
-  random_seed =
-    device_uuid[0] ^ device_uuid[1] ^ device_uuid[2] ^ device_uuid[3];
 
   /* Initialize OpenBeacon nRF24L01 interface */
   while (!nRFAPI_Init
