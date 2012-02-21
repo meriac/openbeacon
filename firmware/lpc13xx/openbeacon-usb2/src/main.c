@@ -456,8 +456,6 @@ main (void)
       debug_printf("@%08u: rx'ed %03u pkt/s\n", time, (packets*10)/delta_time);
       packets = 0;
 
-      debug_printf("@%08u: nRF status=0x%02X\n", time, nRFAPI_GetFifoStatus ());
-
       /* prepare packet */
       bzero (&g_Beacon, sizeof (g_Beacon));
       g_Beacon.pkt.proto = RFBPROTO_BEACONTRACKER_EXT;
