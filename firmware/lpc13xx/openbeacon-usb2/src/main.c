@@ -315,6 +315,9 @@ main (void)
   /* initialize SPI */
   spi_init ();
 
+  /* peripherals initialized */
+  blink (1);
+
   /* Init 3D acceleration sensor */
   acc_init (1);
 
@@ -326,7 +329,6 @@ main (void)
     device_uuid[0] ^ device_uuid[1] ^ device_uuid[2] ^ device_uuid[3];
 
   /* Initialize OpenBeacon nRF24L01 interface */
-  blink (1);
   while (!nRFAPI_Init
 	 (CONFIG_TRACKER_CHANNEL, broadcast_mac, sizeof (broadcast_mac), 0))
     blink (3);
