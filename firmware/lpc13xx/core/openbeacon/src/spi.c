@@ -95,6 +95,9 @@ int spi_txrx(spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
 		}
 	}
 
+	/* Wait for transaction to finish */
+	while((LPC_SSP->SR & 1)==0);
+
 	/* de-activate chip select */
 	if ((chipselect & SPI_CS_MODE_SKIP_CS_DEASSERT) == 0)
 		spi_txrx_done (chipselect);
