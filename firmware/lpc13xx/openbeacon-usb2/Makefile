@@ -30,7 +30,7 @@ all: README $(TARGET).bin
 
 publish: clean $(TARGET).bin
 	rm -f $(TARGET).zip
-	../lpc-flash/src/lpc-flash $(TARGET).bin $(TARGET)-firmware.bin
+	lpc-flash $(TARGET).bin $(TARGET)-firmware.bin
 	zip $(TARGET).zip $(TARGET)-firmware.bin
 	scp $(TARGET).zip $(TARGET)-firmware.bin meri@bitmanufaktur.net:/home/wwwrun/open.bitmanufaktur.com/web/www/people/milosch/usb2tag/
 
