@@ -315,6 +315,8 @@ main (void)
   /* initialize SPI */
   spi_init ();
 
+  blink (1);
+
   /* Init 3D acceleration sensor */
   GPIOSetValue (1, 1, 1);
   acc_init (1);
@@ -328,10 +330,10 @@ main (void)
     device_uuid[0] ^ device_uuid[1] ^ device_uuid[2] ^ device_uuid[3];
 
   /* Initialize OpenBeacon nRF24L01 interface */
-  blink (1);
+  blink (2);
   while (!nRFAPI_Init
 	 (CONFIG_TRACKER_CHANNEL, broadcast_mac, sizeof (broadcast_mac), 0))
-    blink (3);
+    blink (4);
 
   /* set tx power power to high */
   nRFCMD_Power (1);
@@ -361,7 +363,7 @@ main (void)
   nRFCMD_CE (1);
 
   /* blink three times to show readyness */
-  blink (2);
+  blink (3);
   /* remember last time */
   last_time = LPC_TMR32B0->TC;
   packets = 0;
