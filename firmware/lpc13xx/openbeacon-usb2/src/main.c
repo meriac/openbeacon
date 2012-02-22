@@ -425,7 +425,8 @@ main (void)
 
       time = LPC_TMR32B0->TC;
       delta_time = time - last_time;
-      if (delta_time > 10)
+      /* run transmit code twice per second */
+      if (delta_time > 5)
 	{
 	  /* switch to TX mode */
 	  nRFCMD_CE (0);

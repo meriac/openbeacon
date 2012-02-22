@@ -41,6 +41,10 @@
 #define RFBPROTO_PROXREPORT             69
 #define RFBPROTO_PROXREPORT_EXT         70
 
+#define FWD_TAG_MAX 4
+#define FWD_TAG_TAG_STRENGTH_BITS 3
+#define FWD_TAG_COUNT_BITS 5
+
 #define PROX_MAX 4
 #define PROX_TAG_ID_BITS 12
 #define PROX_TAG_COUNT_BITS 2
@@ -118,6 +122,13 @@ typedef struct
   uint32_t uptime, ip;
 } PACKED TBeaconReaderAnnounce;
 
+typedef struct
+{
+  uint16_t oid;
+  uint8_t strength[FWD_TAG_MAX];
+  uint32_t seq;
+} PACKED TBeaconForward;
+
 typedef union
 {
   TBeaconProx prox;
@@ -125,6 +136,7 @@ typedef union
   TBeaconTrackerExt trackerExt;
   TBeaconReaderCommand reader_command;
   TBeaconReaderAnnounce reader_announce;
+  TBeaconForward forward;
 } PACKED TBeaconPayload;
 
 typedef struct
