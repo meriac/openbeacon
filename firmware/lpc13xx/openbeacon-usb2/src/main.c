@@ -386,7 +386,9 @@ main (void)
   /* read device UUID */
   bzero (&device_uuid, sizeof (device_uuid));
   iap_read_uid (&device_uuid);
-  tag_id = crc16 ((uint8_t *) & device_uuid, sizeof (device_uuid));
+
+  /* make sure tag-id is always >0x8000 to avoid collisions with other tags */
+  tag_id = crc16 ((uint8_t *) & device_uuid, sizeof (device_uuid))|0x8000;
   random_seed =
     device_uuid[0] ^ device_uuid[1] ^ device_uuid[2] ^ device_uuid[3];
 
@@ -411,7 +413,7 @@ main (void)
 
   /* Initialize OpenBeacon nRF24L01 interface */
   while (!nRFAPI_Init
-	 (CONFIG_TRACKER_CHANNEL, broadcast_mac, sizeof (broadcast_mac), 0))
+	 (CONFIG_NAVIGATION_CHANNEL, broadcast_mac, sizeof (broadcast_mac), 0))
     blink (3);
 
   /* set tx power power to high */
@@ -520,8 +522,10 @@ main (void)
 	  pmu_wait_ms (2);
 	  /* switch to TX mode */
 	  nRFAPI_SetRxMode (0);
-	  /* switch to packet forwardign channel */
-	  nRFAPI_SetChannel (CONFIG_FORWARD_CHANNEL);
+	  /* switch to packet forwarding channel */
+#if CONFIG_TRACKER_CHANNEL!=CONFIG_NAVIGATION_CHANNEL
+	    nRFAPI_SetChannel (CONFIG_TRACKER_CHANNEL);
+#endif
 
 	  /* print packet statistics */
 	  last_time = time;
@@ -536,8 +540,10 @@ main (void)
 	  /* turn LED on */
 	  GPIOSetValue (1, 2, 1);
 
-	  /* switch back to tracker channel */
-	  nRFAPI_SetChannel (CONFIG_TRACKER_CHANNEL);
+	  /* switch back to navigation channel */
+#if CONFIG_TRACKER_CHANNEL!=CONFIG_NAVIGATION_CHANNEL
+	  nRFAPI_SetChannel (CONFIG_NAVIGATION_CHANNEL);
+#endif
 	  /* switch to RX mode */
 	  nRFAPI_SetRxMode (1);
 	  nRFCMD_CE (1);
