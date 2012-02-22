@@ -275,7 +275,6 @@ main (void)
   uint8_t flags, status, strength;
   int firstrun_done, moving;
   volatile int t;
-  int i;
 
   /* wait on boot - debounce */
   for (t = 0; t < 2000000; t++);
@@ -328,7 +327,6 @@ main (void)
 
   /* disable unused jobs */
   SSPdiv = LPC_SYSCON->SSPCLKDIV;
-  i = 0;
   oid_last_seen = 0;
 
   /* reset proximity buffer */
@@ -351,7 +349,7 @@ main (void)
   blink (2);
   /* remember last time */
   last_time = LPC_TMR32B0->TC;
-  packets = 0;
+  packets = seq = 0;
   while (1)
     {
       if (nRFCMD_IRQ ())
@@ -407,6 +405,7 @@ main (void)
 		  if (oid)
 		    {
 		      debug_printf("RX: ID=%04u strength=%u flags=%02X seq=%08u\n",oid,strength,flags,seq);
+		      oid_last_seen = oid;
 
 		      /* fire up LED to indicate rx */
 		      GPIOSetValue (1, 1, 1);
@@ -446,8 +445,8 @@ main (void)
 	  g_Beacon.pkt.proto = RFBPROTO_BEACONTRACKER_EXT;
 	  g_Beacon.pkt.flags = moving ? RFBFLAGS_MOVING : 0;
 	  g_Beacon.pkt.oid = htons (tag_id);
-	  g_Beacon.pkt.p.tracker.strength = (i & 1) + TX_STRENGTH_OFFSET;
-	  g_Beacon.pkt.p.tracker.seq = htonl (time);
+	  g_Beacon.pkt.p.tracker.strength = MAX_POWER_LEVELS;
+	  g_Beacon.pkt.p.tracker.seq = htonl (seq++);
 	  g_Beacon.pkt.p.tracker.oid_last_seen = oid_last_seen;
 	  g_Beacon.pkt.crc = htons (crc16 (g_Beacon.byte, BEACON_CRC_SIZE));
 
@@ -463,9 +462,6 @@ main (void)
 	  /* turn LED off */
 	  GPIOSetValue (1, 2, 0);
 	}
-
-      /* increment counter */
-      i++;
     }
   return 0;
 }
