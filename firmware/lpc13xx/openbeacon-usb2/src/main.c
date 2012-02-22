@@ -530,8 +530,8 @@ main (void)
 	  /* print packet statistics */
 	  last_time = time;
 	  acc_xyz_read (&x, &y, &z);
-	  debug_printf ("\"stats\":{\"id\":\"%04X\", \"time\":%u, \"rate\":%u, acc:{\"x\":%i,\"y\":%i,\"z\":%i}},\n",
-			tag_id, time, (packets * 10) / delta_time, x, y, z);
+	  debug_printf ("\"stats\":{\"id\":\"%04X\", \"version\":\"%s\", \"time\":%u, \"rate\":%u, acc:{\"x\":%i,\"y\":%i,\"z\":%i}},\n",
+			tag_id, PROGRAM_VERSION, time, (packets * 10) / delta_time, x, y, z);
 	  packets = 0;
 
 	  /* prepare outgoing packet */
