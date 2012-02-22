@@ -419,7 +419,7 @@ main (void)
 
 		  if (oid)
 		    {
-		      /* INSERT RX CODE HERE */
+		      debug_printf("RX: ID=%04u strength=%u flags=%02X seq=%08u\n",oid,strength,flags,seq);
 
 		      /* fire up LED to indicate rx */
 		      GPIOSetValue (1, 1, 1);
