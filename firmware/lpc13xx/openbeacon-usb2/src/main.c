@@ -111,23 +111,6 @@ nRF_tx (uint8_t power)
   nRFCMD_CE (0);
 }
 
-static void
-nrf_off (void)
-{
-  /* disable RX mode */
-  nRFCMD_CE (0);
-
-  /* turn LED on */
-  GPIOSetValue (1, 2, 1);
-  /* wait till RX is done */
-  pmu_wait_ms (5);
-  /* turn LED off */
-  GPIOSetValue (1, 2, 0);
-
-  /* switch to TX mode */
-  nRFAPI_SetRxMode (0);
-}
-
 #if 0
 static uint32_t
 rnd (uint32_t range)
@@ -441,13 +424,16 @@ main (void)
 	  nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
 	}
 
-
       time = LPC_TMR32B0->TC;
       delta_time = time - last_time;
       if (delta_time > 10)
 	{
 	  /* switch to TX mode */
-	  nrf_off ();
+	  nRFCMD_CE (0);
+	  /* wait till possible RX is done */
+	  pmu_wait_ms (2);
+	  /* switch to TX mode */
+	  nRFAPI_SetRxMode (0);
 
 	  last_time = time;
 
@@ -465,12 +451,17 @@ main (void)
 	  g_Beacon.pkt.p.tracker.oid_last_seen = oid_last_seen;
 	  g_Beacon.pkt.crc = htons (crc16 (g_Beacon.byte, BEACON_CRC_SIZE));
 
+	  /* turn LED on */
+	  GPIOSetValue (1, 2, 1);
+
 	  /* transmit packet */
 	  nRF_tx (g_Beacon.pkt.p.tracker.strength);
-
 	  /* switch to RX mode */
 	  nRFAPI_SetRxMode (1);
 	  nRFCMD_CE (1);
+
+	  /* turn LED off */
+	  GPIOSetValue (1, 2, 0);
 	}
 
       /* increment counter */
