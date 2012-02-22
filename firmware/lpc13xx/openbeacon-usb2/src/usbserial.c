@@ -28,7 +28,6 @@
 static BOOL CDC_DepInEmpty;	// Data IN EP is empty
 static unsigned char fifo_out[USB_CDC_BUFSIZE], fifo_in[128];
 static int fifo_out_count, fifo_in_count;
-static BOOL usb_active=FALSE;
 
 static inline void
 CDC_BulkIn_Handler (BOOL from_isr)
@@ -128,7 +127,7 @@ CDC_BulkOut (void)
 BOOL
 default_putchar (uint8_t data)
 {
-  if(usb_active)
+  if(USB_Configuration)
   {
     __disable_irq ();
 
@@ -146,7 +145,6 @@ default_putchar (uint8_t data)
 void
 init_usbserial (void)
 {
-  usb_active = FALSE;
   fifo_out_count = fifo_in_count = 0;
   CDC_DepInEmpty = TRUE;
 
@@ -155,14 +153,5 @@ init_usbserial (void)
   USB_Init ();
   /* Connect to USB port */
   USB_Connect (TRUE);
-  /* wait until USB is initialized */
-  while (!USB_Configuration)
-  {
-      pmu_wait_ms (90);
-      GPIOSetValue (1,1,1);
-      pmu_wait_ms (10);
-      GPIOSetValue (1,1,0);
-  }
-  usb_active = TRUE;
 }
 #endif /*ENABLE_USB_FULLFEATURE*/
