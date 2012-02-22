@@ -131,8 +131,10 @@ default_putchar (uint8_t data)
   {
     __disable_irq ();
 
-    if (fifo_out_count < (int) sizeof (fifo_out))
-      fifo_out[fifo_out_count++] = data;
+    if (fifo_out_count >= (int) sizeof (fifo_out))
+      CDC_BulkIn_Handler (TRUE);
+
+    fifo_out[fifo_out_count++] = data;
 
     if (data == '\n')
       CDC_BulkIn_Handler (TRUE);
