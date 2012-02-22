@@ -73,13 +73,13 @@ int spi_txrx(spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
 			else
 				data = 0;
 
-			LPC_SSP->DR = data;
-
 			/* Wait for transaction to finish */
-			while((LPC_SSP->SR & 1)==0);
+			while((LPC_SSP->SR & 2)==0);
+
+			LPC_SSP->DR = data;
 		}
 
-		if (LPC_SSP->SR & 0x04)
+		while (LPC_SSP->SR & 0x04)
 		{
 			data = LPC_SSP->DR;
 			xfered--;
