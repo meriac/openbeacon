@@ -32,7 +32,7 @@
 #include "xxtea.h"
 #include "openbeacon-proto.h"
 
-#define PROXIMITY_SLOTS 16
+#define PROXIMITY_SLOTS 32
 #define FIFO_DEPTH 10
 
 typedef struct
@@ -44,11 +44,11 @@ typedef struct
 {
   uint16_t oid;
   uint32_t seq;
-  uint8_t seen[MAX_POWER_LEVELS];
+  uint8_t strength[FWDTAG_STRENGTH_COUNT];
+  uint8_t flags;
 } TProximitySlot;
 
 /* proximity aggregation buffer */
-static uint8_t prox_head, prox_tail;
 static TProximitySlot prox[PROXIMITY_SLOTS];
 /* device UUID */
 static uint16_t tag_id;
@@ -91,7 +91,6 @@ static TBeaconEnvelope g_Beacon;
 static void
 nRF_tx (uint8_t power)
 {
-
   /* encrypt data */
   xxtea_encode (g_Beacon.block, XXTEA_BLOCK_COUNT, xxtea_key);
 
@@ -244,7 +243,7 @@ show_version (void)
   debug_printf (" * Stored Logfile Items: %i\n", g_storage_items);
 }
 
-void
+static void
 blink (uint8_t times)
 {
   GPIOSetValue (1, 1, 0);
@@ -261,19 +260,112 @@ blink (uint8_t times)
   pmu_wait_ms (500);
 }
 
+static inline void
+tag_aggregate (uint16_t oid, uint8_t strength, uint8_t flags, uint32_t seq)
+{
+  int i;
+  TProximitySlot *p;
+
+  if(!oid || (strength>FWDTAG_STRENGTH_MASK))
+    return;
+
+#ifdef  VERBOSE
+  debug_printf("\"rx\":{\"id\":\"%04X\", \"strength\":%u, \"seq\":%u, \"flags\":%u},\n",oid,strength,seq,flags);
+#endif/*VERBOSE*/
+
+  p = prox;
+  for(i=0;i<PROXIMITY_SLOTS;i++)
+  {
+    /* search for free entry */
+    if(p->oid)
+    {
+	/* skip to next */
+	if(p->oid!=oid)
+	{
+	  p++;
+	  continue;
+	}
+    }
+    else
+	/* ...else allocate new entry */
+	p->oid = oid;
+
+    /* aggregate packet */
+    if(p->strength[strength]<0xFF)
+	p->strength[strength]++;
+    else
+	p->flags |= RFBFLAGS_OVERFLOW;
+
+    if(seq > p->seq)
+	p->seq = seq;
+    p->flags |= flags;
+
+    break;
+  }
+}
+
+static inline void
+tag_aggregate_tx (void)
+{
+  int i;
+  uint8_t power, count, *s, slot;
+  TProximitySlot *p;
+
+  p = prox;
+  for(i=0;i<PROXIMITY_SLOTS;i++)
+  {
+    if(!p->oid)
+	break;
+
+    debug_printf("\"aggregate\":{\"id\":\"%04X\",power:[", p->oid);
+
+    /* prepare packet */
+    bzero (&g_Beacon, sizeof (g_Beacon));
+    g_Beacon.pkt.proto = RFBPROTO_FORWARD;
+    g_Beacon.pkt.flags = p->flags;
+    g_Beacon.pkt.oid = htons (tag_id);
+    g_Beacon.pkt.p.forward.oid = htons (p->oid);
+
+    slot = 0;
+    s = p->strength;
+    for(power=0;power<FWDTAG_STRENGTH_COUNT;power++)
+    {
+	count = *s++;
+	debug_printf("%c%2u",power?',':' ',count);
+
+	if(count && (slot<FWDTAG_SLOTS))
+	{
+	    if(count>FWDTAG_COUNT_MASK)
+	    {
+		count = FWDTAG_COUNT_MASK;
+		g_Beacon.pkt.flags |= RFBFLAGS_OVERFLOW;
+	    }
+	    g_Beacon.pkt.p.forward.slot[slot++] = FWDTAG_SLOT(power,count);
+	}
+    }
+    debug_printf(" ], \"seq\":%u, \"flags\":%u},\n", p->seq, p->flags);
+
+    g_Beacon.pkt.p.forward.seq = htonl (p->seq);
+    g_Beacon.pkt.crc = htons (crc16 (g_Beacon.byte, BEACON_CRC_SIZE));
+
+    /* transmit packet */
+    nRF_tx (3);
+
+    p++;
+  }
+
+  /* reset proximity buffer */
+  bzero (&prox, sizeof (prox));
+}
+
 int
 main (void)
 {
-  /* accelerometer readings fifo */
-  TFifoEntry acc_lowpass;
-  TFifoEntry fifo_buf[FIFO_DEPTH];
-  int fifo_pos;
-
+  int x, y, z;
   uint32_t SSPdiv, seq, oid, packets;
   uint32_t time, last_time, delta_time;
-  uint16_t crc, oid_last_seen;
+  uint16_t crc;
   uint8_t flags, status, strength;
-  int firstrun_done, moving;
   volatile int t;
 
   /* wait on boot - debounce */
@@ -327,19 +419,9 @@ main (void)
 
   /* disable unused jobs */
   SSPdiv = LPC_SYSCON->SSPCLKDIV;
-  oid_last_seen = 0;
 
   /* reset proximity buffer */
-  prox_head = prox_tail = 0;
   bzero (&prox, sizeof (prox));
-
-  /*initialize FIFO */
-  fifo_pos = 0;
-  bzero (&acc_lowpass, sizeof (acc_lowpass));
-  bzero (&fifo_buf, sizeof (fifo_buf));
-  firstrun_done = 0;
-  moving = 0;
-  g_sequence = 0;
 
   /* enable RX mode */
   nRFAPI_SetRxMode (1);
@@ -350,6 +432,7 @@ main (void)
   /* remember last time */
   last_time = LPC_TMR32B0->TC;
   packets = seq = 0;
+  g_sequence = 0;
   while (1)
     {
       if (nRFCMD_IRQ ())
@@ -374,6 +457,9 @@ main (void)
 		{
 		  seq = oid = 0;
 		  flags = strength = 0;
+
+		  /* increment global sequence counter to reseed rnd */
+		  g_sequence++;
 
 		  switch (g_Beacon.proto)
 		    {
@@ -402,10 +488,10 @@ main (void)
 		      seq = ntohl (g_Beacon.pkt.p.trackerExt.seq);
 		    }
 
-		  if (oid)
+		  if (oid && (oid <= 0xFFFF))
 		    {
-		      debug_printf("RX: ID=%04u strength=%u flags=%02X seq=%08u\n",oid,strength,flags,seq);
-		      oid_last_seen = oid;
+		      /* remember tag sighting */
+		      tag_aggregate(oid,strength,flags,seq);
 
 		      /* fire up LED to indicate rx */
 		      GPIOSetValue (1, 1, 1);
@@ -425,8 +511,8 @@ main (void)
 
       time = LPC_TMR32B0->TC;
       delta_time = time - last_time;
-      /* run transmit code twice per second */
-      if (delta_time > 5)
+      /* run transmit code two times per second */
+      if (delta_time >= 10)
 	{
 	  /* switch to TX mode */
 	  nRFCMD_CE (0);
@@ -434,28 +520,24 @@ main (void)
 	  pmu_wait_ms (2);
 	  /* switch to TX mode */
 	  nRFAPI_SetRxMode (0);
+	  /* switch to packet forwardign channel */
+	  nRFAPI_SetChannel (CONFIG_FORWARD_CHANNEL);
 
+	  /* print packet statistics */
 	  last_time = time;
-
-	  debug_printf ("@%08u: rx'ed %03u pkt/s\n", time,
-			(packets * 10) / delta_time);
+	  acc_xyz_read (&x, &y, &z);
+	  debug_printf ("\"stats\":{\"id\":\"%04X\", \"time\":%u, \"rate\":%u, acc:{\"x\":%i,\"y\":%i,\"z\":%i}},\n",
+			tag_id, time, (packets * 10) / delta_time, x, y, z);
 	  packets = 0;
 
-	  /* prepare packet */
-	  bzero (&g_Beacon, sizeof (g_Beacon));
-	  g_Beacon.pkt.proto = RFBPROTO_BEACONTRACKER_EXT;
-	  g_Beacon.pkt.flags = moving ? RFBFLAGS_MOVING : 0;
-	  g_Beacon.pkt.oid = htons (tag_id);
-	  g_Beacon.pkt.p.tracker.strength = MAX_POWER_LEVELS;
-	  g_Beacon.pkt.p.tracker.seq = htonl (seq++);
-	  g_Beacon.pkt.p.tracker.oid_last_seen = oid_last_seen;
-	  g_Beacon.pkt.crc = htons (crc16 (g_Beacon.byte, BEACON_CRC_SIZE));
+	  /* prepare outgoing packet */
+	  tag_aggregate_tx ();
 
 	  /* turn LED on */
 	  GPIOSetValue (1, 2, 1);
 
-	  /* transmit packet */
-	  nRF_tx (g_Beacon.pkt.p.tracker.strength);
+	  /* switch back to tracker channel */
+	  nRFAPI_SetChannel (CONFIG_TRACKER_CHANNEL);
 	  /* switch to RX mode */
 	  nRFAPI_SetRxMode (1);
 	  nRFCMD_CE (1);
