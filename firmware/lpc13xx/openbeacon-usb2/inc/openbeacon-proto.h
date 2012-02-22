@@ -18,7 +18,6 @@
     You should have received a copy of the GNU General Public License along
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
 */
 
 #ifndef __OPENBEACON_PROTO_H__
@@ -26,6 +25,8 @@
 
 #define CONFIG_TRACKER_CHANNEL 81
 #define CONFIG_PROX_CHANNEL 76
+
+#define BEACONLOG_SIGHTING 0x01
 
 #define XXTEA_BLOCK_COUNT 4
 #define MAX_POWER_LEVELS 4
@@ -85,10 +86,19 @@ typedef struct
 {
   uint8_t strength;
   uint16_t oid_last_seen;
+  uint16_t powerup_count;
+  uint8_t reserved;
+  uint32_t seq;
+} PACKED TBeaconTracker;
+
+typedef struct
+{
+  uint8_t strength;
+  uint16_t oid_last_seen;
   uint16_t time;
   uint8_t battery;
   uint32_t seq;
-} PACKED TBeaconTracker;
+} PACKED TBeaconTrackerExt;
 
 typedef struct
 {
@@ -112,6 +122,7 @@ typedef union
 {
   TBeaconProx prox;
   TBeaconTracker tracker;
+  TBeaconTrackerExt trackerExt;
   TBeaconReaderCommand reader_command;
   TBeaconReaderAnnounce reader_announce;
 } PACKED TBeaconPayload;
@@ -138,10 +149,27 @@ typedef union
 
 typedef struct
 {
-  uint32_t time;
-  uint32_t seq;
-  uint16_t oid;
-  uint8_t strength, crc;
-} PACKED TLogfileBeaconPacket;
+  uint32_t timestamp;
+  uint32_t ip;
+  TBeaconEnvelope env;
+} PACKED TBeaconEnvelopeLog;
+
+typedef struct
+{
+  uint16_t icrc16;
+  uint8_t protocol;
+  uint8_t interface;
+  uint16_t reader_id;
+  uint16_t size;
+} PACKED TBeaconNetworkHdr;
+
+/* BEACONLOG_SIGHTING */
+typedef struct
+{
+  TBeaconNetworkHdr hdr;
+  uint32_t sequence;
+  uint32_t timestamp;
+  TBeaconEnvelope log;
+} PACKED TBeaconLogSighting;
 
 #endif/*__OPENBEACON_PROTO_H__*/
