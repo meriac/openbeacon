@@ -85,7 +85,6 @@ static const unsigned char broadcast_mac[NRF_MAX_MAC_SIZE] = {
 
 /* OpenBeacon packet */
 static TBeaconEnvelope g_Beacon;
-static TLogfileBeaconPacket g_Log;
 
 #define BEACON_CRC_SIZE (sizeof (g_Beacon) - sizeof (g_Beacon.pkt.crc))
 
@@ -286,7 +285,7 @@ main (void)
   uint32_t SSPdiv, seq, oid, packets;
   uint32_t time, last_time, delta_time;
   uint16_t crc, oid_last_seen;
-  uint8_t flags, status;
+  uint8_t flags, status, strength;
   int firstrun_done, moving;
   volatile int t;
   int i;
@@ -368,8 +367,6 @@ main (void)
   packets = 0;
   while (1)
     {
-      pmu_wait_ms (100);
-
       if (nRFCMD_IRQ ())
 	{
 	  do
@@ -390,33 +387,34 @@ main (void)
 
 	      if (ntohs (g_Beacon.pkt.crc) == crc)
 		{
-		  seq = 0;
-		  oid = 0;
+		  seq = oid = 0;
+		  flags = strength = 0;
 
 		  switch (g_Beacon.proto)
 		    {
+
 		    case RFBPROTO_BEACONTRACKER_OLD:
 		      if (g_Beacon.old.proto2 == RFBPROTO_BEACONTRACKER_OLD2)
 			{
-			  g_Log.strength = g_Beacon.old.strength / 0x55;
-
+			  strength = g_Beacon.old.strength / 0x55;
 			  flags = g_Beacon.old.flags;
 			  oid = ntohl (g_Beacon.old.oid);
 			  seq = ntohl (g_Beacon.old.seq);
 			}
 		      break;
-		    case RFBPROTO_BEACONTRACKER_EXT:
-		      g_Log.strength = g_Beacon.pkt.p.tracker.strength;
-		      if (g_Log.strength >= MAX_POWER_LEVELS)
-			g_Log.strength = (MAX_POWER_LEVELS - 1);
 
-		      /* remember that packet was proximity packet */
-		      g_Log.strength |= LOGFLAG_PROXIMITY;
-
+		    case RFBPROTO_BEACONTRACKER:
+		      strength = g_Beacon.pkt.p.tracker.strength;
 		      flags = g_Beacon.pkt.flags;
 		      oid = ntohs (g_Beacon.pkt.oid);
 		      seq = ntohl (g_Beacon.pkt.p.tracker.seq);
 		      break;
+
+		    case RFBPROTO_BEACONTRACKER_EXT:
+		      strength = g_Beacon.pkt.p.trackerExt.strength;
+		      flags = g_Beacon.pkt.flags;
+		      oid = ntohs (g_Beacon.pkt.oid);
+		      seq = ntohl (g_Beacon.pkt.p.trackerExt.seq);
 		    }
 
 		  if (oid)
@@ -468,8 +466,6 @@ main (void)
 	  g_Beacon.pkt.p.tracker.strength = (i & 1) + TX_STRENGTH_OFFSET;
 	  g_Beacon.pkt.p.tracker.seq = htonl (time);
 	  g_Beacon.pkt.p.tracker.oid_last_seen = oid_last_seen;
-	  g_Beacon.pkt.p.tracker.time = htons ((uint16_t) g_sequence++);
-	  g_Beacon.pkt.p.tracker.battery = 0;
 	  g_Beacon.pkt.crc = htons (crc16 (g_Beacon.byte, BEACON_CRC_SIZE));
 
 	  /* transmit packet */
