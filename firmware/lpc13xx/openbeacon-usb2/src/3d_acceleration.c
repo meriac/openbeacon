@@ -54,9 +54,6 @@ acc_reg_read (uint8_t addr)
 void
 acc_xyz_read (int *x, int *y, int *z)
 {
-  /* dummy read - FIXME */
-  acc_reg_read (0);
-
   /*  get acceleration values */
   *x = (int8_t) acc_reg_read (6);
   *y = (int8_t) acc_reg_read (7);
@@ -80,8 +77,6 @@ acc_power (uint8_t enabled)
   if(enabled)
     GPIOSetDir (1, 11, 0);
 
-  /* dummy read - FIXME */
-  acc_reg_read (0);
   /* set 3D acceleration sensor active, 2g - FIXME power saving */
   acc_reg_write (0x16, enabled ? (0x01 | 0x01 << 2) : 0x00);
 
