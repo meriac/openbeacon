@@ -111,14 +111,18 @@ nRF_tx (uint8_t power)
   nRFCMD_CE (0);
 }
 
-void
+static void
 nrf_off (void)
 {
   /* disable RX mode */
   nRFCMD_CE (0);
 
+  /* turn LED on */
+  GPIOSetValue (1, 2, 1);
   /* wait till RX is done */
   pmu_wait_ms (5);
+  /* turn LED off */
+  GPIOSetValue (1, 2, 0);
 
   /* switch to TX mode */
   nRFAPI_SetRxMode (0);
@@ -429,13 +433,6 @@ main (void)
 		      GPIOSetValue (1, 1, 0);
 		    }
 		}
-
-	      /* fire up LED to indicate rx */
-	      GPIOSetValue (1, 2, 1);
-	      /* light LED for 2ms */
-	      pmu_wait_ms (2);
-	      /* turn LED off */
-	      GPIOSetValue (1, 2, 0);
 
 	      /* get status */
 	      status = nRFAPI_GetFifoStatus ();
