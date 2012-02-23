@@ -266,42 +266,42 @@ tag_aggregate (uint16_t oid, uint8_t strength, uint8_t flags, uint32_t seq)
   int i;
   TProximitySlot *p;
 
-  if(!oid || (strength>FWDTAG_STRENGTH_MASK))
+  if (!oid || (strength > FWDTAG_STRENGTH_MASK))
     return;
 
 #ifdef  VERBOSE
-  debug_printf("\"rx\":{\"id\":\"%04X\", \"strength\":%u, \"seq\":%u, \"flags\":%u},\n",oid,strength,seq,flags);
-#endif/*VERBOSE*/
-
-  p = prox;
-  for(i=0;i<PROXIMITY_SLOTS;i++)
-  {
-    /* search for free entry */
-    if(p->oid)
+  debug_printf ("\"rx\":{\"id\":\"%04X\", \"strength\":%u, "
+		"\"seq\":%u, \"flags\":%u},\n", oid, strength, seq, flags);
+#endif /*VERBOSE*/
+    p = prox;
+  for (i = 0; i < PROXIMITY_SLOTS; i++)
     {
-	/* skip to next */
-	if(p->oid!=oid)
+      /* search for free entry */
+      if (p->oid)
 	{
-	  p++;
-	  continue;
+	  /* skip to next */
+	  if (p->oid != oid)
+	    {
+	      p++;
+	      continue;
+	    }
 	}
-    }
-    else
+      else
 	/* ...else allocate new entry */
 	p->oid = oid;
 
-    /* aggregate packet */
-    if(p->strength[strength]<0xFF)
+      /* aggregate packet */
+      if (p->strength[strength] < 0xFF)
 	p->strength[strength]++;
-    else
+      else
 	p->flags |= RFBFLAGS_OVERFLOW;
 
-    if(seq > p->seq)
+      if (seq > p->seq)
 	p->seq = seq;
-    p->flags |= flags;
+      p->flags |= flags;
 
-    break;
-  }
+      break;
+    }
 }
 
 static inline void
@@ -312,47 +312,48 @@ tag_aggregate_tx (void)
   TProximitySlot *p;
 
   p = prox;
-  for(i=0;i<PROXIMITY_SLOTS;i++)
-  {
-    if(!p->oid)
+  for (i = 0; i < PROXIMITY_SLOTS; i++)
+    {
+      if (!p->oid)
 	break;
 
-    debug_printf("\"aggregate\":{\"id\":\"%04X\",power:[", p->oid);
+      debug_printf ("\"aggregate\":{\"id\":\"%04X\",power:[", p->oid);
 
-    /* prepare packet */
-    bzero (&g_Beacon, sizeof (g_Beacon));
-    g_Beacon.pkt.proto = RFBPROTO_FORWARD;
-    g_Beacon.pkt.flags = p->flags;
-    g_Beacon.pkt.oid = htons (tag_id);
-    g_Beacon.pkt.p.forward.oid = htons (p->oid);
+      /* prepare packet */
+      bzero (&g_Beacon, sizeof (g_Beacon));
+      g_Beacon.pkt.proto = RFBPROTO_FORWARD;
+      g_Beacon.pkt.flags = p->flags;
+      g_Beacon.pkt.oid = htons (tag_id);
+      g_Beacon.pkt.p.forward.oid = htons (p->oid);
 
-    slot = 0;
-    s = p->strength;
-    for(power=0;power<FWDTAG_STRENGTH_COUNT;power++)
-    {
-	count = *s++;
-	debug_printf("%c%2u",power?',':' ',count);
-
-	if(count && (slot<FWDTAG_SLOTS))
+      slot = 0;
+      s = p->strength;
+      for (power = 0; power < FWDTAG_STRENGTH_COUNT; power++)
 	{
-	    if(count>FWDTAG_COUNT_MASK)
+	  count = *s++;
+	  debug_printf ("%c%2u", power ? ',' : ' ', count);
+
+	  if (count && (slot < FWDTAG_SLOTS))
 	    {
-		count = FWDTAG_COUNT_MASK;
-		g_Beacon.pkt.flags |= RFBFLAGS_OVERFLOW;
+	      if (count > FWDTAG_COUNT_MASK)
+		{
+		  count = FWDTAG_COUNT_MASK;
+		  g_Beacon.pkt.flags |= RFBFLAGS_OVERFLOW;
+		}
+	      g_Beacon.pkt.p.forward.slot[slot++] =
+		FWDTAG_SLOT (power, count);
 	    }
-	    g_Beacon.pkt.p.forward.slot[slot++] = FWDTAG_SLOT(power,count);
 	}
+      debug_printf (" ], \"seq\":%u, \"flags\":%u},\n", p->seq, p->flags);
+
+      g_Beacon.pkt.p.forward.seq = htonl (p->seq);
+      g_Beacon.pkt.crc = htons (crc16 (g_Beacon.byte, BEACON_CRC_SIZE));
+
+      /* transmit packet */
+      nRF_tx (3);
+
+      p++;
     }
-    debug_printf(" ], \"seq\":%u, \"flags\":%u},\n", p->seq, p->flags);
-
-    g_Beacon.pkt.p.forward.seq = htonl (p->seq);
-    g_Beacon.pkt.crc = htons (crc16 (g_Beacon.byte, BEACON_CRC_SIZE));
-
-    /* transmit packet */
-    nRF_tx (3);
-
-    p++;
-  }
 
   /* reset proximity buffer */
   bzero (&prox, sizeof (prox));
@@ -388,7 +389,7 @@ main (void)
   iap_read_uid (&device_uuid);
 
   /* make sure tag-id is always >0x8000 to avoid collisions with other tags */
-  tag_id = crc16 ((uint8_t *) & device_uuid, sizeof (device_uuid))|0x8000;
+  tag_id = crc16 ((uint8_t *) & device_uuid, sizeof (device_uuid)) | 0x8000;
   random_seed =
     device_uuid[0] ^ device_uuid[1] ^ device_uuid[2] ^ device_uuid[3];
 
@@ -397,7 +398,7 @@ main (void)
   bt_init (TRUE, tag_id);
 #else
   UARTInit (115200, 0);
-#endif/*ENABLE_BLUETOOTH*/
+#endif /*ENABLE_BLUETOOTH */
 
   /* CDC USB Initialization */
   init_usbserial ();
@@ -412,8 +413,8 @@ main (void)
   acc_init (1);
 
   /* Initialize OpenBeacon nRF24L01 interface */
-  while (!nRFAPI_Init
-	 (CONFIG_NAVIGATION_CHANNEL, broadcast_mac, sizeof (broadcast_mac), 0))
+  while (!nRFAPI_Init (CONFIG_NAVIGATION_CHANNEL,
+		       broadcast_mac, sizeof (broadcast_mac), 0))
     blink (3);
 
   /* set tx power power to high */
@@ -493,7 +494,7 @@ main (void)
 		  if (oid && (oid <= 0xFFFF))
 		    {
 		      /* remember tag sighting */
-		      tag_aggregate(oid,strength,flags,seq);
+		      tag_aggregate (oid, strength, flags, seq);
 
 		      /* fire up LED to indicate rx */
 		      GPIOSetValue (1, 1, 1);
@@ -524,14 +525,17 @@ main (void)
 	  nRFAPI_SetRxMode (0);
 	  /* switch to packet forwarding channel */
 #if CONFIG_TRACKER_CHANNEL!=CONFIG_NAVIGATION_CHANNEL
-	    nRFAPI_SetChannel (CONFIG_TRACKER_CHANNEL);
+	  nRFAPI_SetChannel (CONFIG_TRACKER_CHANNEL);
 #endif
 
 	  /* print packet statistics */
 	  last_time = time;
 	  acc_xyz_read (&x, &y, &z);
-	  debug_printf ("\"stats\":{\"id\":\"%04X\", \"version\":\"%s\", \"time\":%u, \"rate\":%u, acc:{\"x\":%i,\"y\":%i,\"z\":%i}},\n",
-			tag_id, PROGRAM_VERSION, time, (packets * 10) / delta_time, x, y, z);
+	  debug_printf
+	    ("\"stats\":{\"id\":\"%04X\", \"version\":\"%s\", \"time\":%u, "
+	     "\"rate\":%u, acc:{\"x\":%i,\"y\":%i,\"z\":%i}},\n",
+	     tag_id, PROGRAM_VERSION, time,
+	     (packets * 10) / delta_time, x, y, z);
 	  packets = 0;
 
 	  /* prepare outgoing packet */
