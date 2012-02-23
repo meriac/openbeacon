@@ -81,7 +81,7 @@ CDC_BulkIn (void)
 static inline void
 CDC_GetCommand (unsigned char *command)
 {
-  debug_printf ("CMD: '%s'\n", command);
+  debug_printf ("Unknown command: '%s'\n", command);
   CDC_Flush ();
 }
 
@@ -127,16 +127,20 @@ CDC_BulkOut (void)
 BOOL
 default_putchar (uint8_t data)
 {
-  __disable_irq ();
+  if(USB_Configuration)
+  {
+    __disable_irq ();
 
-  if (fifo_out_count < (int) sizeof (fifo_out))
+    if (fifo_out_count >= (int) sizeof (fifo_out))
+      CDC_BulkIn_Handler (TRUE);
+
     fifo_out[fifo_out_count++] = data;
 
-  if (data == '\n')
-    CDC_BulkIn_Handler (TRUE);
+    if (data == '\n')
+      CDC_BulkIn_Handler (TRUE);
 
-  __enable_irq ();
-
+    __enable_irq ();
+  }
   return UARTSendChar (data);
 }
 
@@ -151,13 +155,5 @@ init_usbserial (void)
   USB_Init ();
   /* Connect to USB port */
   USB_Connect (TRUE);
-  /* wait until USB is initialized */
-  while (!USB_Configuration)
-  {
-      pmu_wait_ms (90);
-      GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
-      pmu_wait_ms (10);
-      GPIOSetValue (LED_PORT, LED_BIT, LED_OFF);
-  }
 }
 #endif /*ENABLE_USB_FULLFEATURE*/
