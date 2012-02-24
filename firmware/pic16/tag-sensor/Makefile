@@ -2,7 +2,7 @@ COMPILER_PATH=/usr/hitech/picc/9.83/bin/
 PK2=/usr/local/bin/pk2cmd
 CC=$(COMPILER_PATH)picc
 
-MODE=lite
+MODE=std
 CHIP=16F688
 PROGNAME=openbeacontag
 
