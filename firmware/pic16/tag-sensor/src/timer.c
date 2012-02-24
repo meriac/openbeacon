@@ -46,14 +46,16 @@
 #define INTCON_PEIE	(1 << 6)
 #define INTCON_GIE	(1 << 7)
 
+/* Configure Timer 1 to use external 32768Hz crystal and
+ * no (1:1) prescaler */
+#define T1CON_DEFAULT	(T1CON_T1OSCEN | T1CON_T1SYNC | T1CON_TMR1CS)
+
 static volatile char timer1_wrapped;
 
 void
 timer_init (void)
 {
-  /* Configure Timer 1 to use external 32768Hz crystal and 
-   * no (1:1) prescaler*/
-  T1CON = T1CON_T1OSCEN | T1CON_T1SYNC | T1CON_TMR1CS;
+  T1CON = T1CON_DEFAULT;
   timer1_wrapped = 0;
 }
 
@@ -80,6 +82,17 @@ void
 sleep_2ms (void)
 {
   sleep_jiffies (JIFFIES_PER_MS(2));
+}
+
+void
+sleep_deep (unsigned char div)
+{
+  T1CON = 0;
+  CLRWDT ();
+  WDTCON = ((div & 0xF)<<1)|1;
+  SLEEP ();
+  WDTCON = 0;
+  T1CON = T1CON_DEFAULT;
 }
 
 void interrupt

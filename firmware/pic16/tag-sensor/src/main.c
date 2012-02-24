@@ -177,13 +177,13 @@ read_adc (void)
     TRISA0 = 1;
     ANS0 = 1;
     /* wait for ADC to initialize (-1ms) */
-    sleep_jiffies (JIFFIES_PER_MS (4));
+    sleep_deep (SLEEPDEEP_4ms);
 
     /* enable sensor power */
     CONFIG_PIN_SENSOR_POWER = 1;
 
     /* wait for power to settle */
-    sleep_jiffies (JIFFIES_PER_MS (1));
+    sleep_deep (SLEEPDEEP_1ms);
     /* ADC conversion */
     GO_DONE = 1;
     while(GO_DONE);
@@ -256,7 +256,7 @@ main (void)
       {
 	tx_count = 5;
 	CONFIG_PIN_LED = 1;
-	sleep_jiffies (JIFFIES_PER_MS (1));
+	sleep_deep (SLEEPDEEP_1ms);
 	CONFIG_PIN_LED = 0;
       }
 
@@ -267,7 +267,7 @@ main (void)
 	else
 	{
 	    CONFIG_PIN_LED = 1;
-	    sleep_jiffies (JIFFIES_PER_MS (1));
+	    sleep_deep (SLEEPDEEP_1ms);
 	    CONFIG_PIN_LED = 0;
 	}
 
@@ -308,6 +308,6 @@ main (void)
 	nRFCMD_Execute ();
       }
       else
-	sleep_jiffies (JIFFIES_PER_MS (100));
+	sleep_deep (SLEEPDEEP_132ms);
     }
 }
