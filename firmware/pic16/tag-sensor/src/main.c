@@ -250,8 +250,6 @@ main (void)
     {
       i++;
 
-      sleep_jiffies (JIFFIES_PER_MS (60 + (rand () % 80 )));
-
       data = read_adc();
 
       if((abs(((signed short)last_data)-data)>=ADC_TX_TRESHOLD) && (data>=ADC_TX_MIN) && (data<=ADC_TX_MAX))
@@ -302,10 +300,14 @@ main (void)
 	xxtea_encode ();
 	shuffle_tx_byteorder ();
 
+	// random backoff before transmitting
+	sleep_jiffies ( JIFFIES_PER_MS (37) + (rand()&0x7FF) );
+
 	// send it away
 	nRFCMD_Macro ((unsigned char *) &g_MacroBeacon);
 	nRFCMD_Execute ();
       }
-
+      else
+	sleep_jiffies (JIFFIES_PER_MS (100));
     }
 }
