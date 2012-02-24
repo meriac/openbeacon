@@ -62,7 +62,7 @@ sleep_jiffies (unsigned short jiffies)
 {
   jiffies = 0xffff - jiffies;
   TMR1H = jiffies >> 8;
-  TMR1L = (unsigned short) jiffies;
+  TMR1L = (unsigned char) jiffies;
   TMR1ON = 1;
   TMR1IE = 1;
   PEIE = 1;
