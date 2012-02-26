@@ -2,7 +2,7 @@
  *
  * OpenBeacon.org - main entry, CRC, behaviour
  *
- * Copyright 2006 Milosch Meriac <meriac@openbeacon.de>
+ * Copyright 2006-2012 Milosch Meriac <meriac@openbeacon.de>
  *
 /***************************************************************
 
