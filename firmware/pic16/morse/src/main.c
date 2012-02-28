@@ -38,7 +38,7 @@ main (void)
   char data,*c, morsemessage[] = "... ___ ...";
 
   /* configure CPU peripherals */
-  OPTION = CONFIG_CPU_OPTION;
+  OPTION_REG = CONFIG_CPU_OPTION;
   TRISA = CONFIG_CPU_TRISA;
   TRISC = CONFIG_CPU_TRISC;
   WPUA = CONFIG_CPU_WPUA;

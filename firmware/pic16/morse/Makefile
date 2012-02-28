@@ -1,58 +1,52 @@
-COMPILER_PATH=/usr/hitech/picc/std/9.60PL2
-PK2=/usr/local/bin/pk2
-CC=$(COMPILER_PATH)/bin/picc
+COMPILER_PATH=/usr/hitech/picc/9.83/bin/
+PK2=/usr/local/bin/pk2cmd
+CC=$(COMPILER_PATH)picc
 
-CONFIG=0x3d4
+MODE=std
 CHIP=16F684
-PROGNAME=morse
+PROGNAME=openbeacon-morse
 
-SRCS=main.c timer.c
+MAIN=main.c
+SRCS=$(MAIN) timer.c
 
-PROG_EXTS=cof hxl map mum sym
+PROG_EXTS=cof hxl map mum sym as sdb lst rlf obj
 PROG_FILES=$(patsubst %, obj/$(PROGNAME).%, $(PROG_EXTS))
+PROG_TARGET=$(PROGNAME)-PIC$(CHIP)-firmware.hex
 
-OBJ_EXTS=p1 rlf sdb lst
+OBJ_EXTS=p1 rlf sdb lst pre as
 OBJ_TMP=$(foreach T, $(OBJ_EXTS), $(patsubst %.c, obj/%.$(T), $(SRCS)))
-OBJ_OUT=$(patsubst %.c, obj/%.obj, $(SRCS))
+OBJ_OUT=$(patsubst %.c, obj/%.p1, $(SRCS))
 
-CLEANS=$(OBJ_OUT) $(OBJ_TMP) $(PROG_FILES)
-CLEANS+=obj/startup.as obj/startup.lst obj/startup.rlf obj/$(PROGNAME).hex $(PROGNAME).hex 
+CLEANS=$(OBJ_OUT) $(OBJ_TMP) $(PROG_FILES) $(PROG_TARGET)
+CLEANS+=obj/startup.as obj/startup.lst obj/startup.rlf obj/$(PROGNAME).hex $(PROGNAME).hex obj/startup.obj funclist
 
-COMMON_FLAGS=-q --outdir=obj --chip=$(CHIP) -m --asmlist --codeoffset=0 --warn=0 --errors=1- --char=signed --double=24
-CFLAGS=$(COMMON_FLAGS) --asmlist --opt=asm,speed,9
-LDFLAGS=$(COMMON_FLAGS) --summary=mem,file  --output=+intel --output=+mcof --runtime=+init --runtime=+osccal --runtime=+clear --runtime=+clib --runtime=+keep
-
-#bugfix for hitech PICC compiler copy protection
-#export LC_ALL=C
+COMMON_FLAGS=-q --MODE=$(MODE) --outdir=obj --chip=$(CHIP) --codeoffset=0 --warn=0 --errors=1- --char=signed --double=24
+CFLAGS=$(COMMON_FLAGS) --pass1
+LDFLAGS=$(COMMON_FLAGS) --summary=mem,file --asmlist --output=+intel --output=+mcof --runtime=+init --runtime=+osccal --runtime=+clear --runtime=+clib --runtime=+keep -m
 
 all: $(PROGNAME).hex
 
-obj/%.obj: src/%.c src/*.h
+.PHONY: $(PROGNAME).hex clean flash publish counted
+
+obj/%.p1: src/%.c src/*.h
 	$(CC) $(CFLAGS) -c $(filter-out %.h,$^)
 
-$(PROGNAME).hex: $(OBJ_OUT)
-	$(CC) $(LDFLAGS) -Oobj/$@ $^
+obj/$(PROGNAME).hex: $(OBJ_OUT)
+	$(CC) $(LDFLAGS) -O$@ $^
 
 clean:
 	rm -f $(CLEANS)
 
-install: $(PROGNAME).hex
-	$(PK2) --device=$(CHIP) --write obj/$(PROGNAME).hex
+flash: $(PROGNAME).hex
+	$(PK2) -B/usr/share/pk2/ -I -A5 -PPIC$(CHIP) -F$^ -M -YP
 
 publish: $(PROGNAME).hex
-#	scp obj/$(PROGNAME).hex brita@10.1.0.23:/home/windows.user/Projekte/CCC/Sputnik/Firmware/
-#	cp obj/$(PROGNAME).hex /home/windows.meri/HOPE/
-	scp -P30303 obj/$(PROGNAME).hex bitmanufaktur.de:/home/wwwrun/wildcard.bitmanufaktur/www/thelasthope/$(PROGNAME).raw
-	scp -P30303 obj/$(PROGNAME).sym bitmanufaktur.de:/home/wwwrun/wildcard.bitmanufaktur/www/thelasthope/
+	mv $^ ~/Share/OpenBeacon/$(PROG_TARGET)
 
-verify: $(PROGNAME).hex
-	sudo $(PK2) --verify obj/$(PROGNAME).hex
+vmware: $(PROGNAME).hex
+	mv $^ ~/Share/OpenBeacon/$(PROGNAME).hex
 
 counted: $(PROGNAME).hex
-	./create_counted_firmware.php
 
-on:
-	sudo $(PK2) --on
-
-off:
-	sudo $(PK2) --off
+$(PROGNAME).hex: obj/$(PROGNAME).hex
+	php ./create_counted_firmware.php
