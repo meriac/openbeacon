@@ -37,8 +37,7 @@ static TFIFO fifo_BulkIn, fifo_BulkOut;
 static int
 usb_putchar_irq (TFIFO * fifo, uint8_t data)
 {
-	debug_printf ("P: %02X\n", data);
-	if (fifo->count < FIFO_SIZE)
+	if (fifo->count >= FIFO_SIZE)
 		return -1;
 
 	/* add data to FIFO */
@@ -57,8 +56,6 @@ usb_getchar_irq (TFIFO * fifo)
 {
 	int res;
 
-	debug_printf ("G: ");
-
 	if (!fifo->count)
 		return -1;
 
@@ -69,8 +66,6 @@ usb_getchar_irq (TFIFO * fifo)
 	/* handle wrapping */
 	if (fifo->tail == FIFO_SIZE)
 		fifo->tail = 0;
-
-	debug_printf ("%02X", res);
 
 	return res;
 }
