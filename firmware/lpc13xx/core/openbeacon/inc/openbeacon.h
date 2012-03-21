@@ -46,6 +46,7 @@ extern BOOL default_putchar (uint8_t data);
 #include <rfid.h>
 #endif/*ENABLE_PN532_RFID*/
 
+#include <spi.h>
 #include <gpio.h>
 
 /* PDSLEEPCFG, PDAWAKECFG, PDRUNCFG */
