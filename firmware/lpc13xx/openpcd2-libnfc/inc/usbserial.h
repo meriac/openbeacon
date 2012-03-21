@@ -25,7 +25,9 @@
 #define __USBSERIAL_H__
 
 #ifdef  ENABLE_USB_FULLFEATURED
-extern void init_usbserial (void);
+extern void usb_init (void);
+extern int usb_get (uint8_t * data, int count);
+extern int usb_put (const uint8_t * data, int count);
 #endif /*ENABLE_USB_FULLFEATURED */
 
 #endif/*__USBSERIAL_H__*/

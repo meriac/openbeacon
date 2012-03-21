@@ -24,7 +24,7 @@
 #include "pmu.h"
 #include "usbserial.h"
 
-#define FIFO_SIZE (USB_CDC_BUFSIZE*2)
+#define FIFO_SIZE (USB_CDC_BUFSIZE)
 
 typedef struct
 {
@@ -32,12 +32,12 @@ typedef struct
 	uint16_t head, tail, count;
 } TFIFO;
 
-static BOOL CDC_DepInEmpty;		// Data IN EP is empty
 static TFIFO fifo_BulkIn, fifo_BulkOut;
 
 static int
-fifo_put_irq (TFIFO * fifo, uint8_t data)
+usb_putchar_irq (TFIFO * fifo, uint8_t data)
 {
+	debug_printf ("P: %02X\n", data);
 	if (fifo->count < FIFO_SIZE)
 		return -1;
 
@@ -53,9 +53,11 @@ fifo_put_irq (TFIFO * fifo, uint8_t data)
 }
 
 static int
-fifo_get_irq (TFIFO * fifo)
+usb_getchar_irq (TFIFO * fifo)
 {
 	int res;
+
+	debug_printf ("G: ");
 
 	if (!fifo->count)
 		return -1;
@@ -68,69 +70,104 @@ fifo_get_irq (TFIFO * fifo)
 	if (fifo->tail == FIFO_SIZE)
 		fifo->tail = 0;
 
+	debug_printf ("%02X", res);
+
 	return res;
 }
 
-static inline void
-CDC_BulkIn_Handler (BOOL from_isr)
+int
+usb_get (uint8_t * data, int count)
 {
-	uint8_t *p;
-	uint32_t data;
-	uint16_t count;
+	int res, copied;
 
-	if (!from_isr)
-		__disable_irq ();
+	if (!count)
+		return 0;
 
-	if (!fifo_BulkIn.count)
-		CDC_DepInEmpty = 1;
-	else
+	copied = 0;
+
+	__disable_irq ();
+	while (count--)
 	{
-		if (fifo_BulkIn.count > USB_CDC_BUFSIZE)
-			count = USB_CDC_BUFSIZE;
-		else
-			count = fifo_BulkIn.count;
+		if ((res = usb_getchar_irq (&fifo_BulkOut)) < 0)
+			break;
 
-		USB_WriteEP_Count (CDC_DEP_IN, count);
-
-		while (count > 0)
-		{
-
-			if (count < (int) sizeof (data))
-			{
-				data = 0;
-				p = (uint8_t *) & data;
-				while (count--)
-					*p++ = fifo_get_irq (&fifo_BulkIn);
-			}
-			else
-			{
-				((uint8_t *) & data)[0] = fifo_get_irq (&fifo_BulkIn);
-				((uint8_t *) & data)[1] = fifo_get_irq (&fifo_BulkIn);
-				((uint8_t *) & data)[2] = fifo_get_irq (&fifo_BulkIn);
-				((uint8_t *) & data)[3] = fifo_get_irq (&fifo_BulkIn);
-				count -= 4;
-			}
-
-			USB_WriteEP_Block (data);
-		}
-		USB_WriteEP_Terminate (CDC_DEP_IN);
+		*data++ = (uint8_t) res;
+		copied++;
 	}
+	__enable_irq ();
 
-	if (!from_isr)
-		__enable_irq ();
+	return copied;
 }
 
-static inline void
-CDC_Flush (void)
+int
+usb_put (const uint8_t * data, int count)
 {
-	if (CDC_DepInEmpty)
-		CDC_BulkIn_Handler (FALSE);
+	int res, copied;
+
+	if (!count)
+		return 0;
+
+	copied = 0;
+
+	__disable_irq ();
+	while (count--)
+	{
+		if ((res = usb_putchar_irq (&fifo_BulkIn, *data++)) < 0)
+			break;
+
+		copied++;
+	}
+	__enable_irq ();
+
+	return copied;
 }
 
 void
 CDC_BulkIn (void)
 {
-	CDC_BulkIn_Handler (TRUE);
+	uint8_t *p;
+	uint32_t data;
+	uint16_t count;
+
+	if (!fifo_BulkIn.count)
+		return;
+
+	if (fifo_BulkIn.count > USB_CDC_BUFSIZE)
+		count = USB_CDC_BUFSIZE;
+	else
+		count = fifo_BulkIn.count;
+
+	USB_WriteEP_Count (CDC_DEP_IN, count);
+
+	while (count > 0)
+	{
+		if (count < (int) sizeof (data))
+		{
+			data = 0;
+			p = (uint8_t *) & data;
+			while (count--)
+				*p++ = usb_getchar_irq (&fifo_BulkIn);
+		}
+		else
+		{
+			((uint8_t *) & data)[0] = usb_getchar_irq (&fifo_BulkIn);
+			((uint8_t *) & data)[1] = usb_getchar_irq (&fifo_BulkIn);
+			((uint8_t *) & data)[2] = usb_getchar_irq (&fifo_BulkIn);
+			((uint8_t *) & data)[3] = usb_getchar_irq (&fifo_BulkIn);
+			count -= 4;
+		}
+		USB_WriteEP_Block (data);
+	}
+
+	USB_WriteEP_Terminate (CDC_DEP_IN);
+}
+
+static inline void
+CDC_Flush (void)
+{
+	__disable_irq ();
+	CDC_BulkIn ();
+	__enable_irq ();
 }
 
 void
@@ -138,11 +175,9 @@ CDC_BulkOut (void)
 {
 	int count, bs;
 	uint32_t block;
-	uint8_t *p, data;
+	uint8_t *p;
 
 	count = USB_ReadEP_Count (CDC_DEP_OUT);
-
-	debug_printf ("Out: ");
 
 	while (count > 0)
 	{
@@ -151,26 +186,18 @@ CDC_BulkOut (void)
 		count -= bs;
 		p = (unsigned char *) &block;
 		while (bs--)
-		{
-			data = *p++;
-			debug_printf (" %02X", data);
-			fifo_put_irq (&fifo_BulkOut, data);
-		}
+			usb_putchar_irq (&fifo_BulkOut, *p++);
 	}
-
-	debug_printf ("\n");
 
 	USB_ReadEP_Terminate (CDC_DEP_OUT);
 }
 
 void
-init_usbserial (void)
+usb_init (void)
 {
 	/* initialize buffers */
 	bzero (&fifo_BulkIn, sizeof (fifo_BulkIn));
 	bzero (&fifo_BulkOut, sizeof (fifo_BulkOut));
-
-	CDC_DepInEmpty = TRUE;
 
 	CDC_Init ();
 	/* USB Initialization */

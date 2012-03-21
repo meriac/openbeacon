@@ -43,13 +43,14 @@
 #define SYSTEM_CORE_CLOCK (SYSTEM_CRYSTAL_CLOCK*6)
 
 /* PN532 pin definitions */
-#ifdef  ENABLE_PN532_RFID
 #define PN532_RESET_PORT 1
 #define PN532_RESET_PIN 11
-#define PN532_CS_PORT 0
-#define PN532_CS_PIN 2
 #define PN532_IRQ_PORT 1
 #define PN532_IRQ_PIN 4
-#endif /*ENABLE_PN532_RFID */
+
+/* SPI_CS(io_port, io_pin, CPSDVSR frequency, mode) */
+#define SPI_CS_PN532 SPI_CS( 0, 2, 16, SPI_CS_MODE_SKIP_TX|SPI_CS_MODE_BIT_REVERSED )
+
+
 
 #endif/*__CONFIG_H__*/

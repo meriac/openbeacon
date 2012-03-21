@@ -23,7 +23,8 @@
 #include <openbeacon.h>
 #include "pmu.h"
 
-static uint32_t g_sysahbclkctrl;
+static volatile uint32_t g_sysahbclkctrl;
+static volatile uint8_t g_sleeping;
 
 #define MAINCLKSEL_IRC 0
 #define MAINCLKSEL_SYSPLL_IN 1
@@ -60,34 +61,22 @@ WAKEUP_IRQHandlerPIO0_8 (void)
 	/* select MISO function for PIO0_8 */
 	LPC_IOCON->PIO0_8 = 1;
 
+	g_sleeping = FALSE;
+
 	/* vodoo -NOP */
 	__NOP ();
 }
 
 void
-pmu_wait_ms (uint16_t ms)
+pmu_cancel_timer (void)
 {
-	LPC_IOCON->PIO0_8 = 2;
-
-	g_sysahbclkctrl = LPC_SYSCON->SYSAHBCLKCTRL;
-	LPC_SYSCON->SYSAHBCLKCTRL |= EN_CT16B0;
-
-	/* prepare 16B0 timer */
+	/* stop 16B0 timer */
 	LPC_TMR16B0->TCR = 2;
-	LPC_TMR16B0->PR = SYSTEM_CORE_CLOCK / SYSTEM_TMR16B0_PRESCALER;
-	LPC_TMR16B0->EMR = 2 << 4;
-	LPC_TMR16B0->MR0 = ms * 10;
-	/* enable IRQ, reset and timer stop in MR0 match */
-	LPC_TMR16B0->MCR = 7;
+	/* set 16B0 timer to 0 */
+	LPC_TMR16B0->TC = 0;
 
-	/* prepare sleep */
-	LPC_PMU->PCON = (1 << 11) | (1 << 8);
-	SCB->SCR &= ~SCB_SCR_SLEEPDEEP_Msk;
-
-	/* start timer */
-	LPC_TMR16B0->TCR = 1;
-	/* sleep */
-	__WFI ();
+	/* call IRQ handler */
+	WAKEUP_IRQHandlerPIO0_8 ();
 }
 
 void
@@ -132,12 +121,45 @@ pmu_sleep_ms (uint16_t ms)
 	/* start timer */
 	LPC_TMR16B0->TCR = 1;
 	/* sleep */
-	__WFI ();
+	g_sleeping = TRUE;
+	while (g_sleeping)
+		__WFI ();
 }
+
+void
+pmu_wait_ms (uint16_t ms)
+{
+	LPC_IOCON->PIO0_8 = 2;
+
+	g_sysahbclkctrl = LPC_SYSCON->SYSAHBCLKCTRL;
+	LPC_SYSCON->SYSAHBCLKCTRL |= EN_CT16B0;
+
+	/* prepare 16B0 timer */
+	LPC_TMR16B0->TCR = 2;
+	LPC_TMR16B0->PR = SYSTEM_CORE_CLOCK / SYSTEM_TMR16B0_PRESCALER;
+	LPC_TMR16B0->EMR = 2 << 4;
+	LPC_TMR16B0->MR0 = ms * 10;
+	/* enable IRQ, reset and timer stop in MR0 match */
+	LPC_TMR16B0->MCR = 7;
+
+	/* prepare sleep */
+	LPC_PMU->PCON = (1 << 11) | (1 << 8);
+	SCB->SCR &= ~SCB_SCR_SLEEPDEEP_Msk;
+
+	/* start timer */
+	LPC_TMR16B0->TCR = 1;
+	/* sleep */
+	g_sleeping = TRUE;
+	while (g_sleeping)
+		__WFI ();
+}
+
 
 void
 pmu_init (void)
 {
+	g_sleeping = FALSE;
+
 	/* reset 16B0 timer */
 	LPC_TMR16B0->TCR = 2;
 	/* Turn on the watchdog oscillator */
@@ -148,4 +170,12 @@ pmu_init (void)
 	LPC_SYSCON->STARTAPRP0 |= STARTxPRP0_PIO0_8;
 	LPC_SYSCON->STARTRSRP0CLR = STARTxPRP0_PIO0_8;
 	LPC_SYSCON->STARTERP0 |= STARTxPRP0_PIO0_8;
+
+	/* prepare 32B0 system timer */
+	LPC_SYSCON->SYSAHBCLKCTRL |= EN_CT32B0;
+	LPC_TMR32B0->TCR = 2;
+	LPC_TMR32B0->PR = SYSTEM_CRYSTAL_CLOCK / LPC_SYSCON->SYSAHBCLKDIV;
+	LPC_TMR32B0->EMR = 0;
+	/* start 32B0 timer */
+	LPC_TMR32B0->TCR = 1;
 }
