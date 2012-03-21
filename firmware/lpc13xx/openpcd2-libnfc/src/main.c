@@ -26,7 +26,7 @@
 
 #define PN532_FIFO_SIZE 64
 
-static uint8_t buffer_get[PN532_FIFO_SIZE+1];
+static uint8_t buffer_get[PN532_FIFO_SIZE + 1];
 
 inline static void
 pn532_init (void)
@@ -60,7 +60,7 @@ pn532_init (void)
 int
 main (void)
 {
-//	int count;
+//  int count;
 
 	/* Initialize GPIO (sets up clock) */
 	GPIOInit ();
