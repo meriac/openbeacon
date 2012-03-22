@@ -121,4 +121,6 @@ static inline uint32_t htonl(uint32_t x)
 #define ntohl(l) htonl(l)
 #define ntohs(s) htons(s)
 
+#define BIT_REVERSE(x) ((unsigned char)(__RBIT(x)>>24))
+
 #endif/*__OPENBEACON_H__*/

@@ -28,8 +28,6 @@
 #include "rfid.h"
 #include "pmu.h"
 
-#define BIT_REVERSE(x) ((unsigned char)(__RBIT(x)>>24))
-
 void rfid_reset(unsigned char reset)
 {
 	GPIOSetValue(PN532_RESET_PORT, PN532_RESET_PIN, reset ? 1 : 0);
