@@ -28,10 +28,24 @@
 
 static uint8_t buffer_get[PN532_FIFO_SIZE + 1];
 
+#if 0
+static uint8_t
+fifo_status (void)
+{
+	uint8_t res;
+	static const uint8_t pkt = 0x2;
+
+	spi_txrx (SPI_CS_PN532, &pkt, sizeof (pkt), &res, sizeof (res));
+
+	return res;
+}
+#endif
+
 int
 main (void)
 {
 	int count;
+	uint8_t data, *p;
 
 	/* Initialize GPIO (sets up clock) */
 	GPIOInit ();
@@ -45,7 +59,6 @@ main (void)
 	/* Set LED port pin to output */
 	GPIOSetDir (LED_PORT, LED_BIT, 1);
 	GPIOSetValue (LED_PORT, LED_BIT, LED_OFF);
-
 
 	/* UART setup */
 	UARTInit (115200, 0);
@@ -75,8 +88,34 @@ main (void)
 	{
 		if ((count = usb_get (&buffer_get[1], PN532_FIFO_SIZE)) > 0)
 		{
-			debug_printf ("HOST->PN532: %u bytes\n", count);
 			spi_txrx (SPI_CS_PN532, &buffer_get, count + 1, NULL, 0);
+
+			p = &buffer_get[1];
+			debug_printf("TX: ");
+			while(count--)
+				debug_printf(" %02X", *p++);
+			debug_printf("\n");
+		}
+
+		if (!GPIOGetValue (PN532_IRQ_PORT, PN532_IRQ_PIN))
+		{
+			data = 0x03;
+			spi_txrx (SPI_CS_PN532 | SPI_CS_MODE_SKIP_CS_DEASSERT, &data,
+					  sizeof (data), NULL, 0);
+
+			debug_printf("RX: ");
+			while (!GPIOGetValue (PN532_IRQ_PORT, PN532_IRQ_PIN))
+			{
+				spi_txrx ((SPI_CS_PN532 ^ SPI_CS_MODE_SKIP_TX) |
+						  SPI_CS_MODE_SKIP_CS_ASSERT |
+						  SPI_CS_MODE_SKIP_CS_DEASSERT, NULL, 0,
+						  &data, sizeof(data));
+
+				debug_printf(" %02X", data);
+			}
+			debug_printf("\n");
+
+			GPIOSetDir (PN532_CS_PORT, PN532_CS_PIN, 1);
 		}
 	}
 	return 0;
