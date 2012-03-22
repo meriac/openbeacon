@@ -32,9 +32,10 @@ typedef struct
 	uint16_t head, tail, count;
 } TFIFO;
 
-static TFIFO fifo_BulkIn, fifo_BulkOut;
+BOOL CDC_DepInEmpty;
+TFIFO fifo_BulkIn, fifo_BulkOut;
 
-static int
+int
 usb_putchar_irq (TFIFO * fifo, uint8_t data)
 {
 	if (fifo->count >= FIFO_SIZE)
@@ -51,7 +52,7 @@ usb_putchar_irq (TFIFO * fifo, uint8_t data)
 	return 0;
 }
 
-static int
+int
 usb_getchar_irq (TFIFO * fifo)
 {
 	int res;
@@ -95,26 +96,15 @@ usb_get (uint8_t * data, int count)
 }
 
 int
-usb_put (const uint8_t * data, int count)
+usb_putchar (uint8_t data)
 {
-	int res, copied;
-
-	if (!count)
-		return 0;
-
-	copied = 0;
+	int res;
 
 	__disable_irq ();
-	while (count--)
-	{
-		if ((res = usb_putchar_irq (&fifo_BulkIn, *data++)) < 0)
-			break;
-
-		copied++;
-	}
+	res = usb_putchar_irq (&fifo_BulkIn, data);
 	__enable_irq ();
 
-	return copied;
+	return res;
 }
 
 void
@@ -123,9 +113,6 @@ CDC_BulkIn (void)
 	uint8_t *p;
 	uint32_t data;
 	uint16_t count;
-
-	if (!fifo_BulkIn.count)
-		return;
 
 	if (fifo_BulkIn.count > USB_CDC_BUFSIZE)
 		count = USB_CDC_BUFSIZE;
@@ -157,8 +144,8 @@ CDC_BulkIn (void)
 	USB_WriteEP_Terminate (CDC_DEP_IN);
 }
 
-static inline void
-CDC_Flush (void)
+void
+usb_flush (void)
 {
 	__disable_irq ();
 	CDC_BulkIn ();

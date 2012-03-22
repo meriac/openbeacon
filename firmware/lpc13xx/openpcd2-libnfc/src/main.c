@@ -26,7 +26,7 @@
 
 #define PN532_FIFO_SIZE 64
 
-static uint8_t buffer_get[PN532_FIFO_SIZE + 1];
+uint8_t buffer_get[PN532_FIFO_SIZE + 1];
 
 #if 0
 static uint8_t
@@ -76,6 +76,7 @@ main (void)
 	/* release reset line after 400ms */
 	pmu_wait_ms (400);
 	GPIOSetValue (PN532_RESET_PORT, PN532_RESET_PIN, 1);
+
 	/* wait for PN532 to boot */
 	pmu_wait_ms (100);
 
@@ -91,10 +92,11 @@ main (void)
 			spi_txrx (SPI_CS_PN532, &buffer_get, count + 1, NULL, 0);
 
 			p = &buffer_get[1];
-			debug_printf("TX: ");
-			while(count--)
-				debug_printf(" %02X", *p++);
-			debug_printf("\n");
+
+			debug_printf ("TX: ");
+			while (count--)
+				debug_printf (" %02X", *p++);
+			debug_printf ("\n");
 		}
 
 		if (!GPIOGetValue (PN532_IRQ_PORT, PN532_IRQ_PIN))
@@ -103,19 +105,25 @@ main (void)
 			spi_txrx (SPI_CS_PN532 | SPI_CS_MODE_SKIP_CS_DEASSERT, &data,
 					  sizeof (data), NULL, 0);
 
-			debug_printf("RX: ");
+			debug_printf ("RX: ");
 			while (!GPIOGetValue (PN532_IRQ_PORT, PN532_IRQ_PIN))
 			{
 				spi_txrx ((SPI_CS_PN532 ^ SPI_CS_MODE_SKIP_TX) |
 						  SPI_CS_MODE_SKIP_CS_ASSERT |
 						  SPI_CS_MODE_SKIP_CS_DEASSERT, NULL, 0,
-						  &data, sizeof(data));
+						  &data, sizeof (data));
 
-				debug_printf(" %02X", data);
+				usb_putchar (data);
+
+				debug_printf (" %02X", data);
 			}
-			debug_printf("\n");
+
+			usb_putchar (0x00);
+			debug_printf (" 00\n");
 
 			GPIOSetDir (PN532_CS_PORT, PN532_CS_PIN, 1);
+
+			usb_flush ();
 		}
 	}
 	return 0;
