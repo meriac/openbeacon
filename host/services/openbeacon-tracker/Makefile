@@ -24,7 +24,7 @@ endif
 
 DEBUG   :=-O3
 CXXOPT  :=$(DEBUG) -ffunction-sections -fdata-sections
-CXXFLAGS:=-Werror -Wall -std=gnu++0x -D_REENTRANT -DPROGRAM_VERSION=\"$(PROGRAM_VERSION)\" -D PROGRAM_NAME=\"$(TARGET)\" $(ENCRYPTION_KEYS)
+CXXFLAGS:=-Werror -Wall -D_REENTRANT -DPROGRAM_VERSION=\"$(PROGRAM_VERSION)\" -D PROGRAM_NAME=\"$(TARGET)\" $(ENCRYPTION_KEYS)
 LDOPT   :=-Wl,--gc-sections
 LDFLAGS :=$(LIBS)
 OBJS    :=$(SOURCES:%.cpp=%.o)
