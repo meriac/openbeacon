@@ -151,7 +151,7 @@ bmMapHandleToItem::Add (bmHandle handle, pthread_mutex_t ** mutex)
 	{
 	  if (!map->handle)
 	    {
-	      map->mutex = PTHREAD_MUTEX_INITIALIZER;
+	      pthread_mutex_init (&map->mutex, NULL);
 	      if (mutex)
 		{
 		  pthread_mutex_lock (&map->mutex);
