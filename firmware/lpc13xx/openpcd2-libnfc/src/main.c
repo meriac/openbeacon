@@ -121,7 +121,7 @@ main (void)
 			usb_putchar (0x00);
 			debug_printf (" 00\n");
 
-			GPIOSetDir (PN532_CS_PORT, PN532_CS_PIN, 1);
+			spi_txrx ( SPI_CS_PN532 | SPI_CS_MODE_SKIP_CS_ASSERT, NULL, 0, NULL, 0);
 
 			usb_flush ();
 		}
