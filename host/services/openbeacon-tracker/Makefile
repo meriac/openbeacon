@@ -69,7 +69,7 @@ $(FILTER): src/$(FILTER).cpp
 	$(CXX) $(CXXFLAGS) $(CXXOPT) $(LDOPT) -lz $^ -o $@
 
 indent: $(SOURCES)
-	indent -c81 -i4 -cli4 -bli0 -ts 4 $+
+	find src -iname '*\.[cph]*' -exec indent -c81 -i4 -cli4 -bli0 -ts 4 \{\} \;
 	rm -f src/*~
 
 $(TARGET): .depend $(OBJS)

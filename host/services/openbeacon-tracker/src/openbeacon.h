@@ -69,102 +69,102 @@
 
 typedef struct
 {
-  u_int8_t proto, proto2;
-  u_int8_t flags, strength;
-  u_int32_t seq;
-  u_int32_t oid;
-  u_int16_t reserved;
-  u_int16_t crc;
+	u_int8_t proto, proto2;
+	u_int8_t flags, strength;
+	u_int32_t seq;
+	u_int32_t oid;
+	u_int16_t reserved;
+	u_int16_t crc;
 } PACKED TBeaconTrackerOld;
 
 typedef struct
 {
-  u_int8_t strength;
-  u_int16_t oid_last_seen;
-  u_int16_t powerup_count;
-  u_int8_t reserved;
-  u_int32_t seq;
+	u_int8_t strength;
+	u_int16_t oid_last_seen;
+	u_int16_t powerup_count;
+	u_int8_t reserved;
+	u_int32_t seq;
 } PACKED TBeaconTracker;
 
 typedef struct
 {
-  uint8_t strength;
-  uint16_t oid_last_seen;
-  uint16_t time;
-  uint8_t battery;
-  uint32_t seq;
+	uint8_t strength;
+	uint16_t oid_last_seen;
+	uint16_t time;
+	uint8_t battery;
+	uint32_t seq;
 } PACKED TBeaconTrackerExt;
 
 typedef struct
 {
-  u_int16_t oid_prox[PROX_MAX];
-  u_int16_t seq;
+	u_int16_t oid_prox[PROX_MAX];
+	u_int16_t seq;
 } PACKED TBeaconProx;
 
 typedef struct
 {
-  u_int8_t opcode, res;
-  u_int32_t data[2];
+	u_int8_t opcode, res;
+	u_int32_t data[2];
 } PACKED TBeaconReaderCommand;
 
 typedef struct
 {
-  u_int8_t opcode, strength;
-  u_int32_t uptime, ip;
+	u_int8_t opcode, strength;
+	u_int32_t uptime, ip;
 } PACKED TBeaconReaderAnnounce;
 
 typedef union
 {
-  TBeaconProx prox;
-  TBeaconTracker tracker;
-  TBeaconTrackerExt trackerExt;
-  TBeaconReaderCommand reader_command;
-  TBeaconReaderAnnounce reader_announce;
+	TBeaconProx prox;
+	TBeaconTracker tracker;
+	TBeaconTrackerExt trackerExt;
+	TBeaconReaderCommand reader_command;
+	TBeaconReaderAnnounce reader_announce;
 } PACKED TBeaconPayload;
 
 typedef struct
 {
-  u_int8_t proto;
-  u_int16_t oid;
-  u_int8_t flags;
+	u_int8_t proto;
+	u_int16_t oid;
+	u_int8_t flags;
 
-  TBeaconPayload p;
+	TBeaconPayload p;
 
-  u_int16_t crc;
+	u_int16_t crc;
 } PACKED TBeaconWrapper;
 
 typedef union
 {
-  u_int8_t proto;
-  TBeaconWrapper pkt;
-  TBeaconTrackerOld old;
-  u_int32_t block[XXTEA_BLOCK_COUNT];
-  u_int8_t byte[XXTEA_BLOCK_COUNT * 4];
+	u_int8_t proto;
+	TBeaconWrapper pkt;
+	TBeaconTrackerOld old;
+	u_int32_t block[XXTEA_BLOCK_COUNT];
+	u_int8_t byte[XXTEA_BLOCK_COUNT * 4];
 } PACKED TBeaconEnvelope;
 
 typedef struct
 {
-  u_int32_t timestamp;
-  u_int32_t ip;
-  TBeaconEnvelope env;
+	u_int32_t timestamp;
+	u_int32_t ip;
+	TBeaconEnvelope env;
 } PACKED TBeaconEnvelopeLog;
 
 typedef struct
 {
-  u_int16_t icrc16;
-  u_int8_t protocol;
-  u_int8_t interface;
-  u_int16_t reader_id;
-  u_int16_t size;
+	u_int16_t icrc16;
+	u_int8_t protocol;
+	u_int8_t interface;
+	u_int16_t reader_id;
+	u_int16_t size;
 } PACKED TBeaconNetworkHdr;
 
 /* BEACONLOG_SIGHTING */
 typedef struct
 {
-  TBeaconNetworkHdr hdr;
-  u_int32_t sequence;
-  u_int32_t timestamp;
-  TBeaconEnvelope log;
+	TBeaconNetworkHdr hdr;
+	u_int32_t sequence;
+	u_int32_t timestamp;
+	TBeaconEnvelope log;
 } PACKED TBeaconLogSighting;
 
 #endif/*__OPENBEACON_H__*/

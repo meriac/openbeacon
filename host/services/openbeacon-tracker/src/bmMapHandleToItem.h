@@ -31,32 +31,34 @@
 #define HASH_MAP_INDEX_SIZE 0x100000
 
 typedef uint64_t bmHandle;
-typedef void (*bmIterationCallback) (void *Item, double timestamp, bool realtime);
+typedef void (*bmIterationCallback) (void *Item, double timestamp,
+									 bool realtime);
 
 typedef struct
 {
-  bmHandle handle;
-  pthread_mutex_t mutex;
-  void *data;
+	bmHandle handle;
+	pthread_mutex_t mutex;
+	void *data;
 } bmHandleMap;
 
 class bmMapHandleToItem
 {
-private:
-  int m_ItemSize;
-  int m_MapIteratePos;
-  bmHandleMap m_Map[HASH_MAP_INDEX_SIZE];
-  bmHandleMap *m_MapIterate[HASH_MAP_INDEX_SIZE];
-  bmHandleMap *HashMap (bmHandle handle);
-public:
-    bmMapHandleToItem (void);
-   ~bmMapHandleToItem (void);
-  bool SetItemSize (int ItemSize);
-  int GetItemSize (void);
-  int GetItemCount (void);
-  void *Find (bmHandle handle, pthread_mutex_t ** mutex);
-  void *Add (bmHandle handle, pthread_mutex_t ** mutex);
-  int IterateLocked (bmIterationCallback Callback, double timestamp, bool realtime);
+  private:
+	int m_ItemSize;
+	int m_MapIteratePos;
+	bmHandleMap m_Map[HASH_MAP_INDEX_SIZE];
+	bmHandleMap *m_MapIterate[HASH_MAP_INDEX_SIZE];
+	bmHandleMap *HashMap (bmHandle handle);
+  public:
+	  bmMapHandleToItem (void);
+	 ~bmMapHandleToItem (void);
+	bool SetItemSize (int ItemSize);
+	int GetItemSize (void);
+	int GetItemCount (void);
+	void *Find (bmHandle handle, pthread_mutex_t ** mutex);
+	void *Add (bmHandle handle, pthread_mutex_t ** mutex);
+	int IterateLocked (bmIterationCallback Callback, double timestamp,
+					   bool realtime);
 };
 
 #endif/*__BMMAPHANDLETOITEM_H__*/
