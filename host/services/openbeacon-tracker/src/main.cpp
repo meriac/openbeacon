@@ -1151,7 +1151,7 @@ parse_pcap (const char *file, bool realtime)
 					udp_hdr = (const udphdr *) packet;
 
 					/* get UDP packet payload size */
-#ifdef __FAVOR_BSD
+#ifdef __APPLE__
 					len = udp_hdr->uh_ulen;
 #else
 					len = udp_hdr->len;
