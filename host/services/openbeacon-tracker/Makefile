@@ -23,9 +23,8 @@ else
 endif
 
 DEBUG   :=-O3
-CXXOPT  :=$(DEBUG) -ffunction-sections -fdata-sections
-CXXFLAGS:=-Werror -Wall -D_REENTRANT -DPROGRAM_VERSION=\"$(PROGRAM_VERSION)\" -D PROGRAM_NAME=\"$(TARGET)\" $(ENCRYPTION_KEYS)
-LDOPT   :=-Wl,--gc-sections
+CXXOPT  :=$(DEBUG)
+CXXFLAGS:=-Werror -Wall -D_REENTRANT -DPROGRAM_VERSION=\"$(PROGRAM_VERSION)\" -DPROGRAM_NAME=\"$(TARGET)\" $(ENCRYPTION_KEYS)
 LDFLAGS :=$(LIBS)
 OBJS    :=$(SOURCES:%.cpp=%.o)
 LOGJSON :=$(LOGFILE:%.bin=%.json.bz2)
@@ -70,8 +69,8 @@ $(FILTER): src/$(FILTER).cpp
 	$(CXX) $(CXXFLAGS) $(CXXOPT) $(LDOPT) -lz $^ -o $@
 
 indent: $(SOURCES)
-	indent $+
-	rm -f *~
+	indent -c81 -i4 -cli4 -bli0 -ts 4 $+
+	rm -f src/*~
 
 $(TARGET): .depend $(OBJS)
 	$(CXX) $(LDFLAGS) $(LDOPT) $(OBJS) -o $@

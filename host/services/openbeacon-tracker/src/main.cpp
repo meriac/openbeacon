@@ -1120,7 +1120,12 @@ parse_pcap (const char *file, bool realtime)
 		udp_hdr = (const udphdr *) packet;
 
 		/* get UDP packet payload size */
-		len = ntohs (udp_hdr->len) - sizeof (udphdr);
+#ifdef __FAVOR_BSD
+		len = udp_hdr->uh_ulen;
+#else
+		len = udp_hdr->len;
+#endif
+		len = ntohs (len) - sizeof (udphdr);
 		packet += sizeof (udphdr);
 
 		/* run estimation every second */
