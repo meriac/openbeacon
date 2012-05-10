@@ -47,16 +47,16 @@
 static inline void
 prvSetupHardware (void)
 {
-  /*  When using the JTAG debugger the hardware is not always initialised to
-     the correct default state.  This line just ensures that this does not
-     cause all interrupts to be masked at the start. */
-  AT91C_BASE_AIC->AIC_EOICR = 0;
+	/*  When using the JTAG debugger the hardware is not always initialised to
+	   the correct default state.  This line just ensures that this does not
+	   cause all interrupts to be masked at the start. */
+	AT91C_BASE_AIC->AIC_EOICR = 0;
 
-  /*  Enable the peripheral clock. */
-  AT91C_BASE_PMC->PMC_PCER =
-    (1 << AT91C_ID_PIOA) |
-    (1 << AT91C_ID_PIOB) | (1 << AT91C_ID_EMAC) |
-    (1 << AT91C_ID_SPI0) | (1 << AT91C_ID_SPI1);
+	/*  Enable the peripheral clock. */
+	AT91C_BASE_PMC->PMC_PCER =
+		(1 << AT91C_ID_PIOA) |
+		(1 << AT91C_ID_PIOB) | (1 << AT91C_ID_EMAC) |
+		(1 << AT91C_ID_SPI0) | (1 << AT91C_ID_SPI1);
 }
 
 /**********************************************************************/
@@ -64,8 +64,8 @@ void
 vApplicationIdleHook (void)
 {
 #ifndef DISABLE_WATCHDOG
-  /* Restart watchdog, has been enabled in Cstartup_SAM7.c */
-  AT91F_WDTRestart (AT91C_BASE_WDTC);
+	/* Restart watchdog, has been enabled in Cstartup_SAM7.c */
+	AT91F_WDTRestart (AT91C_BASE_WDTC);
 #endif /*DISABLE_WATCHDOG */
 }
 
@@ -73,23 +73,23 @@ vApplicationIdleHook (void)
 void
 vDebugSendHook (char data)
 {
-  vUSBSendByte (data);
+	vUSBSendByte (data);
 }
 
 /**********************************************************************/
 void __attribute__ ((noreturn)) mainloop (void)
 {
-  prvSetupHardware ();
-  vLedInit ();
+	prvSetupHardware ();
+	vLedInit ();
 
-  PtCmdInit ();
-  vNetworkInit ();
-  PtInitProtocol ();
+	PtCmdInit ();
+	vNetworkInit ();
+	PtInitProtocol ();
 
-  xTaskCreate (vUSBCDCTask, (signed portCHAR *) "USB", TASK_USB_STACK,
-	       NULL, TASK_USB_PRIORITY, NULL);
+	xTaskCreate (vUSBCDCTask, (signed portCHAR *) "USB", TASK_USB_STACK,
+				 NULL, TASK_USB_PRIORITY, NULL);
 
-  vTaskStartScheduler ();
+	vTaskStartScheduler ();
 
-  while (1);
+	while (1);
 }

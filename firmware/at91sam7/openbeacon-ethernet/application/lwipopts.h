@@ -32,7 +32,7 @@
 #ifndef __LWIPOPTS_H__
 #define __LWIPOPTS_H__
 
-#define LWIP_NOASSERT 1		// To suppress some errors for now (no debug output)
+#define LWIP_NOASSERT 1															// To suppress some errors for now (no debug output)
 #define SYS_LIGHTWEIGHT_PROT            1
 
 //#define LWIP_DEBUG

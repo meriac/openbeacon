@@ -32,14 +32,14 @@ extern TBeaconLogSighting g_Beacon;
 static inline unsigned short
 PtSwapShort (unsigned short src)
 {
-  return (src >> 8) | (src << 8);
+	return (src >> 8) | (src << 8);
 }
 
 static inline unsigned long
 PtSwapLong (unsigned long src)
 {
-  return (src >> 24) |
-    (src << 24) | ((src >> 8) & 0x0000FF00) | ((src << 8) & 0x00FF0000);
+	return (src >> 24) |
+		(src << 24) | ((src >> 8) & 0x0000FF00) | ((src << 8) & 0x00FF0000);
 }
 
 extern void PtInitProtocol (void);
