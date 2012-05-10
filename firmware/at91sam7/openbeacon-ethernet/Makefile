@@ -53,6 +53,10 @@ all: README $(TARGET).bin
 README: .readme
 	groff -Tascii $< >$@
 
+indent:
+	for FILE in application/*.[ch] config/*.[ch]; do indent -c81 -i4 -cli4 -bli0 -ts 4 $$FILE; done
+	rm -f application/*.[ch]~ config/*.[ch]~
+
 app_clean:
 	find application network config -name '*.o' -exec rm \{\} \;
 	find application network config -name '*~'  -exec rm \{\} \;
