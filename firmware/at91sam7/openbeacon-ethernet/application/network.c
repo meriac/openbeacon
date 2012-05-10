@@ -176,21 +176,31 @@ static void
 vNetworkReceive (void *arg, struct udp_pcb *pcb, struct pbuf *p,
 				 struct ip_addr *addr, u16_t port)
 {
-	int dbg = PtGetDebugLevel ();
+	int dbg;
+	struct pbuf *buf;
+	const char msg[] = "Hello World!\n\r.";
 
 	if (!p)
 		return;
 
-	if (dbg)
+	if ((dbg = PtGetDebugLevel ()) != 0)
 	{
 		debug_printf ("RX'ed %i bytes from %s:%i\n", p->len,
 					  vNetworkNTOA (*addr), port);
 
 		if (p->len == p->tot_len)
 			hex_dump (p->payload, 0, p->len);
-
-		pbuf_free (p);
 	}
+
+	buf = pbuf_alloc (PBUF_TRANSPORT, sizeof (msg), PBUF_REF);
+	if (buf)
+	{
+		buf->payload = &msg;
+		udp_sendto (pcb, buf, addr, port);
+		pbuf_free (buf);
+	}
+
+	pbuf_free (p);
 }
 
 static void
