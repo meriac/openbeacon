@@ -67,6 +67,13 @@ PtSetDebugLevel (int Level)
 }
 
 /**********************************************************************/
+int
+PtGetDebugLevel (void)
+{
+  return pt_debug_level;
+}
+
+/**********************************************************************/
 void
 PtSetRfPowerLevel (unsigned char Level)
 {

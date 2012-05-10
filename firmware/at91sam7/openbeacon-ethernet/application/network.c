@@ -173,6 +173,25 @@ vNetworkDumpConfig (void)
 }
 
 static void
+vNetworkReceive (void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr *addr, u16_t port)
+{
+  int dbg = PtGetDebugLevel ();
+
+  if(!p)
+	return;
+
+  if(dbg)
+  {
+	debug_printf( "RX'ed %i bytes from %s:%i\n",p->len, vNetworkNTOA(*addr), port);
+
+	if(p->len == p->tot_len)
+		hex_dump ( p->payload, 0, p->len );
+
+	pbuf_free(p);
+  }
+}
+
+static void
 vNetworkThread (void *pvParameters)
 {
   (void) pvParameters;
@@ -226,6 +245,8 @@ vNetworkThread (void *pvParameters)
 
   /* setup server response UDP packet */
   vNetworkSocket = udp_new ();
+  udp_bind(vNetworkSocket, IP_ADDR_ANY, env.e.ip_server_port);
+  udp_recv(vNetworkSocket, vNetworkReceive, NULL);
   vNetworkSocketBuf = pbuf_alloc (PBUF_TRANSPORT, sizeof (g_Beacon), PBUF_REF);
 
   while (pdTRUE)

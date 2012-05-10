@@ -44,6 +44,7 @@ PtSwapLong (unsigned long src)
 
 extern void PtInitProtocol (void);
 extern void PtSetDebugLevel (int Level);
+extern int PtGetDebugLevel (void);
 extern void PtStatusRxTx (void);
 extern void PtSetRfPowerLevel (unsigned char Level);
 extern unsigned char PtGetRfPowerLevel (void);
