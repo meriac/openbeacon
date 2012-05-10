@@ -616,9 +616,8 @@ spi_start_bus_exclusive (spi_device * device)
 	AT91F_SPI_CfgCs (AT91C_BASE_SPI, device->cs,
 					 device->config | AT91C_SPI_CSAAT);
 	AT91C_BASE_SPI->SPI_MR =
-		(AT91C_BASE_SPI->
-		 SPI_MR & ~(0x000F0000)) | ((~(1L << (device->cs + 16))) &
-									0x000F0000);
+		(AT91C_BASE_SPI->SPI_MR & ~(0x000F0000)) |
+		((~(1L << (device->cs + 16))) & 0x000F0000);
 
 	bus_exclusive |= 1L << device->cs;
 	device->flags.bus_exclusive = 1;
