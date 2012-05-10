@@ -141,7 +141,7 @@
 #define IP_AUTOCONFIG_READER_ID 1
 #define IP_AUTOCONFIG_DHCP 2
 /*-------------------------------*/
-#define SERVER_LOCAL_UDP PORT 4223
+#define DEFAULT_SERVER_PORT 2342
 /*-------------------------------*/
 
 typedef struct

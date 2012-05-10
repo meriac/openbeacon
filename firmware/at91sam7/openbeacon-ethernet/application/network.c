@@ -257,7 +257,7 @@ vNetworkThread (void *pvParameters)
 
 	/* setup server response UDP packet */
 	vNetworkSocket = udp_new ();
-	udp_bind (vNetworkSocket, IP_ADDR_ANY, env.e.ip_server_port);
+	udp_bind (vNetworkSocket, IP_ADDR_ANY, DEFAULT_SERVER_PORT);
 	udp_recv (vNetworkSocket, vNetworkReceive, NULL);
 	vNetworkSocketBuf =
 		pbuf_alloc (PBUF_TRANSPORT, sizeof (g_Beacon), PBUF_REF);
@@ -289,7 +289,7 @@ vNetworkResetDefaultSettings (void)
 	bzero (&env, sizeof (env));
 	env.e.reader_id = 0;
 	env.e.ip_autoconfig = IP_AUTOCONFIG_READER_ID;
-	env.e.ip_server_port = 2342;
+	env.e.ip_server_port = DEFAULT_SERVER_PORT;
 	env.e.filter_duplicates = pdTRUE;
 	IP4_ADDR (&env.e.ip_host, 10, 254, 0, 0);
 	IP4_ADDR (&env.e.ip_netmask, 255, 255, 0, 0);
