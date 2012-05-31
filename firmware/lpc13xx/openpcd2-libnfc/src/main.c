@@ -27,24 +27,12 @@
 #define PN532_FIFO_SIZE 64
 
 uint8_t buffer_get[PN532_FIFO_SIZE + 1];
-
-#if 0
-static uint8_t
-fifo_status (void)
-{
-	uint8_t res;
-	static const uint8_t pkt = 0x2;
-
-	spi_txrx (SPI_CS_PN532, &pkt, sizeof (pkt), &res, sizeof (res));
-
-	return res;
-}
-#endif
+uint8_t buffer_put[PN532_FIFO_SIZE + 1];
 
 int
 main (void)
 {
-	int count;
+	int i,count;
 	uint8_t data, *p;
 
 	/* Initialize GPIO (sets up clock) */
@@ -83,29 +71,38 @@ main (void)
 	/* run RFID loop */
 	buffer_get[0] = 0x01;
 
+	debug_printf ("OpenPCD2 lives\n");
+
 	/* show LED to signal initialization */
 	GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
+	pmu_wait_ms (500);
+
 	while (1)
 	{
 		if ((count = usb_get (&buffer_get[1], PN532_FIFO_SIZE)) > 0)
 		{
-			spi_txrx (SPI_CS_PN532, &buffer_get, count + 1, NULL, 0);
-
 			p = &buffer_get[1];
-
 			debug_printf ("TX: ");
-			while (count--)
-				debug_printf (" %02X", *p++);
+			for(i=0;i<count;i++)
+				debug_printf ("%c%02X", i==6?'*':' ', *p++);
 			debug_printf ("\n");
+
+			spi_txrx (SPI_CS_PN532, &buffer_get, count, NULL, 0);
 		}
+
+		GPIOSetValue (LED_PORT, LED_BIT, GPIOGetValue (PN532_IRQ_PORT, PN532_IRQ_PIN));
 
 		if (!GPIOGetValue (PN532_IRQ_PORT, PN532_IRQ_PIN))
 		{
+			p = buffer_put;
+			debug_printf ("RX: ");
+
 			data = 0x03;
+
 			spi_txrx (SPI_CS_PN532 | SPI_CS_MODE_SKIP_CS_DEASSERT, &data,
 					  sizeof (data), NULL, 0);
 
-			debug_printf ("RX: ");
+			i = 0;
 			while (!GPIOGetValue (PN532_IRQ_PORT, PN532_IRQ_PIN))
 			{
 				spi_txrx ((SPI_CS_PN532 ^ SPI_CS_MODE_SKIP_TX) |
@@ -113,17 +110,21 @@ main (void)
 						  SPI_CS_MODE_SKIP_CS_DEASSERT, NULL, 0,
 						  &data, sizeof (data));
 
-				usb_putchar (data);
-
+				usb_putchar  (data);
 				debug_printf (" %02X", data);
+				i++;
 			}
-
-			usb_putchar (0x00);
-			debug_printf (" 00\n");
-
 			spi_txrx ( SPI_CS_PN532 | SPI_CS_MODE_SKIP_CS_ASSERT, NULL, 0, NULL, 0);
 
-			usb_flush ();
+			if(i)
+			{
+				usb_putchar  (0x00);
+				usb_flush ();
+				debug_printf ("-00");
+			}
+			debug_printf ("\n");
+
+
 		}
 	}
 	return 0;

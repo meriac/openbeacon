@@ -114,6 +114,9 @@ CDC_BulkIn (void)
 	uint32_t data;
 	uint16_t count;
 
+	if (!fifo_BulkIn.count)
+		return;
+
 	if (fifo_BulkIn.count > USB_CDC_BUFSIZE)
 		count = USB_CDC_BUFSIZE;
 	else
@@ -127,8 +130,11 @@ CDC_BulkIn (void)
 		{
 			data = 0;
 			p = (uint8_t *) & data;
-			while (count--)
+			while (count)
+			{
+				count--;
 				*p++ = usb_getchar_irq (&fifo_BulkIn);
+			}
 		}
 		else
 		{
