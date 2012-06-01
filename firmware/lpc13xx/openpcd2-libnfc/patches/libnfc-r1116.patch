@@ -1,0 +1,13 @@
+Index: libnfc/buses/uart_posix.c
+===================================================================
+--- libnfc/buses/uart_posix.c	(Revision 1116)
++++ libnfc/buses/uart_posix.c	(Arbeitskopie)
+@@ -51,7 +51,7 @@
+ #  elif defined (__FreeBSD__) || defined (__OpenBSD__)
+ char *serial_ports_device_radix[] = { "cuaU", "cuau", NULL };
+ #  elif defined (__linux__)
+-char *serial_ports_device_radix[] = { "ttyUSB", "ttyS", NULL };
++char *serial_ports_device_radix[] = { "ttyACM", NULL };
+ #  else
+ #    error "Can't determine serial string for your system"
+ #  endif
