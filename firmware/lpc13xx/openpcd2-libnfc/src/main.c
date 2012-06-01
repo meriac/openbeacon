@@ -29,8 +29,11 @@
 static uint8_t buffer_get[PN532_FIFO_SIZE + 1];
 static const uint8_t hsu_wakeup[] = {0x55, 0x55, 0x00, 0x00 ,0x00};
 
-#define debug(...) {}
-//#define debug(args...) debug_printf(args)
+#ifdef  DEBUG
+#  define debug(args...) debug_printf(args)
+#else /* no DEBUG enable - remove debug code */
+#  define debug(...) {}
+#endif/*DEBUG*/
 
 int
 main (void)
@@ -74,7 +77,7 @@ main (void)
 	/* run RFID loop */
 	buffer_get[0] = 0x01;
 
-	debug_printf ("OpenPCD2 lives\n");
+	debug_printf ("OpenPCD2 v" PROGRAM_VERSION "\n");
 
 	/* show LED to signal initialization */
 	GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
