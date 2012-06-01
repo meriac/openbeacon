@@ -79,19 +79,6 @@ main (void)
 
 	while (1)
 	{
-		if ((count = usb_get (&buffer_get[1], PN532_FIFO_SIZE)) > 0)
-		{
-			p = &buffer_get[1];
-			debug_printf ("TX: ");
-			for(i=0;i<count;i++)
-				debug_printf ("%c%02X", i==6?'*':' ', *p++);
-			debug_printf ("\n");
-
-			spi_txrx (SPI_CS_PN532, &buffer_get, count, NULL, 0);
-		}
-
-		GPIOSetValue (LED_PORT, LED_BIT, GPIOGetValue (PN532_IRQ_PORT, PN532_IRQ_PIN));
-
 		if (!GPIOGetValue (PN532_IRQ_PORT, PN532_IRQ_PIN))
 		{
 			p = buffer_put;
@@ -124,7 +111,17 @@ main (void)
 			}
 			debug_printf ("\n");
 
+		}
 
+		if ((count = usb_get (&buffer_get[1], PN532_FIFO_SIZE)) > 0)
+		{
+			p = &buffer_get[1];
+			debug_printf ("TX: ");
+			for(i=0;i<count;i++)
+				debug_printf ("%c%02X", i==6?'*':' ', *p++);
+			debug_printf ("\n");
+
+			spi_txrx (SPI_CS_PN532, &buffer_get, count+1, NULL, 0);
 		}
 	}
 	return 0;
