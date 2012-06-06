@@ -91,12 +91,6 @@ loop_rfid (void)
   uint32_t counter;
   static unsigned char data[80];
 
-  /* release reset line after 400ms */
-  pmu_wait_ms (400);
-  rfid_reset (1);
-  /* wait for PN532 to boot */
-  pmu_wait_ms (100);
-
   /* fully initialized */
   GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
 
@@ -157,9 +151,6 @@ main (void)
   GPIOSetDir (LED_PORT, LED_BIT, 1);
   GPIOSetValue (LED_PORT, LED_BIT, LED_OFF);
 
-  /* Init RFID */
-  rfid_init ();
-
   /* Init Power Management Routines */
   pmu_init ();
 
@@ -168,6 +159,9 @@ main (void)
 
   /* CDC USB Initialization */
   init_usbserial ();
+
+  /* Init RFID */
+  rfid_init ();
 
   /* RUN RFID loop */
   loop_rfid ();
