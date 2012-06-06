@@ -24,10 +24,10 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
-#define LED_PORT 1	/* Port for led                      */
-#define LED_BIT 9	/* Bit on port for led               */
-#define LED_ON 1	/* Level to set port to turn on led  */
-#define LED_OFF 0	/* Level to set port to turn off led */
+#define LED_PORT 1																/* Port for led                      */
+#define LED_BIT 9																/* Bit on port for led               */
+#define LED_ON 1																/* Level to set port to turn on led  */
+#define LED_OFF 0																/* Level to set port to turn off led */
 
 #define ENABLE_USB_FULLFEATURED
 #define ENABLE_PN532_RFID
@@ -37,7 +37,7 @@
 #define USB_VENDOR_ID	0x2366
 #define USB_PROD_ID	0x0003
 #define USB_DEVICE	0x0100
-#endif/*ENABLE_USB_FULLFEATURED*/
+#endif /*ENABLE_USB_FULLFEATURED */
 
 /* Clock Definition */
 #define SYSTEM_CRYSTAL_CLOCK 12000000
@@ -49,6 +49,6 @@
 #define PN532_RESET_PIN 11
 #define PN532_CS_PORT 0
 #define PN532_CS_PIN 2
-#endif/*ENABLE_PN532_RFID*/
+#endif /*ENABLE_PN532_RFID */
 
 #endif/*__CONFIG_H__*/
