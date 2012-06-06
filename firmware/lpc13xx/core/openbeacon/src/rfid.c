@@ -2,7 +2,7 @@
  *
  * OpenBeacon.org - PN532 routines for LPC13xx based OpenPCD2
  *
- * Copyright 2010 Milosch Meriac <meriac@openbeacon.de>
+ * Copyright 2010-2012 Milosch Meriac <meriac@openbeacon.de>
  *
  ***************************************************************
 
@@ -38,35 +38,22 @@ static void rfid_cs(unsigned char cs)
 	GPIOSetValue(PN532_CS_PORT, PN532_CS_PIN, cs ? 1 : 0);
 }
 
-static unsigned char rfid_tx(unsigned char data)
+static void rfid_tx(unsigned char data)
 {
-	while ((LPC_SSP->SR & 0x02) == 0);
-	LPC_SSP->DR = BIT_REVERSE (data);
-	while ((LPC_SSP->SR & 0x04) == 0);
-	data = BIT_REVERSE (LPC_SSP->DR);
-	return data;
+	spi_txrx ((SPI_CS_PN532 ^ SPI_CS_MODE_SKIP_TX) |
+		SPI_CS_MODE_SKIP_CS_ASSERT |
+		SPI_CS_MODE_SKIP_CS_DEASSERT, &data, sizeof (data), NULL, 0);
 }
 
 static unsigned char rfid_rx(void)
 {
-	return rfid_tx(0x00);
-}
+	unsigned char data;
+	spi_txrx ((SPI_CS_PN532 ^ SPI_CS_MODE_SKIP_TX) |
+		SPI_CS_MODE_SKIP_CS_ASSERT |
+		SPI_CS_MODE_SKIP_CS_DEASSERT, NULL, 0, &data, sizeof (data));
 
-static unsigned char rfid_status(void)
-{
-	unsigned char res;
 
-	/* enable chip select */
-	rfid_cs(0);
-
-	/* transmit status request */
-	rfid_tx(0x02);
-	res = rfid_rx();
-
-	/* release chip select */
-	rfid_cs(1);
-
-	return res;
+	return data;
 }
 
 int rfid_read(void *data, unsigned char size)
@@ -76,12 +63,14 @@ int rfid_read(void *data, unsigned char size)
 
 	/* wait 100ms max till PN532 response is ready */
 	t=0;
-	while ((rfid_status() & 1) == 0)
+	while ( GPIOGetValue (PN532_IRQ_PORT, PN532_IRQ_PIN) )
 	{
 		if(t++>10)
 			return -8;
 		pmu_wait_ms( 10 );
 	}
+
+	debug ("RI: ");
 
 	/* enable chip select */
 	rfid_cs(0);
@@ -151,6 +140,8 @@ int rfid_read(void *data, unsigned char size)
 						{
 							/* read data */
 							c = rfid_rx();
+							debug (" %02X", c);
+
 							/* maintain crc */
 							crc += c;
 							/* save payload */
@@ -177,6 +168,8 @@ int rfid_read(void *data, unsigned char size)
 	}
 	rfid_cs(1);
 
+	debug (" [%i]\n", res);
+
 	/* everything fine */
 	return res;
 }
@@ -192,6 +185,8 @@ int rfid_write(const void *data, int len)
 	if (!data)
 		len = 0xFF;
 
+	debug ("TI: ");
+
 	/* enable chip select */
 	rfid_cs(0);
 
@@ -206,6 +201,8 @@ int rfid_write(const void *data, int len)
 	while (len--)
 	{
 		c = *p++;
+		debug (" %02X", c);
+
 		rfid_tx(c);
 		tfi += c;
 	}
@@ -214,6 +211,8 @@ int rfid_write(const void *data, int len)
 
 	/* release chip select */
 	rfid_cs(1);
+
+	debug ("\n");
 
 	/* check for ack */
 	return rfid_read(NULL, 0);
@@ -263,36 +262,27 @@ int rfid_read_register(unsigned short address)
 	    return res;
 }
 
-
 void rfid_init(void)
 {
-	/* reset SSP peripheral */
-	LPC_SYSCON->PRESETCTRL = 0x01;
-
-	/* Enable SSP clock */
-	LPC_SYSCON->SYSAHBCLKCTRL |= (1 << 11);
-
-	// Enable SSP peripheral
-	LPC_IOCON->PIO0_8 = 0x01 | (0x01 << 3); /* MISO, Pulldown */
-	LPC_IOCON->PIO0_9 = 0x01; /* MOSI */
-
-	LPC_IOCON->SCKLOC = 0x00; /* route to PIO0_10 */
-	LPC_IOCON->JTAG_TCK_PIO0_10 = 0x02; /* SCK */
-
-	/* Set SSP clock to 4.5MHz */
-	LPC_SYSCON->SSPCLKDIV = 0x01;
-	LPC_SSP->CR0 = 0x0707;
-	LPC_SSP->CR1 = 0x0002;
-	LPC_SSP->CPSR = 0x02;
-
-	/* Initialize chip select line */
-	GPIOSetDir(PN532_CS_PORT, PN532_CS_PIN, 1);
-	rfid_cs(1);
-
 	/* Initialize RESET line */
 	GPIOSetDir(PN532_RESET_PORT, PN532_RESET_PIN, 1);
-	rfid_reset(0);
 
+	/* reset PN532 */
+	GPIOSetValue (PN532_RESET_PORT, PN532_RESET_PIN, 0);
+
+	/* initialize PN532 IRQ line */
+	GPIOSetDir (PN532_IRQ_PORT, PN532_IRQ_PIN, 0);
+
+	/* init RFID SPI interface */
+	spi_init ();
+	spi_init_pin (SPI_CS_PN532);
+
+	/* release reset line after 400ms */
+	pmu_wait_ms (400);
+	GPIOSetValue (PN532_RESET_PORT, PN532_RESET_PIN, 1);
+
+	/* wait for PN532 to boot */
+	pmu_wait_ms (100);
 }
 
 #endif/*ENABLE_PN532_RFID*/
