@@ -61,6 +61,7 @@ rfid_send (const void *data, int len)
 	const uint8_t *p = preamble;
 	uint8_t tfi = 0xD4, c;
 
+	/* assert chip select and send out preamble to FIFO */
 	spi_txrx (SPI_CS_PN532 | SPI_CS_MODE_SKIP_CS_DEASSERT, &preamble,
 			  sizeof (preamble), NULL, 0);
 
@@ -78,6 +79,9 @@ rfid_send (const void *data, int len)
 	}
 	rfid_tx (0x100 - tfi);														/* DCS */
 	rfid_rx ();																	/* Postamble */
+
+	/* deassert chip select */
+	spi_txrx (SPI_CS_PN532 | SPI_CS_MODE_SKIP_CS_ASSERT, NULL, 0, NULL, 0);
 }
 
 int
