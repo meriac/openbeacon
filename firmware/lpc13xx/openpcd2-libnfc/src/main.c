@@ -34,7 +34,52 @@ static const uint8_t hsu_wakeup[] = { 0x55, 0x55, 0x00, 0x00, 0x00 };
 #else /* no DEBUG enable - remove debug code */
 #define debug(...) {}
 #endif /*DEBUG*/
-	int
+static uint8_t
+rfid_rx (void)
+{
+	uint8_t byte;
+	spi_txrx ((SPI_CS_PN532 ^ SPI_CS_MODE_SKIP_TX) |
+			  SPI_CS_MODE_SKIP_CS_ASSERT |
+			  SPI_CS_MODE_SKIP_CS_DEASSERT, NULL, 0, &byte, sizeof (byte));
+
+	return byte;
+}
+
+static void
+rfid_tx (uint8_t byte)
+{
+	spi_txrx ((SPI_CS_PN532 ^ SPI_CS_MODE_SKIP_TX) |
+			  SPI_CS_MODE_SKIP_CS_ASSERT |
+			  SPI_CS_MODE_SKIP_CS_DEASSERT, &byte, sizeof (byte), NULL, 0);
+}
+
+void
+rfid_send (const void *data, int len)
+{
+	static const uint8_t preamble[] = { 0x01, 0x00, 0x00, 0xFF };
+	const uint8_t *p = preamble;
+	uint8_t tfi = 0xD4, c;
+
+	spi_txrx (SPI_CS_PN532 | SPI_CS_MODE_SKIP_CS_DEASSERT, &preamble,
+			  sizeof (preamble), NULL, 0);
+
+	rfid_tx (len + 1);															/* LEN */
+	rfid_tx (0x100 - (len + 1));												/* LCS */
+	rfid_tx (tfi);																/* TFI */
+
+	/* PDn */
+	p = (const uint8_t *) data;
+	while (len--)
+	{
+		c = *p++;
+		rfid_tx (c);
+		tfi += c;
+	}
+	rfid_tx (0x100 - tfi);														/* DCS */
+	rfid_rx ();																	/* Postamble */
+}
+
+int
 main (void)
 {
 	int i, count;
