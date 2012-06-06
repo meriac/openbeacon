@@ -22,6 +22,7 @@
  */
 #include <openbeacon.h>
 #include "pmu.h"
+#include "rfid.h"
 #include "usbserial.h"
 
 #define PN532_FIFO_SIZE 64
@@ -29,75 +30,14 @@
 static uint8_t buffer_get[PN532_FIFO_SIZE + 1];
 static const uint8_t hsu_wakeup[] = { 0x55, 0x55, 0x00, 0x00, 0x00 };
 
-#ifdef  DEBUG
-#define debug(args...) debug_printf(args)
-#else /* no DEBUG enable - remove debug code */
-#define debug(...) {}
-#endif /*DEBUG*/
-
-static uint8_t
-rfid_rx (void)
-{
-	uint8_t byte;
-	spi_txrx ((SPI_CS_PN532 ^ SPI_CS_MODE_SKIP_TX) |
-			  SPI_CS_MODE_SKIP_CS_ASSERT |
-			  SPI_CS_MODE_SKIP_CS_DEASSERT, NULL, 0, &byte, sizeof (byte));
-
-	return byte;
-}
-
-static void
-rfid_tx (uint8_t byte)
-{
-	spi_txrx ((SPI_CS_PN532 ^ SPI_CS_MODE_SKIP_TX) |
-			  SPI_CS_MODE_SKIP_CS_ASSERT |
-			  SPI_CS_MODE_SKIP_CS_DEASSERT, &byte, sizeof (byte), NULL, 0);
-}
-
-void
-rfid_send (const void *data, int len)
-{
-	static const uint8_t preamble[] = { 0x01, 0x00, 0x00, 0xFF };
-	const uint8_t *p = preamble;
-	uint8_t tfi = 0xD4, c;
-
-	/* assert chip select and send out preamble to FIFO */
-	spi_txrx (SPI_CS_PN532 | SPI_CS_MODE_SKIP_CS_DEASSERT, &preamble,
-			  sizeof (preamble), NULL, 0);
-
-	rfid_tx (len + 1);															/* LEN */
-	rfid_tx (0x100 - (len + 1));												/* LCS */
-	rfid_tx (tfi);																/* TFI */
-
-	/* PDn */
-	p = (const uint8_t *) data;
-	while (len--)
-	{
-		c = *p++;
-		rfid_tx (c);
-		tfi += c;
-	}
-	rfid_tx (0x100 - tfi);														/* DCS */
-	rfid_rx ();																	/* Postamble */
-
-	/* deassert chip select */
-	spi_txrx (SPI_CS_PN532 | SPI_CS_MODE_SKIP_CS_ASSERT, NULL, 0, NULL, 0);
-}
-
 int
 main (void)
 {
-	int i, count;
-	uint8_t t, data, *p;
+	int i, t, count;
+	uint8_t data, *p;
 
 	/* Initialize GPIO (sets up clock) */
 	GPIOInit ();
-
-	/* reset PN532 */
-	GPIOSetDir (PN532_RESET_PORT, PN532_RESET_PIN, 1);
-	GPIOSetValue (PN532_RESET_PORT, PN532_RESET_PIN, 0);
-	/* initialize PN532 IRQ line */
-	GPIOSetDir (PN532_IRQ_PORT, PN532_IRQ_PIN, 0);
 
 	/* Set LED port pin to output */
 	GPIOSetDir (LED_PORT, LED_BIT, 1);
@@ -113,18 +53,7 @@ main (void)
 	pmu_init ();
 
 	/* init RFID SPI interface */
-	spi_init ();
-	spi_init_pin (SPI_CS_PN532);
-
-	/* release reset line after 400ms */
-	pmu_wait_ms (400);
-	GPIOSetValue (PN532_RESET_PORT, PN532_RESET_PIN, 1);
-
-	/* wait for PN532 to boot */
-	pmu_wait_ms (100);
-
-	/* run RFID loop */
-	buffer_get[0] = 0x01;
+	rfid_init ();
 
 	debug_printf ("OpenPCD2 v" PROGRAM_VERSION "\n");
 
@@ -132,6 +61,38 @@ main (void)
 	GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
 	pmu_wait_ms (500);
 
+	/* get firmware version */
+	data = PN532_CMD_GetFirmwareVersion;
+	while( 1 )
+	{
+		if(	((i = rfid_write (&data, sizeof(data))) == 0) &&
+			((i = rfid_read(buffer_get,sizeof(buffer_get)))>0)
+			)
+			break;
+
+		debug ("res=%i\n",i);
+		pmu_wait_ms (490);
+		GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
+		pmu_wait_ms (10);
+		GPIOSetValue (LED_PORT, LED_BIT, LED_OFF);
+	}
+
+	if (buffer_get[1] == 0x32)
+		debug_printf ("PN532 firmware version: v%i.%i\n",
+			buffer_get[2], buffer_get[3]);
+	else
+		debug ("Unknown firmware version\n");
+
+	/* enable debug output */
+	debug ("\nenabling debug output...\n");
+	rfid_write_register (0x6328, 0xFC);
+	/* select test bus signal */
+	rfid_write_register (0x6321, 6);
+	/* select test bus type */
+	rfid_write_register (0x6322, 0x07);
+
+	/* run RFID loop */
+	buffer_get[0] = 0x01;
 	t = 0;
 	while (1)
 	{
