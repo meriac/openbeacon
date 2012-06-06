@@ -61,6 +61,4 @@
 /* SPI_CS(io_port, io_pin, CPSDVSR frequency, mode) */
 #define SPI_CS_PN532 SPI_CS( PN532_CS_PORT, PN532_CS_PIN, 64, SPI_CS_MODE_SKIP_TX|SPI_CS_MODE_BIT_REVERSED )
 
-
-
 #endif/*__CONFIG_H__*/

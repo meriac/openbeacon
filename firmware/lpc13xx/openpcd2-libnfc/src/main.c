@@ -63,14 +63,13 @@ main (void)
 
 	/* get firmware version */
 	data = PN532_CMD_GetFirmwareVersion;
-	while( 1 )
+	while (1)
 	{
-		if(	((i = rfid_write (&data, sizeof(data))) == 0) &&
-			((i = rfid_read(buffer_get,sizeof(buffer_get)))>0)
-			)
+		if (((i = rfid_write (&data, sizeof (data))) == 0) &&
+			((i = rfid_read (buffer_get, sizeof (buffer_get))) > 0))
 			break;
 
-		debug ("res=%i\n",i);
+		debug ("res=%i\n", i);
 		pmu_wait_ms (490);
 		GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
 		pmu_wait_ms (10);
@@ -79,7 +78,7 @@ main (void)
 
 	if (buffer_get[1] == 0x32)
 		debug_printf ("PN532 firmware version: v%i.%i\n",
-			buffer_get[2], buffer_get[3]);
+					  buffer_get[2], buffer_get[3]);
 	else
 		debug ("Unknown firmware version\n");
 
