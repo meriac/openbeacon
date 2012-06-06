@@ -34,6 +34,7 @@ static const uint8_t hsu_wakeup[] = { 0x55, 0x55, 0x00, 0x00, 0x00 };
 #else /* no DEBUG enable - remove debug code */
 #define debug(...) {}
 #endif /*DEBUG*/
+
 static uint8_t
 rfid_rx (void)
 {
