@@ -91,9 +91,8 @@ loop_rfid (void)
 		data[0] = PN532_CMD_InListPassiveTarget;
 		data[1] = 0x01;															/* MaxTg - maximum cards    */
 		data[2] = 0x00;															/* BrTy - 106 kbps type A   */
-		if (((res = rfid_execute (&data, 3, sizeof (data))) >= 11) && (data[1]
-																	   ==
-																	   0x01)
+		if (((res = rfid_execute (&data, 3, sizeof (data))) >= 11)
+			&& (data[1] == 0x01)
 			&& (data[2] == 0x01))
 		{
 			GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
