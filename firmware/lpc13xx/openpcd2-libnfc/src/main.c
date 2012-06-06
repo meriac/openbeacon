@@ -82,6 +82,7 @@ main (void)
 	else
 		debug ("Unknown firmware version\n");
 
+#ifdef  DEBUG
 	/* enable debug output */
 	debug ("\nenabling debug output...\n");
 	rfid_write_register (0x6328, 0xFC);
@@ -89,6 +90,7 @@ main (void)
 	rfid_write_register (0x6321, 6);
 	/* select test bus type */
 	rfid_write_register (0x6322, 0x07);
+#endif/*DEBUG*/
 
 	/* run RFID loop */
 	buffer_get[0] = 0x01;
