@@ -27,18 +27,17 @@
 #define PN532_FIFO_SIZE 64
 
 static uint8_t buffer_get[PN532_FIFO_SIZE + 1];
-static const uint8_t hsu_wakeup[] = {0x55, 0x55, 0x00, 0x00 ,0x00};
+static const uint8_t hsu_wakeup[] = { 0x55, 0x55, 0x00, 0x00, 0x00 };
 
 #ifdef  DEBUG
-#  define debug(args...) debug_printf(args)
+#define debug(args...) debug_printf(args)
 #else /* no DEBUG enable - remove debug code */
-#  define debug(...) {}
-#endif/*DEBUG*/
-
-int
+#define debug(...) {}
+#endif /*DEBUG*/
+	int
 main (void)
 {
-	int i,count;
+	int i, count;
 	uint8_t t, data, *p;
 
 	/* Initialize GPIO (sets up clock) */
@@ -83,12 +82,12 @@ main (void)
 	GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
 	pmu_wait_ms (500);
 
-	t=0;
+	t = 0;
 	while (1)
 	{
 		if (!GPIOGetValue (PN532_IRQ_PORT, PN532_IRQ_PIN))
 		{
-			GPIOSetValue (LED_PORT, LED_BIT, (t++)&1);
+			GPIOSetValue (LED_PORT, LED_BIT, (t++) & 1);
 
 			debug ("RX: ");
 
@@ -105,15 +104,16 @@ main (void)
 						  SPI_CS_MODE_SKIP_CS_DEASSERT, NULL, 0,
 						  &data, sizeof (data));
 
-				usb_putchar  (data);
+				usb_putchar (data);
 				debug (" %02X", data);
 				i++;
 			}
-			spi_txrx ( SPI_CS_PN532 | SPI_CS_MODE_SKIP_CS_ASSERT, NULL, 0, NULL, 0);
+			spi_txrx (SPI_CS_PN532 | SPI_CS_MODE_SKIP_CS_ASSERT, NULL, 0,
+					  NULL, 0);
 
-			if(i)
+			if (i)
 			{
-				usb_putchar  (0x00);
+				usb_putchar (0x00);
 				usb_flush ();
 				debug ("-00");
 			}
@@ -123,25 +123,26 @@ main (void)
 
 		if ((count = usb_get (&buffer_get[1], PN532_FIFO_SIZE)) > 0)
 		{
-			GPIOSetValue (LED_PORT, LED_BIT, (t++)&1);
+			GPIOSetValue (LED_PORT, LED_BIT, (t++) & 1);
 
 			p = &buffer_get[1];
 
 			/* erase FIFO after seeing HSU wakeup */
-			if ((count == sizeof(hsu_wakeup)) && (memcmp(p,&hsu_wakeup,sizeof(hsu_wakeup))==0))
+			if ((count == sizeof (hsu_wakeup))
+				&& (memcmp (p, &hsu_wakeup, sizeof (hsu_wakeup)) == 0))
 			{
 				count = PN532_FIFO_SIZE;
-				memset(&buffer_get[1],0,PN532_FIFO_SIZE);
+				memset (&buffer_get[1], 0, PN532_FIFO_SIZE);
 			}
 			else
 			{
 				debug ("TX: ");
-				for(i=0;i<count;i++)
-					debug ("%c%02X", i==6?'*':' ', *p++);
+				for (i = 0; i < count; i++)
+					debug ("%c%02X", i == 6 ? '*' : ' ', *p++);
 				debug ("\n");
 			}
 
-			spi_txrx (SPI_CS_PN532, &buffer_get, count+1, NULL, 0);
+			spi_txrx (SPI_CS_PN532, &buffer_get, count + 1, NULL, 0);
 		}
 
 	}
