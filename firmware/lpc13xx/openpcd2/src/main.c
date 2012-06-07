@@ -26,6 +26,7 @@
 
 #define MIFARE_KEY_SIZE 6
 const unsigned char mifare_key[MIFARE_KEY_SIZE] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+int test_signal = 0;
 
 static void
 rfid_hexdump (const void *buffer, int size)
@@ -42,11 +43,18 @@ rfid_hexdump (const void *buffer, int size)
 	debug_printf (" [size=%02i]\n", size);
 }
 
+void
+CDC_GetCommand (unsigned char *command)
+{
+	(void)command;
+	test_signal++;
+}
+
 static void
 loop_rfid (void)
 {
-	int res;
-	static unsigned char data[80];
+	int res, old_test_signal=-1;
+	static unsigned char data[80],bus,signal;
 	static unsigned char oid[4];
 
 	/* fully initialized */
@@ -70,20 +78,14 @@ loop_rfid (void)
 	else
 		debug_printf ("v%i.%i\n", data[2], data[3]);
 
-	/* enable debug output */
-	debug_printf ("\nenabling debug output...\n");
-	rfid_write_register (0x6328, 0xFC);
-	// select test bus signal
-	rfid_write_register (0x6321, 6);
-	// select test bus type
-	rfid_write_register (0x6322, 0x07);
-
+	/* show card response on U.FL */
+	test_signal = (25<<3)|2;
 	/* enable debug output */
 	GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
 	while (1)
 	{
-		/* wait 10ms */
-		pmu_wait_ms (10);
+		/* wait 1s */
+		pmu_wait_ms (500);
 
 		/* detect cards in field */
 		data[0] = PN532_CMD_InListPassiveTarget;
@@ -152,11 +154,30 @@ loop_rfid (void)
 				debug_printf ("PN532 error res=%i\n", res);
 		}
 
+
 		/* turning field off */
 		data[0] = PN532_CMD_RFConfiguration;
 		data[1] = 0x01;															/* CfgItem = 0x01           */
 		data[2] = 0x00;															/* RF Field = off           */
 		rfid_execute (&data, 3, sizeof (data));
+
+		if(test_signal != old_test_signal)
+		{
+			old_test_signal = test_signal;
+
+			/* enable test singal output on U.FL sockets */
+			signal = test_signal & 0x7;
+			bus = (test_signal >> 3) & 0x1F;
+
+			rfid_write_register (0x6328, 0xFC);
+			/* select test bus signal */
+			rfid_write_register (0x6321, signal);
+			/* select test bus type */
+			rfid_write_register (0x6322, bus);
+			debug_printf ("UPDATED_DEBUG_OUTPUT\n");
+		}
+		/* display current test signal ID */
+		debug_printf ("TEST_SIGNAL_ID: %02i.%i\n", bus, signal);
 	}
 }
 
