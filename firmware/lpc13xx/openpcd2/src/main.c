@@ -25,7 +25,8 @@
 #include "usbserial.h"
 
 #define MIFARE_KEY_SIZE 6
-const unsigned char mifare_key[MIFARE_KEY_SIZE] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+const unsigned char mifare_key[MIFARE_KEY_SIZE] =
+	{ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 unsigned char test_signal = 0;
 
 static void
@@ -46,8 +47,8 @@ rfid_hexdump (const void *buffer, int size)
 void
 CDC_GetCommand (unsigned char *command)
 {
-	if(!command[1])
-		switch(command[0])
+	if (!command[1])
+		switch (command[0])
 		{
 			case '+':
 				test_signal++;
@@ -57,14 +58,14 @@ CDC_GetCommand (unsigned char *command)
 				break;
 			case 'B':
 				/* increment U.FL test bus number */
-				test_signal = (test_signal & ~0x7)+(1<<3);
+				test_signal = (test_signal & ~0x7) + (1 << 3);
 				break;
 			case 'b':
 				/* decrement U.FL test bus number */
-				test_signal = (test_signal & ~0x7)-(1<<3);
+				test_signal = (test_signal & ~0x7) - (1 << 3);
 				break;
 			case '0':
-				test_signal=0;
+				test_signal = 0;
 				break;
 		}
 }
@@ -72,8 +73,8 @@ CDC_GetCommand (unsigned char *command)
 static void
 loop_rfid (void)
 {
-	int res, old_test_signal=-1;
-	static unsigned char data[80],bus,signal;
+	int res, old_test_signal = -1;
+	static unsigned char data[80], bus, signal;
 	static unsigned char oid[4];
 
 	/* fully initialized */
@@ -98,7 +99,7 @@ loop_rfid (void)
 		debug_printf ("v%i.%i\n", data[2], data[3]);
 
 	/* show card response on U.FL */
-	test_signal = (25<<3)|2;
+	test_signal = (25 << 3) | 2;
 	/* enable debug output */
 	GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
 	while (1)
@@ -111,49 +112,48 @@ loop_rfid (void)
 		data[1] = 0x01;															/* MaxTg - maximum cards    */
 		data[2] = 0x00;															/* BrTy - 106 kbps type A   */
 		if (((res = rfid_execute (&data, 3, sizeof (data))) >= 11)
-			&& (data[1] == 0x01)
-			&& (data[2] == 0x01))
+			&& (data[1] == 0x01) && (data[2] == 0x01))
 		{
 			/* only for Mifare Classic cards */
-			if (data[3]==0 && data[4]==4 && data[6]>=4)
+			if (data[3] == 0 && data[4] == 4 && data[6] >= 4)
 			{
-				memcpy (oid, &data[7], sizeof(oid));
+				memcpy (oid, &data[7], sizeof (oid));
 
 				data[0] = PN532_CMD_InDataExchange;
-				data[1] = 0x01; /* card 1 */
-				data[2] = 0x60; /* MIFARE authenticate A */
-				data[3] = 0x01; /* block 1 */
+				data[1] = 0x01;													/* card 1 */
+				data[2] = 0x60;													/* MIFARE authenticate A */
+				data[3] = 0x01;													/* block 1 */
 				/* MIFARE NFCID1 */
-				memcpy(&data[10], oid, sizeof(oid));
+				memcpy (&data[10], oid, sizeof (oid));
 				/* MIFARE default key 6*0xFF */
-				memcpy(&data[4], mifare_key, MIFARE_KEY_SIZE);
+				memcpy (&data[4], mifare_key, MIFARE_KEY_SIZE);
 
 				/* MIFARE Authenticate */
 				res = rfid_execute (&data, 14, sizeof (data));
 
-				if(res>0)
+				if (res > 0)
 				{
 					rfid_hexdump (&data, res);
 
 					data[0] = PN532_CMD_InDataExchange;
-					data[1] = 0x01; /* card 1 */
-					data[2] = 0x30; /* MIFARE read 16 bytes */
-					data[3] = 0x01; /* block 1 */
+					data[1] = 0x01;												/* card 1 */
+					data[2] = 0x30;												/* MIFARE read 16 bytes */
+					data[3] = 0x01;												/* block 1 */
 
 					/* MIFARE Read */
 					res = rfid_execute (&data, 14, sizeof (data));
 
-					debug_printf("\nMIFARE_READ:");
-					if(res==18)
-						rfid_hexdump(&data[2], 16);
+					debug_printf ("\nMIFARE_READ:");
+					if (res == 18)
+						rfid_hexdump (&data[2], 16);
 					else
-						debug_printf(" failed [%i]\n", res);
+						debug_printf (" failed [%i]\n", res);
 				}
 				else
-					debug_printf("AUTH failed [%i]\n", res);
+					debug_printf ("AUTH failed [%i]\n", res);
 
-				debug_printf("MIFARE_CARD_ID:");
-				rfid_hexdump(oid, sizeof(oid));
+				debug_printf ("MIFARE_CARD_ID:");
+				rfid_hexdump (oid, sizeof (oid));
 			}
 			else
 			{
@@ -180,7 +180,7 @@ loop_rfid (void)
 		data[2] = 0x00;															/* RF Field = off           */
 		rfid_execute (&data, 3, sizeof (data));
 
-		if(test_signal != old_test_signal)
+		if (test_signal != old_test_signal)
 		{
 			old_test_signal = test_signal;
 
