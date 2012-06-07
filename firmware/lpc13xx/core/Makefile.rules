@@ -6,6 +6,11 @@ OBJDUMP=$(CROSS)objdump
 AR=$(CROSS)ar
 LDSCRIPT=$(CORE)linker/$(CPU).ld
 
+FIRMWARE:="/media/CRP DISABLD/firmware.bin"
+ifeq ("$(wildcard $(FIRMWARE))","")
+	FIRMWARE="/var/run/media/$(USER)/CRP DISABLD/firmware.bin"
+endif
+
 # determine program version
 PROGRAM_VERSION:=$(shell git describe --tags --abbrev=4 --dirty 2>/dev/null | sed s/^v//)
 ifeq ("$(PROGRAM_VERSION)","")
@@ -101,7 +106,7 @@ version:
 	@echo "$(TARGET) version $(PROGRAM_VERSION)"
 
 flash : $(TARGET).bin
-	lpc-flash $(TARGET).bin /media/CRP\ DISABLD/firmware.bin
+	lpc-flash $(TARGET).bin $(FIRMWARE)
 
 upload_firmware : $(TARGET).bin
 	lpc-flash $(TARGET).bin $(TARGET)-$(CPU).bin
