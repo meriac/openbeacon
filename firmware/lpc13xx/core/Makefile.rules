@@ -8,7 +8,7 @@ LDSCRIPT=$(CORE)linker/$(CPU).ld
 
 FIRMWARE:="/media/CRP DISABLD/firmware.bin"
 ifeq ("$(wildcard $(FIRMWARE))","")
-	FIRMWARE="/var/run/media/$(USER)/CRP DISABLD/firmware.bin"
+	FIRMWARE:="/var/run/media/$(USER)/CRP DISABLD/firmware.bin"
 endif
 
 # determine program version
