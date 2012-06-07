@@ -262,6 +262,16 @@ int rfid_read_register(unsigned short address)
 	    return res;
 }
 
+int rfid_mask_register(unsigned short address, unsigned char data, unsigned char mask)
+{
+	int res;
+
+	if((res = rfid_read_register (address))<0)
+		return res;
+	else
+		return rfid_write_register (address, (((unsigned char)res) & (~mask))|(data & mask));
+}
+
 void rfid_init(void)
 {
 	/* Initialize RESET line */
