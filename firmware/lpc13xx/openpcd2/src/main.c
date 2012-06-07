@@ -26,7 +26,7 @@
 
 #define MIFARE_KEY_SIZE 6
 const unsigned char mifare_key[MIFARE_KEY_SIZE] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-int test_signal = 0;
+unsigned char test_signal = 0;
 
 static void
 rfid_hexdump (const void *buffer, int size)
@@ -46,8 +46,27 @@ rfid_hexdump (const void *buffer, int size)
 void
 CDC_GetCommand (unsigned char *command)
 {
-	(void)command;
-	test_signal++;
+	if(!command[1])
+		switch(command[0])
+		{
+			case '+':
+				test_signal++;
+				break;
+			case '-':
+				test_signal--;
+				break;
+			case 'B':
+				/* increment U.FL test bus number */
+				test_signal = (test_signal & ~0x7)+(1<<3);
+				break;
+			case 'b':
+				/* decrement U.FL test bus number */
+				test_signal = (test_signal & ~0x7)-(1<<3);
+				break;
+			case '0':
+				test_signal=0;
+				break;
+		}
 }
 
 static void
