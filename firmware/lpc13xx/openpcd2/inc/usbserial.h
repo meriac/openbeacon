@@ -26,6 +26,7 @@
 
 #ifdef  ENABLE_USB_FULLFEATURED
 extern void init_usbserial (void);
+extern void CDC_GetCommand (unsigned char *command);
 #endif /*ENABLE_USB_FULLFEATURED */
 
 #endif/*__USBSERIAL_H__*/
