@@ -145,6 +145,12 @@ main (void)
 			{
 				count = PN532_FIFO_SIZE;
 				memset (&buffer_get[1], 0, PN532_FIFO_SIZE);
+
+				/* reset PN532 */
+				GPIOSetValue (PN532_RESET_PORT, PN532_RESET_PIN, 0);
+				pmu_wait_ms (100);
+				GPIOSetValue (PN532_RESET_PORT, PN532_RESET_PIN, 1);
+				pmu_wait_ms (400);
 			}
 			else
 			{
