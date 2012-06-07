@@ -24,6 +24,9 @@
 #include "pmu.h"
 #include "usbserial.h"
 
+#define MIFARE_KEY_SIZE 6
+const unsigned char mifare_key[MIFARE_KEY_SIZE] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+
 static void
 rfid_hexdump (const void *buffer, int size)
 {
@@ -44,6 +47,7 @@ loop_rfid (void)
 {
 	int res;
 	static unsigned char data[80];
+	static unsigned char oid[4];
 
 	/* fully initialized */
 	GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
@@ -89,12 +93,57 @@ loop_rfid (void)
 			&& (data[1] == 0x01)
 			&& (data[2] == 0x01))
 		{
+			/* only for Mifare Classic cards */
+			if (data[3]==0 && data[4]==4 && data[6]>=4)
+			{
+				memcpy (oid, &data[7], sizeof(oid));
+
+				data[0] = PN532_CMD_InDataExchange;
+				data[1] = 0x01; /* card 1 */
+				data[2] = 0x60; /* MIFARE authenticate A */
+				data[3] = 0x01; /* block 1 */
+				/* MIFARE NFCID1 */
+				memcpy(&data[10], oid, sizeof(oid));
+				/* MIFARE default key 6*0xFF */
+				memcpy(&data[4], mifare_key, MIFARE_KEY_SIZE);
+
+				/* MIFARE Authenticate */
+				res = rfid_execute (&data, 14, sizeof (data));
+
+				if(res>0)
+				{
+					rfid_hexdump (&data, res);
+
+					data[0] = PN532_CMD_InDataExchange;
+					data[1] = 0x01; /* card 1 */
+					data[2] = 0x30; /* MIFARE read 16 bytes */
+					data[3] = 0x01; /* block 1 */
+
+					/* MIFARE Read */
+					res = rfid_execute (&data, 14, sizeof (data));
+
+					debug_printf("\nMIFARE_READ:");
+					if(res==18)
+						rfid_hexdump(&data[2], 16);
+					else
+						debug_printf(" failed [%i]\n", res);
+				}
+				else
+					debug_printf("AUTH failed [%i]\n", res);
+
+				debug_printf("MIFARE_CARD_ID:");
+				rfid_hexdump(oid, sizeof(oid));
+			}
+			else
+			{
+				debug_printf ("\nCARD_ID:");
+				rfid_hexdump (&data[7], data[6]);
+			}
+
+			/* blink LED to indicate card */
 			GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
 			pmu_wait_ms (50);
 			GPIOSetValue (LED_PORT, LED_BIT, LED_OFF);
-
-			debug_printf ("card id: ");
-			rfid_hexdump (&data[7], data[6]);
 		}
 		else
 		{
