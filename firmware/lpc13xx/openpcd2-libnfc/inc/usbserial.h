@@ -28,6 +28,7 @@
 extern void usb_init (void);
 extern void usb_flush (void);
 extern int usb_get (uint8_t * data, int count);
+extern int usb_getchar (void);
 extern int usb_putchar (uint8_t data);
 #endif /*ENABLE_USB_FULLFEATURED */
 

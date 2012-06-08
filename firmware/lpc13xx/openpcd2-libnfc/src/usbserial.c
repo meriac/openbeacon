@@ -96,6 +96,18 @@ usb_get (uint8_t * data, int count)
 }
 
 int
+usb_getchar (void)
+{
+	int res;
+
+	__disable_irq ();
+	res = usb_getchar_irq (&fifo_BulkOut);
+	__enable_irq ();
+
+	return res;
+}
+
+int
 usb_putchar (uint8_t data)
 {
 	int res;
