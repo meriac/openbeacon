@@ -340,6 +340,8 @@ main (void)
 			spi_txrx (SPI_CS_PN532 | SPI_CS_MODE_SKIP_CS_DEASSERT, &data,
 					  sizeof (data), NULL, 0);
 
+			debug ("IRX:");
+
 			while (!GPIOGetValue (PN532_IRQ_PORT, PN532_IRQ_PIN))
 			{
 				spi_txrx ((SPI_CS_PN532 ^ SPI_CS_MODE_SKIP_TX) |
@@ -347,8 +349,12 @@ main (void)
 						  SPI_CS_MODE_SKIP_CS_DEASSERT, NULL, 0,
 						  &data, sizeof (data));
 
+				debug (" %02X",data);
+
 				if ( (res = packet_put(&buffer_get, data))>0 )
 				{
+					debug ("\n");
+
 					/* add termination */
 					buffer_get.data[res++] = 0x00;
 					p = buffer_get.data;
