@@ -90,7 +90,7 @@ usb_putchar (uint8_t data)
 
 	__disable_irq ();
 	/* if USB FIFO is full - flush */
-	if(fifo_BulkIn.count >= USB_CDC_BUFSIZE)
+	if (fifo_BulkIn.count >= USB_CDC_BUFSIZE)
 		CDC_BulkIn ();
 	/* store new data in FIFO */
 	res = usb_putchar_irq (&fifo_BulkIn, data);
