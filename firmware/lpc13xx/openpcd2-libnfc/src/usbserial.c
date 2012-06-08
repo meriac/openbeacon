@@ -72,30 +72,6 @@ usb_getchar_irq (TFIFO * fifo)
 }
 
 int
-usb_get (uint8_t * data, int count)
-{
-	int res, copied;
-
-	if (!count)
-		return 0;
-
-	copied = 0;
-
-	__disable_irq ();
-	while (count--)
-	{
-		if ((res = usb_getchar_irq (&fifo_BulkOut)) < 0)
-			break;
-
-		*data++ = (uint8_t) res;
-		copied++;
-	}
-	__enable_irq ();
-
-	return copied;
-}
-
-int
 usb_getchar (void)
 {
 	int res;
