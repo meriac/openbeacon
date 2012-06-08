@@ -349,11 +349,12 @@ main (void)
 
 				if ( (res = packet_put(&buffer_get, data))>0 )
 				{
+					/* add termination */
+					buffer_get.data[res++] = 0x00;
 					p = buffer_get.data;
 					count = res;
 					while(count--)
 						usb_putchar ( *p++ );
-					usb_putchar ( 0x00 );
 					usb_flush ();
 #ifdef  DEBUG
 					debug ("RX: ");
@@ -378,6 +379,7 @@ main (void)
 				debug ("TX: ");
 				dump_packet (&buffer_put.data[1], count-1);
 #endif/*DEBUG*/
+				break;
 			}
 			else
 				switch(count)
