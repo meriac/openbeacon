@@ -84,6 +84,7 @@ packet_put (PN532_Packet* pkt, uint8_t data)
 		case STATE_WAKEUP:
 		{
 			debug ("\nWAKEUP\n");
+			pmu_wait_ms (50);
 			res = STATE_IDLE;
 			/* intentionally no 'break;' */
 		}
