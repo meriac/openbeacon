@@ -24,11 +24,11 @@
 #include "pmu.h"
 #include "usbserial.h"
 
-#define FIFO_SIZE (USB_CDC_BUFSIZE)
+#define FIFO_SIZE (USB_CDC_BUFSIZE * 2)
 
 typedef struct
 {
-	uint8_t buffer[USB_CDC_BUFSIZE * 2];
+	uint8_t buffer[FIFO_SIZE];
 	uint16_t head, tail, count;
 } TFIFO;
 
@@ -113,6 +113,10 @@ usb_putchar (uint8_t data)
 	int res;
 
 	__disable_irq ();
+	/* if USB FIFO is full - flush */
+	if(fifo_BulkIn.count >= USB_CDC_BUFSIZE)
+		CDC_BulkIn ();
+	/* store new data in FIFO */
 	res = usb_putchar_irq (&fifo_BulkIn, data);
 	__enable_irq ();
 
