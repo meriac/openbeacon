@@ -275,7 +275,7 @@ int
 main (void)
 {
 	int i, t, count, res;
-	uint8_t data;
+	uint8_t data, *p;
 
 	/* Initialize GPIO (sets up clock) */
 	GPIOInit ();
@@ -349,8 +349,11 @@ main (void)
 
 				if ( (res = packet_put(&buffer_get, data))>0 )
 				{
-					buffer_get.data[res++] = 0x00;
-					usb_get ( buffer_get.data, res );
+					p = buffer_get.data;
+					count = res;
+					while(count--)
+						usb_putchar ( *p++ );
+					usb_putchar ( 0x00 );
 					usb_flush ();
 #ifdef  DEBUG
 					debug ("RX: ");
