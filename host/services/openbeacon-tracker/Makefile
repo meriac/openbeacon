@@ -2,7 +2,7 @@ CXX     :=g++
 TARGET  :=openbeacon-tracker
 SOURCES :=src/bmMapHandleToItem.cpp src/main.cpp
 FILTER  :=filter-singularsighting
-LOGFILE :=logs/sputnik-24c3-log.bin
+LOGFILE :=logs/brucon-2011-log.bin
 
 FILTERFILE_PREFIX:=logs/sightings.json
 
