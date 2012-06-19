@@ -65,6 +65,7 @@ static bool g_first;
 
 /* proximity tag TEA encryption keys */
 static const long tea_keys[][XXTEA_BLOCK_COUNT] = {
+	{0x338C4720, 0x9E9C7ECA, 0x04180F62, 0xEE39F134},							/* 0: BruCON 2011 key */
 	{0x7013F569, 0x4417CA7E, 0x07AAA968, 0x822D7554},							/* 1: 25C3 free beta version key */
 	{0xbf0c3a08, 0x1d4228fc, 0x4244b2b0, 0x0b4492e9},							/* 2: 25C3 final key  */
 	{0xB4595344, 0xD3E119B6, 0xA814D0EC, 0xEFF5A24E},							/* 3: 24C3 */
