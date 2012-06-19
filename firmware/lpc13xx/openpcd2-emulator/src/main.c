@@ -25,6 +25,8 @@
 #include "pmu.h"
 #include "usbserial.h"
 
+static volatile uint32_t edges;
+
 static void
 rfid_hexdump (const void *buffer, int size)
 {
@@ -63,15 +65,20 @@ rfid_init_emulator (void)
   /* run counter */
   LPC_TMR32B0->TCR = 0x01;
 
+  /* enable RxMultiple mode */
+  rfid_write_register (0x6303, 0x0C);
+  /* disable parity for TX/RX */
+  rfid_write_register (0x630D, 0x10);
+
   /* enable SVDD switch */
-  rfid_write_register (0x6306, 0x2A);
+  rfid_write_register (0x6306, 0x2F);
   rfid_write_register (0x6307, 0x03);
   rfid_write_register (0x6106, 0x10);
   /* enable secure clock */
   rfid_write_register (0x6330, 0x80);
   rfid_write_register (0x6104, 0x00);
   /* output envelope to AUX1 */
-#if 0
+#if 1
   rfid_write_register (0x6321, 0x34);
   rfid_write_register (0x6322, 0x0E);
 #else
@@ -84,11 +91,35 @@ rfid_init_emulator (void)
   LPC_SYSCON->SYSAHBCLKCTRL |= EN_CT32B0;
 }
 
+void PIOINT3_IRQHandler(void)
+{
+	static int i = 0;
+
+	LPC_GPIO3->IC = 1<<PN532_SIGOUT_PIN;
+
+	edges++;
+//	GPIOSetValue (LED_PORT, LED_BIT, GPIOGetValue(1,8));
+	GPIOSetValue (LED_PORT, LED_BIT, (i++)&1);
+}
+
+static void
+trigger_init (void)
+{
+	edges = 0;
+	/* enable SIGOUT input pin */
+	GPIOSetDir (PN532_SIGOUT_PORT, PN532_SIGOUT_PIN, 0);
+	/* enable SIGOUT interrupt */
+//	LPC_GPIO3->IE |= 1<<PN532_SIGOUT_PIN;
+
+//	NVIC_EnableIRQ(EINT3_IRQn);
+//	NVIC_SetPriority(EINT3_IRQn, 1);
+}
+
 static void
 loop_rfid (void)
 {
   int res, line, t;
-  uint32_t counter;
+//  uint32_t counter;
   static unsigned char data[80];
 
   /* fully initialized */
@@ -133,11 +164,14 @@ loop_rfid (void)
 
   while (1)
     {
+#if 0
       counter = LPC_TMR32B0->TC;
-      pmu_wait_ms (500);
-      counter = (LPC_TMR32B0->TC - counter)*2;
+      pmu_wait_ms (100);
+      counter = (LPC_TMR32B0->TC - counter)*10;
 
       debug_printf ("LPC_TMR32B0[%08u]: %uHz\n", line++, counter);
+#endif
+      GPIOSetValue (LED_PORT, LED_BIT, GPIOGetValue(1,8));
     }
 }
 
@@ -162,6 +196,9 @@ main (void)
 
   /* Init RFID */
   rfid_init ();
+
+  /* Init emulation triggers */
+  trigger_init ();
 
   /* RUN RFID loop */
   loop_rfid ();

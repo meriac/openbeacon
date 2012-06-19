@@ -58,6 +58,8 @@
 #define PN532_IRQ_PIN 4
 #define PN532_CS_PORT 0
 #define PN532_CS_PIN 2
+#define PN532_SIGOUT_PORT 3
+#define PN532_SIGOUT_PIN 2
 
 /* SPI_CS(io_port, io_pin, CPSDVSR frequency, mode) */
 #define SPI_CS_PN532 SPI_CS( PN532_CS_PORT, PN532_CS_PIN, 64, SPI_CS_MODE_SKIP_TX|SPI_CS_MODE_BIT_REVERSED )
