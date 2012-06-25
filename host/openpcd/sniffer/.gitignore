@@ -1,0 +1,5 @@
+.depend
+*.o
+*.img
+*.wav
+*.txt
