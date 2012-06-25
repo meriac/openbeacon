@@ -24,7 +24,7 @@ OBJ_TMP=$(foreach T, $(OBJ_EXTS), $(patsubst %.c, obj/%.$(T), $(SRCS)))
 OBJ_OUT=$(patsubst %.c, obj/%.p1, $(SRCS))
 
 CLEANS=$(OBJ_OUT) $(OBJ_TMP) $(PROG_FILES) $(PROG_TARGET)
-CLEANS+=obj/startup.as obj/startup.lst obj/startup.rlf obj/$(PROGNAME).hex $(PROGNAME).hex obj/startup.obj funclist $(PROGNAME)-*.zip
+CLEANS+=obj/startup.as obj/startup.lst obj/startup.rlf obj/$(PROGNAME).hex $(PROGNAME).hex obj/startup.obj funclist $(PROGNAME)-*.zip src/*.[ch]~
 
 COMMON_FLAGS=-q --MODE=$(MODE) --outdir=obj --chip=$(CHIP) --codeoffset=0 --warn=0 --errors=1- --char=signed --double=24
 CFLAGS=$(COMMON_FLAGS) --pass1
@@ -61,3 +61,6 @@ $(PROG_TARGET).zip: obj/$(PROGNAME).hex
 
 publish: production
 	scp $(PROG_TARGET).zip meri@bitmanufaktur.net:/home/wwwrun/open.bitmanufaktur.com/web/www/people/milosch/firmware/pic16/
+
+indent:
+	find src -iname '*.[ch]' -exec indent -c81 -i4 -cli4 -bli0 -ts 4 \{\} \;

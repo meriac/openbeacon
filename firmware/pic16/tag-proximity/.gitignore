@@ -1,4 +1,5 @@
 funclist
 firmware_counter
 *.hex
+*.[ch]~
 openbeacontag-*.zip
