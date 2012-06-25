@@ -27,11 +27,11 @@
  */
 
 #ifndef	XTAL_FREQ
-#define	XTAL_FREQ	8MHZ	/* Crystal frequency in MHz */
+#define	XTAL_FREQ	8MHZ														/* Crystal frequency in MHz */
 #endif
 
-#define	MHZ	*1000L		/* number of kHz in a MHz */
-#define	KHZ	*1		/* number of kHz in a kHz */
+#define	MHZ	*1000L																/* number of kHz in a MHz */
+#define	KHZ	*1																	/* number of kHz in a kHz */
 
 #if	XTAL_FREQ >= 12MHZ
 

@@ -51,45 +51,45 @@ static volatile char timer1_wrapped;
 void
 timer_init (void)
 {
-  /* Configure Timer 1 to use external 32768Hz crystal and 
-   * no (1:1) prescaler*/
-  T1CON = T1CON_T1OSCEN | T1CON_T1SYNC | T1CON_TMR1CS;
-  timer1_wrapped = 0;
+	/* Configure Timer 1 to use external 32768Hz crystal and 
+	 * no (1:1) prescaler*/
+	T1CON = T1CON_T1OSCEN | T1CON_T1SYNC | T1CON_TMR1CS;
+	timer1_wrapped = 0;
 }
 
 void
 sleep_jiffies (unsigned short jiffies)
 {
-  jiffies = 0xffff - jiffies;
-  TMR1H = jiffies >> 8;
-  TMR1L = (unsigned short) jiffies;
-  TMR1ON = 1;
-  TMR1IE = 1;
-  PEIE = 1;
-  GIE = 1;
-  timer1_wrapped = 0;
-  while (timer1_wrapped == 0)
-    {
-      /* enable peripheral interrupts */
-      GIE = PEIE = TMR1IE = 1;
-      SLEEP ();
-    }
+	jiffies = 0xffff - jiffies;
+	TMR1H = jiffies >> 8;
+	TMR1L = (unsigned short) jiffies;
+	TMR1ON = 1;
+	TMR1IE = 1;
+	PEIE = 1;
+	GIE = 1;
+	timer1_wrapped = 0;
+	while (timer1_wrapped == 0)
+	{
+		/* enable peripheral interrupts */
+		GIE = PEIE = TMR1IE = 1;
+		SLEEP ();
+	}
 }
 
 void
 sleep_2ms (void)
 {
-  sleep_jiffies (JIFFIES_PER_MS(2));
+	sleep_jiffies (JIFFIES_PER_MS (2));
 }
 
 void interrupt
 irq (void)
 {
-  /* timer1 has overflowed */
-  if (TMR1IF)
-    {
-      timer1_wrapped = 1;
-      TMR1ON = 0;
-      TMR1IF = 0;
-    }
+	/* timer1 has overflowed */
+	if (TMR1IF)
+	{
+		timer1_wrapped = 1;
+		TMR1ON = 0;
+		TMR1IF = 0;
+	}
 }

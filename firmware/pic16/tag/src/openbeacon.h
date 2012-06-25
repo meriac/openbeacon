@@ -42,27 +42,27 @@ typedef unsigned long u_int32_t;
 
 typedef struct
 {
-  u_int8_t proto;
-  u_int16_t oid;
-  u_int8_t flags;
+	u_int8_t proto;
+	u_int16_t oid;
+	u_int8_t flags;
 } TBeaconHeader;
 
 typedef struct
 {
-  TBeaconHeader hdr;
-  u_int8_t strength;
-  u_int16_t oid_last_seen;
-  u_int16_t powerup_count;
-  u_int8_t reserved;
-  u_int32_t seq;
-  u_int16_t crc;
+	TBeaconHeader hdr;
+	u_int8_t strength;
+	u_int16_t oid_last_seen;
+	u_int16_t powerup_count;
+	u_int8_t reserved;
+	u_int32_t seq;
+	u_int16_t crc;
 } TBeaconTracker;
 
 typedef union
 {
-  TBeaconTracker pkt;
-  u_int32_t data[TEA_ENCRYPTION_BLOCK_COUNT];
-  u_int8_t datab[TEA_ENCRYPTION_BLOCK_COUNT * sizeof (u_int32_t)];
+	TBeaconTracker pkt;
+	u_int32_t data[TEA_ENCRYPTION_BLOCK_COUNT];
+	u_int8_t datab[TEA_ENCRYPTION_BLOCK_COUNT * sizeof (u_int32_t)];
 }
 TBeaconEnvelope;
 

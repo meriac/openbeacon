@@ -35,47 +35,47 @@ __CONFIG (0x03d4);
 void
 main (void)
 {
-  char data,*c, morsemessage[] = "... ___ ...";
+	char data, *c, morsemessage[] = "... ___ ...";
 
-  /* configure CPU peripherals */
-  OPTION_REG = CONFIG_CPU_OPTION;
-  TRISA = CONFIG_CPU_TRISA;
-  TRISC = CONFIG_CPU_TRISC;
-  WPUA = CONFIG_CPU_WPUA;
-  ANSEL = CONFIG_CPU_ANSEL;
-  CMCON0 = CONFIG_CPU_CMCON0;
-  OSCCON = CONFIG_CPU_OSCCON;
+	/* configure CPU peripherals */
+	OPTION_REG = CONFIG_CPU_OPTION;
+	TRISA = CONFIG_CPU_TRISA;
+	TRISC = CONFIG_CPU_TRISC;
+	WPUA = CONFIG_CPU_WPUA;
+	ANSEL = CONFIG_CPU_ANSEL;
+	CMCON0 = CONFIG_CPU_CMCON0;
+	OSCCON = CONFIG_CPU_OSCCON;
 
-  timer1_init ();
+	timer1_init ();
 
-  IOCA = IOCA | (1 << 0);
+	IOCA = IOCA | (1 << 0);
 
 #define GAP 100
-  while (1)
-    {
-      c = morsemessage;
-      while (data=(*c++))
+	while (1)
 	{
-	  switch (data)
-	    {
-	    case '.':
-	      CONFIG_PIN_LED = 1;
-	      sleep_jiffies (1 * GAP * TIMER1_JIFFIES_PER_MS);
-	      CONFIG_PIN_LED = 0;
-	      break;
+		c = morsemessage;
+		while (data = (*c++))
+		{
+			switch (data)
+			{
+				case '.':
+					CONFIG_PIN_LED = 1;
+					sleep_jiffies (1 * GAP * TIMER1_JIFFIES_PER_MS);
+					CONFIG_PIN_LED = 0;
+					break;
 
-	    case ' ':
-	      sleep_jiffies (3 * GAP * TIMER1_JIFFIES_PER_MS);
-	      break;
+				case ' ':
+					sleep_jiffies (3 * GAP * TIMER1_JIFFIES_PER_MS);
+					break;
 
-	    case '_':
-	      CONFIG_PIN_LED = 1;
-	      sleep_jiffies (3 * GAP * TIMER1_JIFFIES_PER_MS);
-	      CONFIG_PIN_LED = 0;
-	      break;
-	    }
-	  sleep_jiffies (1 * GAP * TIMER1_JIFFIES_PER_MS);
+				case '_':
+					CONFIG_PIN_LED = 1;
+					sleep_jiffies (3 * GAP * TIMER1_JIFFIES_PER_MS);
+					CONFIG_PIN_LED = 0;
+					break;
+			}
+			sleep_jiffies (1 * GAP * TIMER1_JIFFIES_PER_MS);
+		}
+		sleep_jiffies (10 * GAP * TIMER1_JIFFIES_PER_MS);
 	}
-      sleep_jiffies (10 * GAP * TIMER1_JIFFIES_PER_MS);
-    }
 }

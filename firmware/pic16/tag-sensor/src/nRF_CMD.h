@@ -32,16 +32,16 @@
 
 extern void nRFCMD_Init (void);
 extern unsigned char nRFCMD_RegWrite (unsigned char reg,
-				      const unsigned char *buf,
-				      unsigned char count);
+									  const unsigned char *buf,
+									  unsigned char count);
 extern unsigned char nRFCMD_RegRead (unsigned char reg, unsigned char *buf,
-				     unsigned char count);
+									 unsigned char count);
 extern void nRFCMD_Macro (const unsigned char *macro);
 extern void nRFCMD_Execute (void);
 extern void nRFCMD_Stop (void);
 extern unsigned char nRFCMD_RegExec (unsigned char reg);
 extern unsigned char nRFCMD_RegReadWrite (unsigned char reg,
-					  unsigned char value);
+										  unsigned char value);
 
 
 #endif /*NRF_CMD_H */

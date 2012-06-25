@@ -55,54 +55,54 @@ static volatile char timer1_wrapped;
 void
 timer_init (void)
 {
-  T1CON = T1CON_DEFAULT;
-  timer1_wrapped = 0;
+	T1CON = T1CON_DEFAULT;
+	timer1_wrapped = 0;
 }
 
 void
 sleep_jiffies (unsigned short jiffies)
 {
-  jiffies = 0xffff - jiffies;
-  TMR1H = jiffies >> 8;
-  TMR1L = (unsigned char) jiffies;
-  TMR1ON = 1;
-  TMR1IE = 1;
-  PEIE = 1;
-  GIE = 1;
-  timer1_wrapped = 0;
-  while (timer1_wrapped == 0)
-    {
-      /* enable peripheral interrupts */
-      GIE = PEIE = TMR1IE = 1;
-      SLEEP ();
-    }
+	jiffies = 0xffff - jiffies;
+	TMR1H = jiffies >> 8;
+	TMR1L = (unsigned char) jiffies;
+	TMR1ON = 1;
+	TMR1IE = 1;
+	PEIE = 1;
+	GIE = 1;
+	timer1_wrapped = 0;
+	while (timer1_wrapped == 0)
+	{
+		/* enable peripheral interrupts */
+		GIE = PEIE = TMR1IE = 1;
+		SLEEP ();
+	}
 }
 
 void
 sleep_2ms (void)
 {
-  sleep_jiffies (JIFFIES_PER_MS(2));
+	sleep_jiffies (JIFFIES_PER_MS (2));
 }
 
 void
 sleep_deep (unsigned char div)
 {
-  T1CON = 0;
-  CLRWDT ();
-  WDTCON = ((div & 0xF)<<1)|1;
-  SLEEP ();
-  WDTCON = 0;
-  T1CON = T1CON_DEFAULT;
+	T1CON = 0;
+	CLRWDT ();
+	WDTCON = ((div & 0xF) << 1) | 1;
+	SLEEP ();
+	WDTCON = 0;
+	T1CON = T1CON_DEFAULT;
 }
 
 void interrupt
 irq (void)
 {
-  /* timer1 has overflowed */
-  if (TMR1IF)
-    {
-      timer1_wrapped = 1;
-      TMR1ON = 0;
-      TMR1IF = 0;
-    }
+	/* timer1 has overflowed */
+	if (TMR1IF)
+	{
+		timer1_wrapped = 1;
+		TMR1ON = 0;
+		TMR1IF = 0;
+	}
 }
