@@ -26,7 +26,7 @@ LDFLAGS=$(COMMON_FLAGS) --summary=mem,file --asmlist --output=+intel --output=+m
 
 all: $(PROGNAME).hex
 
-.PHONY: $(PROGNAME).hex clean flash publish counted
+.PHONY: $(PROGNAME).hex clean flash publish $(PROGNAME).hex
 
 obj/%.p1: src/%.c src/*.h
 	$(CC) $(CFLAGS) -c $(filter-out %.h,$^)
@@ -46,10 +46,8 @@ publish: $(PROGNAME).hex
 vmware: $(PROGNAME).hex
 	mv $^ ~/Share/OpenBeacon/$(PROGNAME).hex
 
-counted: $(PROGNAME).hex
-
 $(PROGNAME).hex: obj/$(PROGNAME).hex
-	php ./create_counted_firmware.php
+	cp $^ $@
 
 indent:
 	find src -iname '*.[ch]' -exec indent -c81 -i4 -cli4 -bli0 -ts 4 \{\} \;
