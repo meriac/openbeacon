@@ -167,7 +167,7 @@ xxtea_encode (void)
 void
 main (void)
 {
-	u_int8_t i, status;
+	u_int8_t i;
 	u_int16_t crc;
 
 	/* configure CPU peripherals */
