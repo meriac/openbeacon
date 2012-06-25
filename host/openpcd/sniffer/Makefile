@@ -2,7 +2,7 @@ CXX     :=g++
 TARGET  :=openpcd-sniffer
 SOURCES :=src/filter.cpp
 
-DUMP    :=iCLASS-001.img
+DUMP    :=iCLASS-002.img
 MIRROR  :=http://mirror.openbeacon.net
 LIBS    :=-lm
 
