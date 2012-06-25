@@ -13,8 +13,9 @@ ifeq ("$(PROGRAM_VERSION)","")
 endif
 
 FILTERED:=$(DUMP:%.img=%-filtered.img)
-LOGFILE :=$(DUMP:%.img=%.csv)
-WAV     :=$(DUMP:%.img=%.wav)
+LOGFILE :=$(DUMP:%.img=%-filtered.csv)
+WAV     :=$(DUMP:%.img=%-filtered.wav)
+WAV_ORIG:=$(DUMP:%.img=%.wav)
 
 DEBUG   :=-O3
 CXXOPT  :=$(DEBUG)
@@ -47,10 +48,16 @@ $(WAV): $(TARGET) $(DUMP)
 	./$(TARGET) $(DUMP) $(FILTERED) > $(LOGFILE)
 	sox -2 -b 16 -s -c 2 -r 434027 -t raw $(FILTERED) $@
 
+$(WAV_ORIG): $(DUMP)
+	sox -2 -b 16 -s -c 1 -r 15625000 -t raw $^ $@
+
 demo: $(WAV)
 
-audacity: $(WAV)
+audacity: $(WAV) $(WAV_ORIG)
 	audacity $(WAV)
+
+audacity_orig: $(WAV_ORIG)
+	audacity $(WAV_ORIG)
 
 $(DUMP).bz2:
 	curl -f -o $@ $(MIRROR)/$@
@@ -59,9 +66,9 @@ $(DUMP): $(DUMP).bz2
 	bzip2 -cd $^ > $@
 
 cleanall: clean
-	rm -rf .depend $(DUMP) $(DUMP).bz2
+	rm -rf .depend $(WAV_ORIG) $(DUMP) $(DUMP).bz2
 
 clean:
-	rm -f $(TARGET) $(OBJS) $(FILTERED) $(LOGFILE) $(WAV) callgrind.out.* *~
+	rm -f $(TARGET) $(OBJS) $(FILTERED) $(LOGFILE) $(WAV)callgrind.out.* *~
 
 include .depend
