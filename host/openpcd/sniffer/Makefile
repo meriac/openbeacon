@@ -25,7 +25,7 @@ PREFIX  :=/usr/local
 
 all: $(TARGET)
 
-.PHONY: all indent version install cleanall clean
+.PHONY: all indent version install cleanall clean demo audacity
 
 version:
 	@echo "$(TARGET) version $(PROGRAM_VERSION)"
@@ -43,9 +43,13 @@ $(TARGET): .depend $(OBJS)
 .cpp.o:
 	$(CXX) $(CXXFLAGS) $(CXXOPT) -c $< -o $@
 
-audacity: $(TARGET) $(DUMP)
+$(WAV): $(TARGET) $(DUMP)
 	./$(TARGET) $(DUMP) $(FILTERED) > $(LOGFILE)
-	sox -2 -b 16 -s -c 2 -r 434027 -t raw $(FILTERED) $(WAV)
+	sox -2 -b 16 -s -c 2 -r 434027 -t raw $(FILTERED) $@
+
+demo: $(WAV)
+
+audacity: $(WAV)
 	audacity $(WAV)
 
 $(DUMP).bz2:
