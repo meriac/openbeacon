@@ -2,11 +2,8 @@ CXX     :=g++
 TARGET  :=openpcd-sniffer
 SOURCES :=src/filter.cpp
 
+DUMP    :=iCLASS-001.img
 MIRROR  :=http://mirror.openbeacon.net
-DUMP    :=dump-001.img
-FILTERED:=$(DUMP:%.img=%-filtered.img)
-LOGFILE :=$(DUMP:%.img=%.txt)
-WAV     :=$(DUMP:%.img=%.wav)
 LIBS    :=-lm
 
 # determine program version
@@ -14,6 +11,10 @@ PROGRAM_VERSION:=$(shell git describe --tags --abbrev=4 --dirty 2>/dev/null | se
 ifeq ("$(PROGRAM_VERSION)","")
     PROGRAM_VERSION:='unknown'
 endif
+
+FILTERED:=$(DUMP:%.img=%-filtered.img)
+LOGFILE :=$(DUMP:%.img=%.csv)
+WAV     :=$(DUMP:%.img=%.wav)
 
 DEBUG   :=-O3
 CXXOPT  :=$(DEBUG)
@@ -47,8 +48,14 @@ audacity: $(TARGET) $(DUMP)
 	sox -2 -b 16 -s -c 2 -r 434027 -t raw $(FILTERED) $(WAV)
 	audacity $(WAV)
 
+$(DUMP).bz2:
+	curl -f -o $@ $(MIRROR)/$@
+
+$(DUMP): $(DUMP).bz2
+	bzip2 -cd $^ > $@
+
 cleanall: clean
-	rm -rf .depend
+	rm -rf .depend $(DUMP) $(DUMP).bz2
 
 clean:
 	rm -f $(TARGET) $(OBJS) $(FILTERED) $(LOGFILE) $(WAV) callgrind.out.* *~
