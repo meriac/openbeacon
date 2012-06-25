@@ -69,6 +69,6 @@ cleanall: clean
 	rm -rf .depend $(WAV_ORIG) $(DUMP) $(DUMP).bz2
 
 clean:
-	rm -f $(TARGET) $(OBJS) $(FILTERED) $(LOGFILE) $(WAV)callgrind.out.* *~
+	rm -f $(TARGET) $(OBJS) $(FILTERED) $(LOGFILE) $(WAV) callgrind.out.* *~
 
 include .depend
