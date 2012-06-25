@@ -279,7 +279,7 @@ main (void)
 		{
 			// receive raw data
 			nRFCMD_RegRead (RD_RX_PLOAD, pkt.byte, sizeof (pkt.byte));
-			nRFCMD_RegReadWrite (STATUS | WRITE_REG, NRF_CONFIG_MASK_RX_DR);
+			nRFCMD_RegReadWrite (NRF_REG_STATUS | WRITE_REG, NRF_CONFIG_MASK_RX_DR);
 
 			// decrypt data
 			protocol_decode ();

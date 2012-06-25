@@ -336,12 +336,11 @@ main (void)
 
 			nRFCMD_Stop ();
 
-			while ((nRFCMD_RegGet (NRF_REG_FIFO_STATUS) & NRF_FIFO_RX_EMPTY)
-				   == 0)
+			while ((nRFCMD_RegGet (NRF_REG_FIFO_STATUS) & NRF_FIFO_RX_EMPTY) == 0)
 			{
 				// receive raw data
 				nRFCMD_RegRead (RD_RX_PLOAD, pkt.byte, sizeof (pkt.byte));
-				nRFCMD_RegReadWrite (STATUS | WRITE_REG,
+				nRFCMD_RegReadWrite (NRF_REG_STATUS | WRITE_REG,
 									 NRF_CONFIG_MASK_RX_DR);
 
 				// decrypt data
