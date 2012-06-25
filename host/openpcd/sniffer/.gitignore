@@ -1,5 +1,7 @@
+openpcd-sniffer
 .depend
 *.o
 *.img
 *.wav
 *.csv
+*.bz2
