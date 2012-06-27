@@ -70,7 +70,6 @@ patch_apply($patches,FALSE);
 //
 // Helper functions
 //
-
 function patch_lookup_patches($file,$patch_list)
 {
 	$patches = array();
@@ -117,31 +116,46 @@ function patch_lookup_patches($file,$patch_list)
 
 function patch_hexread($file)
 {
-	global $hexfile,$memory;
+	global $hexfile,$memory,$hexfile_postfix;
 	
 	$hexfile=array();
+	$hexfile_postfix='';
 	$memory=array();
+
+	$postfix=false;
 
 	if(!is_readable($file))
 		exit("Can't read HEX input file '$file'\n");
 	else
 		foreach(file($file) as $row=>$line)
 		{
+			print_r($line);
+			if($postfix)
+			{
+				$hexfile_postfix.=$line;
+				continue;
+			}
+
 			if(!preg_match('/^:(..)(....)(..)(.*)(..)$/',$line,$matches))
 			exit("error at line($row)\n");
-			
+
 			$rec=array();
 			foreach(array( 1=>'count', 2=>'address', 3=>'type', 5=>'checksum') as $offset=>$name )
 				$rec[$name]=hexdec($matches[$offset]);
-			
-			$hexfile[]=$rec;
-			
-			if($rec['type']>0)
-				break;
-				
-			$address=$rec['address'];
-			foreach(explode(',',trim(chunk_split($matches[4],2,','),',')) as $byte)
-				$memory[$address++]=hexdec($byte);
+
+			if($postfix || ($rec['type']>0))
+			{
+				$postfix=true;
+				$hexfile_postfix=$line;
+			}
+			else
+			{
+				$hexfile[]=$rec;
+
+				$address=$rec['address'];
+				foreach(explode(',',trim(chunk_split($matches[4],2,','),',')) as $byte)
+					$memory[$address++]=hexdec($byte);
+			}
 		}
 }
 
@@ -155,10 +169,10 @@ function patch_apply($patches,$first=FALSE)
 		{
 			if($first && (!isset($memory[$address]) || ($memory[$address]!=0xFF)))
 				exit(sprintf("expecting data set to 0xFF at 0x%04X\n",$address));
-			
+
 			if($memory[$address+1]!=PIC16_DATA_OPCODE)
 				exit(sprintf("expecting PIC16 data opcode at 0x%04X\n",$address+1));
-			
+
 			$memory[$address]=$data&0xFF;	
 			$data>>=8;
 			$address+=2;
@@ -168,7 +182,7 @@ function patch_apply($patches,$first=FALSE)
 
 function patch_hexwrite($file)
 {
-	global $hexfile,$memory;
+	global $hexfile,$hexfile_postfix,$memory;
 		
 	$handle=fopen($file,'w');
 	if(!$handle)
@@ -179,16 +193,17 @@ function patch_hexwrite($file)
 		{
 			$address=$rec['address'];
 			$line=sprintf('%02X%04X%02X',$rec['count'],$address,$rec['type']);
-		
+
 			for($i=0;$i<$rec['count'];$i++)
 			$line.=sprintf('%02X',$memory[$address++]);
-		
+
 			$crc=0;
 			foreach(explode(',',chunk_split($line,2,',')) as $byte)
 			$crc+=hexdec($byte);
 		
 			fwrite($handle,sprintf(":%s%02X\n",$line,(0x100-$crc)&0xFF));
 		}
+		fwrite($handle, $hexfile_postfix);
 		fclose($handle);
 	}
 }
