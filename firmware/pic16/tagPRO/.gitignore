@@ -1,0 +1,6 @@
+funclist
+firmware_counter
+*.hex
+*~
+test_aes
+.depend
