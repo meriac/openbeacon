@@ -129,7 +129,6 @@ function patch_hexread($file)
 	else
 		foreach(file($file) as $row=>$line)
 		{
-			print_r($line);
 			if($postfix)
 			{
 				$hexfile_postfix.=$line;
