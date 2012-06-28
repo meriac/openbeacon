@@ -355,7 +355,7 @@ main (void)
 		// timer deviation difficult
 		sleep_jiffies (JIFFIES_PER_MS (50 + (rand () % 42)));
 
-		/* --------- perform RX ----------------------- */
+		// perform RX
 		if (((uint8_t) seq) & 1)
 		{
 			nRFCMD_Listen (JIFFIES_PER_MS (5));
@@ -373,37 +373,35 @@ main (void)
 					protocol_decode ();
 
 					// verify the crc checksum
-					crc =
-						crc16 (pkt.byte,
-							   sizeof (pkt.tracker) -
-							   sizeof (pkt.tracker.crc));
+					crc = crc16 (pkt.byte,
+						sizeof (pkt.tracker) - sizeof (pkt.tracker.crc));
+
 					// only handle RFBPROTO_PROXTRACKER packets
 					if (htons (crc) == pkt.tracker.crc
 						&& (pkt.hdr.proto == RFBPROTO_PROXTRACKER))
 						protocol_process_packet ();
 				}
-
 			nRFCMD_ResetStop ();
 		}
 
-		/* populate common fields */
+		// populate common fields
 		pkt.hdr.oid = htons (oid_ram);
 		pkt.hdr.flags = global_flags;
 		if (clicked)
 			pkt.hdr.flags |= RFBFLAGS_SENSOR;
 
-		/* perform TX */
+		// perform TX
 		if (((uint8_t) seq) & 1)
 		{
 			CONFIG_PIN_TX_POWER = 1;
 			strength = (seq & 2) ? 1 : 2;
-			nRFCMD_RegPut (NRF_REG_RF_CH | WRITE_REG, CONFIG_PROX_CHANNEL);
+			nRFCMD_Channel (CONFIG_PROX_CHANNEL);
 			pkt.hdr.proto = RFBPROTO_PROXTRACKER;
 			pkt.tracker.oid_last_seen = 0;
 		}
 		else
 		{
-			nRFCMD_RegPut (NRF_REG_RF_CH | WRITE_REG, CONFIG_TRACKER_CHANNEL);
+			nRFCMD_Channel (CONFIG_TRACKER_CHANNEL);
 			strength = (((unsigned char) seq) >> 1) & 0x03;
 
 			pkt.hdr.proto = RFBPROTO_BEACONTRACKER;
@@ -411,7 +409,7 @@ main (void)
 			oid_last_seen = 0;
 		}
 
-		/* for lower strength send normal tracking packet */
+		// for lower strength send normal tracking packet
 		if (strength < 3)
 		{
 			pkt.tracker.strength = strength;
@@ -421,17 +419,17 @@ main (void)
 		}
 		else
 			/* for highest strength send proximity report */
-		{
-			pkt.hdr.proto = RFBPROTO_PROXREPORT_EXT;
-			for (j = 0; j < PROX_MAX; j++)
-				pkt.prox.oid_prox[j] = (j < seen_count) ? (htons (
-					(oid_seen[j]) |
-					(oid_seen_count [j] << PROX_TAG_ID_BITS) |
-					(oid_seen_pwr [j] << (PROX_TAG_ID_BITS+PROX_TAG_COUNT_BITS))
-				)) : 0;
-			pkt.prox.short_seq = htons ((uint16_t) seq);
-			seen_count = 0;
-		}
+			{
+				pkt.hdr.proto = RFBPROTO_PROXREPORT_EXT;
+				for (j = 0; j < PROX_MAX; j++)
+					pkt.prox.oid_prox[j] = (j < seen_count) ? (htons (
+						(oid_seen[j]) |
+						(oid_seen_count [j] << PROX_TAG_ID_BITS) |
+						(oid_seen_pwr [j] << (PROX_TAG_ID_BITS+PROX_TAG_COUNT_BITS))
+					)) : 0;
+				pkt.prox.short_seq = htons ((uint16_t) seq);
+				seen_count = 0;
+			}
 
 		// add CRC to packet
 		crc =
