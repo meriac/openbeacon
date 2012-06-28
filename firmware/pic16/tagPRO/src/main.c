@@ -54,14 +54,28 @@
 #define EEPROM_OID_H 2
 #define EEPROM_OID_L 3
 
-__CONFIG (0x0314);
+/*    configuration word 1
+      32 1098 7654 3210
+      00 1001 1100 1100 = 0x0DCC */
+__CONFIG (0x09CC);
+
+/*    configuration word 2
+      32 1098 7654 3210
+      01 0110 0001 0000 = 0x1610 */
+__CONFIG (0x1610);
+
 __EEPROM_DATA (0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF);
 
 // key is set in create_counted_firmware.php while patching firmware hex file
 volatile const uint32_t oid = 0xFFFFFFFF;
 volatile const uint32_t seed = 0xFFFFFFFF;
 const uint32_t xxtea_key[4] =
-	{ 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
+{
+	0xFFFFFFFF,
+	0xFFFFFFFF,
+	0xFFFFFFFF,
+	0xFFFFFFFF
+};
 
 static uint32_t seq = 0;
 static uint16_t oid_ram = 0;
@@ -294,7 +308,6 @@ main (void)
 	WPUC = CONFIG_CPU_WPUC;
 	ANSELA = CONFIG_CPU_ANSELA;
 	ANSELC = CONFIG_CPU_ANSELC;
-	CONFIG_PIN_TX_POWER = 0;
 
 	INTE = 0;
 	CONFIG_PIN_SENSOR = 1;
@@ -379,7 +392,7 @@ main (void)
 		if (clicked)
 			pkt.hdr.flags |= RFBFLAGS_SENSOR;
 
-		/* --------- perform TX ----------------------- */
+		/* perform TX */
 		if (((uint8_t) seq) & 1)
 		{
 			CONFIG_PIN_TX_POWER = 1;
@@ -457,16 +470,10 @@ main (void)
 
 		// handle click
 		if (!CONFIG_PIN_SENSOR)
-		{
 			clicked = 16;
-			// reset touch sensor pin
-			TRISA = CONFIG_CPU_TRISA & ~0x02;
-			CONFIG_PIN_SENSOR = 1;
-			TRISA = CONFIG_CPU_TRISA;
-		}
-
-		if (clicked > 0)
-			clicked--;
+		else
+			if (clicked > 0)
+				clicked--;
 
 		// finally increase sequence number
 		seq++;
