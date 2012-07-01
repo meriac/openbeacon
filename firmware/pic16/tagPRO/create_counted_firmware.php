@@ -62,11 +62,6 @@ patch_hexwrite(OUTPUT_FILE);
 $patch_list['_oid']++;
 file_put_contents(COUNT_FILE,$patch_list['_oid']);
 
-// Lookup actual symbol offsets from symbols file ...
-$patches=patch_lookup_patches(SYMBOLS_FILE,$patch_list);
-// ... and apply them
-patch_apply($patches,FALSE);
-
 //
 // Helper functions
 //
