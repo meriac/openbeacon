@@ -28,7 +28,7 @@
 // LNA, RF output -18dBm, 2Mbps
 #define NRF_RFOPTIONS 0x09
 
-#define NRF_MAC_SIZE 4
+#define NRF_MAC_SIZE 5
 
 extern void nRFCMD_Init (void);
 extern uint8_t nRFCMD_RegWrite (uint8_t reg,
