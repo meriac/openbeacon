@@ -329,6 +329,9 @@ main (void)
 		/* --------- perform RX ----------------------- */
 		if (((u_int8_t) seq) & 1)
 		{
+			nRFCMD_RegReadWrite (NRF_REG_RF_CH | WRITE_REG,
+								 CONFIG_PROX_CHANNEL);
+
 			nRFCMD_StartRX ();
 			CONFIG_PIN_CE = 1;
 			sleep_jiffies (JIFFIES_PER_MS (5));
@@ -368,8 +371,6 @@ main (void)
 		{
 			CONFIG_PIN_ANT_SWITCH = 1;
 			strength = (seq & 2) ? 1 : 2;
-			nRFCMD_RegReadWrite (NRF_REG_RF_CH | WRITE_REG,
-								 CONFIG_PROX_CHANNEL);
 			pkt.hdr.proto = RFBPROTO_PROXTRACKER;
 			pkt.tracker.oid_last_seen = 0;
 		}
@@ -435,13 +436,13 @@ main (void)
 
 		/* --------- blinking pattern ----------------------- */
 		if ((seq & (clicked ? 1 : 0x1F)) == 0)
+		{
 			CONFIG_PIN_LED = 1;
-
-		// blink for 1ms
-		sleep_jiffies (JIFFIES_PER_MS (1));
-
-		// disable LED
-		CONFIG_PIN_LED = 0;
+			// blink for 1ms
+			sleep_jiffies (JIFFIES_PER_MS (1));
+			// disable LED
+			CONFIG_PIN_LED = 0;
+		}
 
 		/* --------- handle click ----------------------- */
 		if (!CONFIG_PIN_SENSOR)
