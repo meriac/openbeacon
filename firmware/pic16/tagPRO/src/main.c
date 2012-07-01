@@ -317,7 +317,7 @@ main (void)
 	timer_init ();
 	nRFCMD_Init ();
 
-	for (j = 0; j <= 50; j++)
+	for (j = 0; j <= 20; j++)
 	{
 		CONFIG_PIN_LED = j & 1;
 		sleep_jiffies (JIFFIES_PER_MS (25));
@@ -444,8 +444,7 @@ main (void)
 		protocol_encode ();
 
 		// transmit data to nRF24L01 chip
-		nRFCMD_RegWrite (WR_TX_PLOAD | WRITE_REG, (unsigned char *) &pkt,
-						 sizeof (pkt));
+		nRFCMD_RegWrite (WR_TX_PLOAD | WRITE_REG, (uint8_t*)&pkt, sizeof (pkt));
 		// send data away
 		nRFCMD_Execute ();
 
@@ -458,13 +457,15 @@ main (void)
 
 		// blinking pattern
 		if ((seq & (clicked ? 1 : 0x1F)) == 0)
+		{
 			CONFIG_PIN_LED = 1;
 
-		// blink for 1ms
-		sleep_jiffies (JIFFIES_PER_MS (1));
+			// blink for 1ms
+			sleep_jiffies (JIFFIES_PER_MS (1));
 
-		// disable LED
-		CONFIG_PIN_LED = 0;
+			// disable LED
+			CONFIG_PIN_LED = 0;
+		}
 
 		// handle click
 		if (!CONFIG_PIN_SENSOR)
