@@ -62,15 +62,9 @@ patch_hexwrite(OUTPUT_FILE);
 $patch_list['_oid']++;
 file_put_contents(COUNT_FILE,$patch_list['_oid']);
 
-// Lookup actual symbol offsets from symbols file ...
-$patches=patch_lookup_patches(SYMBOLS_FILE,$patch_list);
-// ... and apply them
-patch_apply($patches,FALSE);
-
 //
 // Helper functions
 //
-
 function patch_lookup_patches($file,$patch_list)
 {
 	$patches = array();
@@ -85,26 +79,26 @@ function patch_lookup_patches($file,$patch_list)
 
 			if($name && array_key_exists($name,$patch_list))
 			{
-			if($symbol[3]!=SYMBOLS_SEG)
-				exit($name.' must be in '.SYMBOLS_SEG." segment - invalid segment $symbol[3] sepecified\n");
-		
-			$offset = hexdec($symbol[1])*2;
-			if($offset)
-			{
-				$patch = $patch_list[$name];
+				if($symbol[3]!=SYMBOLS_SEG)
+					exit($name.' must be in '.SYMBOLS_SEG." segment - invalid segment $symbol[3] sepecified\n");
 
-				// remove found patches from list
-				unset($patch_list[$name]);
-
-				if(is_array($patch))
-				foreach($patch as $content)
+				$offset = hexdec($symbol[1])*2;
+				if($offset)
 				{
-					$patches[$offset]=$content;
-					$offset+=8;
+					$patch = $patch_list[$name];
+
+					// remove found patches from list
+					unset($patch_list[$name]);
+
+					if(is_array($patch))
+						foreach($patch as $content)
+						{
+							$patches[$offset]=$content;
+							$offset+=8;
+						}
+						else
+							$patches[$offset]=$patch;
 				}
-				else
-				$patches[$offset]=$patch;
-			}
 			}
 		}
 
@@ -118,7 +112,7 @@ function patch_lookup_patches($file,$patch_list)
 function patch_hexread($file)
 {
 	global $hexfile,$memory;
-	
+
 	$hexfile=array();
 	$memory=array();
 
@@ -128,17 +122,17 @@ function patch_hexread($file)
 		foreach(file($file) as $row=>$line)
 		{
 			if(!preg_match('/^:(..)(....)(..)(.*)(..)$/',$line,$matches))
-			exit("error at line($row)\n");
-			
+				exit("error at line($row)\n");
+
 			$rec=array();
 			foreach(array( 1=>'count', 2=>'address', 3=>'type', 5=>'checksum') as $offset=>$name )
 				$rec[$name]=hexdec($matches[$offset]);
-			
-			$hexfile[]=$rec;
-			
+
 			if($rec['type']>0)
 				break;
-				
+
+			$hexfile[]=$rec;
+
 			$address=$rec['address'];
 			foreach(explode(',',trim(chunk_split($matches[4],2,','),',')) as $byte)
 				$memory[$address++]=hexdec($byte);
@@ -155,11 +149,11 @@ function patch_apply($patches,$first=FALSE)
 		{
 			if($first && (!isset($memory[$address]) || ($memory[$address]!=0xFF)))
 				exit(sprintf("expecting data set to 0xFF at 0x%04X\n",$address));
-			
+
 			if($memory[$address+1]!=PIC16_DATA_OPCODE)
 				exit(sprintf("expecting PIC16 data opcode at 0x%04X\n",$address+1));
-			
-			$memory[$address]=$data&0xFF;	
+
+			$memory[$address]=$data&0xFF;
 			$data>>=8;
 			$address+=2;
 		}
@@ -179,16 +173,18 @@ function patch_hexwrite($file)
 		{
 			$address=$rec['address'];
 			$line=sprintf('%02X%04X%02X',$rec['count'],$address,$rec['type']);
-		
+
 			for($i=0;$i<$rec['count'];$i++)
-			$line.=sprintf('%02X',$memory[$address++]);
-		
+				$line.=sprintf('%02X',$memory[$address++]);
+
 			$crc=0;
 			foreach(explode(',',chunk_split($line,2,',')) as $byte)
-			$crc+=hexdec($byte);
-		
+				$crc+=hexdec($byte);
+
 			fwrite($handle,sprintf(":%s%02X\n",$line,(0x100-$crc)&0xFF));
 		}
+
+		fwrite($handle,":00000001FF\n");
 		fclose($handle);
 	}
 }
