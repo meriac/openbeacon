@@ -81,7 +81,7 @@ static const long tea_keys[][XXTEA_BLOCK_COUNT] = {
 
 static uint32_t g_tea_key_usage[TEA_KEY_COUNT + 1];
 static uint32_t g_total_crc_ok, g_total_crc_errors;
-static uint32_t g_ignored_protocol, g_invalid_protocol, g_invalid_reader;
+static uint32_t g_ignored_protocol, g_invalid_protocol, g_unknown_reader;
 static uint8_t g_decrypted_one;
 
 #define MX  ( (((z>>5)^(y<<2))+((y>>3)^(z<<4)))^((sum^y)+(tea_key[(p&3)^e]^z)) )
@@ -484,8 +484,8 @@ EstimationStep (double timestamp, bool realtime)
 	if (g_invalid_protocol)
 		printf ("    \"invalid_protocol\":%i,\n", g_invalid_protocol);
 
-	if (g_invalid_reader)
-		printf ("    \"invalid_reader\":%i,\n", g_invalid_reader);
+	if (g_unknown_reader)
+		printf ("    \"unknown_reader\":%i,\n", g_unknown_reader);
 
 	/* show CRC errors count */
 	if (g_total_crc_errors)
@@ -925,136 +925,126 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 				item->reader_index = t;
 				item->last_seen = 0;
 			}
-			else
-				memset (item, 0, sizeof (*item));
 
 			item->tag_id = tag_id;
 		}
 
 		/* increment reader stats for each packet */
 		if (!item->reader_id)
-		{
-			fprintf (stderr, "\t\tunknown reader 0x%08X\n", reader_id);
-			g_invalid_reader++;
-		}
+			g_unknown_reader++;
+
+		g_reader_last_seen[item->reader_index] = timestamp;
+
+		if ((tag = (TTagItem *) g_map_tag.Add (tag_id, &tag_mutex)) == NULL)
+			diep ("can't add tag");
 		else
 		{
-			g_reader_last_seen[item->reader_index] = timestamp;
-
-			if ((tag =
-				 (TTagItem *) g_map_tag.Add (tag_id, &tag_mutex)) == NULL)
-				diep ("can't add tag");
-			else
+			/* on first occurrence */
+			if (!tag->id)
 			{
-				/* on first occurrence */
-				if (!tag->id)
-				{
-					fprintf (stderr, "new tag %8u [key=%u] seen\n", tag_id,
-							 key_id);
-					tag->id = tag_id;
-					tag->key_id = key_id;
-					tag->last_calculated = timestamp;
-					tag->last_reader_statistics = timestamp;
-				}
-
-				/* get time difference since last run */
-				delta_t = timestamp - tag->last_seen;
-				tag->last_seen = timestamp;
-				if (tag->key_id != key_id)
-				{
-					fprintf (stderr,
-							 "\t\ttag %u changed encryption key id from [key=%u]->[key=%u]\n",
-							 tag_id, tag->key_id, key_id);
-					tag->key_id = key_id;
-				}
-
-				if (delta_t >= RESET_TAG_POSITION_SECONDS)
-				{
-					/* reset tag origin to first reader seen */
-					px = item->reader->x;
-					py = item->reader->y;
-					tag->px = px;
-					tag->py = py;
-					power = tag->power;
-
-					for (t = 0; t < STRENGTH_LEVELS_COUNT; t++)
-					{
-						power->px = px;
-						power->py = py;
-						power->reader = item->reader;
-						power->count = 0;
-						power++;
-					}
-				}
-
-				/* TODO: fix wrapping of 16 bit sequence numbers */
-				if (tag_flags & TAGSIGHTINGFLAG_SHORT_SEQUENCE)
-					tag->sequence = (tag->sequence & ~0xFFFF) | tag_sequence;
-				else
-					tag->sequence = tag_sequence;
-
-				item->tag = tag;
-				pthread_mutex_unlock (tag_mutex);
-#ifdef DEBUG
-				fprintf (stderr,
-						 "tag:%04u [reader=%04u,strength=%u,sequence=0x%08X] ",
-						 tag_id, reader_id, tag_strength, tag->sequence);
-				hex_dump (&env, 0, sizeof (env));
-#endif
+				fprintf (stderr, "new tag %8u [key=%u] seen\n", tag_id,
+						 key_id);
+				tag->id = tag_id;
+				tag->key_id = key_id;
+				tag->last_calculated = timestamp;
+				tag->last_reader_statistics = timestamp;
 			}
 
 			/* get time difference since last run */
-			delta_t = timestamp - item->last_seen;
-			if (delta_t)
+			delta_t = timestamp - tag->last_seen;
+			tag->last_seen = timestamp;
+			if (tag->key_id != key_id)
 			{
-				item->last_seen = timestamp;
-
-				if (delta_t >= MAX_AGGREGATION_SECONDS)
-				{
-					memset (&item->levels, 0, sizeof (item->levels));
-					memset (&item->strength, 0, sizeof (item->strength));
-					item->fifo_pos = 0;
-					delta_t = 0;
-				}
-				else
-				{
-					item->fifo_pos++;
-					if (item->fifo_pos >= MAX_AGGREGATION_SECONDS)
-						item->fifo_pos = 0;
-				}
+				fprintf (stderr,
+						 "\t\ttag %u changed encryption key id from [key=%u]->[key=%u]\n",
+						 tag_id, tag->key_id, key_id);
+				tag->key_id = key_id;
 			}
 
-			/* get current aggregation position */
-			aggregation = &item->levels[item->fifo_pos];
-
-			/* reset values to zero */
-			if (delta_t)
+			if ((delta_t >= RESET_TAG_POSITION_SECONDS) && item->reader)
 			{
-				memset (aggregation, 0, sizeof (*aggregation));
-				aggregation->time = timestamp;
-			}
-			aggregation->strength[tag_strength]++;
-
-			if (delta_t)
-			{
-				memset (&item->strength, 0, sizeof (item->strength));
-				aggregation = item->levels;
-				for (t = 0; t < MAX_AGGREGATION_SECONDS; t++)
+				/* reset tag origin to first reader seen */
+				px = item->reader->x;
+				py = item->reader->y;
+				tag->px = px;
+				tag->py = py;
+				power = tag->power;
+				for (t = 0; t < STRENGTH_LEVELS_COUNT; t++)
 				{
-					for (j = 0; j < STRENGTH_LEVELS_COUNT; j++)
-						if ((timestamp - aggregation->time) <=
-							AGGREGATION_TIMEOUT (j))
-							item->strength[j] += aggregation->strength[j];
-					aggregation++;
+					power->px = px;
+					power->py = py;
+					power->reader = item->reader;
+					power->count = 0;
+					power++;
 				}
 			}
 
-			if (tag_flags & TAGSIGHTINGFLAG_BUTTON_PRESS)
-				tag->button = timestamp + TAGSIGHTING_BUTTON_TIME_SECONDS;
+			/* TODO: fix wrapping of 16 bit sequence numbers */
+			if (tag_flags & TAGSIGHTINGFLAG_SHORT_SEQUENCE)
+				tag->sequence = (tag->sequence & ~0xFFFF) | tag_sequence;
+			else
+				tag->sequence = tag_sequence;
+			item->tag = tag;
+			pthread_mutex_unlock (tag_mutex);
+#ifdef DEBUG
+			fprintf (stderr,
+					 "tag:%04u [reader=%04u,strength=%u,sequence=0x%08X] ",
+					 tag_id, reader_id, tag_strength, tag->sequence);
+			hex_dump (&env, 0, sizeof (env));
+#endif
 		}
 
-		pthread_mutex_unlock (item_mutex);
+		/* get time difference since last run */
+		delta_t = timestamp - item->last_seen;
+		if (delta_t)
+		{
+			item->last_seen = timestamp;
+
+			if (delta_t >= MAX_AGGREGATION_SECONDS)
+			{
+				memset (&item->levels, 0, sizeof (item->levels));
+				memset (&item->strength, 0, sizeof (item->strength));
+				item->fifo_pos = 0;
+				delta_t = 0;
+			}
+			else
+			{
+				item->fifo_pos++;
+				if (item->fifo_pos >= MAX_AGGREGATION_SECONDS)
+					item->fifo_pos = 0;
+			}
+		}
+
+		/* get current aggregation position */
+		aggregation = &item->levels[item->fifo_pos];
+
+		/* reset values to zero */
+		if (delta_t)
+		{
+			memset (aggregation, 0, sizeof (*aggregation));
+			aggregation->time = timestamp;
+		}
+		aggregation->strength[tag_strength]++;
+
+		if (delta_t)
+		{
+			memset (&item->strength, 0, sizeof (item->strength));
+			aggregation = item->levels;
+			for (t = 0; t < MAX_AGGREGATION_SECONDS; t++)
+			{
+				for (j = 0; j < STRENGTH_LEVELS_COUNT; j++)
+					if ((timestamp - aggregation->time) <=
+						AGGREGATION_TIMEOUT (j))
+						item->strength[j] += aggregation->strength[j];
+				aggregation++;
+			}
+		}
+
+		if (tag_flags & TAGSIGHTINGFLAG_BUTTON_PRESS)
+			tag->button = timestamp + TAGSIGHTING_BUTTON_TIME_SECONDS;
 	}
+
+	pthread_mutex_unlock (item_mutex);
 
 	return res;
 }
@@ -1243,7 +1233,7 @@ main (int argc, char **argv)
 	bool realtime;
 
 	/* initialize statistics */
-	g_invalid_reader = 0;
+	g_unknown_reader = 0;
 	g_decrypted_one = 0;
 	g_total_crc_ok = g_total_crc_errors = 0;
 	g_ignored_protocol = g_invalid_protocol = 0;
