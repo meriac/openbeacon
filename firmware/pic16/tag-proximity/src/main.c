@@ -453,9 +453,9 @@ main (void)
 			CONFIG_PIN_SENSOR = 1;
 			TRISA = CONFIG_CPU_TRISA;
 		}
-
-		if (clicked > 0)
-			clicked--;
+		else
+			if (clicked > 0)
+				clicked--;
 
 		// finally increase sequence number
 		seq++;
