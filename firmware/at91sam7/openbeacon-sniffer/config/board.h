@@ -41,9 +41,9 @@
 /* Master Clock                  */
 /*-------------------------------*/
 
-#define EXT_OC		18432000	// Exetrnal ocilator MAINCK
-#define MCK		47923200	// MCK (PLLRC div by 2)
-#define MCKKHz		(MCK/1000)	//
+#define EXT_OC		18432000													// Exetrnal ocilator MAINCK
+#define MCK		47923200														// MCK (PLLRC div by 2)
+#define MCKKHz		(MCK/1000)													//
 
 /*-------------------------------*/
 /* LED declaration               */
@@ -95,9 +95,9 @@
 
 typedef struct
 {
-    unsigned int magic,size,crc16;
-    unsigned int mode,speed;
-    unsigned int tag_id;
+	unsigned int magic, size, crc16;
+	unsigned int mode, speed;
+	unsigned int tag_id;
 } TEnvironment;
 
 /*----------------------------------*/

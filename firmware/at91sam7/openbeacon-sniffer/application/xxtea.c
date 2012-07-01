@@ -49,51 +49,51 @@ unsigned char e;
 void
 mx_update (unsigned char p)
 {
-  mx = MX;
+	mx = MX;
 }
 
 #ifdef  CONFIG_TEA_ENABLEENCODE
 static inline void
 mx_encode (unsigned char p)
 {
-  mx_update (p);
-  z = tmp + mx;
+	mx_update (p);
+	z = tmp + mx;
 }
 
 void
 xxtea_encode (void)
 {
-  int q;
+	int q;
 
-  z = g_Beacon.data[3];
-  sum = 0;
+	z = g_Beacon.data[3];
+	sum = 0;
 
-  q = TEA_ROUNDS_COUNT;
-  while (q-- > 0)
-    {
-      sum += DELTA;
-      e = sum >> 2 & 3;
+	q = TEA_ROUNDS_COUNT;
+	while (q-- > 0)
+	{
+		sum += DELTA;
+		e = sum >> 2 & 3;
 
-      y = g_Beacon.data[1];
-      tmp = g_Beacon.data[0];
-      mx_encode (0);
-      g_Beacon.data[0] = z;
+		y = g_Beacon.data[1];
+		tmp = g_Beacon.data[0];
+		mx_encode (0);
+		g_Beacon.data[0] = z;
 
-      y = g_Beacon.data[2];
-      tmp = g_Beacon.data[1];
-      mx_encode (1);
-      g_Beacon.data[1] = z;
+		y = g_Beacon.data[2];
+		tmp = g_Beacon.data[1];
+		mx_encode (1);
+		g_Beacon.data[1] = z;
 
-      y = g_Beacon.data[3];
-      tmp = g_Beacon.data[2];
-      mx_encode (2);
-      g_Beacon.data[2] = z;
+		y = g_Beacon.data[3];
+		tmp = g_Beacon.data[2];
+		mx_encode (2);
+		g_Beacon.data[2] = z;
 
-      y = g_Beacon.data[0];
-      tmp = g_Beacon.data[3];
-      mx_encode (3);
-      g_Beacon.data[3] = z;
-    }
+		y = g_Beacon.data[0];
+		tmp = g_Beacon.data[3];
+		mx_encode (3);
+		g_Beacon.data[3] = z;
+	}
 }
 #endif /*CONFIG_TEA_ENABLEENCODE */
 
@@ -101,41 +101,41 @@ xxtea_encode (void)
 static inline void
 mx_decode (unsigned char p)
 {
-  mx_update (p);
-  y = tmp - mx;
+	mx_update (p);
+	y = tmp - mx;
 }
 
 void
 xxtea_decode (void)
 {
-  y = g_Beacon.data[0];
-  sum = DELTA * TEA_ROUNDS_COUNT;
+	y = g_Beacon.data[0];
+	sum = DELTA * TEA_ROUNDS_COUNT;
 
-  while (sum != 0)
-    {
-      e = sum >> 2 & 3;
+	while (sum != 0)
+	{
+		e = sum >> 2 & 3;
 
-      z = g_Beacon.data[2];
-      tmp = g_Beacon.data[3];
-      mx_decode (3);
-      g_Beacon.data[3] = y;
+		z = g_Beacon.data[2];
+		tmp = g_Beacon.data[3];
+		mx_decode (3);
+		g_Beacon.data[3] = y;
 
-      z = g_Beacon.data[1];
-      tmp = g_Beacon.data[2];
-      mx_decode (2);
-      g_Beacon.data[2] = y;
+		z = g_Beacon.data[1];
+		tmp = g_Beacon.data[2];
+		mx_decode (2);
+		g_Beacon.data[2] = y;
 
-      z = g_Beacon.data[0];
-      tmp = g_Beacon.data[1];
-      mx_decode (1);
-      g_Beacon.data[1] = y;
+		z = g_Beacon.data[0];
+		tmp = g_Beacon.data[1];
+		mx_decode (1);
+		g_Beacon.data[1] = y;
 
-      z = g_Beacon.data[3];
-      tmp = g_Beacon.data[0];
-      mx_decode (0);
-      g_Beacon.data[0] = y;
+		z = g_Beacon.data[3];
+		tmp = g_Beacon.data[0];
+		mx_decode (0);
+		g_Beacon.data[0] = y;
 
-      sum -= DELTA;
-    }
+		sum -= DELTA;
+	}
 }
 #endif /*CONFIG_TEA_ENABLEDECODE */

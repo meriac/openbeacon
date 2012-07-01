@@ -39,19 +39,19 @@
 
 typedef struct
 {
-  TBeaconHeader hdr;
-  u_int8_t flags, strength;
-  u_int32_t seq;
-  u_int32_t oid;
-  u_int16_t reserved;
-  u_int16_t crc;
+	TBeaconHeader hdr;
+	u_int8_t flags, strength;
+	u_int32_t seq;
+	u_int32_t oid;
+	u_int16_t reserved;
+	u_int16_t crc;
 } __attribute__ ((packed)) TBeaconTracker;
 
 typedef union
 {
-  TBeaconTracker pkt;
-  u_int32_t data[TEA_ENCRYPTION_BLOCK_COUNT];
-  u_int8_t datab[TEA_ENCRYPTION_BLOCK_COUNT * sizeof (u_int32_t)];
+	TBeaconTracker pkt;
+	u_int32_t data[TEA_ENCRYPTION_BLOCK_COUNT];
+	u_int8_t datab[TEA_ENCRYPTION_BLOCK_COUNT * sizeof (u_int32_t)];
 }
 __attribute__ ((packed)) TBeaconEnvelope;
 

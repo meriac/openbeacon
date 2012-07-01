@@ -43,46 +43,46 @@
 static inline void
 prvSetupHardware (void)
 {
-  /*  When using the JTAG debugger the hardware is not always initialised to
-     the correct default state.  This line just ensures that this does not
-     cause all interrupts to be masked at the start. */
-  AT91C_BASE_AIC->AIC_EOICR = 0;
+	/*  When using the JTAG debugger the hardware is not always initialised to
+	   the correct default state.  This line just ensures that this does not
+	   cause all interrupts to be masked at the start. */
+	AT91C_BASE_AIC->AIC_EOICR = 0;
 
-  /*  Enable the peripheral clock. */
-  AT91C_BASE_PMC->PMC_PCER = 1 << AT91C_ID_PIOA;
-  AT91C_BASE_PMC->PMC_PCER = 1 << AT91C_ID_PIOB;
+	/*  Enable the peripheral clock. */
+	AT91C_BASE_PMC->PMC_PCER = 1 << AT91C_ID_PIOA;
+	AT91C_BASE_PMC->PMC_PCER = 1 << AT91C_ID_PIOB;
 }
 
 /**********************************************************************/
 void
 vApplicationIdleHook (void)
 {
-  /* Restart watchdog, has been enabled in Cstartup_SAM7.c */
-  AT91F_WDTRestart (AT91C_BASE_WDTC);
+	/* Restart watchdog, has been enabled in Cstartup_SAM7.c */
+	AT91F_WDTRestart (AT91C_BASE_WDTC);
 }
 
 /**********************************************************************/
 void
 vDebugSendHook (char data)
 {
-  vUSBSendByte (data);
+	vUSBSendByte (data);
 }
 
 /**********************************************************************/
-void __attribute__((noreturn)) mainloop (void)
+void __attribute__ ((noreturn)) mainloop (void)
 {
-  prvSetupHardware ();
+	prvSetupHardware ();
 
-  vLedInit ();
+	vLedInit ();
 
-  xTaskCreate (vUSBCDCTask, (signed portCHAR *) "USB", TASK_USB_STACK,
-	       NULL, TASK_USB_PRIORITY, NULL);
+	xTaskCreate (vUSBCDCTask, (signed portCHAR *) "USB", TASK_USB_STACK,
+				 NULL, TASK_USB_PRIORITY, NULL);
 
-  vInitProtocolLayer ();
+	vInitProtocolLayer ();
 
-  vLedSetGreen (1);
+	vLedSetGreen (1);
 
-  vTaskStartScheduler ();
+	vTaskStartScheduler ();
 
-  while(1);
+	while (1);
 }

@@ -29,9 +29,9 @@
 
 typedef struct
 {
-  u_int16_t tag_oid;
-  u_int8_t tag_strength;
-  u_int8_t packet_count;
+	u_int16_t tag_oid;
+	u_int8_t tag_strength;
+	u_int8_t packet_count;
 } __attribute__ ((packed)) TBeaconSort;
 
 extern TBeaconEnvelope g_Beacon;
