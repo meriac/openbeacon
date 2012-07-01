@@ -132,7 +132,8 @@ typedef struct
 typedef struct
 {
 	uint32_t last_seen, fifo_pos;
-	uint32_t tag_id, reader_id, reader_index;
+	uint32_t tag_id, reader_id;
+	int reader_index;
 	const TReaderItem *reader;
 	TTagItem *tag;
 	uint8_t strength[STRENGTH_LEVELS_COUNT];
@@ -921,19 +922,25 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 			if (t < READER_COUNT)
 			{
 				item->reader = &g_ReaderList[t];
-				item->reader_id = reader_id;
 				item->reader_index = t;
-				item->last_seen = 0;
+			}
+			else
+			{
+				item->reader = NULL;
+				item->reader_index = -1;
 			}
 
+			item->reader_id = reader_id;
 			item->tag_id = tag_id;
+			item->last_seen = 0;
 		}
 
 		/* increment reader stats for each packet */
 		if (!item->reader_id)
 			g_unknown_reader++;
 
-		g_reader_last_seen[item->reader_index] = timestamp;
+		if(item->reader_index>=0)
+			g_reader_last_seen[item->reader_index] = timestamp;
 
 		if ((tag = (TTagItem *) g_map_tag.Add (tag_id, &tag_mutex)) == NULL)
 			diep ("can't add tag");
