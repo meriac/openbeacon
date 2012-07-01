@@ -394,7 +394,7 @@ main (void)
 			pkt.tracker.seq = htonl (seq);
 		}
 		else
-			/* for highest strength send proximity report */
+		/* for highest strength send proximity report */
 		{
 			pkt.hdr.proto = RFBPROTO_PROXREPORT_EXT;
 			for (j = 0; j < PROX_MAX; j++)
