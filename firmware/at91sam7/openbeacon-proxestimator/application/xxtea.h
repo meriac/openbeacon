@@ -29,11 +29,11 @@
 #ifdef  CONFIG_TEA_ENABLEENCODE
 extern void
 xxtea_encode (void)
-  RAMFUNC;
+	RAMFUNC;
 #endif /*CONFIG_ENABLEENCODE */
 
 #ifdef  CONFIG_TEA_ENABLEDECODE
-     extern void xxtea_decode (void) RAMFUNC;
+	 extern void xxtea_decode (void) RAMFUNC;
 #endif /*CONFIG_ENABLEDECODE */
 
 #endif/*__XXTEA_H__*/
