@@ -115,6 +115,7 @@ typedef struct
 typedef struct
 {
 	const TReaderItem *reader;
+	uint32_t reader_id;
 	int count;
 	double px, py, Fx, Fy;
 } TTagItemStrength;
@@ -126,6 +127,7 @@ typedef struct
 	double last_seen, last_calculated, last_reader_statistics;
 	double px, py, vx, vy;
 	const TReaderItem *last_reader;
+	uint32_t last_reader_id;
 	TTagItemStrength power[STRENGTH_LEVELS_COUNT];
 } TTagItem;
 
@@ -318,8 +320,7 @@ ThreadIterateLocked (void *Context, double timestamp, bool realtime)
 	TTagItemStrength *power;
 	TEstimatorItem *item = (TEstimatorItem *) Context;
 
-	if (!item->reader
-		|| ((timestamp - item->last_seen) >= MAX_AGGREGATION_SECONDS))
+	if ((timestamp - item->last_seen) >= MAX_AGGREGATION_SECONDS)
 		return;
 
 	tag = item->tag;
@@ -327,16 +328,21 @@ ThreadIterateLocked (void *Context, double timestamp, bool realtime)
 
 	for (i = 0; i < STRENGTH_LEVELS_COUNT; i++)
 	{
-		dx = item->reader->x - power->px;
-		dy = item->reader->y - power->py;
-
 		strength = item->strength[i];
-		power->Fx += dx * strength;
-		power->Fy += dy * strength;
 
-		if ((strength > power->count) && (item->reader))
+		if(item->reader)
+		{
+			dx = item->reader->x - power->px;
+			dy = item->reader->y - power->py;
+
+			power->Fx += dx * strength;
+			power->Fy += dy * strength;
+		}
+
+		if ((strength > power->count))
 		{
 			power->reader = item->reader;
+			power->reader_id = item->reader_id;
 			power->count = strength;
 		}
 
@@ -380,6 +386,7 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
 			{
 				found = true;
 				tag->last_reader = power->reader;
+				tag->last_reader_id = power->reader_id;
 			}
 			power->reader = NULL;
 			power->count = 0;
@@ -414,14 +421,16 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
 	tag->vy += (F * delta_t) / TAG_MASS;
 	tag->py += F * delta_t * delta_t / (TAG_MASS * 2.0);
 
-	printf ("%s    {\"id\":%u,\"px\":%i,\"py\":%i",
-			g_first ? "" : ",\n", tag->id, (int) tag->px, (int) tag->py);
+	printf ("%s    {\"id\":%u", g_first ? "" : ",\n", tag->id);
+
+	if (tag->last_reader)
+		printf (",\"px\":%i,\"py\":%i", (int) tag->px, (int) tag->py);
 
 	if (tag->key_id)
 		printf (",\"key\":%i", tag->key_id);
 
-	if (tag->last_reader)
-		printf (",\"reader\":%i", tag->last_reader->id);
+	if (tag->last_reader_id)
+		printf (",\"reader\":%i", tag->last_reader_id);
 
 	if (tag->button > timestamp)
 		printf (",\"button\":true}");
@@ -936,7 +945,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 		}
 
 		/* increment reader stats for each packet */
-		if (!item->reader_id)
+		if (item->reader_index<0)
 			g_unknown_reader++;
 
 		if(item->reader_index>=0)
