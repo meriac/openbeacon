@@ -358,9 +358,11 @@ main (void)
 		// perform RX
 		if (((uint8_t) seq) & 1)
 		{
+			nRFCMD_Channel (CONFIG_PROX_CHANNEL);
 			nRFCMD_Listen (JIFFIES_PER_MS (5));
 
 			if (!CONFIG_PIN_IRQ)
+			{
 				while ((nRFCMD_RegGet (NRF_REG_FIFO_STATUS) &
 						NRF_FIFO_RX_EMPTY) == 0)
 				{
@@ -381,7 +383,8 @@ main (void)
 						&& (pkt.hdr.proto == RFBPROTO_PROXTRACKER))
 						protocol_process_packet ();
 				}
-			nRFCMD_ResetStop ();
+				nRFCMD_ResetStop ();
+			}
 		}
 
 		// populate common fields
@@ -395,7 +398,6 @@ main (void)
 		{
 			CONFIG_PIN_TX_POWER = 1;
 			strength = (seq & 2) ? 1 : 2;
-			nRFCMD_Channel (CONFIG_PROX_CHANNEL);
 			pkt.hdr.proto = RFBPROTO_PROXTRACKER;
 			pkt.tracker.oid_last_seen = 0;
 		}
@@ -447,6 +449,8 @@ main (void)
 		nRFCMD_RegWrite (WR_TX_PLOAD | WRITE_REG, (uint8_t*)&pkt, sizeof (pkt));
 		// send data away
 		nRFCMD_Execute ();
+		// halt RF frontend
+		nRFCMD_ResetStop ();
 
 		// update code_block so on next power up
 		// the seq will be higher or equal
