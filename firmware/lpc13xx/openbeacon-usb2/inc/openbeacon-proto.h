@@ -28,7 +28,7 @@
 
 #ifndef CONFIG_NAVIGATION_CHANNEL
 #define CONFIG_NAVIGATION_CHANNEL CONFIG_TRACKER_CHANNEL
-#endif/*CONFIG_NAVIGATION_CHANNEL*/
+#endif /*CONFIG_NAVIGATION_CHANNEL */
 
 #define BEACONLOG_SIGHTING 0x01
 
@@ -92,110 +92,110 @@
 
 typedef struct
 {
-  uint8_t proto, proto2;
-  uint8_t flags, strength;
-  uint32_t seq;
-  uint32_t oid;
-  uint16_t reserved;
-  uint16_t crc;
+	uint8_t proto, proto2;
+	uint8_t flags, strength;
+	uint32_t seq;
+	uint32_t oid;
+	uint16_t reserved;
+	uint16_t crc;
 } PACKED TBeaconTrackerOld;
 
 typedef struct
 {
-  uint8_t strength;
-  uint16_t oid_last_seen;
-  uint16_t powerup_count;
-  uint8_t reserved;
-  uint32_t seq;
+	uint8_t strength;
+	uint16_t oid_last_seen;
+	uint16_t powerup_count;
+	uint8_t reserved;
+	uint32_t seq;
 } PACKED TBeaconTracker;
 
 typedef struct
 {
-  uint8_t strength;
-  uint16_t oid_last_seen;
-  uint16_t time;
-  uint8_t battery;
-  uint32_t seq;
+	uint8_t strength;
+	uint16_t oid_last_seen;
+	uint16_t time;
+	uint8_t battery;
+	uint32_t seq;
 } PACKED TBeaconTrackerExt;
 
 typedef struct
 {
-  uint16_t oid_prox[PROX_MAX];
-  uint16_t seq;
+	uint16_t oid_prox[PROX_MAX];
+	uint16_t seq;
 } PACKED TBeaconProx;
 
 typedef struct
 {
-  uint8_t opcode, res;
-  uint32_t data[2];
+	uint8_t opcode, res;
+	uint32_t data[2];
 } PACKED TBeaconReaderCommand;
 
 typedef struct
 {
-  uint8_t opcode, strength;
-  uint32_t uptime, ip;
+	uint8_t opcode, strength;
+	uint32_t uptime, ip;
 } PACKED TBeaconReaderAnnounce;
 
 typedef struct
 {
-  uint16_t oid;
-  uint8_t slot[FWDTAG_SLOTS];
-  uint32_t seq;
+	uint16_t oid;
+	uint8_t slot[FWDTAG_SLOTS];
+	uint32_t seq;
 } PACKED TBeaconForward;
 
 typedef union
 {
-  TBeaconProx prox;
-  TBeaconTracker tracker;
-  TBeaconTrackerExt trackerExt;
-  TBeaconReaderCommand reader_command;
-  TBeaconReaderAnnounce reader_announce;
-  TBeaconForward forward;
+	TBeaconProx prox;
+	TBeaconTracker tracker;
+	TBeaconTrackerExt trackerExt;
+	TBeaconReaderCommand reader_command;
+	TBeaconReaderAnnounce reader_announce;
+	TBeaconForward forward;
 } PACKED TBeaconPayload;
 
 typedef struct
 {
-  uint8_t proto;
-  uint16_t oid;
-  uint8_t flags;
+	uint8_t proto;
+	uint16_t oid;
+	uint8_t flags;
 
-  TBeaconPayload p;
+	TBeaconPayload p;
 
-  uint16_t crc;
+	uint16_t crc;
 } PACKED TBeaconWrapper;
 
 typedef union
 {
-  uint8_t proto;
-  TBeaconWrapper pkt;
-  TBeaconTrackerOld old;
-  uint32_t block[XXTEA_BLOCK_COUNT];
-  uint8_t byte[XXTEA_BLOCK_COUNT * 4];
+	uint8_t proto;
+	TBeaconWrapper pkt;
+	TBeaconTrackerOld old;
+	uint32_t block[XXTEA_BLOCK_COUNT];
+	uint8_t byte[XXTEA_BLOCK_COUNT * 4];
 } PACKED TBeaconEnvelope;
 
 typedef struct
 {
-  uint32_t timestamp;
-  uint32_t ip;
-  TBeaconEnvelope env;
+	uint32_t timestamp;
+	uint32_t ip;
+	TBeaconEnvelope env;
 } PACKED TBeaconEnvelopeLog;
 
 typedef struct
 {
-  uint16_t icrc16;
-  uint8_t protocol;
-  uint8_t interface;
-  uint16_t reader_id;
-  uint16_t size;
+	uint16_t icrc16;
+	uint8_t protocol;
+	uint8_t interface;
+	uint16_t reader_id;
+	uint16_t size;
 } PACKED TBeaconNetworkHdr;
 
 /* BEACONLOG_SIGHTING */
 typedef struct
 {
-  TBeaconNetworkHdr hdr;
-  uint32_t sequence;
-  uint32_t timestamp;
-  TBeaconEnvelope log;
+	TBeaconNetworkHdr hdr;
+	uint32_t sequence;
+	uint32_t timestamp;
+	TBeaconEnvelope log;
 } PACKED TBeaconLogSighting;
 
 #endif/*__OPENBEACON_PROTO_H__*/

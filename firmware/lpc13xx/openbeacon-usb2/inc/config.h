@@ -33,7 +33,7 @@
 #define USB_VENDOR_ID 0x2366
 #define USB_PROD_ID 0x0003
 #define USB_DEVICE 1
-#endif/*ENABLE_USB_FULLFEATURED*/
+#endif /*ENABLE_USB_FULLFEATURED */
 
 /* Treshold for detecting 3D accelerometer movement */
 #define ACC_TRESHOLD 5
@@ -44,10 +44,10 @@
 
 /* SPI_CS(io_port, io_pin, CPSDVSR frequency, mode) */
 #ifdef  ENABLE_FLASH
-#define SPI_CS_FLASH SPI_CS( 1, 8, 2, SPI_CS_MODE_SKIP_TX )	/*  3.0 MHz */
-#endif/*ENABLE_FLASH*/
-#define SPI_CS_NRF   SPI_CS( 1,10,16, SPI_CS_MODE_NORMAL )	/*  4.5 MHz */
-#define SPI_CS_ACC3D SPI_CS( 0, 4,16, SPI_CS_MODE_NORMAL )	/*  4.5 MHz */
+#define SPI_CS_FLASH SPI_CS( 1, 8, 2, SPI_CS_MODE_SKIP_TX )						/*  3.0 MHz */
+#endif /*ENABLE_FLASH */
+#define SPI_CS_NRF   SPI_CS( 1,10,16, SPI_CS_MODE_NORMAL )						/*  4.5 MHz */
+#define SPI_CS_ACC3D SPI_CS( 0, 4,16, SPI_CS_MODE_NORMAL )						/*  4.5 MHz */
 
 #define NRF_MAX_MAC_SIZE 5
 
