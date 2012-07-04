@@ -30,10 +30,10 @@
 */
 
 define('PIC16_DATA_OPCODE',0x34);
-define('INPUT_FILE','obj/openbeacontag.hex');
-define('OUTPUT_FILE','openbeacontag.hex');
+define('INPUT_FILE','obj/openbeacon-tag.hex');
+define('OUTPUT_FILE','openbeacon-tag.hex');
 define('COUNT_FILE','firmware_counter');
-define('SYMBOLS_FILE','obj/openbeacontag.sym');
+define('SYMBOLS_FILE','obj/openbeacon-tag.sym');
 define('SYMBOLS_SEG','STRING');
 
 //
