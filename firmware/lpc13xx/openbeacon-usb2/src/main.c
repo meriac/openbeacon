@@ -364,7 +364,7 @@ int
 main (void)
 {
 	int x, y, z;
-	uint32_t SSPdiv, seq, oid, packets;
+	uint32_t seq, oid, packets;
 	uint32_t time, last_time, delta_time;
 	uint16_t crc;
 	uint8_t flags, status, strength;
@@ -418,15 +418,12 @@ main (void)
 	acc_init (1);
 
 	/* Initialize OpenBeacon nRF24L01 interface */
-	while (!nRFAPI_Init (CONFIG_NAVIGATION_CHANNEL,
+	while (!nRFAPI_Init (CONFIG_PROX_CHANNEL,
 						 broadcast_mac, sizeof (broadcast_mac), 0))
 		blink (3);
 
 	/* set tx power power to high */
 	nRFCMD_Power (1);
-
-	/* disable unused jobs */
-	SSPdiv = LPC_SYSCON->SSPCLKDIV;
 
 	/* reset proximity buffer */
 	bzero (&prox, sizeof (prox));
@@ -483,6 +480,7 @@ main (void)
 							}
 							break;
 
+						case RFBPROTO_PROXTRACKER:
 						case RFBPROTO_BEACONTRACKER:
 							strength = g_Beacon.pkt.p.tracker.strength;
 							flags = g_Beacon.pkt.flags;
