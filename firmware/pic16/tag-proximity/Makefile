@@ -4,7 +4,7 @@ CC=$(COMPILER_PATH)picc
 
 MODE=std
 CHIP=16F688
-PROGNAME=openbeacontag
+PROGNAME=openbeacon-proximity
 
 MAIN=main.c
 SRCS=$(MAIN) timer.c nRF_CMD.c
