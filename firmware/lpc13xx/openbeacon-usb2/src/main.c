@@ -368,6 +368,9 @@ main (void)
 	uint32_t time, last_time, delta_time;
 	uint16_t crc;
 	uint8_t flags, status, strength;
+#ifdef  ENABLE_BLUETOOTH
+	uint8_t bt_enabled;
+#endif /*ENABLE_BLUETOOTH */
 	volatile int t;
 
 	/* wait on boot - debounce */
@@ -397,6 +400,7 @@ main (void)
 #ifdef  ENABLE_BLUETOOTH
 	/* Init Bluetooth */
 	bt_init (TRUE, tag_id);
+	bt_enabled = FALSE;
 #else
 	UARTInit (115200, 0);
 #endif /*ENABLE_BLUETOOTH */
@@ -513,6 +517,22 @@ main (void)
 			while ((status & FIFO_RX_EMPTY) == 0);
 			nRFAPI_ClearIRQ (MASK_IRQ_FLAGS);
 		}
+
+#ifdef  ENABLE_BLUETOOTH
+		/* check for incoming bluetooth connection */
+		if (UARTCount != 0)
+		{
+			if(!bt_enabled)
+				for(x=0;x<(int)UARTCount;x++)
+					if(UARTBuffer[x]=='\n')
+					{
+						bt_enabled=TRUE;
+						EnableBluetoothConsole ( TRUE );
+						break;
+					}
+			UARTCount = 0;
+		}
+#endif /*ENABLE_BLUETOOTH */
 
 		time = LPC_TMR32B0->TC;
 		delta_time = time - last_time;

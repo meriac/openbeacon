@@ -25,6 +25,10 @@
 #include "usbserial.h"
 
 #ifdef ENABLE_USB_FULLFEATURED
+
+#ifdef  ENABLE_BLUETOOTH
+static BOOL bluetooth_suppress;
+#endif /*ENABLE_BLUETOOTH */
 static BOOL CDC_DepInEmpty;		// Data IN EP is empty
 static unsigned char fifo_out[USB_CDC_BUFSIZE], fifo_in[128];
 static int fifo_out_count, fifo_in_count;
@@ -124,6 +128,13 @@ CDC_BulkOut (void)
 	USB_ReadEP_Terminate (CDC_DEP_OUT);
 }
 
+#ifdef  ENABLE_BLUETOOTH
+void EnableBluetoothConsole (BOOL enable)
+{
+	bluetooth_suppress = !enable;
+}
+#endif /*ENABLE_BLUETOOTH */
+
 BOOL
 default_putchar (uint8_t data)
 {
@@ -141,12 +152,21 @@ default_putchar (uint8_t data)
 
 		__enable_irq ();
 	}
-	return UARTSendChar (data);
+
+#ifdef  ENABLE_BLUETOOTH
+	if(bluetooth_suppress)
+		return TRUE;
+	else
+#endif /*ENABLE_BLUETOOTH */
+		return UARTSendChar (data);
 }
 
 void
 init_usbserial (void)
 {
+#ifdef  ENABLE_BLUETOOTH
+	bluetooth_suppress = TRUE;
+#endif /*ENABLE_BLUETOOTH */
 	fifo_out_count = fifo_in_count = 0;
 	CDC_DepInEmpty = TRUE;
 

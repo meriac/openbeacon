@@ -22,6 +22,7 @@
 */
 #include <openbeacon.h>
 #include "bluetooth.h"
+#include "usbserial.h"
 #include "pmu.h"
 #ifdef  ENABLE_BLUETOOTH
 
@@ -84,6 +85,8 @@ bt_init (uint8_t enabled, uint16_t device_id)
 	bt_device_id_string[BT_ID_POS + 2] = hex_char (device_id >> 4);
 	bt_device_id_string[BT_ID_POS + 3] = hex_char (device_id >> 0);
 
+	EnableBluetoothConsole ( TRUE );
+
 	/* iterate through all bt_init_strings if activated */
 	if (enabled)
 		while (bt_init_pos <= BT_INIT_STRINGS_COUNT)
@@ -101,5 +104,7 @@ bt_init (uint8_t enabled, uint16_t device_id)
 					bt_init_pos++;
 				}
 		}
+
+	EnableBluetoothConsole ( FALSE );
 }
 #endif /*ENABLE_BLUETOOTH */

@@ -26,6 +26,11 @@
 
 #ifdef  ENABLE_USB_FULLFEATURED
 extern void init_usbserial (void);
+
+#ifdef  ENABLE_BLUETOOTH
+extern void EnableBluetoothConsole (BOOL enable);
+#endif /*ENABLE_BLUETOOTH */
+
 #endif /*ENABLE_USB_FULLFEATURED */
 
 #endif/*__USBSERIAL_H__*/
