@@ -27,6 +27,8 @@
 */
 
 define('PICC_BIT_PERIOD', 37.76);   // full PICC bit period in microseconds
+define('PICC_SOF_PERIOD', 56.64);
+define('PCD_BIT_PERIOD', 9.44);
 
 if($argc==2)
 	demodulate_file($argv[1]);
