@@ -113,37 +113,38 @@ function decode_PCD_byte($data)
 	static $packet, $data_r;
 	global $time;
 	global $state;
+	global $cmd, $cmd_prev;
 
 	if($data<0)
 	{
 		if($packet)
 		{
-//			printf("PCD: %s\n",strtoupper(bin2hex($packet)));
-
 			echo "PCD : CMD ";
+			$cmd_prev=$cmd;
+
 			$cmd=ord(substr($packet,0,1));
-			if(($len=strlen($packet))>=4)
+			$data=substr($packet,1);
+
+			if(strlen($data)>=3)
 			{
 				$crc=false;
+
 				switch($cmd)
 				{
 					case 0x05:
-						$data=unpack('N*',substr($packet,1));
+						$data=unpack('N*',$data);
 						printf("CHECK CHALLENGE=0x%08X SIGNATURE=0x%08X\n",$data[1],$data[2]);
 						break;
 					case 0x0C:
-						$data=substr($packet,1,1);
+						$data=substr($data,0,1);
 						$crc=true;
 						printf("READ ADDRESS=0x%02X",ord($data));
 						break;
 					case 0x81:
-						$data=substr($packet,1);
 						printf("SELECT UID=0x%s\n",strtoupper(bin2hex($data)));
 						break;
 					default:
-						$data=substr($packet,1,-2);
-						$crc=true;
-						printf("UNKNOWN CMD=0x%02X PAYLOAD=0x%s",$cmd,strtoupper(bin2hex($data)));
+						printf("UNKNOWN CMD=0x%02X PACKET=0x%s\n",$cmd,strtoupper(bin2hex($data)));
 				}
 
 				if($crc)
@@ -162,11 +163,11 @@ function decode_PCD_byte($data)
 						printf("IDENTIFY\n");
 						break;
 					case 0x88:
-						$data=substr($packet,1,1);
+						$data=substr($data,0,1);
 						printf("READCHECK ADDRESS=0x%02X\n",ord($data));
 						break;
 					default:
-						printf("UNKNOWN CMD=0x%02X PACKET=0x%s\n",$cmd,strtoupper(bin2hex($packet)));
+						printf("UNKNOWN CMD=0x%02X PACKET=0x%s\n",$cmd,strtoupper(bin2hex($data)));
 				}
 		}
 		$packet='';
