@@ -82,7 +82,7 @@ function decode_PCD($delta_t)
 				if($slot==2)
 				{
 					$sof=FALSE;
-					printf("PCD:  EoF %9.3fms\n",$time/1000);
+//					printf("PCD:  EoF %9.3fms\n",$time/1000);
 					decode_PCD_byte(-1);
 				}
 				else
@@ -94,7 +94,7 @@ function decode_PCD($delta_t)
 		{
 			if($slot==5)
 			{
-				printf("\nPCD:  SoF %9.3fms\n",$time/1000);;
+//				printf("\nPCD:  SoF %9.3fms\n",$time/1000);;
 				$sof=true;
 				$slot_prev = 8-$slot;
 			}
@@ -118,30 +118,56 @@ function decode_PCD_byte($data)
 	{
 		if($packet)
 		{
-			printf("PCD: %s\n",strtoupper(bin2hex($packet)));
+//			printf("PCD: %s\n",strtoupper(bin2hex($packet)));
+
+			echo "PCD : CMD ";
+			$cmd=ord(substr($packet,0,1));
 			if(($len=strlen($packet))>=4)
 			{
-				$cmd=ord(substr($packet,0,1));
-				$data=substr($packet,1,-2);
-				$crc=unpack('v',substr($packet,-2));
+				$crc=false;
 				switch($cmd)
 				{
 					case 0x05:
 						$data=unpack('N*',substr($packet,1));
-						printf("PCD: CHECK CHALLENGE=0x%08X SIGNATURE=0x%08X\n",$data[1],$data[2]);
+						printf("CHECK CHALLENGE=0x%08X SIGNATURE=0x%08X\n",$data[1],$data[2]);
 						break;
 					case 0x0C:
-						$data=unpack('C',$data);
-						printf("PCD: READ ADDRESS=0x%02X\n",$data[1]);
+						$data=substr($packet,1,1);
+						$crc=true;
+						printf("READ ADDRESS=0x%02X",ord($data));
 						break;
 					case 0x81:
 						$data=substr($packet,1);
-						printf("PCD:  SELECT UID=0x%s\n",strtoupper(bin2hex($data)));
+						printf("SELECT UID=0x%s\n",strtoupper(bin2hex($data)));
 						break;
 					default:
-						printf("PCD:  cmd=0x%02X payload=0x%s CRC:%s\n",$cmd,strtoupper(bin2hex($data)),($crc[1]==crc16($data))?'OK':'INVALID');
+						$data=substr($packet,1,-2);
+						$crc=true;
+						printf("UNKNOWN CMD=0x%02X PAYLOAD=0x%s",$cmd,strtoupper(bin2hex($data)));
+				}
+
+				if($crc)
+				{
+					$crc = unpack('v',substr($packet,-2));
+					printf(" CRC=%s\n",($crc[1]==crc16($data))?'OK':'INVALID');
 				}
 			}
+			else
+				switch($cmd)
+				{
+					case 0x0A:
+						printf("ACTALL\n");
+						break;
+					case 0x0C:
+						printf("IDENTIFY\n");
+						break;
+					case 0x88:
+						$data=substr($packet,1,1);
+						printf("READCHECK ADDRESS=0x%02X\n",ord($data));
+						break;
+					default:
+						printf("UNKNOWN CMD=0x%02X PACKET=0x%s\n",$cmd,strtoupper(bin2hex($packet)));
+				}
 		}
 		$packet='';
 		$state=0;
@@ -256,8 +282,7 @@ function decode_PICC_byte($data)
 function crc16($packet)
 {
 	$crc=0xE012;
-	$packet = str_split($packet);
-	foreach($packet as $data)
+	foreach(str_split($packet) as $data)
 	{
 		$crc ^= ord($data);
 		for($i=0;$i<8;$i++)
