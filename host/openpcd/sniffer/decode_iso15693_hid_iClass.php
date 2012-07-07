@@ -29,6 +29,7 @@
 define('PICC_BIT_PERIOD', 37.76);   // full PICC bit period in microseconds
 define('PICC_SOF_PERIOD', 56.64);
 define('PCD_BIT_PERIOD', 9.44);
+define('TOLERANCE', 0.75);
 
 if($argc==2)
 	demodulate_file($argv[1]);
@@ -46,11 +47,12 @@ function decode_PCD($delta_t)
 	static $byte = 0;
 	static $bit_pos = 0;
 
-	if($delta_t>(4*PICC_BIT_PERIOD))
+	if(!$delta_t || $delta_t>(4*PICC_BIT_PERIOD))
 	{
 		$level = $frame = $sof = false;
 		$pulses = $last_edge = $slot_prev = $byte = $bit_pos = 0;
 		decode_PCD_byte(-1);
+		echo "Cancel PCD\n";
 		return;
 	}
 
@@ -108,22 +110,44 @@ function decode_PCD($delta_t)
 
 function decode_PCD_byte($data)
 {
-	static $crc, $packet, $data_r;
+	static $packet, $data_r;
 	global $time;
+	global $state;
 
 	if($data<0)
 	{
 		if($packet)
-			printf("PCD:  packet=%s (%u) CRC=%s:[0x%04X]\n\n",strtoupper(bin2hex($packet)),strlen($packet),(strlen($packet)>2)?(($crc==0x4DA1)?'OK':'FAILED'):'NONE',$crc);
+		{
+			printf("PCD: %s\n",strtoupper(bin2hex($packet)));
+			if(($len=strlen($packet))>=4)
+			{
+				$cmd=ord(substr($packet,0,1));
+				$data=substr($packet,1,-2);
+				$crc=unpack('v',substr($packet,-2));
+				switch($cmd)
+				{
+					case 0x05:
+						$data=unpack('N*',substr($packet,1));
+						printf("PCD: CHECK CHALLENGE=0x%08X SIGNATURE=0x%08X\n",$data[1],$data[2]);
+						break;
+					case 0x0C:
+						$data=unpack('C',$data);
+						printf("PCD: READ ADDRESS=0x%02X\n",$data[1]);
+						break;
+					case 0x81:
+						$data=substr($packet,1);
+						printf("PCD:  SELECT UID=0x%s\n",strtoupper(bin2hex($data)));
+						break;
+					default:
+						printf("PCD:  cmd=0x%02X payload=0x%s CRC:%s\n",$cmd,strtoupper(bin2hex($data)),($crc[1]==crc16($data))?'OK':'INVALID');
+				}
+			}
+		}
 		$packet='';
-		$crc=0xFFFF;
+		$state=0;
 	}
 	else
-	{
 		$packet.=pack('C',$data);
-		$crc = crc16($data,$crc);
-//		printf("PCD:  data=0x%02X crc=0x%04X\n",$data,$crc);
-	}
 }
 
 function decode_PICC($delta_t)
@@ -140,7 +164,7 @@ function decode_PICC($delta_t)
 	static $byte = 0;
 	static $bit_pos  = 0;
 
-	if($delta_t>(4*PICC_BIT_PERIOD))
+	if(!$delta_t || $delta_t>(4*PICC_BIT_PERIOD))
 	{
 		$level = $frame = $sof = false;
 		$pulses = $last_edge = $byte = $bit_pos = 0;
@@ -210,35 +234,42 @@ function decode_PICC_byte($data)
 {
 	static $crc, $packet;
 	global $time;
+	global $state;
 
 	if($data<0)
 	{
 		if($packet)
 			printf("PICC: packet=%s (%u) CRC=%s:[0x%04X]\n\n",strtoupper(bin2hex($packet)),strlen($packet),(strlen($packet)>2)?(($crc==0xC316)?'OK':'FAILED'):'NONE',$crc);
 		$packet='';
-		$crc=0xFFFF;
+		$state=0;
+		$crc=0xE012;
 	}
 	else
 	{
 		$packet.=pack('C',$data);
 		$crc=crc16($data,$crc);
-//		printf("PICC: data=0x%02X crc=0x%04X\n",$data,$crc);
+		printf("PICC: data=0x%02X crc=0x%04X\n",$data,$crc);
 	}
 }
 
 // calculate CRC16 according to ISO/IEC 13239
-function crc16($data,$crc)
+function crc16($packet)
 {
-	$crc^= $data;
-	for($i=0;$i<8;$i++)
-		$crc = ($crc & 1) ? ($crc >> 1) ^ 0x8408 : ($crc >> 1);
+	$crc=0xE012;
+	$packet = str_split($packet);
+	foreach($packet as $data)
+	{
+		$crc ^= ord($data);
+		for($i=0;$i<8;$i++)
+			$crc = ($crc & 1) ? ($crc >> 1) ^ 0x8408 : ($crc >> 1);
+	}
 	return $crc;
 }
-
 
 function demodulate_file($file)
 {
 	global $time;
+	global $state;
 
 	// reset time
 	$time = $time_abs = 0;
@@ -249,10 +280,10 @@ function demodulate_file($file)
 	printf("Decoding file '%s'\n\n",$file);
 
 	$header = NULL;
-	$PCD_time = $PICC_time = 0;
-	$PCD_state = $PICC_state = 0;
 
-	 while (!feof($handle))
+	$state = 0;
+	$delta_prev = 0;
+	while (!feof($handle))
 	{
 		$line = trim(fgets($handle));
 		if($line)
@@ -261,28 +292,55 @@ function demodulate_file($file)
 			continue;
 
 		if(count($values)!=2)
-			exit('Three comma seperated values needed ('.$i.'): "DeltaTime[in ns since last change],SignalEnvelope[logical 0 or 1]"');
+			exit('Two comma seperated values needed ('.$i.'): "DeltaTime[in ns since last change],SignalEnvelope[logical 0 or 1]"');
 
 		if($header)
 		{
 			// read new line of values
-			list($delta_t,$PCD) = $values;
+			list($delta_t,$level) = $values;
 
 			// convert time to microseconds
 			$delta_t = intval($delta_t) / 1000;
-			$PCD_time += $delta_t;
-
 			// maintain global absolute us counter
 			$time_abs += $delta_t;
 			$time = intval($time_abs);
 
-			// decode PCD->PICC with individual delta time stamp
-			if($PCD!=$PCD_state)
+			// find pause
+			if($delta_t>=(PICC_SOF_PERIOD*4))
+				$state=0;
+			else
 			{
-				decode_PCD($PCD_time);
-				$PCD_state = $PCD;
-				$PCD_time = 0;
+				if(!$state && $level && $delta_prev>=(PICC_SOF_PERIOD*4))
+				{
+					if($delta_t>=(PICC_SOF_PERIOD*TOLERANCE))
+					{
+						decode_PICC(false);
+						$state=2;
+					}
+					else
+						if($delta_t>=(PCD_BIT_PERIOD*TOLERANCE))
+						{
+							decode_PCD(false);
+							$state=1;
+						}
+				}
+
+				switch($state)
+				{
+					// PCD mode
+					case 1:
+						decode_PCD($delta_t);
+						break;
+
+					// PICC mode
+					case 2:
+						printf("RX: %6u\tstate=%u\t%u\n",round($delta_t),$state,$level);
+//						decode_PICC($delta_t);
+						break;
+				}
 			}
+
+			$delta_prev = $delta_t;
 		}
 		else
 			$header = $values;
