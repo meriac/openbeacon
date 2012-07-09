@@ -36,23 +36,21 @@ if($argc==2)
 else
 	exit('usage: '.$argv[0]." filename.csv\n");
 
-function decode_PCD($delta_t)
+function decode_PCD($delta_t=false,$level=0)
 {
 	global $time;
 
 	static $slot_prev = 0;
 	static $last_edge = 0;
 	static $sof = FALSE;
-	static $level = FALSE;
 	static $byte = 0;
-	static $bit_pos = 0;
+	static $bit_pos  = 0;
 
 	if(!$delta_t || $delta_t>(4*PICC_BIT_PERIOD))
 	{
-		$level = $frame = $sof = false;
-		$pulses = $last_edge = $slot_prev = $byte = $bit_pos = 0;
+		$sof = false;
+		$last_edge = $slot_prev = $byte = $bit_pos = 0;
 		decode_PCD_byte(-1);
-		echo "Cancel PCD\n";
 		return;
 	}
 
@@ -79,14 +77,12 @@ function decode_PCD($delta_t)
 				}
 			}
 			else
-				if($slot==2)
-				{
-					$sof=FALSE;
-//					printf("PCD:  EoF %9.3fms\n",$time/1000);
-					decode_PCD_byte(-1);
-				}
-				else
+			{
+				if($slot!=2)
 					echo "PCD:  invalid slot number=$slot\n";
+				decode_PCD_byte(-1);
+				$sof=FALSE;
+			}
 
 			$slot_prev = 8-$slot;
 		}
@@ -98,14 +94,11 @@ function decode_PCD($delta_t)
 				$sof=true;
 				$slot_prev = 8-$slot;
 			}
-			else
-				echo "PCD:  invalid SoF slot=$slot\n";
+//			else
+//				echo "PCD:  invalid SoF slot=$slot\n";
 		}
 		$last_edge=0;
 	}
-
-	// maintain current signal level
-	$level = !$level;
 }
 
 function decode_PCD_byte($data)
@@ -113,15 +106,13 @@ function decode_PCD_byte($data)
 	static $packet, $data_r;
 	global $time;
 	global $state;
-	global $cmd, $cmd_prev;
+	global $cmd;
 
 	if($data<0)
 	{
 		if($packet)
 		{
 			echo "PCD : CMD ";
-			$cmd_prev=$cmd;
-
 			$cmd=ord(substr($packet,0,1));
 			$data=substr($packet,1);
 
@@ -177,105 +168,131 @@ function decode_PCD_byte($data)
 		$packet.=pack('C',$data);
 }
 
-function decode_PICC($delta_t)
+function decode_PICC($delta_t=false,$level=0)
 {
+	global $cmd;
 	global $time;
 
-	static $pulses = 0;
-	static $last_edge = 0;
-	static $new_bit = FALSE;
-
-	static $frame = FALSE;
-	static $level = FALSE;
+	static $duration = 0;
+	static $last_bit = FALSE;
 	static $sof = FALSE;
-	static $byte = 0;
-	static $bit_pos  = 0;
 
 	if(!$delta_t || $delta_t>(4*PICC_BIT_PERIOD))
 	{
-		$level = $frame = $sof = false;
-		$pulses = $last_edge = $byte = $bit_pos = 0;
-		decode_PICC_byte(-1);
-		echo "\n";
+		$sof = FALSE;
+		$duration = 0;
+		decode_PICC_bit(-1);
 		return;
 	}
 
-	// maintain current signal level
-	$level = !$level;
-
-	// count subcarrier pulses <2us
-	if(($delta_t < 2)&&$level)
-		$pulses++;
-
-	// count time since start of bit period
-	$last_edge+=$delta_t;
-
-	if($sof)
+	switch($sof)
 	{
-		if($pulses==8 && (intval($last_edge)>1))
-		{
-			$bit=($last_edge > (PICC_BIT_PERIOD*(2/3)));
-
-			// skip first bit in frame - part of SoF
-			if($frame)
+		case 1:
+			if(!$level && ($delta_t>=((PICC_BIT_PERIOD/2)*TOLERANCE)) && ($delta_t<=((PICC_BIT_PERIOD/2)/TOLERANCE)))
 			{
-				$byte>>=1;
-				if($bit)
-					$byte|=0x80;
-
-				$bit_pos ++;
-				if($bit_pos == 8)
-				{
-					decode_PICC_byte($byte);
-					$bit_pos = $byte = 0;
-				}
+				$duration = $delta_t;
+				$last_bit = TRUE;
+				$sof = 2;
 			}
 			else
-				$frame=TRUE;
+				$sof = FALSE;
+			break;
 
-			$last_edge = $bit ? 0:-(PICC_BIT_PERIOD/2);
-			$pulses = 0;
-		}
-		else
-			if($pulses==16)
+		case 2:
+			if($level)
 			{
-				$sof=FALSE;
-				printf("PICC: EoF %9.3fms\n",$time/1000);
-				decode_PICC_byte(-1);
+				$pause = round($duration/(PICC_BIT_PERIOD/2));
+				$high = round($delta_t/(PICC_BIT_PERIOD/2));
+
+				// check for EoF
+				if(($pause==1) && ($high==3))
+					decode_PICC_bit(-1);
+				else
+					// check for invalid codes
+					if(($pause>2)||($pause<1)||($high>2)||($high<1))
+						printf("PICC: Coding Error (pause=$pause high=$high)\n");
+					else
+					{
+						$bit = ($pause==1)?$last_bit:!$last_bit;
+
+						if($high==2)
+						{
+							decode_PICC_bit($bit);
+							$bit = !$bit;
+						}
+						decode_PICC_bit($bit);
+						$last_bit = $bit;
+
+//						echo "PICC: pause=$pause high=$high\n";
+					}
 			}
-	}
-	else
-	{
-		if($pulses==24)
-		{
-			printf("PICC: SoF %9.3fms\n",$time/1000);
-			$sof = TRUE;
-			$pulses = 0;
-			$last_edge = 0;
-			decode_PICC_byte(-1);
-		}
+			else
+				$duration = $delta_t;
+			break;
+
+		default:
+			if($level && ($delta_t>=(PICC_SOF_PERIOD*TOLERANCE)) && ($delta_t<=(PICC_SOF_PERIOD/TOLERANCE)))
+			{
+				if($cmd==0x0A)
+					printf("PICC: SoF@%9.3fms\n",$time/1000);
+				$sof = 1;
+			}
 	}
 }
 
-function decode_PICC_byte($data)
+function decode_PICC_bit($bit)
 {
-	static $crc, $packet;
-	global $time;
 	global $state;
+	global $cmd;
 
-	if($data<0)
+	static $packet = '';
+	static $frame = TRUE;
+	static $byte = 0;
+	static $bit_pos = 0;
+
+	if($bit<0)
 	{
 		if($packet)
-			printf("PICC: packet=%s (%u) CRC=%s:[0x%04X]\n\n",strtoupper(bin2hex($packet)),strlen($packet),(strlen($packet)>2)?(($crc==0xC316)?'OK':'FAILED'):'NONE',$crc);
-		$packet='';
-		$state=0;
-		$crc=0xE012;
+		{
+			echo "PICC: ";
+			switch($cmd)
+			{
+				case 0x88:
+					printf("READCHECK RESPONSE=0x%s\n",strtoupper(bin2hex($packet)));
+					break;
+				case 0x05:
+					printf("CHECK RESPONSE=0x%s\n",strtoupper(bin2hex($packet)));
+					break;
+				default:
+					$data = substr($packet,0,-2);
+					$crc = unpack('v',substr($packet,-2));
+					printf("RESPONSE=0x%s CRC=%s\n",strtoupper(bin2hex($data)),($crc[1]==crc16($data))?'OK':'INVALID');
+			}
+			$packet='';
+			echo "\n";
+		}
+		$byte = $bit_pos = $state = 0;
+		$frame = TRUE;
 	}
 	else
 	{
-		$packet.=pack('C',$data);
-		$crc=crc16($data,$crc);
-		printf("PICC: data=0x%02X crc=0x%04X\n",$data,$crc);
+		if($frame)
+			$frame=FALSE;
+		else
+		{
+//			printf("PICC: bit=%u\n",$bit?1:0);
+			$byte>>=1;
+			if($bit)
+				$byte|=0x80;
+
+			$bit_pos ++;
+			if($bit_pos == 8)
+			{
+//				printf("PICC: byte=0x%02X ####\n",$byte);
+				$packet.=pack('C',$byte);
+				$bit_pos = $byte = 0;
+			}
+		}
 	}
 }
 
@@ -333,20 +350,24 @@ function demodulate_file($file)
 
 			// find pause
 			if($delta_t>=(PICC_SOF_PERIOD*4))
+			{
 				$state=0;
+				if($delta_t>100000)
+					echo "\n\n\n";
+			}
 			else
 			{
 				if(!$state && $level && $delta_prev>=(PICC_SOF_PERIOD*4))
 				{
 					if($delta_t>=(PICC_SOF_PERIOD*TOLERANCE))
 					{
-						decode_PICC(false);
+						decode_PICC();
 						$state=2;
 					}
 					else
 						if($delta_t>=(PCD_BIT_PERIOD*TOLERANCE))
 						{
-							decode_PCD(false);
+							decode_PCD();
 							$state=1;
 						}
 				}
@@ -355,13 +376,13 @@ function demodulate_file($file)
 				{
 					// PCD mode
 					case 1:
-						decode_PCD($delta_t);
+						decode_PCD($delta_t, $level);
 						break;
 
 					// PICC mode
 					case 2:
-						printf("RX: %6u\tstate=%u\t%u\n",round($delta_t),$state,$level);
-//						decode_PICC($delta_t);
+//						printf("RX: %6u\tstate=%u\t%u\n",round($delta_t),$state,$level);
+						decode_PICC($delta_t, $level);
 						break;
 				}
 			}
