@@ -16,6 +16,10 @@ APP_SRC+=$(IMAGES_C)
 
 all: $(TARGET).bin
 
+indent:
+	find src inc -iname '*.[ch]' -exec indent -c81 -i4 -cli4 -bli0 -ts 4 \{\} \;
+	rm -f src/*.[ch]~ inc/*.[ch]~
+
 app_clean:
 	find src -name '*.o' -exec rm \{\} \;
 
