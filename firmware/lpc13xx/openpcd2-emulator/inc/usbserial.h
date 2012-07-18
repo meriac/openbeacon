@@ -26,6 +26,6 @@
 
 #ifdef  ENABLE_USB_FULLFEATURED
 extern void init_usbserial (void);
-#endif/*ENABLE_USB_FULLFEATURED*/
+#endif /*ENABLE_USB_FULLFEATURED */
 
 #endif/*__USBSERIAL_H__*/
