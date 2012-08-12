@@ -29,11 +29,10 @@
  * OF SUCH DAMAGE.
  */
 
+#include <openbeacon.h>
 #include "printf.h"
 
 typedef void (*putcf) (void *, char);
-static putcf stdout_putf;
-static void *stdout_putp;
 
 #ifdef PRINTF_LONG_SUPPORT
 
@@ -117,9 +116,9 @@ a2d (char ch)
 }
 
 static char
-a2i (char ch, char **src, int base, int *nump)
+a2i (char ch, const char **src, int base, int *nump)
 {
-	char *p = *src;
+	const char *p = *src;
 	int num = 0;
 	int digit;
 	while ((digit = a2d (ch)) >= 0)
@@ -149,7 +148,7 @@ putchw (void *putp, putcf putf, int n, char z, char *bf)
 }
 
 void
-tfp_format (void *putp, putcf putf, char *fmt, va_list va)
+tfp_format (void *putp, putcf putf, const char *fmt, va_list va)
 {
 	char bf[12];
 	char ch;
@@ -185,7 +184,7 @@ tfp_format (void *putp, putcf putf, char *fmt, va_list va)
 			switch (ch)
 			{
 				case 0:
-					goto abort;
+					return;
 				case 'u':
 					{
 #ifdef 	PRINTF_LONG_SUPPORT
@@ -232,23 +231,6 @@ tfp_format (void *putp, putcf putf, char *fmt, va_list va)
 			}
 		}
 	}
-  abort:;
-}
-
-void
-init_printf (void *putp, void (*putf) (void *, char))
-{
-	stdout_putf = putf;
-	stdout_putp = putp;
-}
-
-void
-tfp_printf (char *fmt, ...)
-{
-	va_list va;
-	va_start (va, fmt);
-	tfp_format (stdout_putp, stdout_putf, fmt, va);
-	va_end (va);
 }
 
 static void
@@ -258,7 +240,7 @@ putcp (void *p, char c)
 }
 
 void
-tfp_sprintf (char *s, char *fmt, ...)
+tfp_sprintf (char *s, const char *fmt, ...)
 {
 	va_list va;
 	va_start (va, fmt);

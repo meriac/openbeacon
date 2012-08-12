@@ -81,6 +81,7 @@ ARM_SRC= \
   $(CORE)openbeacon/src/xxtea.c \
   $(CORE)openbeacon/src/rfid.c \
   $(CORE)openbeacon/src/persistent.c \
+  $(CORE)openbeacon/src/printf.c \
   $(CORE)openbeacon/src/debug_printf.c
 
 #
