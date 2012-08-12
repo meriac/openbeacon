@@ -9,7 +9,10 @@
 static void
 putc_debug (void *p, char c)
 {
-	(void)p;
+	(void) p;
+
+	if (c == '\n')
+		default_putchar ('\r');
 
 	default_putchar (c);
 }
@@ -27,38 +30,44 @@ debug_printf (const char *fmt, ...)
 char
 hex_char (unsigned char hex)
 {
-  hex &= 0xF;
-  return (hex<0xA)? (hex + '0') : ((hex-0xA)+'A');
+	hex &= 0xF;
+	return (hex < 0xA) ? (hex + '0') : ((hex - 0xA) + 'A');
 }
 
-void hex_dump (const unsigned char *buf, unsigned int addr, unsigned int len)
+void
+hex_dump (const unsigned char *buf, unsigned int addr, unsigned int len)
 {
-        unsigned int start, i, j;
-        char c;
+	unsigned int start, i, j;
+	char c;
 
-        start = addr & ~0xf;
+	start = addr & ~0xf;
 
-        for (j=0; j<len; j+=16) {
-                debug_printf("%08x:", start+j);
+	for (j = 0; j < len; j += 16)
+	{
+		debug_printf ("%08x:", start + j);
 
-                for (i=0; i<16; i++) {
-                        if (start+i+j >= addr && start+i+j < addr+len)
-                                debug_printf(" %02x", buf[start+i+j]);
-                        else
-                                debug_printf("   ");
-                }
-                debug_printf("  |");
-                for (i=0; i<16; i++) {
-                        if (start+i+j >= addr && start+i+j < addr+len) {
-                                c = buf[start+i+j];
-                                if (c >= ' ' && c < 127)
-                                        debug_printf("%c", c);
-                                else
-                                        debug_printf(".");
-                        } else
-                                debug_printf(" ");
-                }
-                debug_printf("|\n\r");
-        }
+		for (i = 0; i < 16; i++)
+		{
+			if (start + i + j >= addr && start + i + j < addr + len)
+				debug_printf (" %02x", buf[start + i + j]);
+			else
+				debug_printf ("   ");
+		}
+		debug_printf ("  |");
+		for (i = 0; i < 16; i++)
+		{
+			if (start + i + j >= addr && start + i + j < addr + len)
+			{
+				c = buf[start + i + j];
+				if (c >= ' ' && c < 127)
+					debug_printf ("%c", c);
+				else
+					debug_printf (".");
+			}
+			else
+				debug_printf (" ");
+		}
+		debug_printf ("|\n\r");
+	}
 }
 #endif /* UART_DISABLE */
