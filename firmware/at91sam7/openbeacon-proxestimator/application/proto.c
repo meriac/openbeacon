@@ -527,7 +527,7 @@ vInitProtocolLayer (void)
 	PtSetFifoLifetimeSeconds (20);
 	vLedSetGreen (1);
 
-	g_debuglevel = 0;
+	g_debuglevel = 1;
 	g_BeaconCacheHead = 0;
 	memset (&g_Beacon, 0, sizeof (g_Beacon));
 	memset (&g_BeaconTx, 0, sizeof (g_BeaconTx));
