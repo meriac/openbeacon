@@ -25,8 +25,8 @@
 
 #ifdef ENABLE_PERSISTENT_INITIALIZATION
 #define PERSISTENT __attribute__ ((section (".persistent")))
-extern void persistent_update(void);
+extern void persistent_update (void);
 extern void persistent_init (void);
-#endif /*ENABLE_PERSISTENT_INITIALIZATION*/
+#endif /*ENABLE_PERSISTENT_INITIALIZATION */
 
 #endif/*__PERISTENT_H__*/

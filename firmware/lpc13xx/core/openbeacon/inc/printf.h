@@ -108,6 +108,7 @@ regs Kusti, 23.10.2004
 #include <stdarg.h>
 
 extern void tfp_sprintf (char *s, const char *fmt, ...);
-extern void tfp_format (void *putp, void (*putf) (void *, char), const char *fmt, va_list va);
+extern void tfp_format (void *putp, void (*putf) (void *, char),
+						const char *fmt, va_list va);
 
 #endif/*__TFP_PRINTF__*/

@@ -31,15 +31,15 @@ static const IAP_FUNC iap = (IAP_FUNC) 0x1fff1ff1;
 void
 iap_invoke_isp (void)
 {
-  static const uint32_t cmd = 57;
+	static const uint32_t cmd = 57;
 
-  (*iap) (&cmd, NULL);
+	(*iap) (&cmd, NULL);
 }
 
 void
 iap_read_uid (TDeviceUID * uid)
 {
-  static const uint32_t cmd = 58;
+	static const uint32_t cmd = 58;
 
-  (*iap) (&cmd, (uint32_t *) uid);
+	(*iap) (&cmd, (uint32_t *) uid);
 }

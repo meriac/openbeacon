@@ -28,65 +28,69 @@
 #include "rfid.h"
 #include "pmu.h"
 
-void rfid_reset(unsigned char reset)
+void
+rfid_reset (unsigned char reset)
 {
-	GPIOSetValue(PN532_RESET_PORT, PN532_RESET_PIN, reset ? 1 : 0);
+	GPIOSetValue (PN532_RESET_PORT, PN532_RESET_PIN, reset ? 1 : 0);
 }
 
-static void rfid_cs(unsigned char cs)
+static void
+rfid_cs (unsigned char cs)
 {
-	GPIOSetValue(PN532_CS_PORT, PN532_CS_PIN, cs ? 1 : 0);
+	GPIOSetValue (PN532_CS_PORT, PN532_CS_PIN, cs ? 1 : 0);
 }
 
-static void rfid_tx(unsigned char data)
+static void
+rfid_tx (unsigned char data)
 {
 	spi_txrx ((SPI_CS_PN532 ^ SPI_CS_MODE_SKIP_TX) |
-		SPI_CS_MODE_SKIP_CS_ASSERT |
-		SPI_CS_MODE_SKIP_CS_DEASSERT, &data, sizeof (data), NULL, 0);
+			  SPI_CS_MODE_SKIP_CS_ASSERT |
+			  SPI_CS_MODE_SKIP_CS_DEASSERT, &data, sizeof (data), NULL, 0);
 }
 
-static unsigned char rfid_rx(void)
+static unsigned char
+rfid_rx (void)
 {
 	unsigned char data;
 	spi_txrx ((SPI_CS_PN532 ^ SPI_CS_MODE_SKIP_TX) |
-		SPI_CS_MODE_SKIP_CS_ASSERT |
-		SPI_CS_MODE_SKIP_CS_DEASSERT, NULL, 0, &data, sizeof (data));
+			  SPI_CS_MODE_SKIP_CS_ASSERT |
+			  SPI_CS_MODE_SKIP_CS_DEASSERT, NULL, 0, &data, sizeof (data));
 
 
 	return data;
 }
 
-int rfid_read(void *data, unsigned char size)
+int
+rfid_read (void *data, unsigned char size)
 {
 	int res;
 	unsigned char *p, c, pkt_size, crc, prev, t;
 
 	/* wait 100ms max till PN532 response is ready */
-	t=0;
-	while ( GPIOGetValue (PN532_IRQ_PORT, PN532_IRQ_PIN) )
+	t = 0;
+	while (GPIOGetValue (PN532_IRQ_PORT, PN532_IRQ_PIN))
 	{
-		if(t++>10)
+		if (t++ > 10)
 			return -8;
-		pmu_wait_ms( 10 );
+		pmu_wait_ms (10);
 	}
 
 	debug ("RI: ");
 
 	/* enable chip select */
-	rfid_cs(0);
+	rfid_cs (0);
 
 	/* read from FIFO command */
-	rfid_tx(0x03);
+	rfid_tx (0x03);
 
 	/* default result */
 	res = -9;
 
 	/* find preamble */
 	t = 0;
-	prev = rfid_rx();
-	while ((!(((c = rfid_rx()) == 0xFF) && (prev == 0x00)))
-		&& (t < PN532_FIFO_SIZE)
-		)
+	prev = rfid_rx ();
+	while ((!(((c = rfid_rx ()) == 0xFF) && (prev == 0x00)))
+		   && (t < PN532_FIFO_SIZE))
 	{
 		prev = c;
 		t++;
@@ -97,18 +101,18 @@ int rfid_read(void *data, unsigned char size)
 	else
 	{
 		/* read packet size */
-		pkt_size = rfid_rx();
+		pkt_size = rfid_rx ();
 
 		/* special treatment for NACK and ACK */
 		if ((pkt_size == 0x00) || (pkt_size == 0xFF))
 		{
 			/* verify if second length byte is inverted */
-			if (rfid_rx() != (unsigned char) (~pkt_size))
+			if (rfid_rx () != (unsigned char) (~pkt_size))
 				res = -2;
 			else
 			{
 				/* eat Postamble */
-				rfid_rx();
+				rfid_rx ();
 				/* -1 for NACK, 0 for ACK */
 				res = pkt_size ? -1 : 0;
 			}
@@ -116,7 +120,7 @@ int rfid_read(void *data, unsigned char size)
 		else
 		{
 			/* verify packet size against LCS */
-			if (((pkt_size + rfid_rx()) & 0xFF) != 0)
+			if (((pkt_size + rfid_rx ()) & 0xFF) != 0)
 				res = -4;
 			else
 			{
@@ -130,7 +134,7 @@ int rfid_read(void *data, unsigned char size)
 					/* remember actual packet size */
 					size = pkt_size;
 					/* verify TFI */
-					if ((crc = rfid_rx()) != 0xD5)
+					if ((crc = rfid_rx ()) != 0xD5)
 						res = -6;
 					else
 					{
@@ -139,7 +143,7 @@ int rfid_read(void *data, unsigned char size)
 						while (pkt_size--)
 						{
 							/* read data */
-							c = rfid_rx();
+							c = rfid_rx ();
 							debug (" %02X", c);
 
 							/* maintain crc */
@@ -150,14 +154,14 @@ int rfid_read(void *data, unsigned char size)
 						}
 
 						/* add DCS to CRC */
-						crc += rfid_rx();
+						crc += rfid_rx ();
 						/* verify CRC */
 						if (crc)
 							res = -7;
 						else
 						{
 							/* eat Postamble */
-							rfid_rx();
+							rfid_rx ();
 							/* return actual size as result */
 							res = size;
 						}
@@ -166,7 +170,7 @@ int rfid_read(void *data, unsigned char size)
 			}
 		}
 	}
-	rfid_cs(1);
+	rfid_cs (1);
 
 	debug (" [%i]\n", res);
 
@@ -174,11 +178,11 @@ int rfid_read(void *data, unsigned char size)
 	return res;
 }
 
-int rfid_write(const void *data, int len)
+int
+rfid_write (const void *data, int len)
 {
 	int i;
-	static const unsigned char preamble[] =
-	{ 0x01, 0x00, 0x00, 0xFF };
+	static const unsigned char preamble[] = { 0x01, 0x00, 0x00, 0xFF };
 	const unsigned char *p = preamble;
 	unsigned char tfi = 0xD4, c;
 
@@ -188,14 +192,14 @@ int rfid_write(const void *data, int len)
 	debug ("TI: ");
 
 	/* enable chip select */
-	rfid_cs(0);
+	rfid_cs (0);
 
-	p = preamble; /* Praeamble */
-	for (i = 0; i < (int) sizeof(preamble); i++)
-		rfid_tx(*p++);
-	rfid_tx(len + 1); /* LEN */
-	rfid_tx(0x100 - (len + 1)); /* LCS */
-	rfid_tx(tfi); /* TFI */
+	p = preamble;																/* Praeamble */
+	for (i = 0; i < (int) sizeof (preamble); i++)
+		rfid_tx (*p++);
+	rfid_tx (len + 1);															/* LEN */
+	rfid_tx (0x100 - (len + 1));												/* LCS */
+	rfid_tx (tfi);																/* TFI */
 	/* PDn */
 	p = (const unsigned char *) data;
 	while (len--)
@@ -203,32 +207,34 @@ int rfid_write(const void *data, int len)
 		c = *p++;
 		debug (" %02X", c);
 
-		rfid_tx(c);
+		rfid_tx (c);
 		tfi += c;
 	}
-	rfid_tx(0x100 - tfi); /* DCS */
-	rfid_rx(); /* Postamble */
+	rfid_tx (0x100 - tfi);														/* DCS */
+	rfid_rx ();																	/* Postamble */
 
 	/* release chip select */
-	rfid_cs(1);
+	rfid_cs (1);
 
 	debug ("\n");
 
 	/* check for ack */
-	return rfid_read(NULL, 0);
+	return rfid_read (NULL, 0);
 }
 
-int rfid_execute(void *data, unsigned int isize, unsigned int osize)
+int
+rfid_execute (void *data, unsigned int isize, unsigned int osize)
 {
 	int res;
 
-	if((res=rfid_write(data, isize))<0)
-	    return res;
+	if ((res = rfid_write (data, isize)) < 0)
+		return res;
 	else
-	    return rfid_read(data, osize);
+		return rfid_read (data, osize);
 }
 
-int rfid_write_register(unsigned short address, unsigned char data)
+int
+rfid_write_register (unsigned short address, unsigned char data)
 {
 	unsigned char cmd[4];
 
@@ -241,10 +247,11 @@ int rfid_write_register(unsigned short address, unsigned char data)
 	/* data value */
 	cmd[3] = data;
 
-	return rfid_execute(&cmd, sizeof(cmd), sizeof(data));
+	return rfid_execute (&cmd, sizeof (cmd), sizeof (data));
 }
 
-int rfid_read_register(unsigned short address)
+int
+rfid_read_register (unsigned short address)
 {
 	int res;
 	unsigned char cmd[3];
@@ -256,26 +263,32 @@ int rfid_read_register(unsigned short address)
 	/* low byte of address */
 	cmd[2] = address & 0xFF;
 
-	if((res = rfid_execute(&cmd, sizeof(cmd), sizeof(cmd)))>1)
-	    return cmd[1];
+	if ((res = rfid_execute (&cmd, sizeof (cmd), sizeof (cmd))) > 1)
+		return cmd[1];
 	else
-	    return res;
+		return res;
 }
 
-int rfid_mask_register(unsigned short address, unsigned char data, unsigned char mask)
+int
+rfid_mask_register (unsigned short address, unsigned char data,
+					unsigned char mask)
 {
 	int res;
 
-	if((res = rfid_read_register (address))<0)
+	if ((res = rfid_read_register (address)) < 0)
 		return res;
 	else
-		return rfid_write_register (address, (((unsigned char)res) & (~mask))|(data & mask));
+		return rfid_write_register (address,
+									(((unsigned char) res) & (~mask)) | (data
+																		 &
+																		 mask));
 }
 
-void rfid_init(void)
+void
+rfid_init (void)
 {
 	/* Initialize RESET line */
-	GPIOSetDir(PN532_RESET_PORT, PN532_RESET_PIN, 1);
+	GPIOSetDir (PN532_RESET_PORT, PN532_RESET_PIN, 1);
 
 	/* reset PN532 */
 	GPIOSetValue (PN532_RESET_PORT, PN532_RESET_PIN, 0);
@@ -295,4 +308,4 @@ void rfid_init(void)
 	pmu_wait_ms (100);
 }
 
-#endif/*ENABLE_PN532_RFID*/
+#endif /*ENABLE_PN532_RFID */

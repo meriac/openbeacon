@@ -27,23 +27,23 @@
 uint16_t
 crc16 (const uint8_t * buffer, uint32_t size)
 {
-  uint16_t crc = 0xFFFF;
+	uint16_t crc = 0xFFFF;
 
-  if (buffer && size)
-    while (size--)
-      {
-	crc = (crc >> 8) | (crc << 8);
-	crc ^= *buffer++;
-	crc ^= ((unsigned char) crc) >> 4;
-	crc ^= crc << 12;
-	crc ^= (crc & 0xFF) << 5;
-      }
+	if (buffer && size)
+		while (size--)
+		{
+			crc = (crc >> 8) | (crc << 8);
+			crc ^= *buffer++;
+			crc ^= ((unsigned char) crc) >> 4;
+			crc ^= crc << 12;
+			crc ^= (crc & 0xFF) << 5;
+		}
 
-  return crc;
+	return crc;
 }
 
 uint16_t
 icrc16 (const uint8_t * buffer, uint32_t size)
 {
-  return crc16 (buffer, size) ^ 0xFFFF;
+	return crc16 (buffer, size) ^ 0xFFFF;
 }

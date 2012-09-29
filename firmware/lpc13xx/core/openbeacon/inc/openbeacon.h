@@ -22,7 +22,7 @@ extern BOOL default_putchar (uint8_t data);
 #include <FreeRTOS.h>
 #include <task.h>
 #include <semphr.h>
-#endif/*ENABLE_FREERTOS*/
+#endif /*ENABLE_FREERTOS */
 
 #ifdef  __LPC13xx__
 
@@ -36,15 +36,15 @@ extern BOOL default_putchar (uint8_t data);
 #include <usbcore.h>
 #include <cdc.h>
 #include <cdcuser.h>
-#else /*ENABLE_USB_FULLFEATURED*/
+#else /*ENABLE_USB_FULLFEATURED */
 #include <usb.h>
 #include <usbdesc.h>
 #include <rom_drivers.h>
-#endif/*ENABLE_USB_FULLFEATURED*/
+#endif /*ENABLE_USB_FULLFEATURED */
 
 #ifdef  ENABLE_PN532_RFID
 #include <rfid.h>
-#endif/*ENABLE_PN532_RFID*/
+#endif /*ENABLE_PN532_RFID */
 
 #include <spi.h>
 #include <gpio.h>
@@ -106,16 +106,18 @@ extern BOOL default_putchar (uint8_t data);
 #include <crc16.h>
 #include <persistent.h>
 
-static inline uint16_t htons(uint16_t x)
+static inline uint16_t
+htons (uint16_t x)
 {
-  __asm__ ("rev16 %0, %1" : "=r" (x) : "r" (x));
-  return x;
+  __asm__ ("rev16 %0, %1": "=r" (x):"r" (x));
+	return x;
 }
 
-static inline uint32_t htonl(uint32_t x)
+static inline uint32_t
+htonl (uint32_t x)
 {
-  __asm__ ("rev %0, %1" : "=r" (x) : "r" (x));
-  return x;
+  __asm__ ("rev %0, %1": "=r" (x):"r" (x));
+	return x;
 }
 
 #define ntohl(l) htonl(l)

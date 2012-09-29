@@ -24,7 +24,7 @@
 #define __HID_H__
 
 extern void hid_init (void);
-extern void GetInReport (uint8_t *src, uint32_t length);
-extern void SetOutReport (uint8_t *dst, uint32_t length);
+extern void GetInReport (uint8_t * src, uint32_t length);
+extern void SetOutReport (uint8_t * dst, uint32_t length);
 
 #endif/*__HID_H__*/

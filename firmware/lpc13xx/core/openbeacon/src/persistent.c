@@ -30,30 +30,30 @@ extern uint8_t __persistent_end__;
 static uint16_t g_crc16 __attribute__ ((section (".persistent_manage")));
 
 void
-persistent_update(void)
+persistent_update (void)
 {
-  uint32_t length;
+	uint32_t length;
 
-  length = ((uint32_t) & __persistent_end__) -
-    ((uint32_t) & __persistent_beg__);
+	length = ((uint32_t) & __persistent_end__) -
+		((uint32_t) & __persistent_beg__);
 
-  g_crc16 = icrc16 (&__persistent_beg__, length);
+	g_crc16 = icrc16 (&__persistent_beg__, length);
 }
 
 void
 persistent_init (void)
 {
-  uint32_t length;
+	uint32_t length;
 
-  length = ((uint32_t) & __persistent_end__) -
-    ((uint32_t) & __persistent_beg__);
+	length = ((uint32_t) & __persistent_end__) -
+		((uint32_t) & __persistent_beg__);
 
-  /* initialize RAM if CRC is wrong */
-  if (length && (g_crc16 != icrc16 (&__persistent_beg__, length)))
-  {
-    g_crc16 = 0;
-    bzero (&__persistent_beg__, length);
-  }
+	/* initialize RAM if CRC is wrong */
+	if (length && (g_crc16 != icrc16 (&__persistent_beg__, length)))
+	{
+		g_crc16 = 0;
+		bzero (&__persistent_beg__, length);
+	}
 }
 
 #endif /*ENABLE_PERSISTENT_INITIALIZATION */

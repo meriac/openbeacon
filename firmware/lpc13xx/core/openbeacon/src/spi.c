@@ -25,20 +25,25 @@
 
 #define BIT_REVERSE(x) ((unsigned char)(__RBIT(x)>>24))
 
-void spi_init_pin(spi_cs chipselect)
+void
+spi_init_pin (spi_cs chipselect)
 {
-	GPIOSetDir((uint8_t) (chipselect >> 24), (uint8_t) (chipselect >> 16), 1);
+	GPIOSetDir ((uint8_t) (chipselect >> 24), (uint8_t) (chipselect >> 16),
+				1);
 }
 
-void spi_txrx_done(spi_cs chipselect)
+void
+spi_txrx_done (spi_cs chipselect)
 {
-	GPIOSetValue((uint8_t) (chipselect >> 24),
-		(uint8_t) (chipselect >> 16), (chipselect
-		& SPI_CS_MODE_INVERT_CS) ^ SPI_CS_MODE_INVERT_CS);
+	GPIOSetValue ((uint8_t) (chipselect >> 24),
+				  (uint8_t) (chipselect >> 16), (chipselect
+												 & SPI_CS_MODE_INVERT_CS) ^
+				  SPI_CS_MODE_INVERT_CS);
 }
 
-int spi_txrx(spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
-		uint16_t rxlen)
+int
+spi_txrx (spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
+		  uint16_t rxlen)
 {
 	uint8_t data;
 	uint16_t total, xfered;
@@ -48,13 +53,13 @@ int spi_txrx(spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
 
 	/* activate chip select */
 	if ((chipselect & SPI_CS_MODE_SKIP_CS_ASSERT) == 0)
-		GPIOSetValue((uint8_t) (chipselect >> 24),
-				(uint8_t) (chipselect >> 16), chipselect
-						& SPI_CS_MODE_INVERT_CS);
+		GPIOSetValue ((uint8_t) (chipselect >> 24),
+					  (uint8_t) (chipselect >> 16), chipselect
+					  & SPI_CS_MODE_INVERT_CS);
 
 	/* calculate SPI transaction size */
 	xfered = total = (chipselect & SPI_CS_MODE_SKIP_TX) ? rxlen + txlen
-			: (txlen >= rxlen) ? txlen : rxlen;
+		: (txlen >= rxlen) ? txlen : rxlen;
 
 	while (xfered)
 	{
@@ -74,7 +79,7 @@ int spi_txrx(spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
 				data = 0;
 
 			/* Wait if TX fifo is full */
-			while((LPC_SSP->SR & 2)==0);
+			while ((LPC_SSP->SR & 2) == 0);
 
 			LPC_SSP->DR = data;
 		}
@@ -97,7 +102,7 @@ int spi_txrx(spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
 	}
 
 	/* Wait for TX transaction to finish */
-	while((LPC_SSP->SR & 1)==0);
+	while ((LPC_SSP->SR & 1) == 0);
 
 	/* de-activate chip select */
 	if ((chipselect & SPI_CS_MODE_SKIP_CS_DEASSERT) == 0)
@@ -105,13 +110,16 @@ int spi_txrx(spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
 	return 0;
 }
 
-void spi_status(void)
+void
+spi_status (void)
 {
-	debug_printf(" * SPI: CLK:%uMHz\n", (SystemCoreClock / (LPC_SYSCON->SSPCLKDIV * LPC_SSP->CPSR))
-			/ 1000000);
+	debug_printf (" * SPI: CLK:%uMHz\n",
+				  (SystemCoreClock /
+				   (LPC_SYSCON->SSPCLKDIV * LPC_SSP->CPSR)) / 1000000);
 }
 
-void spi_init(void)
+void
+spi_init (void)
 {
 	/* reset SSP peripheral */
 	LPC_SYSCON->PRESETCTRL = 0x01;
@@ -135,7 +143,8 @@ void spi_init(void)
 	LPC_SSP->CR1 = 0x0002;
 }
 
-void spi_close(void)
+void
+spi_close (void)
 {
 	/* Disable SSP clock */
 	LPC_SYSCON->SYSAHBCLKCTRL &= ~(1 << 11);
@@ -145,16 +154,16 @@ void spi_close(void)
 
 	/* Enable SSP peripheral MISO, Pulldown */
 	LPC_IOCON->PIO0_8 = 0x00;
-	GPIOSetDir   (0, 8, 1); // OUT
+	GPIOSetDir (0, 8, 1);														// OUT
 	GPIOSetValue (0, 8, 0);
 
 	/* MOSI */
 	LPC_IOCON->PIO0_9 = 0x00;
-	GPIOSetDir   (0, 9, 1); // OUT
+	GPIOSetDir (0, 9, 1);														// OUT
 	GPIOSetValue (0, 9, 0);
 
 	/* SCK */
 	LPC_IOCON->JTAG_TCK_PIO0_10 = 0x01;
-	GPIOSetDir   (0, 10, 1); // OUT
+	GPIOSetDir (0, 10, 1);														// OUT
 	GPIOSetValue (0, 10, 0);
 }

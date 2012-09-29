@@ -38,65 +38,65 @@ static const uint32_t DELTA = 0x9e3779b9UL;
 static void
 xxtea_shuffle (uint32_t * v, uint32_t length)
 {
-  while (length--)
-    {
-      *v = htonl (*v);
-      v++;
-    }
+	while (length--)
+	{
+		*v = htonl (*v);
+		v++;
+	}
 }
 
 void
 xxtea_encode (uint32_t * v, uint32_t length, const uint32_t * tea_key)
 {
-  uint32_t z, y, sum, e, p, q;
+	uint32_t z, y, sum, e, p, q;
 
-  if (!v || !tea_key)
-    return;
+	if (!v || !tea_key)
+		return;
 
-  xxtea_shuffle (v, length);
+	xxtea_shuffle (v, length);
 
-  q = 6 + 52 / length;
-  sum = 0;
-  z = v[length - 1];
-  do
-    {
-      sum += DELTA;
-      e = (sum >> 2) & 3;
+	q = 6 + 52 / length;
+	sum = 0;
+	z = v[length - 1];
+	do
+	{
+		sum += DELTA;
+		e = (sum >> 2) & 3;
 
-      for (p = 0; p < (length - 1); p++)
-	y = v[p + 1], z = v[p] += MX;
+		for (p = 0; p < (length - 1); p++)
+			y = v[p + 1], z = v[p] += MX;
 
-      y = v[0];
-      z = v[length - 1] += MX;
-    }
-  while (--q);
+		y = v[0];
+		z = v[length - 1] += MX;
+	}
+	while (--q);
 
-  xxtea_shuffle (v, length);
+	xxtea_shuffle (v, length);
 }
 
 void
 xxtea_decode (uint32_t * v, uint32_t length, const uint32_t * tea_key)
 {
-  uint32_t z, y, sum, e, p, q;
+	uint32_t z, y, sum, e, p, q;
 
-  if (!v || !tea_key)
-    return;
+	if (!v || !tea_key)
+		return;
 
-  xxtea_shuffle (v, length);
+	xxtea_shuffle (v, length);
 
-  q = 6 + 52 / length;
-  sum = q * DELTA;
-  y = v[0];
-  while (sum)
-    {
-      e = (sum >> 2) & 3;
-      for (p = length - 1; p > 0; p--)
-	z = v[p - 1], y = v[p] -= MX;
+	q = 6 + 52 / length;
+	sum = q * DELTA;
+	y = v[0];
+	while (sum)
+	{
+		e = (sum >> 2) & 3;
+		for (p = length - 1; p > 0; p--)
+			z = v[p - 1], y = v[p] -= MX;
 
-      z = v[length - 1];
-      y = v[0] -= MX;
-      sum -= DELTA;
-    }
+		z = v[length - 1];
+		y = v[0] -= MX;
+		sum -= DELTA;
+	}
 
-    xxtea_shuffle (v, length);
+	xxtea_shuffle (v, length);
 }
