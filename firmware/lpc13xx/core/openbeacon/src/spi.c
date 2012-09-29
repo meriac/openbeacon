@@ -51,6 +51,9 @@ spi_txrx (spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
 	/* SSP0 Clock Prescale Register to SYSCLK/CPSDVSR */
 	LPC_SSP->CPSR = (chipselect >> 8) & 0xFF;
 
+	/* 9 bit for LCD / 8 bit for others , SPI, SCR=0 */
+	LPC_SSP->CR0 = (chipselect & SPI_CS_MODE_LCD) ? 8 : 7;
+
 	/* activate chip select */
 	if ((chipselect & SPI_CS_MODE_SKIP_CS_ASSERT) == 0)
 		GPIOSetValue ((uint8_t) (chipselect >> 24),
@@ -72,6 +75,7 @@ spi_txrx (spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
 				txlen--;
 				data = *((uint8_t *) tx);
 				tx = ((uint8_t *) tx) + 1;
+
 				if (chipselect & SPI_CS_MODE_BIT_REVERSED)
 					data = BIT_REVERSE (data);
 			}
@@ -81,7 +85,20 @@ spi_txrx (spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
 			/* Wait if TX fifo is full */
 			while ((LPC_SSP->SR & 2) == 0);
 
-			LPC_SSP->DR = data;
+			if (chipselect & SPI_CS_MODE_LCD)
+			{
+				/* if SPI_CS_MODE_LCDCMD is set, transmit first byte as CMD ... */
+				if (chipselect & SPI_CS_MODE_LCD_CMD)
+				{
+					chipselect ^= SPI_CS_MODE_LCD_CMD;
+					LPC_SSP->DR = data;
+				}
+				else
+					/* ... and remaining bytes as data */
+					LPC_SSP->DR = 0x100U | data;
+			}
+			else
+				LPC_SSP->DR = data;
 		}
 
 		while (LPC_SSP->SR & 0x04)
@@ -107,6 +124,7 @@ spi_txrx (spi_cs chipselect, const void *tx, uint16_t txlen, void *rx,
 	/* de-activate chip select */
 	if ((chipselect & SPI_CS_MODE_SKIP_CS_DEASSERT) == 0)
 		spi_txrx_done (chipselect);
+
 	return 0;
 }
 
