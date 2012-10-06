@@ -1,13 +1,16 @@
 CXX     :=g++
 TARGET  :=openbeacon-tracker
 SOURCES :=src/bmMapHandleToItem.cpp src/main.cpp
-FILTER  :=filter-singularsighting
+FILTERSS:=filter-singularsighting
+FILTERMG:=filter-mongodb
 LOGFILE :=logs/brucon-2011-log.bin
+MAKE    :=make
 
 FILTERFILE_PREFIX:=logs/sightings.json
 
 MIRROR  :=http://mirror.openbeacon.net
 LIBS    :=-lm -lpthread -lpcap
+MONGOC  :=mongodb-mongo-c-driver
 
 # determine program version
 PROGRAM_VERSION:=$(shell git describe --tags --abbrev=4 --dirty 2>/dev/null | sed s/^v//)
@@ -30,7 +33,7 @@ OBJS    :=$(SOURCES:%.cpp=%.o)
 LOGJSON :=$(LOGFILE:%.bin=%.json.bz2)
 PREFIX  :=/usr/local
 
-all: $(TARGET) filters
+all: $(TARGET) $(FILTERSS)
 
 .PHONY: all version run install demo-realtime demo-logfile demo-fastest logfile filters indent debug dependencies-fedora cleanall clean
 
@@ -63,10 +66,20 @@ $(LOGFILE): $(LOGFILE).bz2
 $(LOGFILE).bz2:
 	curl -C - -o $@ $(MIRROR)/$(shell basename $@)
 
-filters: $(FILTER)
-
-$(FILTER): src/$(FILTER).cpp
+$(FILTERSS): src/$(FILTERSS).cpp
 	$(CXX) $(CXXFLAGS) $(CXXOPT) $(LDOPT) -lz $^ -o $@
+
+$(MONGOC).tar.gz:
+	curl -L -o $@ http://github.com/mongodb/mongo-c-driver/tarball/master
+
+$(MONGOC): $(MONGOC).tar.gz
+	rm -rf $(MONGOC)-*
+	tar -xvzf $^
+	mv $(MONGOC)-* $(MONGOC)
+	$(MAKE) -C $(MONGOC)
+
+$(FILTERMG): src/$(FILTERMG).cpp $(MONGOC)
+	$(CXX) $(CXXFLAGS) $(CXXOPT) $(LDOPT) -ljson -DMONGO_HAVE_STDINT -I$(MONGOC)/src src/$(FILTERMG).cpp $(MONGOC)/libmongoc.a $(MONGOC)/libbson.a -o $@ 
 
 indent: $(SOURCES)
 	find src -iname '*\.[cph]*' -exec indent -c81 -i4 -cli4 -bli0 -ts 4 \{\} \;
@@ -82,12 +95,13 @@ $(TARGET): .depend $(OBJS)
 	$(CXX) $(CXXFLAGS) $(CXXOPT) -c $< -o $@
 
 dependencies-fedora:
-	sudo yum install libpcap libpcap-devel zlib zlib-devel gcc-c++
+	sudo yum install libpcap libpcap-devel zlib zlib-devel gcc-c++ mongodb-devel mongodb boost-build boost-devel json-c json-c-devel
 
 cleanall: clean
-	rm -rf .depend
+	rm -f .depend $(MONGOC).tar.gz
+	rm -rf $(MONGOC)
 
 clean:
-	rm -f $(TARGET) $(OBJS) $(FILTER) $(LOGJSON) $(FILTERFILE_PREFIX)* callgrind.out.* *~
+	rm -f $(TARGET) $(OBJS) $(FILTERSS) $(FILTERMG) $(LOGJSON) $(FILTERFILE_PREFIX)* callgrind.out.* *~
 
 include .depend
