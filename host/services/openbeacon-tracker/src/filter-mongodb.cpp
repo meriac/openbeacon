@@ -143,9 +143,7 @@ main (int argc, char *argv[])
 	if ((res =
 		 mongo_connect (&g_mongo, g_mongo_host, g_mongo_port)) != MONGO_OK)
 	{
-		fprintf (stderr,
-				 LOG
-				 " can't open mongo_db (host %s:%i)\n",
+		fprintf (stderr, LOG " can't open mongo_db (host %s:%i)\n",
 				 g_mongo_host, g_mongo_port);
 		json_tokener_free (tok);
 		return -3;
@@ -160,7 +158,7 @@ main (int argc, char *argv[])
 		/* convert to 8 bits */
 		c[0] = (uint8_t) data;
 		/* echo everything to maintain pipe chain */
-//      putchar (c[0]);
+		putchar (c[0]);
 		/* find start of new object */
 		if (pos && c[2] == '\n' && c[1] == '}' && c[0] == ',')
 		{
@@ -174,9 +172,10 @@ main (int argc, char *argv[])
 				bson_init (&b);
 				process_json2bson (json, NULL, &b);
 				bson_finish (&b);
-				printf ("\n###\n");
-				bson_print (&b);
-//              mongo_insert (&g_mongo, argv[0], &b);
+
+				/* insert object into database */
+				mongo_insert (&g_mongo, argv[1], &b, NULL);
+
 				bson_destroy (&b);
 			}
 			json_tokener_reset (tok);
