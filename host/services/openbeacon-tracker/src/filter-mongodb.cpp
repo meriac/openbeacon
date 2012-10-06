@@ -2,10 +2,10 @@
  *
  * OpenBeacon.org - OnAir protocol position tracker filter
  *
- * Accepts stdout from position tracker on stdin and constantly
- * updates a MongoDB database by dumping the latest JSON object
- * into it. By using good indexes an excellent performance can
- * be achieved.
+ * Accept stdout from position tracker on stdin and constantly
+ * update a MongoDB database by dumping the latest JSON object
+ * into it. By using a good index an excellent read performance
+ * is achieved (see database index examples below).
  *
  * Please note that stdin is forwarded to stdout unmodified -
  * that allows to combine multiple filters or forwarding the 
@@ -31,7 +31,7 @@
 */
 
 /*
- Suggested MongoDB database indexes:
+ Suggested MongoDB database indexe examples:
  *
  db.log.ensureIndex ({"id":1, "time": 1}, {unique: true});
  db.log.ensureIndex ({"id": 1});
