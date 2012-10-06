@@ -46,9 +46,9 @@ run: $(TARGET)
 install: $(TARGET) $(FILTER)
 	install $(TARGET) $(FILTER) $(PREFIX)/bin/
 
-demo-realtime: $(TARGET) $(LOGFILE) $(FILTER)
+demo-realtime: $(TARGET) $(LOGFILE) $(FILTERSS)
 	rm -f $(FILTERFILE_PREFIX)*
-	./$(TARGET) $(LOGFILE) 1 | ./$(FILTER) $(FILTERFILE_PREFIX) | bzip2 -9 >$(LOGJSON)
+	./$(TARGET) $(LOGFILE) 1 | ./$(FILTERSS) $(FILTERFILE_PREFIX) | bzip2 -9 >$(LOGJSON)
 
 demo-logfile: $(TARGET) $(LOGFILE)
 	rm -f $(FILTERFILE_PREFIX)*
@@ -57,6 +57,9 @@ demo-logfile: $(TARGET) $(LOGFILE)
 demo-fastest: $(TARGET) $(LOGFILE)
 	rm -f $(FILTERFILE_PREFIX)*
 	time ./$(TARGET) $(LOGFILE) 0 > /dev/null
+
+demo-mongodb: $(TARGET) $(LOGFILE) $(FILTERMG)
+	./$(TARGET) $(LOGFILE) 0 | ./$(FILTERMG) openbeacon.log >/dev/null
 
 logfile: $(LOGFILE)
 
