@@ -2,12 +2,14 @@
  *
  * OpenBeacon.org - OnAir protocol position tracker filter
  *
- * accepts stdout from position tracker on stdin and constantly
- * updates two JSON files reflecting the current state of the
- * tracker. One of the files ig gzip compressed.
+ * Accepts stdout from position tracker on stdin and constantly
+ * updates a MongoDB database by dumping the latest JSON object
+ * into it. By using good indexes an excellent performance can
+ * be achieved.
  *
- * The basic idea is to point this filter to a RAM backed tmpfs
- * mount which is served by an Apache webserver et al.
+ * Please note that stdin is forwarded to stdout unmodified -
+ * that allows to combine multiple filters or forwarding the 
+ * network stream over network.
  *
  * Copyright 2009-2012 Milosch Meriac <meriac@bitmanufaktur.de>
  *
@@ -26,6 +28,18 @@
  You should have received a copy of the GNU Affero General Public License
  along with this program; if not, write to the Free Software Foundation,
  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
+
+/*
+ Suggested MongoDB database indexes:
+ *
+ db.log.ensureIndex ({"id":1, "time": 1}, {unique: true});
+ db.log.ensureIndex ({"id": 1});
+ db.log.ensureIndex ({"time": 1});
+ db.log.ensureIndex ({"tag.id": 1});
+ db.log.ensureIndex ({"tag.id": 1, "time": 1});
+ db.log.ensureIndex ({"edge.tag": 1});
+ db.log.ensureIndex ({"edge.tag": 1, "time": 1});
 */
 
 #include <stdlib.h>
