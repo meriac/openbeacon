@@ -224,5 +224,6 @@ main (int argc, char *argv[])
 
 	mongo_destroy (&g_mongo);
 	json_tokener_free (tok);
+	free (buffer);
 	return res;
 }
