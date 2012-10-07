@@ -424,7 +424,7 @@ ThreadIterateForceCalculate (void *Context, double timestamp, bool realtime)
 	printf ("%s    {\"id\":%u", g_first ? "" : ",\n", tag->id);
 
 	if (tag->last_reader)
-		printf (",\"px\":%i,\"py\":%i", (int) tag->px, (int) tag->py);
+		printf (",\"loc\":[%i,%i]", (int) tag->px, (int) tag->py);
 
 	if (tag->key_id)
 		printf (",\"key\":%i", tag->key_id);
@@ -517,7 +517,7 @@ EstimationStep (double timestamp, bool realtime)
 	{
 		if ((timestamp - g_reader_last_seen[i]) < READER_TIMEOUT_SECONDS)
 			printf
-				("%s    {\"id\":%u,\"px\":%u,\"py\":%u,\"room\":%u,\"floor\":%u,\"group\":%u}",
+				("%s    {\"id\":%u,\"loc\":[%i,%i],\"room\":%u,\"floor\":%u,\"group\":%u}",
 				 j++ ? ",\n" : "", reader->id, (int) reader->x,
 				 (int) reader->y, (int) reader->room, (int) reader->floor,
 				 (int) reader->group);
