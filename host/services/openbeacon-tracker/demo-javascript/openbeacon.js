@@ -29,7 +29,7 @@
 var w = 1024,
     h = 1024,
     fill = d3.scale.category20();
-    floor = 2;
+    floor = 1;
 
 var nodes_tag = new Array(),
     nodes_reader = new Array(),
@@ -40,7 +40,7 @@ var replay_date_string = d3.select('#date');
     replay_date = new Date();
 
 var vis = d3.select('#chart')
-  .attr('style', 'background-image: url(../images/bcc_map_level'+String.fromCharCode(64+floor)+'.png); background-repeat: no-repeat;')
+  .attr('style', 'background-image: url(http://api.openbeacon.net/images/brucon.png); background-repeat: no-repeat;')
   .append('svg:svg')
     .attr('width', w)
     .attr('height', h);
@@ -117,8 +117,8 @@ function process_server(json) {
 	    node.fixed = true;
 	    node.index = t;
 	    node.radius = 7;
-	    node.px = node.x = reader.px;
-	    node.py = node.y = reader.py;
+	    node.px = node.x = reader.loc[0];
+	    node.py = node.y = reader.loc[1];
 
 	    nodes.push(node);
 	    nodesm.push(node);
@@ -173,8 +173,8 @@ function process_server(json) {
 	      node.index = t;
 	      node.radius = 5;
 	      node.link = link;
-	      node.px = node.x = tag.px;
-	      node.py = node.y = tag.py;
+	      node.px = node.x = tag.loc[0];
+	      node.py = node.y = tag.loc[1];
 
 	      nodes_tag[tag.id] = node;
 	      nodes.push(node);
@@ -222,7 +222,7 @@ function process_server(json) {
 
 function refresh_svg()
 {
-  d3.json('http://api.openbeacon.net/get/sighting.json', process_server);
+  d3.json('http://api.openbeacon.net/get/brucon.json', process_server);
 
   window.setTimeout(refresh_svg, 1000);
 }

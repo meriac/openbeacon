@@ -103,8 +103,10 @@ function main()
 	    /* for BCC reader ID/IP is derieved from switch port number */
 	    $reader_id=sprintf("%s%03u",chr(ord('A')+(($reader->id>>8)&0x1F)),$reader->id&0xFF);
 
-	    imagefilledrectangle($im, $reader->px-3, $reader->py-3, $reader->px+3, $reader->py+3, $reader_color);
-	    imagestring($im, 4, $reader->px, $reader->py-18, $reader_id, $inactive_color);
+	    $px = $reader->loc[0];
+	    $py = $reader->loc[1];
+	    imagefilledrectangle($im, $px-3, $py-3, $px+3, $py+3, $reader_color);
+	    imagestring($im, 4, $px, $py-18, $reader_id, $inactive_color);
 	}
 
     $tag_list = array();
@@ -121,19 +123,19 @@ function main()
 	    $tag1 = $tag_list[$tag_id1];
 	    $tag2 = $tag_list[$tag_id2];
 	    $power = ($edge->power<=MAX_PROX_COLORS) ? $edge->power : MAX_PROX_COLORS;
-	    imageline($im, $tag1->px, $tag1->py, $tag2->px, $tag2->py, $prox_color[$power]);
+	    imageline($im, $tag1->loc[0], $tag1->loc[1], $tag2->loc[0], $tag2->loc[1], $prox_color[$power]);
 	}
     }
 
     /* draw all non-button-pressed tags */
     foreach($track->tag as $tag)
 	if(!isset($tag->button) && isset($tag->reader) && isset($reader_list[$tag->reader]))
-	    draw_tag($im, $tag->px, $tag->py, $tag->id, false);
+	    draw_tag($im, $tag->loc[0], $tag->loc[1], $tag->id, false);
 
     /* draw all button-pressed tags */
     foreach($track->tag as $tag)
 	if(isset($tag->button) && isset($tag->reader) && isset($reader_list[$tag->reader]))
-	    draw_tag($im, $tag->px, $tag->py, $tag->id, true);
+	    draw_tag($im, $tag->loc[0], $tag->loc[1], $tag->id, true);
 
     // timestamp
     $duration = sprintf(" [rate=%u/s, render=%ums]",$track->packets->rate,round((microtime(TRUE)-$time_start)*1000,1));
