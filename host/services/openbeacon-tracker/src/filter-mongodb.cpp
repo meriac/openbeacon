@@ -31,15 +31,18 @@
 */
 
 /*
- Suggested MongoDB database indexe examples:
+ Suggested MongoDB database index examples:
  *
+
+ * ensure double documents from multiple replays of the same data
  db.log.ensureIndex ({"id":1, "time": 1}, {unique: true});
- db.log.ensureIndex ({"id": 1});
- db.log.ensureIndex ({"time": 1});
- db.log.ensureIndex ({"tag.id": 1});
- db.log.ensureIndex ({"tag.id": 1, "time": 1});
- db.log.ensureIndex ({"edge.tag": 1});
- db.log.ensureIndex ({"edge.tag": 1, "time": 1});
+
+ * add geospatial index to tag position collection 
+ db.tag.ensureIndex ( { "loc" : "2d" , "time":1 , "button":1 } , { min:0,max:1024 } );
+
+ * add index for edge detection collection
+ db.edge.ensureIndex ( { "tag":1, "time":1, "power":1 } );
+
 */
 
 #include <stdlib.h>
