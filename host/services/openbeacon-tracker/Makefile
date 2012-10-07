@@ -59,7 +59,7 @@ demo-fastest: $(TARGET) $(LOGFILE)
 	time ./$(TARGET) $(LOGFILE) 0 > /dev/null
 
 demo-mongodb: $(TARGET) $(LOGFILE) $(FILTERMG)
-	time ./$(TARGET) $(LOGFILE) 0 | ./$(FILTERMG) openbeacon.log >/dev/null
+	time ./$(TARGET) $(LOGFILE) 0 | ./$(FILTERMG) >/dev/null
 
 logfile: $(LOGFILE)
 
