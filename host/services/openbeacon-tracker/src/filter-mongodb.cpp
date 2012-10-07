@@ -45,18 +45,19 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <getopt.h>
 #include <stdio.h>
 #include <mongo.h>
 #include <json/json.h>
 
 #define LOG "FILTER_MONGODB "
 
+#define LOG_ERR LOG "ERROR: "
+
 #define MAX_NUM_SIZE 16
 #define MEMORY_INCREMENT 4096
 
 mongo g_mongo;
-const int g_mongo_port = 27017;
-const char g_mongo_host[] = "127.0.0.1";
 
 void
 process_json2bson (struct json_object *json_obj, const char *json_key,
@@ -132,37 +133,142 @@ process_json2bson (struct json_object *json_obj, const char *json_key,
 }
 
 int
+mongodb_store (const char *db, const char *collection, struct json_object *json, uint32_t time)
+{
+	bson b;
+	bson *pb, *batch;
+	bson **ppb, **batch_list;
+
+	int count, written, i, res;
+	struct json_object *js;
+	char mongo_ns[128];
+
+	if(!json)
+		return MONGO_OK;
+
+	if(snprintf(mongo_ns, sizeof(mongo_ns), "%s.%s", db, collection)>=(int)sizeof(mongo_ns))
+	{
+		fprintf (stderr, LOG "ERROR: MongoDB target namespace truncated.\n");
+		return MONGO_ERROR;
+	}
+
+	/* batch-store arrays */
+	if(json_object_get_type (json) != json_type_array)
+	{
+		bson_init (&b);
+		process_json2bson (json, NULL, &b);
+		bson_finish (&b);
+
+		/* insert object into database */
+		res = mongo_insert (&g_mongo, mongo_ns, &b, NULL);
+
+		bson_destroy (&b);
+
+		return res;
+	}
+
+	if((count=json_object_array_length(json))<=0)
+		return MONGO_OK;
+
+	batch = pb = (bson*)malloc(sizeof(bson)*count);
+	batch_list = ppb = (bson**)malloc(sizeof(ppb)*count);
+	memset(ppb,0,sizeof(ppb)*count);
+
+	/* add all array objects to BSON list as single batch */
+	written = 0;
+	for(i=0;i<count;i++)
+		if((js = json_object_array_get_idx (json,i))!=NULL)
+		{
+			if(time && (json_object_get_type (js) == json_type_object))
+				json_object_object_add(js, "time", json_object_new_int (time));
+
+			/* convert to BSON */
+			bson_init (pb);
+			process_json2bson (js, NULL, pb);
+			bson_finish (pb);
+
+			/* advance to next BSON object */
+			*ppb++=pb++;
+			written++;
+		}
+
+	if(written)
+	{
+		/* insert object into database */
+		res = mongo_insert_batch (&g_mongo, mongo_ns, (const bson**)batch_list, written, NULL, 0);
+
+		/* delete bson objects */
+		pb=batch;
+		for(i=0;i<written;i++)
+			bson_destroy(pb++);
+	}
+	else
+		res = MONGO_OK;
+
+	free(batch);
+	free(batch_list);
+
+	return res;
+}
+
+int
 main (int argc, char *argv[])
 {
-	int res, data, size, pos;
+	int cmd, res, data, size, pos, i, mongo_port, mongo_log;
 	uint8_t c[3];
 	char *buffer, *p;
+	const char *mongo_host, *mongo_db;
 	struct json_tokener *tok;
-	struct json_object *json;
-	bson b;
-	if (argc != 2)
-	{
-		fprintf (stderr, LOG " usage: %s mongodb_table_name\n", argv[0]);
-		return -1;
-	}
+	struct json_object *json, *js;
+
+	/* set default parameters */
+	mongo_host = "127.0.0.1";
+	mongo_port = 27017;
+	mongo_db = "openbeacon";
+	mongo_log = 0;
+
+	/* scan for command line arguments */
+	opterr = 0;
+	while ((cmd = getopt (argc, argv, "h:p:d:l")) != -1)
+		switch (cmd)
+		{
+			case 'd':
+				mongo_db = optarg;
+				break;
+			case 'h':
+				mongo_host = optarg;
+				break;
+			case 'p':
+				if((i = atoi (optarg))>0)
+					mongo_port = i;
+				break;
+			case 'l':
+				mongo_log = 1;
+				break;
+			default:
+				fprintf (stderr, "\nUsage: %s [-l] [-h db_host] [-p db_port] [-d db_name]\n\n", argv[0]);
+				return -1;
+		}
 
 	if ((tok = json_tokener_new ()) == NULL)
 	{
-		fprintf (stderr, LOG " failed to allocate tokener\n");
+		fprintf (stderr, LOG_ERR " failed to allocate tokener\n");
 		return -2;
 	}
 
 	mongo_init (&g_mongo);
 	mongo_set_op_timeout (&g_mongo, 1000);
 	if ((res =
-		 mongo_connect (&g_mongo, g_mongo_host, g_mongo_port)) != MONGO_OK)
+		 mongo_connect (&g_mongo, mongo_host, mongo_port)) != MONGO_OK)
 	{
-		fprintf (stderr, LOG " can't open mongo_db (host %s:%i)\n",
-				 g_mongo_host, g_mongo_port);
+		fprintf (stderr, LOG_ERR " can't open mongo_db (host %s:%i)\n",
+				 mongo_host, mongo_port);
 		json_tokener_free (tok);
 		return -3;
 	}
 
+	/* show connection parameters */
+	fprintf (stderr, LOG " connected to mongo://%s:%i/%s\n", mongo_host, mongo_port, mongo_db);
 
 	res = size = pos = 0;
 	buffer = p = NULL;
@@ -180,17 +286,25 @@ main (int argc, char *argv[])
 			*p = 0;
 			json = json_tokener_parse_ex (tok, buffer, pos);
 			if (tok->err != json_tokener_success)
-				fprintf (stderr, LOG "JSON conversion error\n");
+				fprintf (stderr, LOG_ERR "JSON conversion error\n");
 			else
 			{
-				bson_init (&b);
-				process_json2bson (json, NULL, &b);
-				bson_finish (&b);
+				if(mongo_log)
+					mongodb_store (mongo_db,"log",json, 0);
 
-				/* insert object into database */
-				mongo_insert (&g_mongo, argv[1], &b, NULL);
-
-				bson_destroy (&b);
+				if(json_object_get_type (json)==json_type_object)
+				{
+					js = json_object_object_get (json, "time");
+					if(js && ((i=json_object_get_int(js))>0))
+					{
+						mongodb_store(mongo_db,"tag",json_object_object_get(json, "tag"),i);
+						mongodb_store(mongo_db,"edge",json_object_object_get(json, "edge"),i);
+					}
+					else
+						fprintf (stderr, LOG_ERR "time stamp not found - ignoring dataset!\n");
+				}
+				else
+					fprintf (stderr, LOG_ERR "JSON object needed - ignoring dataset!\n");
 			}
 			json_tokener_reset (tok);
 			/* reset object buffer */
@@ -205,7 +319,7 @@ main (int argc, char *argv[])
 				size += MEMORY_INCREMENT;
 				if ((buffer = (char *) realloc (buffer, size)) == NULL)
 				{
-					fprintf (stderr, LOG "out of memory\n");
+					fprintf (stderr, LOG_ERR "out of memory\n");
 					res = -4;
 					break;
 				}
