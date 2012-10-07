@@ -97,7 +97,7 @@ function main()
     /* create associative list for reader id for current floor */
     $reader_list = array();
     foreach($track->reader as $reader)
-	if($reader->floor==$floor)
+	if($reader->floor==$floor && isset($reader->loc))
 	{
 	    $reader_list[intval($reader->id)] = true;
 	    /* for BCC reader ID/IP is derieved from switch port number */
@@ -123,18 +123,19 @@ function main()
 	    $tag1 = $tag_list[$tag_id1];
 	    $tag2 = $tag_list[$tag_id2];
 	    $power = ($edge->power<=MAX_PROX_COLORS) ? $edge->power : MAX_PROX_COLORS;
-	    imageline($im, $tag1->loc[0], $tag1->loc[1], $tag2->loc[0], $tag2->loc[1], $prox_color[$power]);
+	    if(isset($tag1->loc) && isset($tag2->loc))
+	      imageline($im, $tag1->loc[0], $tag1->loc[1], $tag2->loc[0], $tag2->loc[1], $prox_color[$power]);
 	}
     }
 
     /* draw all non-button-pressed tags */
     foreach($track->tag as $tag)
-	if(!isset($tag->button) && isset($tag->reader) && isset($reader_list[$tag->reader]))
+	if(!isset($tag->button) && isset($tag->reader) && isset($reader_list[$tag->reader]) && isset($tag->loc))
 	    draw_tag($im, $tag->loc[0], $tag->loc[1], $tag->id, false);
 
     /* draw all button-pressed tags */
     foreach($track->tag as $tag)
-	if(isset($tag->button) && isset($tag->reader) && isset($reader_list[$tag->reader]))
+	if(isset($tag->button) && isset($tag->reader) && isset($reader_list[$tag->reader]) && isset($tag->loc))
 	    draw_tag($im, $tag->loc[0], $tag->loc[1], $tag->id, true);
 
     // timestamp
