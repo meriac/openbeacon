@@ -43,6 +43,9 @@
 #define BPB_MEDIA_TYPE 0xF8
 #define DISK_FAT_EOC (0xFF00|BPB_MEDIA_TYPE)
 
+#define DATA_BYTE_START ((VOLUME_START + FIRST_DATA_SECTOR) * DISK_BLOCK_SIZE)
+#define DATA_BYTE_END   (DATA_BYTE_START + (DATA_SECTORS * DISK_BLOCK_SIZE))
+
 static const TDiskFile *root_directory = NULL;
 
 typedef uint16_t TFatCluster;
@@ -120,8 +123,8 @@ const TDiskBPB DiskBPB = {
 };
 
 static void
-msd_read_data_area (uint32_t offset, uint32_t length, const void *src,
-					uint8_t * dst)
+msd_access_data_area (uint32_t offset, uint32_t length, const void *write,
+					  void *read)
 {
 	uint32_t t;
 	uint32_t cluster, cluster_start, cluster_end, cluster_count;
@@ -130,9 +133,6 @@ msd_read_data_area (uint32_t offset, uint32_t length, const void *src,
 	/* remember variable content over calls to enable caching */
 	static const TDiskFile *file = NULL;
 	static uint32_t cluster_file_start, cluster_file_end;
-
-	/* touch unused parameter 'src' */
-	(void) src;
 
 	/* ignore zero size read requests */
 	if (!length)
@@ -150,9 +150,11 @@ msd_read_data_area (uint32_t offset, uint32_t length, const void *src,
 		if (file->handler)
 			file->handler (offset -
 						   (cluster_file_start * DISK_CLUSTER_SIZE),
-						   length, file->data, dst);
+						   length, write, read);
 		else
-			memset (dst, ' ', length);
+			/* FIXME !!! */
+		if (read)
+			memset (read, ' ', length);
 	}
 
 	/* if no file cached, try to find file */
@@ -175,7 +177,7 @@ msd_read_data_area (uint32_t offset, uint32_t length, const void *src,
 
 				/* if handler exists - run */
 				if (file->handler)
-					file->handler (offset, length, file->data, dst);
+					file->handler (offset, length, write, read);
 				/* if no handler exists copy data */
 				else if ((file->data) && (offset < file->length))
 				{
@@ -184,15 +186,20 @@ msd_read_data_area (uint32_t offset, uint32_t length, const void *src,
 						t = length;
 
 					/* copy data to output buffer */
-					memcpy (dst, ((uint8_t *) file->data) + offset, t);
+					if (read)
+					{
+						memcpy (read, ((uint8_t *) file->data) + offset, t);
 
-					/* if data is smaller, sent remainder to zero */
-					if (t < length)
-						memset (&dst[t], 0, length - t);
+						/* if data is smaller, sent remainder to zero */
+						if (t < length)
+							memset (((uint8_t *) read) + t, 0, length - t);
+					}
+					else if (write)
+						memcpy (((uint8_t *) file->data) + offset, write, t);
 				}
 				/* if no data exists, set to zero */
-				else
-					memset (dst, 0, length);
+				else if (read)
+					memset (read, 0, length);
 
 				/* request could be satisfied - bail out with cached file
 				   handle after handling request */
@@ -209,8 +216,8 @@ msd_read_data_area (uint32_t offset, uint32_t length, const void *src,
 }
 
 static void
-msd_read_fat_area (uint32_t offset, uint32_t length, const void *src,
-				   uint8_t * dst)
+msd_read_fat_area (uint32_t offset, uint32_t length, const void *write,
+				   void *read)
 {
 	const TDiskFile *file;
 	uint32_t count, t, index, remaining;
@@ -218,8 +225,9 @@ msd_read_fat_area (uint32_t offset, uint32_t length, const void *src,
 	uint32_t cluster_file_start, cluster_file_end, cluster_file_count;
 	TFatCluster *fat;
 
-	/* touch unused parameter 'src' */
-	(void) src;
+	/* ignore writes */
+	if (write)
+		return;
 
 	/* ignore read requests for sizes < cluster table granularity */
 	if (length < sizeof (TFatCluster))
@@ -231,7 +239,7 @@ msd_read_fat_area (uint32_t offset, uint32_t length, const void *src,
 	cluster_end = cluster_start + cluster_count - 1;
 
 	/* pre-set FAT */
-	fat = (TFatCluster *) dst;
+	fat = (TFatCluster *) read;
 	t = cluster_count;
 
 	/* special treatment for reserved clusters */
@@ -273,7 +281,7 @@ msd_read_fat_area (uint32_t offset, uint32_t length, const void *src,
 					count =
 						(cluster_count >
 						 remaining) ? remaining : cluster_count;
-					fat = (TFatCluster *) dst;
+					fat = (TFatCluster *) read;
 				}
 				else
 				{
@@ -281,7 +289,7 @@ msd_read_fat_area (uint32_t offset, uint32_t length, const void *src,
 					remaining = cluster_file_count;
 					t = (cluster_file_start - cluster_start);
 					count = cluster_count - t;
-					fat = ((TFatCluster *) dst) + t;
+					fat = ((TFatCluster *) read) + t;
 				}
 
 				/* populate FAT entries with linked FAT list */
@@ -303,18 +311,19 @@ msd_read_fat_area (uint32_t offset, uint32_t length, const void *src,
 }
 
 static void
-msd_read_root_dir (uint32_t offset, uint32_t length, const void *src,
-				   uint8_t * dst)
+msd_read_root_dir (uint32_t offset, uint32_t length, const void *write,
+				   void *read)
 {
 	uint32_t cluster, t;
 	const TDiskFile *file;
 	TDiskDirectoryEntry *entry;
 
-	/* touch unused parameter 'src' */
-	(void) src;
+	/* ignore writes */
+	if (write)
+		return;
 
 	/* initialize response with zero */
-	memset (dst, 0, length);
+	memset (read, 0, length);
 
 	/* first cluster number on disk is 2 */
 	cluster = 2;
@@ -329,7 +338,7 @@ msd_read_root_dir (uint32_t offset, uint32_t length, const void *src,
 		file = file->next;
 	}
 
-	entry = (TDiskDirectoryEntry *) dst;
+	entry = (TDiskDirectoryEntry *) read;
 	t = length / sizeof (TDiskDirectoryEntry);
 	while (t--)
 	{
@@ -354,14 +363,14 @@ msd_read_root_dir (uint32_t offset, uint32_t length, const void *src,
 }
 
 static void
-msd_read_memory (uint32_t offset, uint32_t length, const void *src,
-				 uint8_t * dst)
+msd_read_memory (uint32_t offset, uint32_t length, const void *write,
+				 void *read)
 {
-	memcpy (dst, ((const uint8_t *) src) + offset, length);
+	memcpy (read, ((const uint8_t *) write) + offset, length);
 }
 
 void
-msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
+msd_read (uint32_t offset, uint8_t * read, uint32_t length)
 {
 	const TDiskRecord *rec;
 	uint32_t t, read_end, rec_start, rec_end, pos, count, written;
@@ -394,7 +403,7 @@ msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
 		{
 		 .offset = (VOLUME_START + FIRST_DATA_SECTOR) * DISK_BLOCK_SIZE,
 		 .length = DATA_SECTORS * DISK_BLOCK_SIZE,
-		 .handler = msd_read_data_area,
+		 .handler = msd_access_data_area,
 		 .data = NULL}
 		,
 		/* FAT area - primary copy */
@@ -477,20 +486,20 @@ msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
 			if (rec_start >= offset)
 			{
 				pos = 0;
-				p = &dst[rec_start - offset];
+				p = &(((uint8_t *) read)[rec_start - offset]);
 				count = (rec_end <= read_end) ?
 					rec->length : read_end - rec_start;
 			}
 			else
 			{
 				pos = offset - rec_start;
-				p = dst;
+				p = read;
 				count = (read_end > rec_end) ? rec_end - offset : length;
 			}
 
 			/* set memory of partial read to zero before filling up */
 			if (!written && (count != length))
-				memset (dst, 0, length);
+				memset (read, 0, length);
 
 			/* handle request */
 			rec->handler (pos, count, rec->data, p);
@@ -505,15 +514,23 @@ msd_read (uint32_t offset, uint8_t * dst, uint32_t length)
 
 	/* set memory to zero if not written yet  */
 	if (!written)
-		memset (dst, 0, length);
+		memset (read, 0, length);
 }
 
 void
-msd_write (uint32_t offset, uint8_t * src, uint32_t length)
+msd_write (uint32_t offset, uint8_t * write, uint32_t length)
 {
-	(void) offset;
-	(void) src;
-	(void) length;
+	if (!write || !length)
+		return;
+
+	/* ignore writes outside of data area */
+	if ((offset < DATA_BYTE_START) || ((offset + length) > DATA_BYTE_END))
+		return;
+
+	/* remove absolute offset into data area */
+	offset -= DATA_BYTE_START;
+
+	msd_access_data_area (offset, length, write, NULL);
 }
 
 void

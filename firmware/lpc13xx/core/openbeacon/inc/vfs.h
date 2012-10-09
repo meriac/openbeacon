@@ -25,7 +25,7 @@
 #define __VFS_H__
 
 typedef void (*TDiskHandler) (uint32_t offset, uint32_t length,
-							  const void *src, uint8_t * dst);
+							  const void *write, void *read);
 
 typedef struct _TDiskFile
 {
