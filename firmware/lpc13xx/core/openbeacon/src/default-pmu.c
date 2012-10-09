@@ -48,6 +48,7 @@ pmu_wait_ms (uint16_t ms)
 	SCB->SCR &= ~SCB_SCR_SLEEPDEEP_Msk;
 
 	/* start timer */
+	LPC_TMR16B0->TC = 0;
 	LPC_TMR16B0->MR0 = ms * (SYSTEM_TMR16B0_PRESCALER/1000);
 	LPC_TMR16B0->TCR = 1;
 
