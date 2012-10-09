@@ -32,7 +32,6 @@ CFLAGS= \
 -I$(CORE)openbeacon/inc \
 -I$(CORE)peripherals/inc \
 -I$(CORE)peripherals/inc/usb \
--I$(CORE)freertos/inc \
 -Wall \
 -Werror \
 -Wextra  \
@@ -66,16 +65,12 @@ ARM_SRC= \
   $(CORE)peripherals/src/usb/usbcore.c \
   $(CORE)peripherals/src/usb/usbhw.c \
   $(CORE)peripherals/src/usb/usbuser.c \
-  $(CORE)freertos/src/heap_2.c \
-  $(CORE)freertos/src/list.c \
-  $(CORE)freertos/src/port.c \
-  $(CORE)freertos/src/queue.c \
-  $(CORE)freertos/src/tasks.c \
   $(CORE)openbeacon/src/msd.c \
   $(CORE)openbeacon/src/vfs.c \
   $(CORE)openbeacon/src/hid.c \
   $(CORE)openbeacon/src/spi.c \
   $(CORE)openbeacon/src/iap.c \
+  $(CORE)openbeacon/src/default-pmu.c \
   $(CORE)openbeacon/src/crc8.c \
   $(CORE)openbeacon/src/crc16.c \
   $(CORE)openbeacon/src/xxtea.c \

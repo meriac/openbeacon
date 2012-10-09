@@ -23,7 +23,6 @@
 #include <openbeacon.h>
 #include "bluetooth.h"
 #include "usbserial.h"
-#include "pmu.h"
 #ifdef  ENABLE_BLUETOOTH
 
 #define CPU_WAKEUP_BLT_PORT 1

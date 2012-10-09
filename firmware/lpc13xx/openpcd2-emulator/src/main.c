@@ -119,8 +119,8 @@ trigger_init (void)
 static void
 loop_rfid (void)
 {
-	int res, line, t;
-//  uint32_t counter;
+	int res, line;
+	uint32_t counter;
 	static unsigned char data[80];
 
 	/* fully initialized */
@@ -161,18 +161,17 @@ loop_rfid (void)
 	/* enable debug output */
 	GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
 	line = 0;
-	t = 0;
 
 	while (1)
 	{
-#if 0
+		GPIOSetValue (LED_PORT, LED_BIT, 1);
 		counter = LPC_TMR32B0->TC;
 		pmu_wait_ms (100);
 		counter = (LPC_TMR32B0->TC - counter) * 10;
+		GPIOSetValue (LED_PORT, LED_BIT, 0);
 
 		debug_printf ("LPC_TMR32B0[%08u]: %uHz\n", line++, counter);
-#endif
-		GPIOSetValue (LED_PORT, LED_BIT, GPIOGetValue (1, 8));
+
 	}
 }
 

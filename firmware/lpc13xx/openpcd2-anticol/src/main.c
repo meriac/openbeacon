@@ -21,7 +21,6 @@
 
  */
 #include <openbeacon.h>
-#include "pmu.h"
 #include "usbserial.h"
 
 unsigned char test_signal = 0;

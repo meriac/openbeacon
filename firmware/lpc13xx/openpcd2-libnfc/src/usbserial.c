@@ -21,7 +21,6 @@
 
  */
 #include <openbeacon.h>
-#include "pmu.h"
 #include "usbserial.h"
 
 #define FIFO_SIZE (USB_CDC_BUFSIZE * 2)

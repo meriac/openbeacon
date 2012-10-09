@@ -2,7 +2,7 @@
  *
  * OpenBeacon.org - LPC13xx Power Management Functions
  *
- * Copyright 2011 Milosch Meriac <meriac@openbeacon.de>
+ * Copyright 2011-2012 Milosch Meriac <meriac@openbeacon.de>
  *
  ***************************************************************
 
@@ -23,10 +23,10 @@
 
 #ifndef __PMU_H__
 #define __PMU_H__
+#ifndef DISABLE_DEFAULT_PMU
 
 extern void pmu_wait_ms (uint16_t ms);
-extern void pmu_sleep_ms (uint16_t ms);
-extern void pmu_cancel_timer (void);
 extern void pmu_init (void);
 
+#endif/*DISABLE_DEFAULT_PMU*/
 #endif/*__PMU_H__*/

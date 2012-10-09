@@ -18,12 +18,6 @@ typedef uint8_t BOOL;
 /* this definition is linked weakly against UARTSendChar */
 extern BOOL default_putchar (uint8_t data);
 
-#ifdef  ENABLE_FREERTOS
-#include <FreeRTOS.h>
-#include <task.h>
-#include <semphr.h>
-#endif /*ENABLE_FREERTOS */
-
 #ifdef  __LPC13xx__
 
 #include <LPC13xx.h>
@@ -105,6 +99,7 @@ extern BOOL default_putchar (uint8_t data);
 #include <crc8.h>
 #include <crc16.h>
 #include <persistent.h>
+#include <pmu.h>
 
 static inline uint16_t
 htons (uint16_t x)

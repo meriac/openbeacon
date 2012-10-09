@@ -44,4 +44,6 @@
 
 #define NRF_MAX_MAC_SIZE 5
 
+#define DISABLE_DEFAULT_PMU
+
 #endif/*__CONFIG_H__*/

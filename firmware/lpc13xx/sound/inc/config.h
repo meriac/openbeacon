@@ -6,4 +6,6 @@
 #define BUT2_PORT 1	// Port for Button 2
 #define BUT2_PIN 4	// Bit on port forButton 2
 
+#define DISABLE_DEFAULT_PMU
+
 #endif/*__CONFIG_H__*/

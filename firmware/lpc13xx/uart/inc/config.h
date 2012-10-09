@@ -38,6 +38,7 @@ How to use:
 #define LED_OFF 0		// Level to set port to turn off led
 #define LED_TOGGLE_TICKS 100	// 100 ticks = 1 Hz flash rate
 
+#define DISABLE_DEFAULT_PMU
 /*********************************************************************************
 **                            End Of File
 *********************************************************************************/

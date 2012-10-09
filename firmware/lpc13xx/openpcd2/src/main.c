@@ -21,7 +21,6 @@
 
  */
 #include <openbeacon.h>
-#include "pmu.h"
 #include "usbserial.h"
 
 #define MIFARE_KEY_SIZE 6

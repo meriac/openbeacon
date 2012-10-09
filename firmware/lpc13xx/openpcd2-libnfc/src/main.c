@@ -21,7 +21,6 @@
 
  */
 #include <openbeacon.h>
-#include "pmu.h"
 #include "rfid.h"
 #include "usbserial.h"
 

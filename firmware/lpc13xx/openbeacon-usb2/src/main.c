@@ -24,7 +24,6 @@
 #include "3d_acceleration.h"
 #include "usbserial.h"
 #include "bluetooth.h"
-#include "pmu.h"
 #include "iap.h"
 #include "spi.h"
 #include "nRF_API.h"

@@ -25,7 +25,6 @@
 
 */
 #include <openbeacon.h>
-#include "pmu.h"
 #include "nRF_HW.h"
 #include "nRF_CMD.h"
 #include "nRF_API.h"
