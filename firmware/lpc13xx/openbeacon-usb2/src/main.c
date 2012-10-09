@@ -384,8 +384,27 @@ main (void)
 	/* fire up LED 1 */
 	GPIOSetValue (1, 1, 1);
 
+	/* CDC USB Initialization */
+//	init_usbserial ();
+
 	/* Power Management Unit Initialization */
 	pmu_init ();
+
+while(1)
+{
+	GPIOSetValue (1, 1, 0);
+	pmu_wait_ms (500);
+	GPIOSetValue (1, 1, 1);
+	pmu_wait_ms (500);
+}
+
+	/* prepare 32B0 system timer */
+	LPC_SYSCON->SYSAHBCLKCTRL |= EN_CT32B0;
+	LPC_TMR32B0->TCR = 2;
+	LPC_TMR32B0->PR = SYSTEM_CRYSTAL_CLOCK / LPC_SYSCON->SYSAHBCLKDIV;
+	LPC_TMR32B0->EMR = 0;
+	/* start 32B0 timer */
+	LPC_TMR32B0->TCR = 1;
 
 	/* read device UUID */
 	bzero (&device_uuid, sizeof (device_uuid));
@@ -403,9 +422,6 @@ main (void)
 #else
 	UARTInit (115200, 0);
 #endif /*ENABLE_BLUETOOTH */
-
-	/* CDC USB Initialization */
-	init_usbserial ();
 
 	/* initialize SPI */
 	spi_init ();

@@ -69,7 +69,7 @@ pmu_init (void)
 
 	/* reset 16B0 timer */
 	LPC_TMR16B0->TCR = 2;
-	LPC_TMR16B0->PR = SystemCoreClock / SYSTEM_TMR16B0_PRESCALER;
+	LPC_TMR16B0->PR = (SystemCoreClock / LPC_SYSCON->SYSAHBCLKDIV) / SYSTEM_TMR16B0_PRESCALER;
 	LPC_TMR16B0->EMR = 0;
 	/* enable IRQ, reset and timer stop in MR0 match */
 	LPC_TMR16B0->MCR = 7;
