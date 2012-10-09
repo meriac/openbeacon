@@ -23,8 +23,8 @@ User #defines:
    LED_ON   Value to set the bit to turn on the LED
    LED_OFF  Value to set the bit to turn off the LED
    LED_TOGGLE_TICKS
-		    Number of timer ticks per flash. The timer is configured to generate
-		    an interrupt 100 times a second or every 10mS.
+   Number of timer ticks per flash. The timer is configured to generate
+   an interrupt 100 times a second or every 10mS.
 
 How to use:
    Click the debug toolbar button.
@@ -32,11 +32,11 @@ How to use:
    * You should see an LED flashing.
 */
 
-#define LED_PORT 1		// Port for led
-#define LED_BIT 9		// Bit on port for led
-#define LED_ON 1		// Level to set port to turn on led
-#define LED_OFF 0		// Level to set port to turn off led
-#define LED_TOGGLE_TICKS 100	// 100 ticks = 1 Hz flash rate
+#define LED_PORT 1																// Port for led
+#define LED_BIT 9																// Bit on port for led
+#define LED_ON 1																// Level to set port to turn on led
+#define LED_OFF 0																// Level to set port to turn off led
+#define LED_TOGGLE_TICKS 100													// 100 ticks = 1 Hz flash rate
 
 #define DISABLE_DEFAULT_PMU
 /*********************************************************************************

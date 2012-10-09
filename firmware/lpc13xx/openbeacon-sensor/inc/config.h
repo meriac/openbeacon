@@ -39,8 +39,8 @@
 #define SOUND_ENABLE
 
 /* SPI_CS(io_port, io_pin, CPSDVSR frequency, mode) */
-#define SPI_CS_NRF   SPI_CS( 1,10, 8, SPI_CS_MODE_NORMAL  )	/*  9.0MHz */
-#define SPI_CS_ACC3D SPI_CS( 0, 4,18, SPI_CS_MODE_NORMAL  )	/*  4.0MHz */
+#define SPI_CS_NRF   SPI_CS( 1,10, 8, SPI_CS_MODE_NORMAL  )						/*  9.0MHz */
+#define SPI_CS_ACC3D SPI_CS( 0, 4,18, SPI_CS_MODE_NORMAL  )						/*  4.0MHz */
 
 #define NRF_MAX_MAC_SIZE 5
 

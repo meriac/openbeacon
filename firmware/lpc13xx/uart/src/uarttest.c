@@ -15,38 +15,38 @@
 int
 main (void)
 {
-  volatile int i;
+	volatile int i;
 
-  /* Basic chip initialization is taken care of in SystemInit() called
-   * from the startup code. SystemInit() and chip settings are defined
-   * in the CMSIS system_<part family>.c file.
-   */
+	/* Basic chip initialization is taken care of in SystemInit() called
+	 * from the startup code. SystemInit() and chip settings are defined
+	 * in the CMSIS system_<part family>.c file.
+	 */
 
-  /* NVIC is installed inside UARTInit file. */
-  UARTInit (115200, 0);
+	/* NVIC is installed inside UARTInit file. */
+	UARTInit (115200, 0);
 
-  /* Initialize GPIO (sets up clock) */
-  GPIOInit ();
+	/* Initialize GPIO (sets up clock) */
+	GPIOInit ();
 
-  /* Set LED port pin to output */
-  GPIOSetDir (LED_PORT, LED_BIT, 1);
+	/* Set LED port pin to output */
+	GPIOSetDir (LED_PORT, LED_BIT, 1);
 
-  debug_printf ("Hello World!\n");
+	debug_printf ("Hello World!\n");
 
-  while (1)
-    {				/* Loop forever */
-      if (UARTCount != 0)
-	{
-	  /* Send back everything we receive */
-	  UARTSend ((uint8_t *) UARTBuffer, UARTCount);
-	  UARTCount = 0;
+	while (1)
+	{																			/* Loop forever */
+		if (UARTCount != 0)
+		{
+			/* Send back everything we receive */
+			UARTSend ((uint8_t *) UARTBuffer, UARTCount);
+			UARTCount = 0;
 
-	  /* Blink on every TX packet */
-	  GPIOSetValue (LED_PORT, LED_BIT, LED_OFF);
-	  /* Small Delay to make blink visible */
-	  for(i=0;i<200000;i++);
-	  /* Turn off LED on exit */
-	  GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
+			/* Blink on every TX packet */
+			GPIOSetValue (LED_PORT, LED_BIT, LED_OFF);
+			/* Small Delay to make blink visible */
+			for (i = 0; i < 200000; i++);
+			/* Turn off LED on exit */
+			GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
+		}
 	}
-    }
 }
