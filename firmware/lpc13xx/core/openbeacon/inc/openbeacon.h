@@ -99,7 +99,7 @@ extern BOOL default_putchar (uint8_t data);
 #include <crc8.h>
 #include <crc16.h>
 #include <persistent.h>
-#include <pmu.h>
+#include <default-pmu.h>
 
 static inline uint16_t
 htons (uint16_t x)

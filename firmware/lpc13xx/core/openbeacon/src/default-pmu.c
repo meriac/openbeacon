@@ -21,7 +21,7 @@
 
  */
 #include <openbeacon.h>
-#include "pmu.h"
+#include "default-pmu.h"
 #ifndef DISABLE_DEFAULT_PMU
 
 static volatile uint8_t g_sleeping;

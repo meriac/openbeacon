@@ -26,7 +26,6 @@
 
 #include "pn532.h"
 #include "rfid.h"
-#include "pmu.h"
 
 void
 rfid_reset (unsigned char reset)
