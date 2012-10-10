@@ -43,43 +43,56 @@ storage_flags (void)
 	return status;
 }
 
+static void
+storage_prepare_write (void)
+{
+	static const uint8_t cmd_wren = 0x06;
+	static const uint8_t cmd_en4b = 0xB7;
+
+	/* allow write */
+	do
+	{
+		spi_txrx (SPI_CS_FLASH, &cmd_wren, sizeof(cmd_wren), NULL, 0);
+	} while ((storage_flags()&3)!=2);
+
+	/* enable 32 bit adresses */
+	spi_txrx (SPI_CS_FLASH, &cmd_en4b, sizeof(cmd_en4b), NULL, 0);
+}
+
 void
 storage_erase (void)
 {
-	uint8_t tx[2];
+	int i;
+	uint8_t data;
+	static const uint8_t cmd_erase = 0x60;
 
-	tx[0] = 0x04;																/* Write Disable */
-	spi_txrx (SPI_CS_FLASH, tx, 1, NULL, 0);
-
-	/* allow write */
-	tx[0] = 0x06;
-	spi_txrx (SPI_CS_FLASH, &tx, 1, NULL, 0);
-
-	/* disable block protection */
-	tx[0] = 0x01;
-	tx[1] = 0x00;
-	spi_txrx (SPI_CS_FLASH, &tx, 2, NULL, 0);
-
-	/* allow write */
-	tx[0] = 0x06;
-	spi_txrx (SPI_CS_FLASH, &tx, 1, NULL, 0);
+	storage_prepare_write ();
 
 	/* erase flash */
-	tx[0] = 0x60;
-	spi_txrx (SPI_CS_FLASH, &tx, sizeof (tx[0]), NULL, 0);
+	spi_txrx (SPI_CS_FLASH, &cmd_erase, sizeof(cmd_erase), NULL, 0);
 
-	while (storage_flags () & 1);
+	debug_printf("erasing flash (flags=0x%02X)...\n",storage_flags());
+
+	i=0;
+	while ( (data = storage_flags ()) & 1)
+	{
+		debug_printf("since %03is erasing [flags=%02X].\r",i++,data);
+		pmu_wait_ms(1000);
+	}
+
+	debug_printf("\nerased flash...(flags=0x%02X)\n",storage_flags());
 }
 
 void
 storage_read (uint32_t offset, uint32_t length, void *dst)
 {
-	uint8_t tx[4];
+	uint8_t tx[5];
 
 	tx[0] = 0x03;																/* 25MHz Read */
-	tx[1] = (uint8_t) (offset >> 16);
-	tx[2] = (uint8_t) (offset >> 8);
-	tx[3] = (uint8_t) (offset);
+	tx[1] = (uint8_t) (offset >> 24);
+	tx[2] = (uint8_t) (offset >> 16);
+	tx[3] = (uint8_t) (offset >> 8);
+	tx[4] = (uint8_t) (offset);
 
 	spi_txrx (SPI_CS_FLASH, tx, sizeof (tx), dst, length);
 }
@@ -87,7 +100,7 @@ storage_read (uint32_t offset, uint32_t length, void *dst)
 void
 storage_write (uint32_t offset, uint32_t length, const void *src)
 {
-	uint8_t tx[6];
+	uint8_t tx[7];
 	const uint8_t *p;
 
 	if (length < 2)
@@ -100,11 +113,12 @@ storage_write (uint32_t offset, uint32_t length, const void *src)
 
 	/* write first block including address */
 	tx[0] = 0xAD;																/* AAI Word Program */
-	tx[1] = (uint8_t) (offset >> 16);
-	tx[2] = (uint8_t) (offset >> 8);
-	tx[3] = (uint8_t) (offset);
-	tx[4] = *p++;
+	tx[1] = (uint8_t) (offset >> 24);
+	tx[2] = (uint8_t) (offset >> 16);
+	tx[3] = (uint8_t) (offset >> 8);
+	tx[4] = (uint8_t) (offset);
 	tx[5] = *p++;
+	tx[6] = *p++;
 	length -= 2;
 	spi_txrx (SPI_CS_FLASH, tx, sizeof (tx), NULL, 0);
 
@@ -131,11 +145,6 @@ static void
 storage_logfile_read_raw (uint32_t offset, uint32_t length, const void *write,
 						  void * read)
 {
-	(void)offset;
-	(void)length;
-	(void)write;
-	(void)read;
-
 	if (read)
 		storage_read (offset, length, read);
 	else
@@ -150,11 +159,16 @@ storage_status (void)
 #ifdef  ENABLE_FLASH
 	static const uint8_t cmd_jedec_read_id = 0x9F;
 	uint8_t rx[3];
+
+	/* wait till ready */
+	debug_printf ("Unlocking\n");
+	storage_prepare_write ();
+
 	spi_txrx (SPI_CS_FLASH, &cmd_jedec_read_id, sizeof (cmd_jedec_read_id),
 			  rx, sizeof (rx));
+
 	/* Show FLASH ID */
 	debug_printf (" * FLASH:    ID=%02X-%02X-%02X\n", rx[0], rx[1], rx[2]);
-	debug_printf (" *       Status=%02X\n", storage_flags ());
 #endif /*ENABLE_FLASH */
 }
 

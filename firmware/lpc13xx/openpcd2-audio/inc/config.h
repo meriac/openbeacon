@@ -77,7 +77,7 @@
 
 /* FLASH storage */
 #ifdef  ENABLE_FLASH
-#define SPI_CS_FLASH SPI_CS( 1, 5,12, SPI_CS_MODE_SKIP_TX )				/*  6.0 MHz */
+#define SPI_CS_FLASH SPI_CS( 1, 5, 3, SPI_CS_MODE_SKIP_TX )				/*  24.0 MHz */
 #define FLASH_RESET_PORT 1
 #define FLASH_RESET_PIN 0
 #endif/*ENABLE_FLASH */

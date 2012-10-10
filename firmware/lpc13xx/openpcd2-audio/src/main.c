@@ -244,10 +244,14 @@ main (void)
 	rfid_init ();
 
 	/* Init Audio */
-	audio_init ();
+//	audio_init ();
 
 	/* Init LCD Display */
-	lcd_init ();
+//	lcd_init ();
+
+	storage_status ();
+//	storage_erase ();
+	GPIOSetValue (LED1_PORT, LED1_BIT, LED_ON);
 
 	/* RUN RFID loop */
 	loop_rfid ();
