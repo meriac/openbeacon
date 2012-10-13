@@ -31,8 +31,8 @@
 #define SPEAKER_SHUTDOWN_PIN 1
 
 #define BUFFER_SIZE 1024
-#define OVERSAMPLING 3
-#define LOWPASS (OVERSAMPLING*4)
+#define OVERSAMPLING 6
+#define LOWPASS (OVERSAMPLING*2)
 
 static volatile int g_buf_pos;
 static uint8_t buffer[BUFFER_SIZE];
@@ -60,7 +60,7 @@ TIMER32_1_IRQHandler (void)
 	LPC_TMR32B1->MR1 = g_lp/LOWPASS;
 
 	g_oversampling++;
-	if(g_oversampling>OVERSAMPLING)
+	if(g_oversampling>(OVERSAMPLING/4))
 	{
 		g_oversampling=0;
 
