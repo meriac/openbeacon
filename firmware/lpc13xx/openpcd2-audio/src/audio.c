@@ -31,7 +31,7 @@
 #define SPEAKER_SHUTDOWN_PIN 1
 
 #define BUFFER_SIZE 1024
-#define OVERSAMPLING 6
+#define OVERSAMPLING 3
 #define LOWPASS (OVERSAMPLING*2)
 
 static volatile int g_buf_pos;
@@ -57,10 +57,10 @@ TIMER32_1_IRQHandler (void)
 	if(g_lp_pos>=LOWPASS)
 		g_lp_pos=0;
 
-	LPC_TMR32B1->MR1 = g_lp/LOWPASS;
+	LPC_TMR32B1->MR1 = 128+(g_lp/LOWPASS);
 
 	g_oversampling++;
-	if(g_oversampling>(OVERSAMPLING/4))
+	if(g_oversampling>OVERSAMPLING)
 	{
 		g_oversampling=0;
 
@@ -103,7 +103,7 @@ audio_init (void)
 	LPC_TMR32B1->PR = 0;
 	LPC_TMR32B1->EMR = 0;
 	LPC_TMR32B1->MR1 = 128*OVERSAMPLING;
-	LPC_TMR32B1->MR3 = 256*OVERSAMPLING;
+	LPC_TMR32B1->MR3 = 256*(OVERSAMPLING+1);
 
 	/* reset buffers */
 	g_buf_pos = 0;
@@ -143,7 +143,7 @@ audio_init (void)
 		GPIOSetValue (LED1_PORT, LED1_BIT, LED_OFF);
 		i+=BUFFER_SIZE/2;
 
-		if(i>3724735)
+		if(i>416000)
 			i=0;
 	}
 }
