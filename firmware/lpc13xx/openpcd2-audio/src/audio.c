@@ -30,7 +30,7 @@
 #define SPEAKER_SHUTDOWN_PORT 1
 #define SPEAKER_SHUTDOWN_PIN 1
 
-#define BUFFER_SIZE 4096
+#define BUFFER_SIZE 1024
 #define OVERSAMPLING 3
 #define LOWPASS (OVERSAMPLING*4)
 
@@ -129,16 +129,18 @@ audio_init (void)
 
 	while(1)
 	{
-		GPIOSetValue (LED1_PORT, LED1_BIT, LED_OFF);
 		while(g_buf_pos<=(BUFFER_SIZE/2))
 			__WFI();
+		GPIOSetValue (LED1_PORT, LED1_BIT, LED_ON);
 		storage_read(i,BUFFER_SIZE/2,buffer);
+		GPIOSetValue (LED1_PORT, LED1_BIT, LED_OFF);
 		i+=BUFFER_SIZE/2;
 
-		GPIOSetValue (LED1_PORT, LED1_BIT, LED_ON);
 		while(g_buf_pos>(BUFFER_SIZE/2))
 			__WFI();
+		GPIOSetValue (LED1_PORT, LED1_BIT, LED_ON);
 		storage_read(i,BUFFER_SIZE/2,&buffer[BUFFER_SIZE/2]);
+		GPIOSetValue (LED1_PORT, LED1_BIT, LED_OFF);
 		i+=BUFFER_SIZE/2;
 
 		if(i>3724735)
