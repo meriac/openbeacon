@@ -145,6 +145,11 @@ static void
 storage_logfile_read_raw (uint32_t offset, uint32_t length, const void *write,
 						  void * read)
 {
+	(void)offset;
+	(void)length;
+	(void)write;
+	(void)read;
+
 	if (read)
 		storage_read (offset, length, read);
 	else
@@ -192,10 +197,14 @@ storage_init (uint16_t device_id)
 
 	/* update string device id */
 	g_device_id = device_id;
-	storage_logfile_name[4] = hex_char (device_id >> 12);
-	storage_logfile_name[5] = hex_char (device_id >> 8);
-	storage_logfile_name[6] = hex_char (device_id >> 4);
-	storage_logfile_name[7] = hex_char (device_id >> 0);
+
+	if(device_id)
+	{
+		storage_logfile_name[4] = hex_char (device_id >> 12);
+		storage_logfile_name[5] = hex_char (device_id >> 8);
+		storage_logfile_name[6] = hex_char (device_id >> 4);
+		storage_logfile_name[7] = hex_char (device_id >> 0);
+	}
 #endif /*ENABLE_FLASH */
 
 	/* read-me.htm file that redirects to project page */
@@ -242,10 +251,15 @@ storage_init (uint16_t device_id)
 #ifdef  ENABLE_FLASH
 	/* setup SPI chipselect pin */
 	spi_init_pin (SPI_CS_FLASH);
+
+	GPIOSetDir (FLASH_RESET_PORT, FLASH_RESET_PIN, 1);
+	GPIOSetValue (FLASH_RESET_PORT, FLASH_RESET_PIN, 1);
+	LPC_IOCON->JTAG_TMS_PIO1_0 = 1;
 #endif /*ENABLE_FLASH */
 
 	/* init virtual file system */
-	vfs_init (&f_autorun);
+	if(device_id)
+		vfs_init (&f_autorun);
 }
 
 #endif /* DISK_SIZE>0 */

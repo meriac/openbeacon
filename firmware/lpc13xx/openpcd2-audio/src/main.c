@@ -115,7 +115,7 @@ loop_rfid (void)
 		if(present)
 			present--;
 		else
-			if(i++%10 == 0)
+			if((i++%10) == 0)
 				lcd_update_char (CHARACTER_START+((i/10)%26));
 
 		/* detect cards in field */
@@ -235,7 +235,9 @@ main (void)
 	spi_init ();
 
 	/* CDC USB Initialization */
-	storage_init (0x1234);
+	storage_init (0);
+	LPC_SYSCON->SYSPLLCTRL = 0x3 | (1<<5);
+	SystemCoreClockUpdate ();
 
 	/* UART setup */
 	UARTInit (115200, 0);
@@ -243,15 +245,14 @@ main (void)
 	/* Init RFID */
 	rfid_init ();
 
-	/* Init Audio */
-//	audio_init ();
-
 	/* Init LCD Display */
-//	lcd_init ();
+	lcd_init ();
 
 	storage_status ();
 //	storage_erase ();
-	GPIOSetValue (LED1_PORT, LED1_BIT, LED_ON);
+
+	/* Init Audio */
+	audio_init ();
 
 	/* RUN RFID loop */
 	loop_rfid ();
