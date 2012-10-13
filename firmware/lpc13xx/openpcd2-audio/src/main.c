@@ -235,9 +235,13 @@ main (void)
 	spi_init ();
 
 	/* CDC USB Initialization */
+#if 0
+	storage_init (0x1234);
+#else
 	storage_init (0);
 	LPC_SYSCON->SYSPLLCTRL = 0x3 | (1<<5);
 	SystemCoreClockUpdate ();
+#endif
 
 	/* UART setup */
 	UARTInit (115200, 0);
