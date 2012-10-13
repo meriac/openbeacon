@@ -31,20 +31,26 @@
 #define SPEAKER_SHUTDOWN_PIN 1
 
 #define BUFFER_SIZE 4096
-#define OVERSAMPLING 7
+#define MULTIPLIER 3
+#define OVERSAMPLING 3
 
 static uint8_t buffer[BUFFER_SIZE];
 
 static volatile int g_buf_pos;
-static volatile uint8_t *g_buf;
+static volatile uint8_t *g_buf,g_data,g_data_prev;
 static volatile int g_oversampling;
 
 void
 TIMER32_1_IRQHandler (void)
 {
-	if(g_oversampling<OVERSAMPLING)
-		g_oversampling++;
-	else
+	uint16_t data;
+
+	data = (g_oversampling*g_data)+((OVERSAMPLING-g_oversampling)*g_data_prev);
+
+	LPC_TMR32B1->MR1 = data;
+
+	g_oversampling++;
+	if(g_oversampling>OVERSAMPLING)
 	{
 		g_oversampling=0;
 
@@ -56,7 +62,8 @@ TIMER32_1_IRQHandler (void)
 		else
 			g_buf_pos++;
 
-		LPC_TMR32B1->MR1 = *g_buf++;
+		g_data_prev = g_data;
+		g_data = *g_buf++;
 	}
 
 	// reset IRQ source
@@ -81,14 +88,15 @@ audio_init (void)
 	LPC_TMR32B1->TCR = 2;
 	LPC_TMR32B1->TCR = 0;
 	LPC_TMR32B1->PWMC = 2;
-	LPC_TMR32B1->PR = 2;
+	LPC_TMR32B1->PR = 0;
 	LPC_TMR32B1->EMR = 0;
-	LPC_TMR32B1->MR1 = 128;
-	LPC_TMR32B1->MR3 = 256;
+	LPC_TMR32B1->MR1 = 128*MULTIPLIER;
+	LPC_TMR32B1->MR3 = 256*MULTIPLIER;
 
 	/* reset buffers */
 	g_buf_pos = 0;
 	g_oversampling = 0;
+	g_data = g_data_prev = 128;
 	memset(buffer, 128, sizeof(buffer));
 	g_buf = buffer;
 
