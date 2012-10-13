@@ -127,7 +127,7 @@ audio_init (void)
 		GPIOSetValue (LED1_PORT, LED1_BIT, LED_OFF);
 		i+=BUFFER_SIZE/2;
 
-		if(i>416000)
+		if(i>3637437)
 			i=0;
 	}
 }
