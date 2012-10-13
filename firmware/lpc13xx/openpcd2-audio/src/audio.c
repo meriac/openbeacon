@@ -32,15 +32,11 @@
 
 #define BUFFER_SIZE 1024
 #define OVERSAMPLING 3
-#define LOWPASS (OVERSAMPLING*2)
 
 static volatile int g_buf_pos;
 static uint8_t buffer[BUFFER_SIZE];
 static uint8_t *g_buf,g_data,g_data_prev;
 static int g_oversampling;
-
-static uint16_t g_lp_buf[LOWPASS],g_lp_pos;
-static uint32_t g_lp;
 
 void
 TIMER32_1_IRQHandler (void)
@@ -50,14 +46,7 @@ TIMER32_1_IRQHandler (void)
 	/* interpolate sound sample */
 	data = (g_oversampling*g_data)+((OVERSAMPLING-g_oversampling)*g_data_prev);
 
-	/* maintain lowpass filter */
-	g_lp-= g_lp_buf[g_lp_pos];
-	g_lp+= data;
-	g_lp_buf[g_lp_pos++]=data;
-	if(g_lp_pos>=LOWPASS)
-		g_lp_pos=0;
-
-	LPC_TMR32B1->MR1 = 128+(g_lp/LOWPASS);
+	LPC_TMR32B1->MR1 = 128+data;
 
 	g_oversampling++;
 	if(g_oversampling>OVERSAMPLING)
@@ -112,12 +101,6 @@ audio_init (void)
 	memset(buffer, 128, sizeof(buffer));
 	g_buf = buffer;
 
-	/* reset lowpass */
-	for(i=0;i<LOWPASS;i++)
-		g_lp_buf[i]=128*OVERSAMPLING;
-	g_lp = 128*OVERSAMPLING*LOWPASS;
-	g_lp_pos = 0;
-
 	/* reset timer on MR3 match, IRQ */
 	LPC_TMR32B1->MCR = 3 << 9;
 
@@ -127,6 +110,7 @@ audio_init (void)
 	/* start timer */
 	LPC_TMR32B1->TCR = 1;
 
+	i=0;
 	while(1)
 	{
 		while(g_buf_pos<=(BUFFER_SIZE/2))
