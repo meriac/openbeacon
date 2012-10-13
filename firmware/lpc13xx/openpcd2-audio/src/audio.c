@@ -49,7 +49,7 @@ TIMER32_1_IRQHandler (void)
 	LPC_TMR32B1->MR1 = 128+data;
 
 	g_oversampling++;
-	if(g_oversampling>OVERSAMPLING)
+	if(g_oversampling>=OVERSAMPLING)
 	{
 		g_oversampling=0;
 
