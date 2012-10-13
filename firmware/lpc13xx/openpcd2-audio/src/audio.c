@@ -31,23 +31,33 @@
 #define SPEAKER_SHUTDOWN_PIN 1
 
 #define BUFFER_SIZE 4096
-#define MULTIPLIER 3
 #define OVERSAMPLING 3
-
-static uint8_t buffer[BUFFER_SIZE];
+#define LOWPASS (OVERSAMPLING*4)
 
 static volatile int g_buf_pos;
-static volatile uint8_t *g_buf,g_data,g_data_prev;
-static volatile int g_oversampling;
+static uint8_t buffer[BUFFER_SIZE];
+static uint8_t *g_buf,g_data,g_data_prev;
+static int g_oversampling;
+
+static uint16_t g_lp_buf[LOWPASS],g_lp_pos;
+static uint32_t g_lp;
 
 void
 TIMER32_1_IRQHandler (void)
 {
 	uint16_t data;
 
+	/* interpolate sound sample */
 	data = (g_oversampling*g_data)+((OVERSAMPLING-g_oversampling)*g_data_prev);
 
-	LPC_TMR32B1->MR1 = data;
+	/* maintain lowpass filter */
+	g_lp-= g_lp_buf[g_lp_pos];
+	g_lp+= data;
+	g_lp_buf[g_lp_pos++]=data;
+	if(g_lp_pos>=LOWPASS)
+		g_lp_pos=0;
+
+	LPC_TMR32B1->MR1 = g_lp/LOWPASS;
 
 	g_oversampling++;
 	if(g_oversampling>OVERSAMPLING)
@@ -73,6 +83,8 @@ TIMER32_1_IRQHandler (void)
 void
 audio_init (void)
 {
+	int i;
+
 	/* enable clocks */
 	LPC_SYSCON->SYSAHBCLKCTRL |= (EN_CT32B1 | EN_IOCON);
 
@@ -90,8 +102,8 @@ audio_init (void)
 	LPC_TMR32B1->PWMC = 2;
 	LPC_TMR32B1->PR = 0;
 	LPC_TMR32B1->EMR = 0;
-	LPC_TMR32B1->MR1 = 128*MULTIPLIER;
-	LPC_TMR32B1->MR3 = 256*MULTIPLIER;
+	LPC_TMR32B1->MR1 = 128*OVERSAMPLING;
+	LPC_TMR32B1->MR3 = 256*OVERSAMPLING;
 
 	/* reset buffers */
 	g_buf_pos = 0;
@@ -99,6 +111,12 @@ audio_init (void)
 	g_data = g_data_prev = 128;
 	memset(buffer, 128, sizeof(buffer));
 	g_buf = buffer;
+
+	/* reset lowpass */
+	for(i=0;i<LOWPASS;i++)
+		g_lp_buf[i]=128*OVERSAMPLING;
+	g_lp = 128*OVERSAMPLING*LOWPASS;
+	g_lp_pos = 0;
 
 	/* reset timer on MR3 match, IRQ */
 	LPC_TMR32B1->MCR = 3 << 9;
@@ -109,7 +127,6 @@ audio_init (void)
 	/* start timer */
 	LPC_TMR32B1->TCR = 1;
 
-	int i=0;
 	while(1)
 	{
 		GPIOSetValue (LED1_PORT, LED1_BIT, LED_OFF);
