@@ -7,17 +7,40 @@ define ('CHARACTER_START', 'A');
 define ('CHARACTER_FONT', 'verdanab.ttf');
 define ('CHARACTER_FILE', 'font');
 
-if(($file = fopen(CHARACTER_FILE.'.c','w'))==NULL)
-	exit("Can't open '".CHARACTER_FILE.".c'\n");
-
-fprintf($file,"#include <openbeacon.h>\n");
-fprintf($file,"#include <font.h>\n");
-
 $start_char = ord(CHARACTER_START);
+$dir = '';
 
-$total = 0;
+function icrc16($data)
+{
+	$crc = 0xFFFF;
+	if($data && strlen($data))
+	{
+		$buffer = unpack('C*',$data);
+		$len = count($buffer);
+		for($i=0;$i<$len;$i++)
+		{
+			$crc = (($crc >> 8) | ($crc << 8))&0xFFFF;
+			$crc^= $data[$i];
+			$crc^= ($crc & 0xFF) >> 4;
+			$crc^= ($crc << 12)&0xFFFF;
+			$crc^= ($crc & 0xFF) << 5;
+		}
+	}
+	return $crc^0xFFFF;
+}
 
-$font = array();
+function directory_entry($type, $id, $next_id, $pos, $string='', $flags = 0)
+{
+	return pack('CnnNNnC',$type,$id,$next_id,$pos,strlen($string),icrc16($string),0);
+}
+
+$directory = '';
+$output = '';
+
+$dir_entry_size = strlen(directory_entry(0x00,0,0,0,''));
+printf("directory entry size = 0x%02X\n",$dir_entry_size);
+$total = (((CHARACTER_COUNT)*2)+1)*$dir_entry_size;
+printf("data start = 0x%04X\n",$total);
 
 for($i=0;$i<CHARACTER_COUNT;$i++)
 {
@@ -47,7 +70,7 @@ for($i=0;$i<CHARACTER_COUNT;$i++)
 	$bytes = $size/2;
 
 	/* create byte array from 4 bit nibbles */
-	$rle = array();
+	$rle = '';
 	$byte_pre = -1;
 	$count = 0;
 	for($t=0;$t<$bytes;$t++)
@@ -62,10 +85,7 @@ for($i=0;$i<CHARACTER_COUNT;$i++)
 				else
 				{
 					if($count)
-					{
-						$rle[] = $byte_pre;
-						$rle[] = $count;
-					}
+						$rle.=chr($byte_pre).chr($count);
 
 					$count=1;
 					$byte_pre = $byte;
@@ -75,78 +95,53 @@ for($i=0;$i<CHARACTER_COUNT;$i++)
 			default:
 				if($count)
 				{
-					$rle[] = $byte_pre;
-					$rle[] = $count;
+					$rle.=chr($byte_pre).chr($count);
 					$count = 0;
 				}
-				$rle[] = $byte;
+				$rle.=chr($byte);
 				$byte_pre = -1;
 		}
 
 		if($count==0xFF)
 		{
-			$rle[] = $byte_pre;
-			$rle[] = $count;
+			$rle.=chr($byte_pre).chr($count);
 			$byte_pre = -1;
 			$count=0;
 		}
-
 	}
 
 	if($count);
 	{
-		$rle[] = $byte_pre;
-		$rle[] = $count;
+		$rle.=chr($byte_pre).chr($count);
 		$count=0;
 	}
 
 	/* store character */
-	$font[$char] = $rle;
-
-	/* maintain statistics */
-	$total += count($rle);
+	printf("Video '%s' @0x%08X (%u bytes)\n",$char,$total,strlen($rle));
+	$directory.=directory_entry(0x02,ord($char),0,$total,$rle);
+	$total += strlen($rle);
+	$output.= $rle;
 
 	imagedestroy ($im);
+
+	/* store audio file */
+	$aud_file = sprintf("alphabet%03u.raw",$i+1);
+	if(($data = file_get_contents($aud_file))==FALSE)
+		echo "failed to open '$audio_file'\n";
+
+	printf("Audio '%s' @0x%08X (%u bytes)\n",$char,$total,strlen($data));
+	$directory.=directory_entry(0x03,ord($char),0,$total,$data);
+	$total += strlen($data);
+	$output.= $data;
 }
 
-fprintf($file,"\n/* total data %u bytes */\n",$total);
+/* create root entry */
+$directory = directory_entry(0x01,0,0,$dir_entry_size,$directory).$directory;
+printf("\n");
+printf("directory size = 0x%08X\n",strlen($directory));
+printf("output size    = 0x%08X\n",strlen($output));
+$output = $directory.$output;
+$length = strlen($output);
+printf("total size     = 0x%08X (%u)\n",$length,$length);
 
-foreach ($font as $char => $rle)
-{
-	fprintf($file,"\n/* character '$char' with ".sizeof($rle)." bytes of data */\n");
-	fprintf($file,"static const uint8_t _$char"."[] = {");
-
-	foreach ($rle as $index => $byte)
-	{
-		if(($index%8)==0)
-			fprintf($file,"\n\t");
-		fprintf($file,$index?',':' ');
-		fprintf($file,"0x%02X",$byte);
-	}
-
-	fprintf($file,"};\n");
-}
-
-fprintf($file,"\nconst uint8_t* font[]={");
-foreach(array_keys($font) as $index => $char)
-{
-	if(($index%8)==0)
-		fprintf($file,"\n\t");
-	fprintf($file,$index?', ':'  ');
-	fprintf($file,"_$char");
-}
-fprintf($file,"};\n\n");
-
-/* close *.c - create *.h */
-fclose($file);
-if(($file = fopen(CHARACTER_FILE.'.h','w'))==NULL)
-	exit("Can't open '".CHARACTER_FILE.".h'\n");
-
-fprintf($file,"#ifndef __FONT_H__\n#define __FONT_H__\n\n");
-fprintf($file,"#define CHARACTER_SIZE ".CHARACTER_SIZE."\n");
-fprintf($file,"#define CHARACTER_COUNT ".CHARACTER_COUNT."\n");
-fprintf($file,"#define CHARACTER_START '".CHARACTER_START."'\n");
-fprintf($file,"\nextern const uint8_t* font[];\n");
-fprintf($file,"\n#endif/*__FONT_H__*/\n");
-
-fclose($file);
+file_put_contents('database.raw',$output);
