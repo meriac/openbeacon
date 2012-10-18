@@ -23,13 +23,19 @@
 #include <openbeacon.h>
 #include "vfs.h"
 #include "storage.h"
+#include "beacon_db.h"
 
 #if DISK_SIZE>0
 #include "spi.h"
 
 #ifdef  ENABLE_FLASH
 
+#define MAX_DIR_ENTRIES 64
 static uint16_t g_device_id;
+static TBeaconDbDirEntry g_dbdir[MAX_DIR_ENTRIES];
+static int g_dbdir_count;
+#define DIR_ENTRY_SIZE sizeof(g_dbdir[0])
+
 
 uint8_t
 storage_flags (void)
@@ -162,6 +168,7 @@ void
 storage_status (void)
 {
 #ifdef  ENABLE_FLASH
+	int i;
 	static const uint8_t cmd_jedec_read_id = 0x9F;
 	uint8_t rx[3];
 
@@ -169,11 +176,45 @@ storage_status (void)
 	debug_printf ("Unlocking\n");
 	storage_prepare_write ();
 
+
 	spi_txrx (SPI_CS_FLASH, &cmd_jedec_read_id, sizeof (cmd_jedec_read_id),
 			  rx, sizeof (rx));
 
 	/* Show FLASH ID */
 	debug_printf (" * FLASH:    ID=%02X-%02X-%02X\n", rx[0], rx[1], rx[2]);
+
+	memset(&g_dbdir,0,sizeof(g_dbdir));
+	storage_read(0,sizeof(g_dbdir[0]),&g_dbdir);
+
+	if(g_dbdir[0].type != DB_DIR_ENTRY_TYPE_ROOT)
+		debug_printf (" * FLASH: invalid entry type\n");
+	else
+	{
+		int len, pos, crc;
+		len = ntohl(g_dbdir[0].length);
+		pos = ntohl(g_dbdir[0].pos);
+		crc = ntohs(g_dbdir[0].crc16);
+		debug_printf (" * FLASH ROOT @0x%04X[size:0x%04X, CRC=0x%04X]\n",pos,len,crc);
+		if(len>(int)sizeof(g_dbdir))
+			debug_printf (" * FLASH root directory overflow\n");
+		{
+			i=0;
+			g_dbdir_count = len/DIR_ENTRY_SIZE;
+
+			for(i=0;i<g_dbdir_count;i++)
+			{
+				storage_read(pos,DIR_ENTRY_SIZE,&g_dbdir[i]);
+				pos+=DIR_ENTRY_SIZE;
+			}
+
+			if(icrc16((uint8_t*)&g_dbdir,len)!=crc)
+				debug_printf(" * FLASH ROOT CRC16 ERROR !!!\n");
+			else
+			{
+				debug_printf(" * FLASH ROOT CRC16 OK\n");
+			}
+		}
+	}
 #endif /*ENABLE_FLASH */
 }
 

@@ -24,7 +24,6 @@
 #include "storage.h"
 #include "audio.h"
 #include "lcd.h"
-#include "font.h"
 
 #define MIFARE_KEY_SIZE 6
 const unsigned char mifare_key[MIFARE_KEY_SIZE] =
@@ -75,7 +74,7 @@ CDC_GetCommand (unsigned char *command)
 static void
 loop_rfid (void)
 {
-	int i, res, old_test_signal = -1, present;
+	int res, old_test_signal = -1, present;
 	static unsigned char data[80], bus, signal;
 	static unsigned char oid[4];
 
@@ -106,7 +105,7 @@ loop_rfid (void)
 	test_signal = (25 << 3) | 2;
 	/* enable debug output */
 	GPIOSetValue (LED1_PORT, LED1_BIT, LED_ON);
-	i = present = 0;
+	present = 0;
 	while (1)
 	{
 		/* wait 1s */
@@ -114,9 +113,9 @@ loop_rfid (void)
 
 		if(present)
 			present--;
-		else
+/*		else
 			if((i++%10) == 0)
-				lcd_update_char (CHARACTER_START+((i/10)%26));
+				lcd_update_char (CHARACTER_START+((i/10)%26));*/
 
 		/* detect cards in field */
 		data[0] = PN532_CMD_InListPassiveTarget;
@@ -256,7 +255,7 @@ main (void)
 //	storage_erase ();
 
 	/* Init Audio */
-	audio_init ();
+//	audio_init ();
 
 	/* RUN RFID loop */
 	loop_rfid ();

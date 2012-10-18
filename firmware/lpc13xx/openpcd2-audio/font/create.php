@@ -13,14 +13,15 @@ $dir = '';
 function icrc16($data)
 {
 	$crc = 0xFFFF;
+
 	if($data && strlen($data))
 	{
 		$buffer = unpack('C*',$data);
-		$len = count($buffer);
-		for($i=0;$i<$len;$i++)
+		foreach($buffer as $data)
 		{
+			printf(" 0x%02X [CRC=0x%04X, iCRC=0x%04X]\n",$data,$crc,$crc^0xFFFF);
 			$crc = (($crc >> 8) | ($crc << 8))&0xFFFF;
-			$crc^= $data[$i];
+			$crc^= $data;
 			$crc^= ($crc & 0xFF) >> 4;
 			$crc^= ($crc << 12)&0xFFFF;
 			$crc^= ($crc & 0xFF) << 5;
@@ -31,7 +32,7 @@ function icrc16($data)
 
 function directory_entry($type, $id, $next_id, $pos, $string='', $flags = 0)
 {
-	return pack('CnnNNnC',$type,$id,$next_id,$pos,strlen($string),icrc16($string),0);
+	return pack('CCnnNNn',$type,$flags,$id,$next_id,$pos,strlen($string),icrc16($string));
 }
 
 $directory = '';
@@ -136,6 +137,7 @@ for($i=0;$i<CHARACTER_COUNT;$i++)
 }
 
 /* create root entry */
+printf("\n\nROOT\n\n");
 $directory = directory_entry(0x01,0,0,$dir_entry_size,$directory).$directory;
 printf("\n");
 printf("directory size = 0x%08X\n",strlen($directory));

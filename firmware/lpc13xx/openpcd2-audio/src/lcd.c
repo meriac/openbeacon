@@ -21,7 +21,6 @@
 
  */
 #include <openbeacon.h>
-#include "font.h"
 #include "lcd.h"
 
 void
@@ -51,16 +50,20 @@ lcd_cmddat (uint8_t cmd, uint8_t data)
 void
 lcd_update_fullscreen(void)
 {
+#if 0
 	const uint8_t cas_pkt[3] = {LCDCMD_CASET,1,CHARACTER_SIZE};
 	const uint8_t ras_pkt[3] = {LCDCMD_PASET,1,CHARACTER_SIZE};
 
 	lcd_send (cas_pkt, sizeof(cas_pkt));
 	lcd_send (ras_pkt, sizeof(ras_pkt));
+#endif
 }
 
 void
 lcd_update_char(char chr)
 {
+	(void)chr;
+#if 0
 	int i;
 	const uint8_t *c;
 	uint8_t pkt[3],data,count;
@@ -100,6 +103,7 @@ lcd_update_char(char chr)
 	}
 
 	spi_txrx_done ( SPI_CS_LCD );
+#endif
 }
 
 void

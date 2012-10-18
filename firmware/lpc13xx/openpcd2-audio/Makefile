@@ -11,8 +11,7 @@ APP_SRC= \
   src/main.c \
   src/audio.c \
   src/lcd.c \
-  src/storage.c \
-  font/font.c
+  src/storage.c
 
 APP_SRC+=$(IMAGES_C)
 
