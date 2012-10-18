@@ -25,10 +25,8 @@
 #include "crc16.h"
 
 uint16_t
-crc16 (const uint8_t * buffer, uint32_t size)
+crc16_continue (uint16_t crc, const uint8_t * buffer, uint32_t size)
 {
-	uint16_t crc = 0xFFFF;
-
 	if (buffer && size)
 		while (size--)
 		{
@@ -38,8 +36,13 @@ crc16 (const uint8_t * buffer, uint32_t size)
 			crc ^= crc << 12;
 			crc ^= (crc & 0xFF) << 5;
 		}
-
 	return crc;
+}
+
+uint16_t
+crc16 (const uint8_t * buffer, uint32_t size)
+{
+	return crc16_continue(0xFFFF, buffer, size);
 }
 
 uint16_t

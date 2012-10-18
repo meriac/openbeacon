@@ -255,7 +255,19 @@ main (void)
 //	storage_erase ();
 
 	/* Init Audio */
-//	audio_init ();
+	audio_init ();
+
+	while(1)
+	{
+		audio_play ('M');
+		audio_play ('I');
+		audio_play ('L');
+		audio_play ('O');
+		audio_play ('S');
+		audio_play ('C');
+		audio_play ('H');
+		pmu_wait_ms (1000);
+	}
 
 	/* RUN RFID loop */
 	loop_rfid ();

@@ -32,10 +32,9 @@
 
 #define MAX_DIR_ENTRIES 64
 static uint16_t g_device_id;
-static TBeaconDbDirEntry g_dbdir[MAX_DIR_ENTRIES];
+static TBeaconDbDirEntry g_dbdir[MAX_DIR_ENTRIES],g_dbdir_entry;
 static int g_dbdir_count;
 #define DIR_ENTRY_SIZE sizeof(g_dbdir[0])
-
 
 uint8_t
 storage_flags (void)
@@ -168,23 +167,24 @@ void
 storage_status (void)
 {
 #ifdef  ENABLE_FLASH
-	int i;
 	static const uint8_t cmd_jedec_read_id = 0x9F;
 	uint8_t rx[3];
+
+	/* reset directory */
+	g_dbdir_count = 0;
+	memset(&g_dbdir_entry,0,sizeof(g_dbdir_entry));
+	memset(&g_dbdir,0,sizeof(g_dbdir));
+	storage_read(0,sizeof(g_dbdir[0]),&g_dbdir);
 
 	/* wait till ready */
 	debug_printf ("Unlocking\n");
 	storage_prepare_write ();
-
 
 	spi_txrx (SPI_CS_FLASH, &cmd_jedec_read_id, sizeof (cmd_jedec_read_id),
 			  rx, sizeof (rx));
 
 	/* Show FLASH ID */
 	debug_printf (" * FLASH:    ID=%02X-%02X-%02X\n", rx[0], rx[1], rx[2]);
-
-	memset(&g_dbdir,0,sizeof(g_dbdir));
-	storage_read(0,sizeof(g_dbdir[0]),&g_dbdir);
 
 	if(g_dbdir[0].type != DB_DIR_ENTRY_TYPE_ROOT)
 		debug_printf (" * FLASH: invalid entry type\n");
@@ -198,24 +198,64 @@ storage_status (void)
 		if(len>(int)sizeof(g_dbdir))
 			debug_printf (" * FLASH root directory overflow\n");
 		{
-			i=0;
 			g_dbdir_count = len/DIR_ENTRY_SIZE;
 
-			for(i=0;i<g_dbdir_count;i++)
-			{
-				storage_read(pos,DIR_ENTRY_SIZE,&g_dbdir[i]);
-				pos+=DIR_ENTRY_SIZE;
-			}
+			storage_read(pos,len,&g_dbdir);
 
 			if(icrc16((uint8_t*)&g_dbdir,len)!=crc)
 				debug_printf(" * FLASH ROOT CRC16 ERROR !!!\n");
 			else
 			{
-				debug_printf(" * FLASH ROOT CRC16 OK\n");
+				debug_printf(" * FLASH ROOT CRC16 OK [%i entries]\n",g_dbdir_count);
 			}
 		}
 	}
 #endif /*ENABLE_FLASH */
+}
+
+int
+storage_db_find (uint8_t type, uint16_t id)
+{
+	int i;
+	TBeaconDbDirEntry *p;
+
+	memset(&g_dbdir_entry,0,sizeof(g_dbdir_entry));
+
+	p = g_dbdir;
+	id = htons(id);
+	for(i=0;i<g_dbdir_count;i++)
+		if((p->type == type) && (p->id == id))
+		{
+			g_dbdir_entry.type = p->type;
+			g_dbdir_entry.flags = p->flags;
+			g_dbdir_entry.id = ntohs(p->id);
+			g_dbdir_entry.next_id = ntohs(p->next_id);
+			g_dbdir_entry.pos = ntohl(p->pos);
+			g_dbdir_entry.length = ntohl(p->length);
+			g_dbdir_entry.crc16 = ntohs(p->crc16);
+
+			return g_dbdir_entry.length;
+		}
+		else
+			p++;
+
+	return -1;
+}
+
+int
+storage_db_read (void* buffer, uint32_t size)
+{
+	if(size>g_dbdir_entry.length)
+		size=g_dbdir_entry.length;
+
+	if(size)
+	{
+		storage_read(g_dbdir_entry.pos, size, buffer);
+		/* adjust remaining pos & size */
+		g_dbdir_entry.pos+=size;
+		g_dbdir_entry.length-=size;
+	}
+	return size;
 }
 
 void

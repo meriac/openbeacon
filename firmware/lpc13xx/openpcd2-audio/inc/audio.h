@@ -25,5 +25,6 @@
 #define __AUDIO_H__
 
 extern void audio_init (void);
+extern void audio_play(uint16_t id);
 
 #endif/*__AUDIO_H__*/
