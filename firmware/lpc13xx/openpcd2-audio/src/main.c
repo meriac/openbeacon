@@ -259,12 +259,25 @@ main (void)
 
 	while(1)
 	{
+		lcd_update_screen ('M');
 		audio_play ('M');
+
+		lcd_update_screen ('I');
 		audio_play ('I');
+
+		lcd_update_screen ('L');
 		audio_play ('L');
+
+		lcd_update_screen ('O');
 		audio_play ('O');
+
+		lcd_update_screen ('S');
 		audio_play ('S');
+
+		lcd_update_screen ('C');
 		audio_play ('C');
+
+		lcd_update_screen ('H');
 		audio_play ('H');
 		pmu_wait_ms (1000);
 	}

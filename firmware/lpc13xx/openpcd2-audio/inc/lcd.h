@@ -38,5 +38,7 @@ extern void lcd_brightness (uint8_t percent);
 extern void lcd_cmd (uint8_t cmd);
 extern void lcd_cmddat (uint8_t cmd, uint8_t data);
 extern void lcd_update_char(char chr);
+extern void lcd_update_screen(uint16_t id);
+
 
 #endif/*__LCD_H__*/

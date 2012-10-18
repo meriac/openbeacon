@@ -21,7 +21,11 @@
 
  */
 #include <openbeacon.h>
+#include "storage.h"
+#include "beacon_db.h"
 #include "lcd.h"
+
+#define CHARACTER_SIZE 130
 
 void
 lcd_send(const uint8_t *pkt, uint16_t len)
@@ -50,60 +54,70 @@ lcd_cmddat (uint8_t cmd, uint8_t data)
 void
 lcd_update_fullscreen(void)
 {
-#if 0
 	const uint8_t cas_pkt[3] = {LCDCMD_CASET,1,CHARACTER_SIZE};
 	const uint8_t ras_pkt[3] = {LCDCMD_PASET,1,CHARACTER_SIZE};
 
 	lcd_send (cas_pkt, sizeof(cas_pkt));
 	lcd_send (ras_pkt, sizeof(ras_pkt));
-#endif
 }
 
 void
-lcd_update_char(char chr)
+lcd_update_screen(uint16_t id)
 {
-	(void)chr;
-#if 0
-	int i;
-	const uint8_t *c;
-	uint8_t pkt[3],data,count;
+	int length, i, read;
+	uint8_t pkt[3],buffer[32],data,count,*c;
 
-	if( (chr<CHARACTER_START) && (chr>=(CHARACTER_START+CHARACTER_COUNT)) )
+	if((length=storage_db_find (DB_DIR_ENTRY_TYPE_VIDEO_GREY,id))>=0)
+		debug_printf("VIDEO: show id=%i with %i bytes\n",id,length);
+	else
+	{
+		debug_printf("VIDEO ERROR: Can't find video ID %i in database\n",id);
 		return;
-	c=font[chr-CHARACTER_START];
+	}
 
 	lcd_update_fullscreen();
 
-	pkt[0]=LCDCMD_RAMWR;
-	spi_txrx ( SPI_CS_LCD|SPI_CS_MODE_LCD_CMD|SPI_CS_MODE_SKIP_CS_DEASSERT, pkt, 1, NULL, 0);
-
-	i=0;
-	while(i<((CHARACTER_SIZE*CHARACTER_SIZE)/2))
+	i=length=read=0;
+	c=NULL;
+	while((length=storage_db_read(buffer,sizeof(buffer)))>0)
 	{
-		data = *c++;
-		if(data==0xFF || data==0x00)
+		c=buffer;
+		read+=length;
+
+		while(length--)
 		{
-			count = *c++;
-			if(!count)
-				break;
-		}
-		else
-			count = 1;
+			data = *c++;
+			if((data==0xFF || data==0x00) && length)
+			{
+				length--;
 
-		i+=count;
+				count = *c++;
+				if(!count)
+				{
+					debug_printf("VIDEO: Terminated\n");
+					break;
+				}
+			}
+			else
+				count = 1;
 
-		while(count--)
-		{
-			pkt[0] = (data>>4)|(data&0xF0);
-			pkt[1] = data;
-			pkt[2] = (data<<4)|(data&0x0F);
+			i+=count;
 
-			spi_txrx ( SPI_CS_LCD|SPI_CS_MODE_LCD_DAT|SPI_CS_MODE_SKIP_CS_ASSERT|SPI_CS_MODE_SKIP_CS_DEASSERT, pkt, sizeof(pkt), NULL, 0);
+			pkt[0] = LCDCMD_RAMWR;
+			spi_txrx ( SPI_CS_LCD|SPI_CS_MODE_LCD_CMD|SPI_CS_MODE_SKIP_CS_DEASSERT, pkt, 1, NULL, 0);
+
+			while(count--)
+			{
+				pkt[0] = (data>>4)|(data&0xF0);
+				pkt[1] = data;
+				pkt[2] = (data<<4)|(data&0x0F);
+				spi_txrx ( SPI_CS_LCD|SPI_CS_MODE_LCD_DAT|SPI_CS_MODE_SKIP_CS_ASSERT|SPI_CS_MODE_SKIP_CS_DEASSERT, pkt, sizeof(pkt), NULL, 0);
+			}
+
+			spi_txrx_done ( SPI_CS_LCD );
 		}
 	}
-
-	spi_txrx_done ( SPI_CS_LCD );
-#endif
+	debug_printf("VIDEO: displayed %i bytes (read %i bytes)\n",i,read);
 }
 
 void
