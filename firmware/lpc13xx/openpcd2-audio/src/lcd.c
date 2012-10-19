@@ -162,5 +162,5 @@ lcd_init (void)
 	lcd_cmd (LCDCMD_DISPON);
 
 	/* enable background light */
-	GPIOSetValue(LCD_PWRPWM_PORT, LCD_PWRPWM_PIN, 1);
+//	GPIOSetValue(LCD_PWRPWM_PORT, LCD_PWRPWM_PIN, 1);
 }

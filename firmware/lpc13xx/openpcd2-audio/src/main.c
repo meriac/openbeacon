@@ -79,12 +79,6 @@ loop_rfid (void)
 		/* wait 1s */
 		pmu_wait_ms (10);
 
-		if(present)
-			present--;
-		else
-			if((i++%10) == 0)
-				lcd_update_screen ('A'+((i/10)%26));
-
 		/* detect cards in field */
 		data[0] = PN532_CMD_InListPassiveTarget;
 		data[1] = 0x01;															/* MaxTg - maximum cards    */
@@ -92,13 +86,21 @@ loop_rfid (void)
 		if (((res = rfid_execute (&data, 3, sizeof (data))) >= 11)
 			&& (data[1] == 0x01) && (data[2] == 0x01))
 		{
-			debug_printf ("\nCARD_ID:");
-			rfid_hexdump (&data[7], data[6]);
+			i = 'A'+(icrc16 (&data[7], data[6]) % 26);
+			debug_printf ("CARD_ID: %c\n",(char)i);
+			if(i!=present)
+			{
+				/* blink LED to indicate card */
+				GPIOSetValue (LED1_PORT, LED1_BIT, LED_ON);
+				lcd_update_screen (i);
 
-			/* blink LED to indicate card */
-			GPIOSetValue (LED1_PORT, LED1_BIT, LED_ON);
-			pmu_wait_ms (50);
-			GPIOSetValue (LED1_PORT, LED1_BIT, LED_OFF);
+				GPIOSetValue(LCD_PWRPWM_PORT, LCD_PWRPWM_PIN, 1);
+				audio_play (i);
+				GPIOSetValue(LCD_PWRPWM_PORT, LCD_PWRPWM_PIN, 0);
+
+				present = i;
+				GPIOSetValue (LED1_PORT, LED1_BIT, LED_OFF);
+			}
 		}
 		else
 		{
@@ -121,6 +123,8 @@ spell (const char* string)
 	uint8_t data;
 
 	debug_printf("\n\n");
+
+	GPIOSetValue(LCD_PWRPWM_PORT, LCD_PWRPWM_PIN, 1);
 	while((data = (uint8_t)(*string++))!=0)
 	{
 		if(data == ' ')
@@ -131,6 +135,7 @@ spell (const char* string)
 			audio_play (data);
 		}
 	}
+	GPIOSetValue(LCD_PWRPWM_PORT, LCD_PWRPWM_PIN, 0);
 }
 
 int
@@ -173,7 +178,11 @@ main (void)
 	lcd_init ();
 
 	storage_status ();
-//	storage_erase ();
+
+#if 0
+	storage_erase ();
+	while(1);
+#endif
 
 	/* Init Audio */
 	audio_init ();
