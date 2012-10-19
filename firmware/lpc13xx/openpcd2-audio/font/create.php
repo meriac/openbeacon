@@ -19,7 +19,6 @@ function icrc16($data)
 		$buffer = unpack('C*',$data);
 		foreach($buffer as $data)
 		{
-			printf(" 0x%02X [CRC=0x%04X, iCRC=0x%04X]\n",$data,$crc,$crc^0xFFFF);
 			$crc = (($crc >> 8) | ($crc << 8))&0xFFFF;
 			$crc^= $data;
 			$crc^= ($crc & 0xFF) >> 4;

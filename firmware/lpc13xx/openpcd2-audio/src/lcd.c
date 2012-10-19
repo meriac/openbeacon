@@ -87,10 +87,21 @@ lcd_update_screen(uint16_t id)
 		while(length--)
 		{
 			data = *c++;
-			if((data==0xFF || data==0x00) && length)
+			if(data==0xFF || data==0x00)
 			{
-				length--;
+				if(!length)
+				{
+					length=storage_db_read(buffer,sizeof(buffer));
+					if(!length)
+					{
+						debug_printf("VIDEO ERROR: Underflow\n");
+						break;
+					}
+					c=buffer;
+					read+=length;
+				}
 
+				length--;
 				count = *c++;
 				if(!count)
 				{

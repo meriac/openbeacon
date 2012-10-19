@@ -212,6 +212,24 @@ loop_rfid (void)
 	}
 }
 
+static void
+spell (const char* string)
+{
+	uint8_t data;
+
+	debug_printf("\n\n");
+	while((data = (uint8_t)(*string++))!=0)
+	{
+		if(data == ' ')
+			pmu_wait_ms (1000);
+		else
+		{
+			lcd_update_screen (data);
+			audio_play (data);
+		}
+	}
+}
+
 int
 main (void)
 {
@@ -259,26 +277,7 @@ main (void)
 
 	while(1)
 	{
-		lcd_update_screen ('M');
-		audio_play ('M');
-
-		lcd_update_screen ('I');
-		audio_play ('I');
-
-		lcd_update_screen ('L');
-		audio_play ('L');
-
-		lcd_update_screen ('O');
-		audio_play ('O');
-
-		lcd_update_screen ('S');
-		audio_play ('S');
-
-		lcd_update_screen ('C');
-		audio_play ('C');
-
-		lcd_update_screen ('H');
-		audio_play ('H');
+		spell("HELLO WORLD");
 		pmu_wait_ms (1000);
 	}
 
