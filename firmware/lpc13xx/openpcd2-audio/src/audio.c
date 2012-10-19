@@ -144,7 +144,7 @@ audio_play(uint16_t id)
 	/* start timer */
 	LPC_TMR32B1->TCR = 1;
 
-	pmu_wait_ms (50);
+	pmu_wait_ms (100);
 
 	/* wait for a full cycle */
 	while(g_buf_pos<=(BUFFER_SIZE/2))
