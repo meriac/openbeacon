@@ -221,7 +221,7 @@ spell (const char* string)
 	while((data = (uint8_t)(*string++))!=0)
 	{
 		if(data == ' ')
-			pmu_wait_ms (1000);
+			pmu_wait_ms (500);
 		else
 		{
 			lcd_update_screen (data);
