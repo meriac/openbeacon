@@ -310,14 +310,32 @@ main (void)
 	ANSELC = CONFIG_CPU_ANSELC;
 
 	INTE = 0;
-	CONFIG_PIN_SENSOR = 1;
+	CONFIG_PIN_SENSOR = 0;
 	CONFIG_PIN_TX_POWER = 0;
 
 	/* initalize hardware */
 	timer_init ();
-	nRFCMD_Init ();
 
-	for (j = 0; j <= 20; j++)
+	/* verify RF chip */
+	nRFCMD_Init ();
+	while(1)
+	{
+		nRFCMD_Channel (23);
+		if(nRFCMD_RegGet (NRF_REG_RF_CH)==23)
+		{
+			nRFCMD_Channel (42);
+			if(nRFCMD_RegGet (NRF_REG_RF_CH)==42)
+				break;
+		}
+
+		CONFIG_PIN_LED = 1;
+		sleep_jiffies (JIFFIES_PER_MS (25));
+		CONFIG_PIN_LED = 0;
+		sleep_jiffies (JIFFIES_PER_MS (25));
+	}
+
+	/* blink to show readyiness */
+	for (j = 0; j <= 10; j++)
 	{
 		CONFIG_PIN_LED = j & 1;
 		sleep_jiffies (JIFFIES_PER_MS (25));
@@ -351,9 +369,27 @@ main (void)
 		// disable antenna dampening
 		CONFIG_PIN_TX_POWER = 0;
 
+
 		// random delay to make opaque tracking based on
 		// timer deviation difficult
 		sleep_jiffies (JIFFIES_PER_MS (50 + (rand () % 42)));
+
+		// reset touch sensor pin
+		TRISA = CONFIG_CPU_TRISA | 0x02;
+		WPUA = CONFIG_CPU_WPUA | 0x02;
+
+		sleep_jiffies (JIFFIES_PER_MS (1));
+
+		// handle click
+		if (!CONFIG_PIN_SENSOR)
+			clicked = 16;
+		else
+			if (clicked > 0)
+				clicked--;
+
+		// reset touch sensor
+		TRISA = CONFIG_CPU_TRISA;
+		WPUA = CONFIG_CPU_WPUA;
 
 		// perform RX
 		if (((uint8_t) seq) & 1)
@@ -452,11 +488,12 @@ main (void)
 		// halt RF frontend
 		nRFCMD_ResetStop ();
 
+
 		// update code_block so on next power up
 		// the seq will be higher or equal
 		// TODO: wrapping
 		crc = (unsigned short) (seq >> 16);
-		if (crc >= code_block)
+		if (crc == code_block)
 			store_incremented_codeblock ();
 
 		// blinking pattern
@@ -470,13 +507,6 @@ main (void)
 			// disable LED
 			CONFIG_PIN_LED = 0;
 		}
-
-		// handle click
-		if (!CONFIG_PIN_SENSOR)
-			clicked = 16;
-		else
-			if (clicked > 0)
-				clicked--;
 
 		// finally increase sequence number
 		seq++;
