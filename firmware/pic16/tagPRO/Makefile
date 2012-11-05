@@ -3,7 +3,7 @@ PK2=/usr/local/bin/pk2cmd
 CC=$(COMPILER_PATH)picc
 
 MODE=pro
-CHIP=16LF1825
+CHIP=16LF1824
 PROGNAME=openbeacon-tagPRO
 
 MAIN=main.c
