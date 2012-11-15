@@ -113,6 +113,25 @@ loop_rfid (void)
 		if (((res = rfid_execute (&data, 3, sizeof (data))) >= 11)
 			&& (data[1] == 0x01) && (data[2] == 0x01))
 		{
+			/* only for Mifare Ultralight cards */
+			if (data[3] == 0 && data[4] == 0x44)
+			{
+				debug_printf ("\nULTRALIGHT_READ:");
+
+				data[0] = PN532_CMD_InDataExchange;
+				data[1] = 0x01;													/* card 1 */
+				data[2] = 0x30;													/* ULTRALIGHT read 16 bytes */
+				data[3] = 0x04;													/* block 1 */
+
+				/* MIFARE Read */
+				res = rfid_execute (&data, 4, sizeof (data));
+
+				if (res == 18)
+					rfid_hexdump (&data[2], 16);
+				else
+					debug_printf (" failed [%i]\n", res);
+			}
+			else
 			/* only for Mifare Classic cards */
 			if (data[3] == 0 && data[4] == 4 && data[6] >= 4)
 			{
@@ -156,7 +175,9 @@ loop_rfid (void)
 			}
 			else
 			{
-				debug_printf ("\nCARD_ID:");
+				debug_printf ("\nCARD_TYPE:");
+				rfid_hexdump (&data[3], 3);
+				debug_printf ("CARD_ID:");
 				rfid_hexdump (&data[7], data[6]);
 			}
 
