@@ -2,7 +2,7 @@
 #
 # Copyright 2010 Milosch Meriac <meriac@openbeacon.de>
 #
-PROJECT=openbeacontag
+PROJECT=openbeacon-tag
 
 if [ ! -f obj/$PROJECT.hex ]; then
     make clean $PROJECT.hex
