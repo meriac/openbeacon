@@ -1,0 +1,24 @@
+#!/bin/bash
+#
+# Creates a PIC firmware ZIP file with pre-set TagIDs
+#
+
+FIRMWARE=openbeacon-tag.hex
+ZIPFILE=openbeacon.zip
+
+# reset zip archive
+rm -f $ZIPFILE
+
+for TAG_ID in {100..199}; do
+	FIRMWARE_COUNTED=openbeacon-tag-$TAG_ID.hex
+	echo -en "\n\n\nBuilding openbeacon-tag-$TAG_ID.hex"
+
+	# update firmware counter
+	echo $TAG_ID > firmware_counter
+	./create_counted_firmware.php
+
+	# add to zip archive
+	mv $FIRMWARE $FIRMWARE_COUNTED
+	zip $ZIPFILE $FIRMWARE_COUNTED
+	rm -f $FIRMWARE_COUNTED
+done
