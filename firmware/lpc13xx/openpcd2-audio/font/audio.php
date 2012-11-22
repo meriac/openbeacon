@@ -6,14 +6,22 @@ define('FREQUENCY',15625);
 if(($file = fopen(STORY_FILE,'r'))===FALSE)
 	exit('Can\'t open '.STORY_FILE);
 
+$index = array();
 while($line = fgets($file))
 {
 	list($start,$end,$text) = explode("\t",strtr($line,',','.'));
-	$start=(int)(floatval($start)*FREQUENCY);
-	$end=(int)(floatval($end)*FREQUENCY);
-	$text=trim($text);
 
-	printf("%8u ->%8u ='%s'\n",$start,$end,$text);
+	$obj = new stdClass;
+	$obj->start=(int)(floatval($start)*FREQUENCY);
+	$obj->end=(int)(floatval($end)*FREQUENCY);
+	$obj->text=trim($text);
+	$index[]=$obj;
+
+	printf("%8u ->%8u ='%s'\n",$obj->start,$obj->end,$obj->text);
 }
+
+$count = count($index);
+
+echo("\n INDEX=$count objects\n");
 
 ?>
