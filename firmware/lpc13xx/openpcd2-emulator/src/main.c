@@ -22,7 +22,6 @@
  */
 #include <openbeacon.h>
 #include "main.h"
-#include "pmu.h"
 #include "usbserial.h"
 
 static volatile uint32_t edges;

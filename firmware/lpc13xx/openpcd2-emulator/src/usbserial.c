@@ -22,7 +22,6 @@
  */
 #include <openbeacon.h>
 #include "main.h"
-#include "pmu.h"
 #include "usbserial.h"
 
 #ifdef ENABLE_USB_FULLFEATURED
