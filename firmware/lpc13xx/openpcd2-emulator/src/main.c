@@ -41,6 +41,16 @@ rfid_hexdump (const void *buffer, int size)
 	debug_printf (" [size=%02i]\n", size);
 }
 
+void TIMER16_1_IRQHandler(void)
+{
+	static int i = 0;
+
+	GPIOSetValue (LED_PORT, LED_BIT, (i++) & 1);
+
+	/* acknowledge capture */
+	LPC_TMR16B1->IR = 0x10;
+}
+
 static inline void
 rfid_init_emulator (void)
 {
@@ -49,12 +59,23 @@ rfid_init_emulator (void)
 
 	/* reset and stop counter 16B0 */
 	LPC_TMR16B1->TCR = 0x02;
-	LPC_TMR16B1->TCR = 0x00;
-	LPC_TMR16B1->MCR = 0x00;
+	LPC_TMR16B1->TCR = 0;
+	LPC_TMR16B1->CTCR = 0;
+	/* no match */
+	LPC_TMR16B1->MCR = 0;
+	LPC_TMR16B1->EMR = 0;
+	LPC_TMR16B1->PWMC = 0;
+	/* Capture rising edge & trigger interrupt */
+	LPC_TMR16B1->CCR = 0x05;
 	/* disable prescaling */
 	LPC_TMR16B1->PR = 0;
 	/* enable CT16B1_CAP0 for signal duration capture */
 	LPC_IOCON->PIO1_8 = 0x1;
+	/* enable timer capture interrupt */
+	NVIC_EnableIRQ(TIMER_16_1_IRQn);
+	NVIC_SetPriority(TIMER_16_1_IRQn, 1);
+	/* run counter */
+	LPC_TMR16B1->TCR = 0x01;
 
 	/* reset and stop counter 32B0 */
 	LPC_TMR32B0->TCR = 0x02;
@@ -92,7 +113,7 @@ rfid_init_emulator (void)
 	rfid_write_register (0x6328, 0xF9);
 
 	/* WTF? FIXME !!! */
-	LPC_SYSCON->SYSAHBCLKCTRL |= EN_CT32B0;
+	LPC_SYSCON->SYSAHBCLKCTRL |= EN_CT32B0|EN_CT16B1;
 }
 
 void
