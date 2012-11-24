@@ -24,9 +24,14 @@
 #include "main.h"
 #include "usbserial.h"
 
+#define MAX_EDGES 128
+
 static volatile uint32_t edges;
 static uint16_t g_counter_prev = 0;
 static uint8_t g_counter_overflow = 0;
+
+static uint16_t g_edge[MAX_EDGES];
+static uint16_t g_edge_pos = 0;
 
 static void
 rfid_hexdump (const void *buffer, int size)
@@ -54,7 +59,12 @@ void TIMER16_1_IRQHandler(void)
 	/* if overflow - reset pulse length detection */
 	if(reason & 0x01)
 	{
-		g_counter_overflow = TRUE;
+		if(!g_counter_overflow)
+		{
+			g_counter_overflow = TRUE;
+			if(g_edge_pos<MAX_EDGES)
+				g_edge[g_edge_pos++]=0xFFFF;
+		}
 		GPIOSetValue (LED_PORT, LED_BIT, 0);
 	}
 	else
@@ -73,6 +83,8 @@ void TIMER16_1_IRQHandler(void)
 			{
 				/* calculate difference */
 				diff = (counter-g_counter_prev);
+				if(diff && (g_edge_pos<MAX_EDGES))
+					g_edge[g_edge_pos++]=diff;
 			}
 			/* remember current counter value */
 			g_counter_prev=counter;
@@ -181,7 +193,7 @@ trigger_init (void)
 static void
 loop_rfid (void)
 {
-	int res, line;
+	int res, line, i;
 	uint32_t counter;
 	static unsigned char data[80];
 
@@ -232,8 +244,19 @@ loop_rfid (void)
 		counter = (LPC_TMR32B0->TC - counter) * 10;
 		GPIOSetValue (LED_PORT, LED_BIT, 0);
 
-		debug_printf ("LPC_TMR32B0[%08u]: %uHz\n", line++, counter);
+		debug_printf ("LPC_TMR32B0[%08u]: %uHz [edges=%u]\n", line++, counter, g_edge_pos);
 
+		/* debug all edges */
+		for(i=0;i<g_edge_pos;i++)
+		{
+			debug_printf(" %5u",g_edge[i]);
+			if((i&7)==7)
+			{
+				debug_printf("\n");
+				pmu_wait_ms (50);
+			}
+		}
+		debug_printf("\n%u EDGES detected\n\n",g_edge_pos);
 	}
 }
 
