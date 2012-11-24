@@ -54,7 +54,7 @@ rfid_init_emulator (void)
 	/* disable prescaling */
 	LPC_TMR16B1->PR = 0;
 	/* enable CT16B1_CAP0 for signal duration capture */
-	LPC_IOCON->PIO1_5 = 0x01;
+	LPC_IOCON->PIO1_8 = 0x1;
 
 	/* reset and stop counter 32B0 */
 	LPC_TMR32B0->TCR = 0x02;
