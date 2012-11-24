@@ -25,6 +25,8 @@
 #include "usbserial.h"
 
 static volatile uint32_t edges;
+static uint16_t g_counter_prev = 0;
+static uint8_t g_counter_overflow = 0;
 
 static void
 rfid_hexdump (const void *buffer, int size)
@@ -43,12 +45,43 @@ rfid_hexdump (const void *buffer, int size)
 
 void TIMER16_1_IRQHandler(void)
 {
-	static int i = 0;
+	uint8_t reason;
+	uint16_t counter,diff;
 
-	GPIOSetValue (LED_PORT, LED_BIT, (i++) & 1);
+	/* get interrupt reason */
+	reason = (uint8_t)LPC_TMR16B1->IR;
 
-	/* acknowledge capture IRQ */
-	LPC_TMR16B1->IR = 0x10;
+	/* if overflow - reset pulse length detection */
+	if(reason & 0x01)
+	{
+		g_counter_overflow = TRUE;
+		GPIOSetValue (LED_PORT, LED_BIT, 0);
+	}
+	else
+		/* we captured an edge */
+		if(reason & 0x10)
+		{
+			/* get captured value */
+			counter = LPC_TMR16B1->CR0;
+			/* update overflow register */
+			LPC_TMR16B1->MR0 = counter;
+
+			/* ignore first value after overflow */
+			if(g_counter_overflow)
+				g_counter_overflow=FALSE;
+			else
+			{
+				/* calculate difference */
+				diff = (counter-g_counter_prev);
+			}
+			/* remember current counter value */
+			g_counter_prev=counter;
+
+			GPIOSetValue (LED_PORT, LED_BIT, 1);
+		}
+
+	/* acknowledge IRQ reason */
+	LPC_TMR16B1->IR = reason;
 }
 
 static inline void
@@ -60,13 +93,15 @@ rfid_init_emulator (void)
 	/* reset and stop counter 16B0 */
 	LPC_TMR16B1->TCR = 0x02;
 	LPC_TMR16B1->TCR = 0;
+	LPC_TMR16B1->TC = 0;
 	LPC_TMR16B1->CTCR = 0;
-	/* no match */
-	LPC_TMR16B1->MCR = 0;
+	/* match on MR0 for overflow detection */
+	LPC_TMR16B1->MR0 = 0xFFFF;
+	LPC_TMR16B1->MCR = 1;
 	LPC_TMR16B1->EMR = 0;
 	LPC_TMR16B1->PWMC = 0;
 	/* Capture rising edge & trigger interrupt */
-	LPC_TMR16B1->CCR = 0x05;
+	LPC_TMR16B1->CCR = 5;
 	/* disable prescaling */
 	LPC_TMR16B1->PR = 0;
 	/* enable CT16B1_CAP0 for signal duration capture */
@@ -74,6 +109,8 @@ rfid_init_emulator (void)
 	/* enable timer capture interrupt */
 	NVIC_EnableIRQ(TIMER_16_1_IRQn);
 	NVIC_SetPriority(TIMER_16_1_IRQn, 1);
+	/* reset previous counter value */
+	g_counter_prev = g_counter_overflow = 0;
 	/* run counter */
 	LPC_TMR16B1->TCR = 0x01;
 
