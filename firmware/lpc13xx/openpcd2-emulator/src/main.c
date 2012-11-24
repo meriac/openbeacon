@@ -47,7 +47,7 @@ void TIMER16_1_IRQHandler(void)
 
 	GPIOSetValue (LED_PORT, LED_BIT, (i++) & 1);
 
-	/* acknowledge capture */
+	/* acknowledge capture IRQ */
 	LPC_TMR16B1->IR = 0x10;
 }
 
