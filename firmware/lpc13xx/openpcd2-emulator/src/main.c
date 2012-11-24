@@ -24,13 +24,15 @@
 #include "main.h"
 #include "usbserial.h"
 
+#define ISO14443A_CARRIER 13560000UL
+#define ISO14443A_ETU(etu) ((uint32_t)((128ULL*SYSTEM_CORE_CLOCK*etu)/ISO14443A_CARRIER))
 #define MAX_EDGES 128
 
 static volatile uint32_t edges;
 static uint16_t g_counter_prev = 0;
 static uint8_t g_counter_overflow = 0;
 
-static uint16_t g_edge[MAX_EDGES];
+static uint8_t g_edge[MAX_EDGES];
 static uint16_t g_edge_pos = 0;
 
 static void
@@ -63,7 +65,7 @@ void TIMER16_1_IRQHandler(void)
 		{
 			g_counter_overflow = TRUE;
 			if(g_edge_pos<MAX_EDGES)
-				g_edge[g_edge_pos++]=0xFFFF;
+				g_edge[g_edge_pos++]=0xFF;
 		}
 		GPIOSetValue (LED_PORT, LED_BIT, 0);
 	}
@@ -74,7 +76,7 @@ void TIMER16_1_IRQHandler(void)
 			/* get captured value */
 			counter = LPC_TMR16B1->CR0;
 			/* update overflow register */
-			LPC_TMR16B1->MR0 = counter;
+			LPC_TMR16B1->MR0 = counter+ISO14443A_ETU(2);
 
 			/* ignore first value after overflow */
 			if(g_counter_overflow)
@@ -82,9 +84,9 @@ void TIMER16_1_IRQHandler(void)
 			else
 			{
 				/* calculate difference */
-				diff = (counter-g_counter_prev);
+				diff = (100UL*(counter-g_counter_prev))/ISO14443A_ETU(1);
 				if(diff && (g_edge_pos<MAX_EDGES))
-					g_edge[g_edge_pos++]=diff;
+					g_edge[g_edge_pos++]=(diff>0xFF)?0xFF:diff;
 			}
 			/* remember current counter value */
 			g_counter_prev=counter;
@@ -108,7 +110,7 @@ rfid_init_emulator (void)
 	LPC_TMR16B1->TC = 0;
 	LPC_TMR16B1->CTCR = 0;
 	/* match on MR0 for overflow detection */
-	LPC_TMR16B1->MR0 = 0xFFFF;
+	LPC_TMR16B1->MR0 = 0;
 	LPC_TMR16B1->MCR = 1;
 	LPC_TMR16B1->EMR = 0;
 	LPC_TMR16B1->PWMC = 0;
@@ -163,31 +165,6 @@ rfid_init_emulator (void)
 
 	/* WTF? FIXME !!! */
 	LPC_SYSCON->SYSAHBCLKCTRL |= EN_CT32B0|EN_CT16B1;
-}
-
-void
-PIOINT3_IRQHandler (void)
-{
-	static int i = 0;
-
-	LPC_GPIO3->IC = 1 << PN532_SIGOUT_PIN;
-
-	edges++;
-//  GPIOSetValue (LED_PORT, LED_BIT, GPIOGetValue(1,8));
-	GPIOSetValue (LED_PORT, LED_BIT, (i++) & 1);
-}
-
-static void
-trigger_init (void)
-{
-	edges = 0;
-	/* enable SIGOUT input pin */
-	GPIOSetDir (PN532_SIGOUT_PORT, PN532_SIGOUT_PIN, 0);
-	/* enable SIGOUT interrupt */
-//  LPC_GPIO3->IE |= 1<<PN532_SIGOUT_PIN;
-
-//  NVIC_EnableIRQ(EINT3_IRQn);
-//  NVIC_SetPriority(EINT3_IRQn, 1);
 }
 
 static void
@@ -249,8 +226,8 @@ loop_rfid (void)
 		/* debug all edges */
 		for(i=0;i<g_edge_pos;i++)
 		{
-			debug_printf(" %5u",g_edge[i]);
-			if((i&7)==7)
+			debug_printf(" %3u",g_edge[i]);
+			if(g_edge[i]==0xFF)
 			{
 				debug_printf("\n");
 				pmu_wait_ms (50);
@@ -281,9 +258,6 @@ main (void)
 
 	/* Init RFID */
 	rfid_init ();
-
-	/* Init emulation triggers */
-	trigger_init ();
 
 	/* RUN RFID loop */
 	loop_rfid ();
