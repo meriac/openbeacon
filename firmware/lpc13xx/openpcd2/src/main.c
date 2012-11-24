@@ -103,8 +103,7 @@ loop_rfid (void)
 	GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
 	while (1)
 	{
-		/* wait 1s */
-		pmu_wait_ms (500);
+		pmu_wait_ms (100);
 
 		/* detect cards in field */
 		data[0] = PN532_CMD_InListPassiveTarget;
@@ -193,6 +192,8 @@ loop_rfid (void)
 				debug_printf ("PN532 error res=%i\n", res);
 		}
 
+		/* wait 0.5s */
+		pmu_wait_ms (500);
 
 		/* turning field off */
 		data[0] = PN532_CMD_RFConfiguration;
