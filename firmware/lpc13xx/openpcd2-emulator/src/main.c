@@ -44,9 +44,19 @@ rfid_hexdump (const void *buffer, int size)
 static inline void
 rfid_init_emulator (void)
 {
-	/* enable timer 32_0 */
-	LPC_SYSCON->SYSAHBCLKCTRL |= EN_CT32B0;
-	/* reset and stop counter */
+	/* enable timer 32B0 & 16B1 */
+	LPC_SYSCON->SYSAHBCLKCTRL |= EN_CT32B0|EN_CT16B1;
+
+	/* reset and stop counter 16B0 */
+	LPC_TMR16B1->TCR = 0x02;
+	LPC_TMR16B1->TCR = 0x00;
+	LPC_TMR16B1->MCR = 0x00;
+	/* disable prescaling */
+	LPC_TMR16B1->PR = 0;
+	/* enable CT16B1_CAP0 for signal duration capture */
+	LPC_IOCON->PIO1_5 = 0x01;
+
+	/* reset and stop counter 32B0 */
 	LPC_TMR32B0->TCR = 0x02;
 	LPC_TMR32B0->TCR = 0x00;
 	/* enable CT32B0_CAP0 timer clock */
@@ -77,13 +87,8 @@ rfid_init_emulator (void)
 	rfid_write_register (0x6330, 0x80);
 	rfid_write_register (0x6104, 0x00);
 	/* output envelope to AUX1 */
-#if 1
 	rfid_write_register (0x6321, 0x34);
 	rfid_write_register (0x6322, 0x0E);
-#else
-	rfid_write_register (0x6321, 0x32);
-	rfid_write_register (0x6322, 0x02);
-#endif
 	rfid_write_register (0x6328, 0xF9);
 
 	/* WTF? FIXME !!! */
