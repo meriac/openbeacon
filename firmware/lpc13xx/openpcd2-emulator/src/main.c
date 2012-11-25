@@ -74,11 +74,13 @@ static void rfid_decode_bit(uint8_t bit)
 		/* short frame ? */
 		if(bitpos>=7)
 			rfid_decode_byte (data);
-		rfid_decode_byte (0x00);
-		rfid_decode_byte (0x00);
-		rfid_decode_byte (0x00);
-		rfid_decode_byte (0x00);
 
+		g_buffer_pos &= 0xFFFFFFF0;
+		if((g_buffer_pos+0x10)<MAX_EDGES)
+		{
+			g_buffer[g_buffer_pos+0xF] = bit;
+			g_buffer_pos+=0x10;
+		}
 		data = bitpos = 0;
 	}
 	else
