@@ -27,7 +27,7 @@
 #define ISO14443A_CARRIER 13560000UL
 #define ISO14443A_ETU(etu) ((uint32_t)((128ULL*SYSTEM_CORE_CLOCK*etu)/ISO14443A_CARRIER))
 #define ETU_TOLERANCE 5
-#define MAX_EDGES 128
+#define MAX_EDGES 1024
 
 #define STATE_WAITREQA 0
 
@@ -135,11 +135,14 @@ static void rfid_decode_miller(uint8_t etu_percent)
 				{
 					rfid_decode_bit(0);
 					rfid_decode_bit(1);
+					bit = 1;
 				}
 				else
+				{
 					rfid_decode_bit(ERR_INVALID_SEQUENCE);
+					bit = 0;
+				}
 
-				bit = 1;
 			}
 			else
 			{
