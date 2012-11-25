@@ -26,14 +26,22 @@
 
 #define ISO14443A_CARRIER 13560000UL
 #define ISO14443A_ETU(etu) ((uint32_t)((128ULL*SYSTEM_CORE_CLOCK*etu)/ISO14443A_CARRIER))
+#define ETU_TOLERANCE 5
 #define MAX_EDGES 128
+
+#define STATE_WAITREQA 0
+
+#define ERR_EOF 0x80
+#define ERR_SHORT_PULSE 0x81
+#define ERR_INVALID_SEQUENCE 0x82
+#define ERR_INVALID_BIN 0x83
 
 static volatile uint32_t edges;
 static uint16_t g_counter_prev = 0;
 static uint8_t g_counter_overflow = 0;
 
-static uint8_t g_edge[MAX_EDGES];
-static uint16_t g_edge_pos = 0;
+static uint8_t g_buffer[MAX_EDGES];
+static int g_buffer_pos;
 
 static void
 rfid_hexdump (const void *buffer, int size)
@@ -50,10 +58,105 @@ rfid_hexdump (const void *buffer, int size)
 	debug_printf (" [size=%02i]\n", size);
 }
 
+static void rfid_decode_byte(uint8_t data)
+{
+	if(g_buffer_pos<MAX_EDGES)
+		g_buffer[g_buffer_pos++] = data;
+}
+
+static void rfid_decode_bit(uint8_t bit)
+{
+	static int bitpos = 0;
+	static uint8_t data = 0;
+
+	if(bit & 0x80)
+	{
+		bitpos = data = 0;
+
+		rfid_decode_byte (data);
+		rfid_decode_byte (0x00);
+		rfid_decode_byte (0x00);
+		rfid_decode_byte (0x00);
+		rfid_decode_byte (0x00);
+
+		bitpos = 0;
+		data = 0;
+	}
+	else
+	{
+		data >>= 1;
+		if(bit)
+			data|=0x80;
+		bitpos++;
+
+		/* gathered a full byte */
+		if((bitpos & 7) == 0)
+		{
+			rfid_decode_byte (data);
+			data = 0;
+		}
+	}
+}
+
+static void rfid_decode_miller(uint8_t etu_percent)
+{
+	static uint8_t bit = 0;
+
+	/* filter spurious signals */
+	if(etu_percent<100-ETU_TOLERANCE)
+	{
+		bit = 0;
+		rfid_decode_bit(ERR_SHORT_PULSE);
+		return;
+	}
+
+	if((etu_percent>=(100-ETU_TOLERANCE)) && (etu_percent<=(100+ETU_TOLERANCE)))
+		rfid_decode_bit(bit);
+	else
+		if((etu_percent>=(150-ETU_TOLERANCE)) && (etu_percent<=(150+ETU_TOLERANCE)))
+		{
+			if(bit)
+			{
+				rfid_decode_bit(0);
+				rfid_decode_bit(0);
+				bit = 0;
+			}
+			else
+			{
+				bit ^= 1;
+				rfid_decode_bit(bit);
+			}
+		}
+		else
+		{
+			if((etu_percent>=(200-ETU_TOLERANCE)) && (etu_percent<=(200+ETU_TOLERANCE)))
+			{
+				if(bit)
+				{
+					rfid_decode_bit(0);
+					rfid_decode_bit(1);
+				}
+				else
+					rfid_decode_bit(ERR_INVALID_SEQUENCE);
+
+				bit = 1;
+			}
+			else
+			{
+				if(etu_percent>(200+ETU_TOLERANCE))
+					rfid_decode_bit(ERR_EOF);
+				else
+					rfid_decode_bit(ERR_INVALID_BIN);
+				bit = 0;
+			}
+		}
+}
+
 void TIMER16_1_IRQHandler(void)
 {
 	uint8_t reason;
-	uint16_t counter,diff;
+	uint16_t counter;
+	uint32_t diff;
 
 	/* get interrupt reason */
 	reason = (uint8_t)LPC_TMR16B1->IR;
@@ -64,8 +167,7 @@ void TIMER16_1_IRQHandler(void)
 		if(!g_counter_overflow)
 		{
 			g_counter_overflow = TRUE;
-			if(g_edge_pos<MAX_EDGES)
-				g_edge[g_edge_pos++]=0xFF;
+			rfid_decode_miller(0xFF);
 		}
 		GPIOSetValue (LED_PORT, LED_BIT, 0);
 	}
@@ -76,7 +178,7 @@ void TIMER16_1_IRQHandler(void)
 			/* get captured value */
 			counter = LPC_TMR16B1->CR0;
 			/* update overflow register */
-			LPC_TMR16B1->MR0 = counter+ISO14443A_ETU(2);
+			LPC_TMR16B1->MR0 = counter+ISO14443A_ETU(3);
 
 			/* ignore first value after overflow */
 			if(g_counter_overflow)
@@ -85,8 +187,7 @@ void TIMER16_1_IRQHandler(void)
 			{
 				/* calculate difference */
 				diff = (100UL*(counter-g_counter_prev))/ISO14443A_ETU(1);
-				if(diff && (g_edge_pos<MAX_EDGES))
-					g_edge[g_edge_pos++]=(diff>0xFF)?0xFF:diff;
+				rfid_decode_miller((diff>0xFF)?0xFF:(uint8_t)diff);
 			}
 			/* remember current counter value */
 			g_counter_prev=counter;
@@ -170,7 +271,7 @@ rfid_init_emulator (void)
 static void
 loop_rfid (void)
 {
-	int res, line, i;
+	int res, line;
 	uint32_t counter;
 	static unsigned char data[80];
 
@@ -221,25 +322,17 @@ loop_rfid (void)
 		counter = (LPC_TMR32B0->TC - counter) * 10;
 		GPIOSetValue (LED_PORT, LED_BIT, 0);
 
-		debug_printf ("LPC_TMR32B0[%08u]: %uHz [edges=%u]\n", line++, counter, g_edge_pos);
+		debug_printf ("LPC_TMR32B0[%08u]: %uHz [edges=%u]\n", line++, counter, g_buffer_pos);
 
-		/* debug all edges */
-		for(i=0;i<g_edge_pos;i++)
-		{
-			debug_printf(" %3u",g_edge[i]);
-			if(g_edge[i]==0xFF)
-			{
-				debug_printf("\n");
-				pmu_wait_ms (50);
-			}
-		}
-		debug_printf("\n%u EDGES detected\n\n",g_edge_pos);
+		hex_dump (g_buffer, 0, g_buffer_pos);
 	}
 }
 
 int
 main (void)
 {
+	g_buffer_pos = 0;
+
 	/* Initialize GPIO (sets up clock) */
 	GPIOInit ();
 
