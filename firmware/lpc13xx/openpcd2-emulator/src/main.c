@@ -26,7 +26,7 @@
 
 #define ISO14443A_CARRIER 13560000UL
 #define ISO14443A_ETU(etu) ((uint32_t)((128ULL*SYSTEM_CORE_CLOCK*etu)/ISO14443A_CARRIER))
-#define ETU_TOLERANCE 5
+#define ETU_TOLERANCE 10
 #define MAX_EDGES 1024
 
 #define STATE_WAITREQA 0
@@ -66,34 +66,42 @@ static void rfid_decode_byte(uint8_t data)
 
 static void rfid_decode_bit(uint8_t bit)
 {
-	static int bitpos = 0;
-	static uint8_t data = 0;
+	static uint8_t bitpos = 0, data = 0;
+	uint8_t parity;
 
 	if(bit & 0x80)
 	{
-		bitpos = data = 0;
-
-		rfid_decode_byte (data);
+		/* short frame ? */
+		if(bitpos>=7)
+			rfid_decode_byte (data);
 		rfid_decode_byte (0x00);
 		rfid_decode_byte (0x00);
 		rfid_decode_byte (0x00);
 		rfid_decode_byte (0x00);
 
-		bitpos = 0;
-		data = 0;
+		data = bitpos = 0;
 	}
 	else
 	{
-		data >>= 1;
-		if(bit)
-			data|=0x80;
-		bitpos++;
-
 		/* gathered a full byte */
-		if((bitpos & 7) == 0)
+		if(bitpos == 8)
 		{
-			rfid_decode_byte (data);
-			data = 0;
+			/*parity calculation */
+			parity = data ^ (data>>4);
+			parity ^= parity>>2;
+			parity ^= parity>>1;
+
+			if((parity & 1)!=bit)
+				rfid_decode_byte (data);
+
+			data = bitpos = 0;
+		}
+		else
+		{
+			data >>= 1;
+			if(bit)
+				data|=0x80;
+			bitpos++;
 		}
 	}
 }
