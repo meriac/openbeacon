@@ -21,12 +21,12 @@
 
  */
 
-#ifndef __PMU_H__
-#define __PMU_H__
+#ifndef __DEFAULT_PMU_H__
+#define __DEFAULT_PMU_H__
 #ifndef DISABLE_DEFAULT_PMU
 
 extern void pmu_wait_ms (uint16_t ms);
 extern void pmu_init (void);
 
 #endif/*DISABLE_DEFAULT_PMU*/
-#endif/*__PMU_H__*/
+#endif/*__DEFAULT_PMU_H__*/
