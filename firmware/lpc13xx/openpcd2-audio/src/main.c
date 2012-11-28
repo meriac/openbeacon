@@ -214,7 +214,7 @@ main (void)
 		UARTInit (115200, 0);
 
 		i=0;
-		while(1)//GPIOGetValue(VUSB_PORT,VUSB_PIN))
+		while(GPIOGetValue(VUSB_PORT,VUSB_PIN))
 		{
 			i=charged();
 
