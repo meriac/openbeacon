@@ -25,6 +25,23 @@
 #include "audio.h"
 #include "lcd.h"
 
+#define LPC_AD_CHANNELS 2
+#define LPC_AD_BITS 10
+#define LPC_AD_RANGE (1UL<<LPC_AD_BITS)
+#define LPC_AD_VREF_mV 3013
+
+#define LPC_VOLTAGE_DIVIDER_L 1300UL
+#define LPC_VOLTAGE_DIVIDER_H 470UL
+#define LPCVOLTAGE_SCALE(raw) ((raw)*(LPC_VOLTAGE_DIVIDER_H+LPC_VOLTAGE_DIVIDER_L))/LPC_VOLTAGE_DIVIDER_L
+
+#define CHARGER_MIN_mV 3000
+#define CHARGER_MAX_mV 4098
+
+#define LPC_ADC_CR ((16UL-1)<<8)
+#define LPC_ADC_CR_AD(channel) ((1UL<<(channel))|LPC_ADC_CR|(1UL<<24))
+
+#define LPC_ADC_VALUE_mV(increments) ((LPC_AD_VREF_mV*(increments))/LPC_AD_RANGE)
+
 #define MIFARE_KEY_SIZE 6
 const unsigned char mifare_key[MIFARE_KEY_SIZE] =
 	{ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
@@ -76,6 +93,10 @@ loop_rfid (void)
 	i = present = 0;
 	while (1)
 	{
+		/* reset upon plugging USB cable */
+		if(GPIOGetValue(VUSB_PORT,VUSB_PIN))
+			NVIC_SystemReset ();
+
 		/* wait 1s */
 		pmu_wait_ms (10);
 
@@ -138,9 +159,30 @@ spell (const char* string)
 	GPIOSetValue(LCD_PWRPWM_PORT, LCD_PWRPWM_PIN, 0);
 }
 
+static int
+charged (void)
+{
+	int mV;
+
+	/* start AD conversion */
+	LPC_ADC->CR = LPC_ADC_CR_AD(4);
+	/* wait a ms */
+	pmu_wait_ms (1);
+	/* read AD conversion */
+	mV = LPCVOLTAGE_SCALE(LPC_ADC_VALUE_mV((LPC_ADC->DR4>>6)&0x3FF));
+
+	/* cap on 4100mV max */
+	if(mV>4100)
+		mV=4100;
+
+	return (100*((mV<=CHARGER_MIN_mV)?0:(mV-CHARGER_MIN_mV)))/(CHARGER_MAX_mV-CHARGER_MIN_mV);
+}
+
 int
 main (void)
 {
+	int i;
+
 	/* Initialize GPIO (sets up clock) */
 	GPIOInit ();
 
@@ -159,38 +201,71 @@ main (void)
 	/* Init SPI */
 	spi_init ();
 
-	/* CDC USB Initialization */
-#if 0
-	storage_init (0x1234);
-#else
+	/* Init Battery ADC4 */
+	LPC_IOCON->ARM_SWDIO_PIO1_3 = 2;
+	LPC_SYSCON->SYSAHBCLKCTRL |= EN_ADC;
+	LPC_SYSCON->PDRUNCFG &= ~ADC_PD;
+
+	if(GPIOGetValue(VUSB_PORT,VUSB_PIN))
+	{
+		storage_init (0x1234);
+
+		/* UART setup */
+		UARTInit (115200, 0);
+
+		i=0;
+		while(1)//GPIOGetValue(VUSB_PORT,VUSB_PIN))
+		{
+			i=charged();
+
+			debug_printf("Charged [%03i%%]\n",i);
+
+			if(i>=99)
+				GPIOSetValue (LED1_PORT, LED1_BIT, LED_ON);
+			else
+			{
+				GPIOSetValue (LED1_PORT, LED1_BIT, LED_ON);
+				pmu_wait_ms (10);
+				GPIOSetValue (LED1_PORT, LED1_BIT, LED_OFF);
+
+				pmu_wait_ms (5*(100-i));
+
+				GPIOSetValue (LED1_PORT, LED1_BIT, LED_ON);
+				pmu_wait_ms (10);
+				GPIOSetValue (LED1_PORT, LED1_BIT, LED_OFF);
+			}
+
+			pmu_wait_ms (1000);
+		}
+
+		/* reset after unplugging USB cable */
+		NVIC_SystemReset ();
+	}
+
 	storage_init (0);
 	LPC_SYSCON->SYSPLLCTRL = 0x3 | (1<<5);
 	SystemCoreClockUpdate ();
-#endif
 
 	/* UART setup */
 	UARTInit (115200, 0);
 
-	/* Init RFID */
-	rfid_init ();
+	debug_printf("OpenPCD2-Audio v" PROGRAM_VERSION "\n");
+
+	/* show storage status */
+	storage_status();
 
 	/* Init LCD Display */
 	lcd_init ();
 
-	storage_status ();
-
-#if 0
-	storage_erase ();
-	while(1);
-#endif
-
 	/* Init Audio */
 	audio_init ();
 
-	spell("HELLO WORLD");
+	/* Init RFID */
+	rfid_init ();
+
+	spell("HELLO");
 
 	/* RUN RFID loop */
 	loop_rfid ();
-
 	return 0;
 }

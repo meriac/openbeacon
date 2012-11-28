@@ -48,6 +48,10 @@
 #define USB_DEVICE	0x0100
 #endif /*ENABLE_USB_FULLFEATURED */
 
+/* USB detection */
+#define VUSB_PORT 0
+#define VUSB_PIN 3
+
 /* Clock Definition */
 #define SYSTEM_CRYSTAL_CLOCK 12000000
 #define SYSTEM_CORE_CLOCK (SYSTEM_CRYSTAL_CLOCK*6)
