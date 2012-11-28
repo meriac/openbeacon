@@ -179,6 +179,18 @@ charged (void)
 }
 
 int
+get_buttons_any (void)
+{
+	return (GPIOGetValue(2,0) && GPIOGetValue(0,1) && GPIOGetValue(1,4))?0:1;
+}
+
+int
+get_buttons_all (void)
+{
+	return (GPIOGetValue(2,0) || GPIOGetValue(0,1) || GPIOGetValue(1,4))?0:1;
+}
+
+int
 main (void)
 {
 	int i;
@@ -197,9 +209,15 @@ main (void)
 
 	/* Init Power Management Routines */
 	pmu_init ();
+	pmu_wait_ms (100);
 
 	/* Init SPI */
 	spi_init ();
+
+	/* Configure Buttons to input */
+	GPIOSetDir (2,0,0);
+	GPIOSetDir (0,1,0);
+	GPIOSetDir (1,4,0);
 
 	/* Init Battery ADC4 */
 	LPC_IOCON->ARM_SWDIO_PIO1_3 = 2;
@@ -216,6 +234,9 @@ main (void)
 		i=0;
 		while(GPIOGetValue(VUSB_PORT,VUSB_PIN))
 		{
+			if(get_buttons_all())
+				storage_erase();
+
 			i=charged();
 
 			debug_printf("Charged [%03i%%]\n",i);

@@ -67,7 +67,7 @@ storage_prepare_write (void)
 void
 storage_erase (void)
 {
-	int i;
+	int i,t;
 	uint8_t data;
 	static const uint8_t cmd_erase = 0x60;
 
@@ -82,7 +82,14 @@ storage_erase (void)
 	while ( (data = storage_flags ()) & 1)
 	{
 		debug_printf("since %03is erasing [flags=%02X].\r",i++,data);
-		pmu_wait_ms(1000);
+
+		for(t=0;t<10;t++)
+		{
+			GPIOSetValue (LED1_PORT, LED1_BIT, LED_ON);
+			pmu_wait_ms(10);
+			GPIOSetValue (LED1_PORT, LED1_BIT, LED_OFF);
+			pmu_wait_ms(90);
+		}
 	}
 
 	debug_printf("\nerased flash...(flags=0x%02X)\n",storage_flags());
