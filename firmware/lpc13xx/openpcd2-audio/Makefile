@@ -2,7 +2,7 @@ TARGET=openpcd2-audio
 ARCH=LPC13
 CPU=$(ARCH)43
 DEBUG=-g
-OPTIM=-O1 -mword-relocations
+OPTIM=-Os -mword-relocations
 
 APP_CFLAGS=-Iinc -Ifont -std=gnu99 -fgnu89-inline -D__USE_CMSIS
 APP_LDFLAGS=-lm
