@@ -190,10 +190,23 @@ get_buttons_all (void)
 	return (GPIOGetValue(2,0) || GPIOGetValue(0,1) || GPIOGetValue(1,4))?0:1;
 }
 
+static void
+blink (uint8_t times)
+{
+	while(times--)
+	{
+		GPIOSetValue (LED1_PORT, LED1_BIT, LED_ON);
+		pmu_wait_ms (20);
+		GPIOSetValue (LED1_PORT, LED1_BIT, LED_OFF);
+		pmu_wait_ms (80);
+	}
+}
+
 int
 main (void)
 {
 	int i;
+	uint8_t connected;
 
 	/* Initialize GPIO (sets up clock) */
 	GPIOInit ();
@@ -224,9 +237,11 @@ main (void)
 	LPC_SYSCON->SYSAHBCLKCTRL |= EN_ADC;
 	LPC_SYSCON->PDRUNCFG &= ~ADC_PD;
 
+	connected = FALSE;
+
 	if(GPIOGetValue(VUSB_PORT,VUSB_PIN))
 	{
-		storage_init (0x1234);
+		storage_init (0x1234, FALSE);
 
 		/* UART setup */
 		UARTInit (115200, 0);
@@ -234,8 +249,24 @@ main (void)
 		i=0;
 		while(GPIOGetValue(VUSB_PORT,VUSB_PIN))
 		{
-			if(get_buttons_all())
-				storage_erase();
+			if((!connected) && get_buttons_any())
+			{
+				GPIOSetValue (LED1_PORT, LED1_BIT, LED_ON);
+				for(i=0;i<6;i++)
+				{
+					blink(3);
+					pmu_wait_ms (200);
+
+					if(get_buttons_all())
+					{
+						storage_erase();
+						break;
+					}
+				}
+				/* make sure to connect *after* erase */
+				msd_connect (TRUE);
+				connected = TRUE;
+			}
 
 			i=charged();
 
@@ -263,7 +294,7 @@ main (void)
 		NVIC_SystemReset ();
 	}
 
-	storage_init (0);
+	storage_init (0, FALSE);
 	LPC_SYSCON->SYSPLLCTRL = 0x3 | (1<<5);
 	SystemCoreClockUpdate ();
 
