@@ -239,7 +239,7 @@ main (void)
 
 			i=charged();
 
-			debug_printf("Charged [%03i%%]\n",i);
+			debug_printf("Charged [%03i%%] OpenPCD2-Audio v" PROGRAM_VERSION "\n",i);
 
 			if(i>=99)
 				GPIOSetValue (LED1_PORT, LED1_BIT, LED_ON);
@@ -269,8 +269,6 @@ main (void)
 
 	/* UART setup */
 	UARTInit (115200, 0);
-
-	debug_printf("OpenPCD2-Audio v" PROGRAM_VERSION "\n");
 
 	/* show storage status */
 	storage_status();
