@@ -64,7 +64,7 @@ typedef struct
 extern const TDiskBPB DiskBPB;
 extern const uint32_t DiskSignature;
 
-extern void vfs_init (const TDiskFile * file);
+extern void vfs_init (const TDiskFile * file, uint8_t connect);
 extern void vfs_status (void);
 
 #endif/*__VFS_H__*/

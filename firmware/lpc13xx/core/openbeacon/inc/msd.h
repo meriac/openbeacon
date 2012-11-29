@@ -45,7 +45,8 @@
 /***************************************************************
  * exported functions
  ***************************************************************/
-extern void msd_init (void);
+extern void msd_init (uint8_t connect);
+extern void msd_connect (uint8_t connect);
 extern void msd_read (uint32_t offset, uint8_t * dst, uint32_t length);
 extern void msd_write (uint32_t offset, uint8_t * src, uint32_t length);
 

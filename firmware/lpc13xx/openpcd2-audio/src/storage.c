@@ -266,7 +266,7 @@ storage_db_read (void* buffer, uint32_t size)
 }
 
 void
-storage_init (uint16_t device_id)
+storage_init (uint16_t device_id, uint8_t connect)
 {
 	/* declare last entry in file chain is volume label */
 	static const TDiskFile f_volume_label = {
@@ -347,7 +347,7 @@ storage_init (uint16_t device_id)
 
 	/* init virtual file system */
 	if(device_id)
-		vfs_init (&f_autorun);
+		vfs_init (&f_autorun, connect);
 }
 
 #endif /* DISK_SIZE>0 */

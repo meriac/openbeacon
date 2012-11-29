@@ -67,7 +67,13 @@ const uint8_t USB_StringDescriptor[] = {
 };
 
 void
-msd_init (void)
+msd_connect (uint8_t connect)
+{
+	(*rom)->pUSBD->connect (connect);
+}
+
+void
+msd_init (uint8_t connect)
 {
 	volatile int i;
 
@@ -111,7 +117,7 @@ msd_init (void)
 	/* Initialize Storage */
 	init_msdstate ();
 	/* ... and USB Connect */
-	(*rom)->pUSBD->connect (1);
+	msd_connect (connect);
 }
 
 #endif /* USB_DISK_SUPPORT */

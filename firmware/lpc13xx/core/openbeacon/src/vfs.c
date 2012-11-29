@@ -539,13 +539,13 @@ vfs_status (void)
 }
 
 void
-vfs_init (const TDiskFile * file)
+vfs_init (const TDiskFile * file, uint8_t connect)
 {
 	if (file)
 	{
 		root_directory = file;
 		/* init USB mass storage */
-		msd_init ();
+		msd_init (connect);
 	}
 }
 
