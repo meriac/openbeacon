@@ -36,6 +36,12 @@ static TBeaconDbDirEntry g_dbdir[MAX_DIR_ENTRIES],g_dbdir_entry;
 static int g_dbdir_count;
 #define DIR_ENTRY_SIZE sizeof(g_dbdir[0])
 
+/* declare last entry in file chain is volume label */
+static const TDiskFile f_volume_label = {
+	.name = DiskBPB.BS_VolLab,
+};
+static TDiskFile f_database_file;
+
 uint8_t
 storage_flags (void)
 {
@@ -266,13 +272,17 @@ storage_db_read (void* buffer, uint32_t size)
 }
 
 void
+storage_connect (uint8_t enabled_db)
+{
+	if(!enabled_db)
+		f_database_file.next = &f_volume_label;
+
+	msd_connect (TRUE);
+}
+
+void
 storage_init (uint16_t device_id, uint8_t connect)
 {
-	/* declare last entry in file chain is volume label */
-	static const TDiskFile f_volume_label = {
-		.name = DiskBPB.BS_VolLab,
-	};
-
 #ifdef  ENABLE_FLASH
 	static char storage_logfile_name[] = "DATA0000BIN";
 	static TDiskFile f_logfile = {
@@ -313,6 +323,9 @@ storage_init (uint16_t device_id, uint8_t connect)
 #endif /*ENABLE_FLASH */
 	};
 
+	/* copy file descriptor into RAM to allow changes in storage_connect() */
+	f_database_file = f_readme;
+
 	/* version information */
 	static const char version[] = PROGRAM_NAME ":v" PROGRAM_VERSION;
 
@@ -321,7 +334,7 @@ storage_init (uint16_t device_id, uint8_t connect)
 		.handler = NULL,
 		.data = &version,
 		.name = "VERSION TXT",
-		.next = &f_readme
+		.next = &f_database_file,
 	};
 
 	/* autorun.inf file that redirects to READ-ME.HTM */

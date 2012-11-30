@@ -206,7 +206,7 @@ int
 main (void)
 {
 	int i;
-	uint8_t connected;
+	uint8_t connected, enable_db;
 
 	/* Initialize GPIO (sets up clock) */
 	GPIOInit ();
@@ -237,7 +237,7 @@ main (void)
 	LPC_SYSCON->SYSAHBCLKCTRL |= EN_ADC;
 	LPC_SYSCON->PDRUNCFG &= ~ADC_PD;
 
-	connected = FALSE;
+	connected = enable_db = FALSE;
 
 	if(GPIOGetValue(VUSB_PORT,VUSB_PIN))
 	{
@@ -260,11 +260,12 @@ main (void)
 					if(get_buttons_all())
 					{
 						storage_erase();
+						enable_db = TRUE;
 						break;
 					}
 				}
 				/* make sure to connect *after* erase */
-				msd_connect (TRUE);
+				storage_connect (enable_db);
 				connected = TRUE;
 			}
 
