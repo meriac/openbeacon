@@ -259,6 +259,8 @@ main (void)
 
 					if(get_buttons_all())
 					{
+
+						storage_status ();
 						storage_erase();
 						enable_db = TRUE;
 						break;
@@ -271,7 +273,8 @@ main (void)
 
 			i=charged();
 
-			debug_printf("Charged [%03i%%] OpenPCD2-Audio v" PROGRAM_VERSION "\n",i);
+			if(!connected)
+				debug_printf("Charged [%03i%%] OpenPCD2-Audio v" PROGRAM_VERSION "\n",i);
 
 			if(i>=99)
 				GPIOSetValue (LED1_PORT, LED1_BIT, LED_ON);
@@ -295,6 +298,7 @@ main (void)
 		NVIC_SystemReset ();
 	}
 
+	/* initialize storage */
 	storage_init (0, FALSE);
 	LPC_SYSCON->SYSPLLCTRL = 0x3 | (1<<5);
 	SystemCoreClockUpdate ();

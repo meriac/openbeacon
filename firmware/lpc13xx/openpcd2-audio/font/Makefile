@@ -13,7 +13,8 @@ play: story.raw
 	play -r $(FREQUENCY) -c1 -b 8 -u $?
 
 store: all
-	sudo dd_rescue -D database.raw /run/media/$(USER)/OPENBEACON/DATA1234.BIN
+	sudo dd_rescue -B 4096 -D database.raw /run/media/$(USER)/OPENBEACON/DATA????.BIN
+	sync
 
 clean:
-	rm -f alphabet0*.raw [A-Z].png database.raw
+	rm -f alphabet0*.raw [A-Z0-9].png database.raw

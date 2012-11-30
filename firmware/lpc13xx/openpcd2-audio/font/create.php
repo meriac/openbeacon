@@ -31,7 +31,7 @@ function icrc16($data)
 
 function directory_entry($type, $id, $next_id, $pos, $string='', $flags = 0)
 {
-	return pack('CCnnNNn',$type,$flags,$id,$next_id,$pos,strlen($string),icrc16($string));
+	return pack('CCnnNNn',$type,$flags,$id,$next_id,$pos,is_string($string)?strlen($string):(int)$string,is_string($string)?icrc16($string):0);
 }
 
 $directory = '';
@@ -39,7 +39,7 @@ $output = '';
 
 $dir_entry_size = strlen(directory_entry(0x00,0,0,0,''));
 printf("directory entry size = 0x%02X\n",$dir_entry_size);
-$total = (((CHARACTER_COUNT)*2)+1)*$dir_entry_size;
+$total = (((CHARACTER_COUNT)*2)+2)*$dir_entry_size;
 printf("data start = 0x%04X\n",$total);
 
 for($i=0;$i<CHARACTER_COUNT;$i++)
@@ -135,14 +135,40 @@ for($i=0;$i<CHARACTER_COUNT;$i++)
 	$output.= $data;
 }
 
+$attach = array();
+for($i=0;$i<10;$i++)
+{
+	$char = chr(ord('0')+$i);
+	$aud_file = "story$char.raw";
+
+	if(($size = @filesize($aud_file))!==FALSE)
+	{
+		printf("Story '%s' @0x%08X (%u bytes)\n",$char,$total,$size);
+		$directory.=directory_entry(0x03,ord($char),0,$total,$size);
+		$attach[] = $aud_file;
+		$total += $size;
+	}
+}
+
 /* create root entry */
 printf("\n\nROOT\n\n");
 $directory = directory_entry(0x01,0,0,$dir_entry_size,$directory).$directory;
 printf("\n");
 printf("directory size = 0x%08X\n",strlen($directory));
 printf("output size    = 0x%08X\n",strlen($output));
-$output = $directory.$output;
 $length = strlen($output);
-printf("total size     = 0x%08X (%u)\n",$length,$length);
+printf("total data     = %u kb\n",$total/1024);
 
-file_put_contents('database.raw',$output);
+/* append attachments */
+$file=fopen('database.raw','w+b');
+fwrite($file, $directory);
+fwrite($file, $output);
+
+foreach($attach as $story)
+{
+	$source = fopen($story,'rb');
+	while(!feof($source))
+		fwrite($file,fread($source,1024));
+}
+
+fclose($file);

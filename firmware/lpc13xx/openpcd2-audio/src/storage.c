@@ -30,11 +30,16 @@
 
 #ifdef  ENABLE_FLASH
 
-#define MAX_DIR_ENTRIES 64
+#define SECTOR_BUFFER_SIZE 256
+
+#define MAX_DIR_ENTRIES 128
 static uint16_t g_device_id;
 static TBeaconDbDirEntry g_dbdir[MAX_DIR_ENTRIES],g_dbdir_entry;
 static int g_dbdir_count;
 #define DIR_ENTRY_SIZE sizeof(g_dbdir[0])
+
+static uint8_t g_sector_buffer[SECTOR_BUFFER_SIZE];
+static uint32_t g_sector;
 
 /* declare last entry in file chain is volume label */
 static const TDiskFile f_volume_label = {
@@ -104,75 +109,84 @@ storage_erase (void)
 void
 storage_read (uint32_t offset, uint32_t length, void *dst)
 {
-	uint8_t tx[5];
+	uint8_t tx[6];
 
-	tx[0] = 0x03;																/* 25MHz Read */
+	tx[0] = 0x0B;																/* Fast Read */
 	tx[1] = (uint8_t) (offset >> 24);
 	tx[2] = (uint8_t) (offset >> 16);
 	tx[3] = (uint8_t) (offset >> 8);
 	tx[4] = (uint8_t) (offset);
+	tx[5] = 0;
 
 	spi_txrx (SPI_CS_FLASH, tx, sizeof (tx), dst, length);
 }
 
 void
-storage_write (uint32_t offset, uint32_t length, const void *src)
+storage_flush (void)
 {
-	uint8_t tx[7];
-	const uint8_t *p;
-
-	if (length < 2)
-		return;
-
-	p = (const uint8_t *) src;
-
-	tx[0] = 0x06;																/* Write Enable */
-	spi_txrx (SPI_CS_FLASH, tx, 1, NULL, 0);
-
-	/* write first block including address */
-	tx[0] = 0xAD;																/* AAI Word Program */
-	tx[1] = (uint8_t) (offset >> 24);
-	tx[2] = (uint8_t) (offset >> 16);
-	tx[3] = (uint8_t) (offset >> 8);
-	tx[4] = (uint8_t) (offset);
-	tx[5] = *p++;
-	tx[6] = *p++;
-	length -= 2;
-	spi_txrx (SPI_CS_FLASH, tx, sizeof (tx), NULL, 0);
-
-	while (length >= 2)
-	{
-		/* wait while busy */
-		while (storage_flags () & 1);
-
-		tx[1] = *p++;
-		tx[2] = *p++;
-		length -= 2;
-
-		spi_txrx (SPI_CS_FLASH, tx, 3, NULL, 0);
-	}
+	uint8_t tx[5];
 
 	/* wait while busy */
 	while (storage_flags () & 1);
 
-	tx[0] = 0x04;																/* Write Disable */
+	tx[0] = 0x06;															/* Write Enable */
 	spi_txrx (SPI_CS_FLASH, tx, 1, NULL, 0);
+
+	/* write first block including address */
+	tx[0] = 0x02;															/* Page Program */
+	tx[1] = (uint8_t) (g_sector >> 24);
+	tx[2] = (uint8_t) (g_sector >> 16);
+	tx[3] = (uint8_t) (g_sector >> 8);
+	tx[4] = (uint8_t) (g_sector);
+
+	spi_txrx (SPI_CS_FLASH|SPI_CS_MODE_SKIP_CS_DEASSERT, tx, sizeof (tx), NULL, 0);
+	spi_txrx (SPI_CS_FLASH, g_sector_buffer, sizeof(g_sector_buffer), NULL, 0);
+}
+
+void
+storage_write (uint32_t offset, uint32_t length, const void *src)
+{
+	int pos;
+
+	/* position inside sector buffer */
+	pos = (uint8_t)offset;
+
+	if((offset>>8)!=(g_sector>>8))
+	{
+		debug_printf("SEEK: @0x%08X -> 0x%08X\n",g_sector, offset);
+		storage_flush();
+
+		/* reset buffer */
+		g_sector = offset & ~0xFFUL;
+		memset(g_sector_buffer, 0, sizeof(g_sector_buffer));
+	}
+
+	if((length+pos)>SECTOR_BUFFER_SIZE)
+	{
+		debug_printf("WRITE: Overflow 0x%08X [%u:%u]\n",g_sector, pos, length);
+		length = SECTOR_BUFFER_SIZE-pos;
+	}
+
+	memcpy(&g_sector_buffer[pos],src,length);
+	pos+=length;
+	if(pos>=SECTOR_BUFFER_SIZE)
+	{
+		storage_flush();
+		g_sector+=SECTOR_BUFFER_SIZE;
+	}
 }
 
 static void
 storage_logfile_read_raw (uint32_t offset, uint32_t length, const void *write,
 						  void * read)
 {
-	(void)offset;
-	(void)length;
-	(void)write;
-	(void)read;
-
+	GPIOSetValue (LED1_PORT, LED1_BIT, LED_OFF);
 	if (read)
 		storage_read (offset, length, read);
-	else
-		if (write)
-			storage_write (offset, length, write);
+
+	if (write)
+		storage_write (offset, length, write);
+	GPIOSetValue (LED1_PORT, LED1_BIT, LED_ON);
 }
 #endif /*ENABLE_FLASH */
 
@@ -292,6 +306,9 @@ storage_init (uint16_t device_id, uint8_t connect)
 		.name = storage_logfile_name,
 		.next = &f_volume_label,
 	};
+
+	/* reset sector positions */
+	g_sector = 0;
 
 	/* update string device id */
 	g_device_id = device_id;
