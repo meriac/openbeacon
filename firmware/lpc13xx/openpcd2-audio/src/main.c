@@ -46,6 +46,30 @@
 const unsigned char mifare_key[MIFARE_KEY_SIZE] =
 	{ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
+int
+get_buttons_any (void)
+{
+	return (GPIOGetValue(2,0) && GPIOGetValue(0,1) && GPIOGetValue(1,4))?0:1;
+}
+
+int
+get_buttons_all (void)
+{
+	return (GPIOGetValue(2,0) || GPIOGetValue(0,1) || GPIOGetValue(1,4))?0:1;
+}
+
+static void
+blink (uint8_t times)
+{
+	while(times--)
+	{
+		GPIOSetValue (LED1_PORT, LED1_BIT, LED_ON);
+		pmu_wait_ms (20);
+		GPIOSetValue (LED1_PORT, LED1_BIT, LED_OFF);
+		pmu_wait_ms (80);
+	}
+}
+
 static void
 rfid_hexdump (const void *buffer, int size)
 {
@@ -96,6 +120,9 @@ loop_rfid (void)
 		/* reset upon plugging USB cable */
 		if(GPIOGetValue(VUSB_PORT,VUSB_PIN))
 			NVIC_SystemReset ();
+
+		if(get_buttons_any())
+			audio_play ('1');
 
 		/* wait 1s */
 		pmu_wait_ms (10);
@@ -176,30 +203,6 @@ charged (void)
 		mV=4100;
 
 	return (100*((mV<=CHARGER_MIN_mV)?0:(mV-CHARGER_MIN_mV)))/(CHARGER_MAX_mV-CHARGER_MIN_mV);
-}
-
-int
-get_buttons_any (void)
-{
-	return (GPIOGetValue(2,0) && GPIOGetValue(0,1) && GPIOGetValue(1,4))?0:1;
-}
-
-int
-get_buttons_all (void)
-{
-	return (GPIOGetValue(2,0) || GPIOGetValue(0,1) || GPIOGetValue(1,4))?0:1;
-}
-
-static void
-blink (uint8_t times)
-{
-	while(times--)
-	{
-		GPIOSetValue (LED1_PORT, LED1_BIT, LED_ON);
-		pmu_wait_ms (20);
-		GPIOSetValue (LED1_PORT, LED1_BIT, LED_OFF);
-		pmu_wait_ms (80);
-	}
 }
 
 int
