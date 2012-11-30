@@ -152,9 +152,9 @@ msd_access_data_area (uint32_t offset, uint32_t length, const void *write,
 						   (cluster_file_start * DISK_CLUSTER_SIZE),
 						   length, write, read);
 		else
-			/* FIXME !!! */
-		if (read)
-			memset (read, ' ', length);
+			if (read)
+				memset (read, 0, length);
+		return;
 	}
 
 	/* if no file cached, try to find file */
