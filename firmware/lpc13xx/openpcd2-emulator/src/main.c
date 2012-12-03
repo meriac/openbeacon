@@ -326,7 +326,6 @@ static void
 loop_rfid (void)
 {
 	int res, line;
-	uint32_t counter;
 	uint8_t test_signal, old_test_signal, signal, bus;
 	static unsigned char data[80];
 
@@ -374,11 +373,6 @@ loop_rfid (void)
 
 	while (1)
 	{
-		counter = LPC_TMR32B0->TC;
-		pmu_wait_ms (250);
-		counter = (LPC_TMR32B0->TC - counter) * 4;
-		debug_printf ("LPC_TMR32B0[%08u]: %uHz [%u bytes sniffed]\n", line++, counter, g_buffer_pos);
-
 		if (UARTCount>0)
 		{
 			switch (UARTBuffer[0])
