@@ -59,16 +59,9 @@ rfid_hexdump (const void *buffer, int size)
 	debug_printf (" [size=%02i]\n", size);
 }
 
-static void rfid_decode_miller(uint8_t data)
-{
-	if(data && (g_buffer_pos<MAX_EDGES))
-		g_buffer[g_buffer_pos++] = data;
-}
-
-#if 0
 static void rfid_decode_byte(uint8_t data)
 {
-	if(data && (g_buffer_pos<MAX_EDGES))
+	if(g_buffer_pos<MAX_EDGES)
 		g_buffer[g_buffer_pos++] = data;
 }
 
@@ -116,62 +109,52 @@ static void rfid_decode_bit(uint8_t bit)
 	}
 }
 
-static void rfid_decode_miller(uint8_t etu_percent)
+static void rfid_decode_miller(uint8_t etu)
 {
 	static uint8_t bit = 0;
 
-	/* filter spurious signals */
-	if(!etu_percent)
+	switch(etu)
 	{
-		bit = 0;
-		return;
-	}
+		/* filter spurious signals */
+		case 0:
+			rfid_decode_bit (ERR_SHORT_PULSE);
+			bit = 0;
+			break;
 
-	if((etu_percent>=(100-ETU_TOLERANCE)) && (etu_percent<=(100+ETU_TOLERANCE)))
-		rfid_decode_bit(bit);
-	else
-		if((etu_percent>=(150-ETU_TOLERANCE)) && (etu_percent<=(150+ETU_TOLERANCE)))
-		{
+		case 4:
+			rfid_decode_bit (bit);
+			break;
+
+		case 6:
 			if(bit)
 			{
-				rfid_decode_bit(0);
-				rfid_decode_bit(0);
+				rfid_decode_bit (0);
+				rfid_decode_bit (0);
 				bit = 0;
 			}
 			else
 			{
-				bit ^= 1;
-				rfid_decode_bit(bit);
+				rfid_decode_bit (1);
+				bit = 1;
 			}
-		}
-		else
-		{
-			if((etu_percent>=(200-ETU_TOLERANCE)) && (etu_percent<=(200+ETU_TOLERANCE)))
-			{
-				if(bit)
-				{
-					rfid_decode_bit(0);
-					rfid_decode_bit(1);
-					bit = 1;
-				}
-				else
-				{
-					rfid_decode_bit(ERR_INVALID_SEQUENCE);
-					bit = 0;
-				}
+			break;
 
+		case 8:
+			if(bit)
+			{
+				rfid_decode_bit (0);
+				rfid_decode_bit (1);
 			}
 			else
-			{
-				if(etu_percent>(200+ETU_TOLERANCE))
-					rfid_decode_bit(ERR_EOF);
-				else
-					rfid_decode_bit(ERR_INVALID_BIN);
-				bit = 0;
-			}
-		}
+				rfid_decode_bit (ERR_EOF);
+			break;
+
+		default:
+			rfid_decode_bit((etu>8) ? ERR_EOF : ERR_INVALID_BIN);
+			bit = 0;
+			break;
+	}
 }
-#endif
 
 void TIMER16_1_IRQHandler(void)
 {
