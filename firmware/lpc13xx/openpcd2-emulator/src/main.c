@@ -42,6 +42,7 @@ static uint8_t g_counter_overflow = 0;
 
 static uint8_t g_buffer[MAX_EDGES];
 static int g_buffer_pos;
+int g_edges;
 
 static void
 rfid_hexdump (const void *buffer, int size)
@@ -58,9 +59,16 @@ rfid_hexdump (const void *buffer, int size)
 	debug_printf (" [size=%02i]\n", size);
 }
 
+static void rfid_decode_miller(uint8_t data)
+{
+	if(data && (g_buffer_pos<MAX_EDGES))
+		g_buffer[g_buffer_pos++] = data;
+}
+
+#if 0
 static void rfid_decode_byte(uint8_t data)
 {
-	if(g_buffer_pos<MAX_EDGES)
+	if(data && (g_buffer_pos<MAX_EDGES))
 		g_buffer[g_buffer_pos++] = data;
 }
 
@@ -113,10 +121,9 @@ static void rfid_decode_miller(uint8_t etu_percent)
 	static uint8_t bit = 0;
 
 	/* filter spurious signals */
-	if(etu_percent<100-ETU_TOLERANCE)
+	if(!etu_percent)
 	{
 		bit = 0;
-		rfid_decode_bit(ERR_SHORT_PULSE);
 		return;
 	}
 
@@ -164,6 +171,7 @@ static void rfid_decode_miller(uint8_t etu_percent)
 			}
 		}
 }
+#endif
 
 void TIMER16_1_IRQHandler(void)
 {
@@ -182,7 +190,6 @@ void TIMER16_1_IRQHandler(void)
 			g_counter_overflow = TRUE;
 			rfid_decode_miller(0xFF);
 		}
-		GPIOSetValue (LED_PORT, LED_BIT, 0);
 	}
 	else
 		/* we captured an edge */
@@ -199,13 +206,11 @@ void TIMER16_1_IRQHandler(void)
 			else
 			{
 				/* calculate difference */
-				diff = (100UL*(counter-g_counter_prev))/ISO14443A_ETU(1);
+				diff = (4UL*(counter-g_counter_prev)+ISO14443A_ETU(0.5))/ISO14443A_ETU(1);
 				rfid_decode_miller((diff>0xFF)?0xFF:(uint8_t)diff);
 			}
 			/* remember current counter value */
 			g_counter_prev=counter;
-
-			GPIOSetValue (LED_PORT, LED_BIT, 1);
 		}
 
 	/* acknowledge IRQ reason */
@@ -272,10 +277,12 @@ rfid_init_emulator (void)
 	/* enable secure clock */
 	rfid_write_register (0x6330, 0x80);
 	rfid_write_register (0x6104, 0x00);
-	/* output envelope to AUX1 */
-	rfid_write_register (0x6321, 0x34);
-	rfid_write_register (0x6322, 0x0E);
-	rfid_write_register (0x6328, 0xF9);
+
+	/* select test bus signal */
+	rfid_write_register (0x6321, 0x30|5);
+	/* select test bus type */
+	rfid_write_register (0x6322, 27);
+	rfid_write_register (0x6328, 0xFC);
 
 	/* WTF? FIXME !!! */
 	LPC_SYSCON->SYSAHBCLKCTRL |= EN_CT32B0|EN_CT16B1;
@@ -286,6 +293,7 @@ loop_rfid (void)
 {
 	int res, line;
 	uint32_t counter;
+	uint8_t test_signal, old_test_signal, signal, bus;
 	static unsigned char data[80];
 
 	/* fully initialized */
@@ -327,17 +335,63 @@ loop_rfid (void)
 	GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
 	line = 0;
 
+	signal = bus = old_test_signal = 0;
+	test_signal = (27<<3)|5;
+
 	while (1)
 	{
-		GPIOSetValue (LED_PORT, LED_BIT, 1);
 		counter = LPC_TMR32B0->TC;
-		pmu_wait_ms (100);
-		counter = (LPC_TMR32B0->TC - counter) * 10;
-		GPIOSetValue (LED_PORT, LED_BIT, 0);
-
+		pmu_wait_ms (250);
+		counter = (LPC_TMR32B0->TC - counter) * 4;
 		debug_printf ("LPC_TMR32B0[%08u]: %uHz [edges=%u]\n", line++, counter, g_buffer_pos);
 
-		hex_dump (g_buffer, 0, g_buffer_pos);
+		if (UARTCount>0)
+		{
+			switch (UARTBuffer[0])
+			{
+				case 'D':
+				case 'd':
+					hex_dump (g_buffer, 0, g_buffer_pos);
+					g_buffer_pos = 0;
+					break;
+				case '+':
+					test_signal++;
+					break;
+				case '-':
+					test_signal--;
+					break;
+				case 'B':
+					/* increment U.FL test bus number */
+					test_signal = (test_signal & ~0x7) + (1 << 3);
+					break;
+				case 'b':
+					/* decrement U.FL test bus number */
+					test_signal = (test_signal & ~0x7) - (1 << 3);
+					break;
+				case '0':
+					test_signal = 0;
+					break;
+			}
+			UARTCount = 0;
+		}
+
+		if (test_signal != old_test_signal)
+		{
+			old_test_signal = test_signal;
+
+			/* enable test singal output on U.FL sockets */
+			signal = test_signal & 0x7;
+			bus = (test_signal >> 3) & 0x1F;
+
+			rfid_write_register (0x6328, 0xF9);
+			/* select test bus signal */
+			rfid_write_register (0x6321, 0x30|signal);
+			/* select test bus type */
+			rfid_write_register (0x6322, bus);
+
+			/* display current test signal ID */
+			debug_printf ("TEST_SIGNAL_ID: %02i.%i\n", bus, signal);
+		}
 	}
 }
 
@@ -358,9 +412,6 @@ main (void)
 
 	/* UART setup */
 	UARTInit (115200, 0);
-
-	/* CDC USB Initialization */
-	init_usbserial ();
 
 	/* Init RFID */
 	rfid_init ();

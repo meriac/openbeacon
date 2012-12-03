@@ -8,8 +8,7 @@ APP_CFLAGS=-Iinc -std=gnu99 -fgnu89-inline -D__USE_CMSIS
 APP_LDFLAGS=-lm
 
 APP_SRC= \
-  src/main.c \
-  src/usbserial.c
+  src/main.c
 
 APP_SRC+=$(IMAGES_C)
 
