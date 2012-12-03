@@ -185,11 +185,9 @@ void TIMER16_1_IRQHandler(void)
 	/* if overflow - reset pulse length detection */
 	if(reason & 0x01)
 	{
-		if(!g_counter_overflow)
-		{
-			g_counter_overflow = TRUE;
-			rfid_decode_miller(0xFF);
-		}
+		rfid_decode_miller(0xFF);
+		LPC_TMR16B1->MCR = 0;
+		g_counter_overflow=TRUE;
 	}
 	else
 		/* we captured an edge */
@@ -211,6 +209,8 @@ void TIMER16_1_IRQHandler(void)
 			}
 			/* remember current counter value */
 			g_counter_prev=counter;
+
+			LPC_TMR16B1->MCR = 1;
 		}
 
 	/* acknowledge IRQ reason */
@@ -230,7 +230,7 @@ rfid_init_emulator (void)
 	LPC_TMR16B1->CTCR = 0;
 	/* match on MR0 for overflow detection */
 	LPC_TMR16B1->MR0 = 0;
-	LPC_TMR16B1->MCR = 1;
+	LPC_TMR16B1->MCR = 0;
 	LPC_TMR16B1->EMR = 0;
 	LPC_TMR16B1->PWMC = 0;
 	/* Capture rising edge & trigger interrupt */
