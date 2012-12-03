@@ -90,7 +90,7 @@ hex_dump (const unsigned char *buf, unsigned int addr, unsigned int len)
 			else
 				debug_printf (" ");
 		}
-		debug_printf ("|\n\r");
+		debug_printf ("|\n");
 	}
 }
 #endif /* UART_DISABLE */
