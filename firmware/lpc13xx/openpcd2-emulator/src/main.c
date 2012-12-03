@@ -305,7 +305,7 @@ rfid_init_emulator (void)
 	rfid_write_register (0x630D, 0x10);
 
 	/* enable SVDD switch */
-	rfid_write_register (0x6306, 0x2F);
+	rfid_write_register (0x6306, 0x8F);
 	rfid_write_register (0x6307, 0x03);
 	rfid_write_register (0x6106, 0x10);
 	/* enable secure clock */
@@ -377,6 +377,11 @@ loop_rfid (void)
 		{
 			switch (UARTBuffer[0])
 			{
+				case 'm':
+					debug_printf("Modulation=%c\n",(line&1)?'1':'0');
+					GPIOSetValue (0, 11, line&1);
+					line++;
+					break;
 				case 'D':
 				case 'd':
 					hex_dump (g_buffer, 0, g_buffer_pos);
@@ -435,6 +440,10 @@ main (void)
 	/* Set LED port pin to output */
 	GPIOSetDir (LED_PORT, LED_BIT, 1);
 	GPIOSetValue (LED_PORT, LED_BIT, LED_OFF);
+
+	LPC_IOCON->JTAG_TDI_PIO0_11 = 0x81;
+	GPIOSetDir (0, 11, 1);
+	GPIOSetValue (0, 11, 0);
 
 	/* Init Power Management Routines */
 	pmu_init ();
