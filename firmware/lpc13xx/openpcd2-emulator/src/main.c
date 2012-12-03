@@ -28,6 +28,7 @@
 #define ISO14443A_ETU(etu) ((uint32_t)((128ULL*SYSTEM_CORE_CLOCK*etu)/ISO14443A_CARRIER))
 #define ETU_TOLERANCE 10
 #define MAX_EDGES 1024
+#define MAX_PACKET 32
 
 #define STATE_WAITREQA 0
 
@@ -36,13 +37,11 @@
 #define ERR_INVALID_SEQUENCE 0x82
 #define ERR_INVALID_BIN 0x83
 
-static volatile uint32_t edges;
 static uint16_t g_counter_prev = 0;
 static uint8_t g_counter_overflow = 0;
 
 static uint8_t g_buffer[MAX_EDGES];
 static int g_buffer_pos;
-int g_edges;
 
 static void
 rfid_hexdump (const void *buffer, int size)
@@ -59,30 +58,75 @@ rfid_hexdump (const void *buffer, int size)
 	debug_printf (" [size=%02i]\n", size);
 }
 
-static void rfid_decode_byte(uint8_t data)
+uint16_t rfid_crc16 (const uint8_t* data, uint16_t length)
 {
-	if(g_buffer_pos<MAX_EDGES)
-		g_buffer[g_buffer_pos++] = data;
+	uint8_t u;
+	uint16_t crc = 0x6363;
+
+	while(length--)
+	{
+		u = *data++;
+		u ^= (uint8_t)crc;
+		u ^= u << 4;
+		crc = (crc>>8)^(((uint16_t)u)<<8)^(((uint16_t)u)<<3)^(u>>4);
+	}
+
+	return crc;
+}
+
+static void rfid_decode_packet(const uint8_t *data, uint8_t length)
+{
+	GPIOSetValue (LED_PORT, LED_BIT, LED_ON);
+#if 0
+	switch(*data)
+	{
+		0x26: /* REQA */
+			if(length==1)
+			{
+			}
+			break;
+		0x52: /* WUPA */
+			if(length==1)
+			{
+			}
+			break;
+	}
+#endif
+	if((length+g_buffer_pos)<MAX_EDGES)
+	{
+		memcpy(&g_buffer[g_buffer_pos], data, length);
+		g_buffer_pos = (g_buffer_pos+0x10)&~0xFUL;
+	}
 }
 
 static void rfid_decode_bit(uint8_t bit)
 {
-	static uint8_t bitpos = 0, data = 0;
+	static uint8_t buffer[MAX_PACKET];
+	static uint8_t bitpos = 0, data = 0, buffer_pos = 0;
+	uint16_t crc;
 	uint8_t parity;
 
 	if(bit & 0x80)
 	{
-		/* short frame ? */
-		if(bitpos>=7)
-			rfid_decode_byte (data);
-
-		g_buffer_pos &= 0xFFFFFFF0;
-		if((g_buffer_pos+0x10)<MAX_EDGES)
+		if(bit == ERR_EOF)
 		{
-			g_buffer[g_buffer_pos+0xF] = bit;
-			g_buffer_pos+=0x10;
+			if(bitpos==7)
+			{
+				buffer[0] = data;
+				rfid_decode_packet(buffer, 1);
+			}
+			else
+				if(buffer_pos>2)
+				{
+					crc = rfid_crc16(buffer, buffer_pos-2);
+					if((buffer[buffer_pos-2] == (uint8_t)crc) && (buffer[buffer_pos-1] == (uint8_t)(crc>>8)))
+						rfid_decode_packet(buffer, buffer_pos);
+				}
+				else
+					if(buffer_pos)
+						rfid_decode_packet(buffer, buffer_pos);
 		}
-		data = bitpos = 0;
+		data = bitpos = buffer_pos = 0;
 	}
 	else
 	{
@@ -95,7 +139,12 @@ static void rfid_decode_bit(uint8_t bit)
 			parity ^= parity>>1;
 
 			if((parity & 1)!=bit)
-				rfid_decode_byte (data);
+			{
+				if(buffer_pos<MAX_PACKET)
+					buffer[buffer_pos++] = data;
+			}
+			else
+				buffer_pos = 0;
 
 			data = bitpos = 0;
 		}
@@ -164,6 +213,8 @@ void TIMER16_1_IRQHandler(void)
 
 	/* get interrupt reason */
 	reason = (uint8_t)LPC_TMR16B1->IR;
+
+	GPIOSetValue (LED_PORT, LED_BIT, LED_OFF);
 
 	/* if overflow - reset pulse length detection */
 	if(reason & 0x01)
@@ -326,7 +377,7 @@ loop_rfid (void)
 		counter = LPC_TMR32B0->TC;
 		pmu_wait_ms (250);
 		counter = (LPC_TMR32B0->TC - counter) * 4;
-		debug_printf ("LPC_TMR32B0[%08u]: %uHz [edges=%u]\n", line++, counter, g_buffer_pos);
+		debug_printf ("LPC_TMR32B0[%08u]: %uHz [%u bytes sniffed]\n", line++, counter, g_buffer_pos);
 
 		if (UARTCount>0)
 		{
@@ -336,6 +387,7 @@ loop_rfid (void)
 				case 'd':
 					hex_dump (g_buffer, 0, g_buffer_pos);
 					g_buffer_pos = 0;
+					memset(g_buffer,0,sizeof(g_buffer));
 					break;
 				case '+':
 					test_signal++;
