@@ -27,7 +27,7 @@
 #ifdef ENABLE_USB_FULLFEATURED
 static BOOL CDC_DepInEmpty;		// Data IN EP is empty
 static unsigned char fifo_out[USB_CDC_BUFSIZE], fifo_in[128];
-static int fifo_out_count, fifo_in_count;
+static volatile int fifo_out_count, fifo_in_count;
 
 static inline void
 CDC_BulkIn_Handler (BOOL from_isr)
@@ -124,6 +124,23 @@ CDC_BulkOut (void)
 	USB_ReadEP_Terminate (CDC_DEP_OUT);
 }
 
+int
+default_getchar (void)
+{
+	int res;
+
+	__disable_irq ();
+
+	if(fifo_in_count)
+		res = fifo_in[--fifo_in_count];
+	else
+		res = -1;
+
+	__enable_irq ();
+
+	return res;
+}
+
 BOOL
 default_putchar (uint8_t data)
 {
@@ -137,7 +154,7 @@ default_putchar (uint8_t data)
 
 	__enable_irq ();
 
-	return UARTSendChar (data);
+	return TRUE;
 }
 
 void

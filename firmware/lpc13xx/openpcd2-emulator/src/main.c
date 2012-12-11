@@ -373,9 +373,9 @@ loop_rfid (void)
 
 	while (1)
 	{
-		if (UARTCount>0)
+		if (fifo_in_count>0)
 		{
-			switch (UARTBuffer[0])
+			switch (fifo_in[0])
 			{
 				case 'm':
 					debug_printf("Modulation=%c\n",(line&1)?'1':'0');
@@ -384,6 +384,7 @@ loop_rfid (void)
 					break;
 				case 'D':
 				case 'd':
+					debug_printf("Dumping %u bytes.\n", g_buffer_pos);
 					hex_dump (g_buffer, 0, g_buffer_pos);
 					g_buffer_pos = 0;
 					memset(g_buffer,0,sizeof(g_buffer));
@@ -448,8 +449,8 @@ main (void)
 	/* Init Power Management Routines */
 	pmu_init ();
 
-	/* UART setup */
-	UARTInit (115200, 0);
+	/* Init USB serial port */
+	init_usbserial ();
 
 	/* Init RFID */
 	rfid_init ();

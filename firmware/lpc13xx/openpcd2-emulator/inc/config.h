@@ -35,7 +35,7 @@
 #define LED_ON 1	/* Level to set port to turn on led  */
 #define LED_OFF 0	/* Level to set port to turn off led */
 
-#undef  ENABLE_USB_FULLFEATURED
+#define ENABLE_USB_FULLFEATURED
 #define ENABLE_PN532_RFID
 
 /* USB device settings */
