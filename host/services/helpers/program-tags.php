@@ -5,7 +5,10 @@
  * OpenBeacon.org - automated QR code based wireless tag ID
  *                  assignment
  *
- * uses cu and zbarcam+webcam
+ * uses cu+OpenBeaconUSB1 (running openbeacon-proxestimator) and
+ *      and zbarcam + USB webcam to decode tag QR code stickers
+ *
+ *      expects freshly programmed tag with constant PROGRAM_TAG_ID
  *
  * Copyright 2012 Milosch Meriac <meriac@bitmanufaktur.de>
  *
