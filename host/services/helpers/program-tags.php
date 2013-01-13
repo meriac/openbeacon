@@ -75,7 +75,7 @@ function process_usb_line ($line)
 	}
 	else
 		if(preg_match('|^BUTTON:|',$line))
-			echo("USB: $line\n");
+			echo("USB: $line\x07\n");
 }
 
 $spec = array(
