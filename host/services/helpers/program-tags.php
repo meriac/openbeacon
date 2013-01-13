@@ -33,6 +33,7 @@ error_reporting(E_ALL);
 
 define('PROGRAM_CU','/usr/bin/cu -l /dev/ttyACM0 -s 115200');
 define('PROGRAM_ZBARCAM','/usr/bin/zbarcam');
+define('PROGRAM_SPEECH','/usr/bin/espeak -s 200 -v male3 ');
 define('QR_PREFIX','QR-Code:http://qr.tk/');
 define('PROGRAM_TAG_ID',151);
 define('TIMEOUT', 5);
@@ -61,7 +62,8 @@ function process_usb_line ($line)
 			if( $tag_id == $tag_wait )
 			{
 				$tag_wait = NULL;
-				echo chr(7)."USB: Updated tag ID to $tag_id\n";
+				echo "USB: Updated tag ID to $tag_id\n";
+				exec(PROGRAM_SPEECH.$tag_id);
 			}
 			else
 				if($tag_id!=PROGRAM_TAG_ID)
