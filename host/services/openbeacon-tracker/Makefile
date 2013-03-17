@@ -82,7 +82,7 @@ $(MONGOC): $(MONGOC).tar.gz
 	$(MAKE) -C $(MONGOC)
 
 $(FILTERMG): src/$(FILTERMG).cpp $(MONGOC)
-	$(CXX) $(CXXFLAGS) $(CXXOPT) $(LDOPT) -ljson -DMONGO_HAVE_STDINT -I$(MONGOC)/src src/$(FILTERMG).cpp $(MONGOC)/libmongoc.a $(MONGOC)/libbson.a -o $@ 
+	$(CXX) $(CXXFLAGS) $(CXXOPT) $(LDOPT) -DMONGO_HAVE_STDINT -I$(MONGOC)/src src/$(FILTERMG).cpp $(MONGOC)/libmongoc.a $(MONGOC)/libbson.a -ljson -o $@ 
 
 indent: $(SOURCES)
 	find src -iname '*\.[cph]*' -exec indent -c81 -i4 -cli4 -bli0 -ts 4 \{\} \;
