@@ -9,7 +9,7 @@ MAKE    :=make
 FILTERFILE_PREFIX:=logs/sightings.json
 
 MIRROR  :=http://mirror.openbeacon.net
-LIBS    :=-lm -lpthread -lpcap
+LIBS    :=-lm -pthread -lpcap
 MONGOC  :=mongodb-mongo-c-driver
 
 # determine program version
@@ -70,7 +70,7 @@ $(LOGFILE).bz2:
 	curl -C - -o $@ $(MIRROR)/$(shell basename $@)
 
 $(FILTERSS): src/$(FILTERSS).cpp
-	$(CXX) $(CXXFLAGS) $(CXXOPT) $(LDOPT) -lz $^ -o $@
+	$(CXX) $(CXXFLAGS) $(CXXOPT) $(LDOPT) $^ -lz -o $@
 
 $(MONGOC).tar.gz:
 	curl -L -o $@ http://github.com/mongodb/mongo-c-driver/tarball/master
@@ -89,7 +89,7 @@ indent: $(SOURCES)
 	rm -f src/*~
 
 $(TARGET): .depend $(OBJS)
-	$(CXX) $(LDFLAGS) $(LDOPT) $(OBJS) -o $@
+	$(CXX) $(LDOPT) $(OBJS) $(LDFLAGS) -o $@
 
 .depend: $(SOURCES) $(FILTERS)
 	$(CXX) $(CXXFLAGS) $(CXXOPT) -MM $^ > $@
