@@ -1058,9 +1058,9 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 
 		if (tag_flags & TAGSIGHTINGFLAG_BUTTON_PRESS)
 			tag->button = timestamp + TAGSIGHTING_BUTTON_TIME_SECONDS;
-	}
 
-	pthread_mutex_unlock (item_mutex);
+		pthread_mutex_unlock (item_mutex);
+	}
 
 	return res;
 }
