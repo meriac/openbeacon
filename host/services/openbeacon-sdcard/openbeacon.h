@@ -118,6 +118,13 @@ typedef union
 
 typedef struct
 {
+	u_int32_t timestamp;
+	u_int32_t ip;
+	TBeaconEnvelope env;
+} PACKED TBeaconEnvelopeLog;
+
+typedef struct
+{
 	u_int16_t icrc16;
 	u_int8_t protocol;
 	u_int8_t interface;
