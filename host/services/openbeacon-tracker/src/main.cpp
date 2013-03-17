@@ -937,6 +937,7 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len,
 			{
 				item->reader = NULL;
 				item->reader_index = -1;
+				fprintf (stderr, "WARNING: unknown reader id %u seen for tag %u\n",reader_id,tag_id);
 			}
 
 			item->reader_id = reader_id;
