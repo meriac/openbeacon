@@ -58,6 +58,8 @@ TIMER32_0_IRQHandler (void)
 int
 main (void)
 {
+	uint64_t time_us;
+
 	/* Initialize GPIO (sets up clock) */
 	GPIOInit ();
 
@@ -78,9 +80,9 @@ main (void)
 	/* CDC USB Initialization */
 	init_usbserial ();
 
-
-	/* configure TMR32B0 for capturing eMeter pulse duration */
+	/* configure TMR32B0 for capturing eMeter pulse duration in us */
 	LPC_SYSCON->SYSAHBCLKCTRL |= (1 << 9);
+	LPC_TMR32B0->PR = SYSTEM_CORE_CLOCK/1000000;
 	LPC_TMR32B0->TCR = 2;
 	LPC_TMR32B0->CCR = 6;
 
@@ -92,13 +94,27 @@ main (void)
 	/* release counter */
 	LPC_TMR32B0->TCR = 1;
 
+	time_us=0;
 	while(TRUE)
 	{
-		debug_printf ("Pulse counter: 0x%08X\n", pulse_count);
+		if(pulse_length)
+		{
+			time_us+=pulse_length;
+			/* print count, time[s], power[mWh] */
+			debug_printf (
+				"%u,%u,%u\n",
+				pulse_count,
+				(uint32_t)(time_us/1000000UL),
+				(uint32_t)(3600000000000ULL/pulse_length)
+			);
+			pulse_length = 0;
+		}
+
+		/* blink once per second */
 		GPIOSetValue (LED_PORT, LED_PIN0, LED_ON);
-		pmu_wait_ms(10);
+		pmu_wait_ms(50);
 		GPIOSetValue (LED_PORT, LED_PIN0, LED_OFF);
-		pmu_wait_ms(90);
+		pmu_wait_ms(950);
 	}
 
 	return 0;
