@@ -66,18 +66,18 @@ hex_dump (const unsigned char *buf, unsigned int addr, unsigned int len)
 
 	for (j = 0; j < len; j += 16)
 	{
-		dprintf ("%08x:", addr);
+		debug_printf ("%08x:", addr);
 
 		line = buf;
 		for (i = 0; i < 16; i++)
 		{
 			if ((j + i) < len)
-				dprintf (" %02x", *line++);
+				debug_printf (" %02x", *line++);
 			else
-				dprintf ("   ");
+				debug_printf ("   ");
 		}
 
-		dprintf ("  |");
+		debug_printf ("  |");
 
 		line = buf;
 		for (i = 0; i < 16; i++)
@@ -86,14 +86,14 @@ hex_dump (const unsigned char *buf, unsigned int addr, unsigned int len)
 			{
 				c = *line++;
 				if (c >= ' ' && c < 127)
-					dprintf ("%c", c);
+					debug_printf ("%c", c);
 				else
-					dprintf (".");
+					debug_printf (".");
 			}
 			else
-				dprintf (" ");
+				debug_printf (" ");
 		}
-		dprintf ("|\n");
+		debug_printf ("|\n");
 
 		/* advance to next line */
 		addr+=16;
