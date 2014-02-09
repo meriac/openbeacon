@@ -239,6 +239,8 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len)
 	TBeaconEnvelope env;
 	TBeaconLogSighting *log;
 
+	res = 0;
+
 	/* check for new log file format */
 	if ((len >= (int) sizeof (TBeaconLogSighting))
 		&& ((len % sizeof (TBeaconLogSighting)) == 0))
