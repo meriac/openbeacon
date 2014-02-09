@@ -93,20 +93,17 @@ static uint8_t g_decrypted_one;
 #define PACKET_STATISTICS_READER 15
 #define AGGREGATION_TIMEOUT(strength) ((uint32_t)(MIN_AGGREGATION_SECONDS+(((MAX_AGGREGATION_SECONDS-MIN_AGGREGATION_SECONDS)/(STRENGTH_LEVELS_COUNT-1))*(strength))))
 
-typedef struct
-{
-	int strength;
-} TTagItemStrength;
+#define MAX_POWER_COUNT 32
 
 typedef struct
 {
-	uint32_t id, sequence, button;
+	uint32_t id, sequence;
+	uint32_t tag_id;
+	uint8_t flags;
 	int key_id;
-	double last_seen, last_calculated, last_reader_statistics;
-	double px, py, vx, vy;
-	const TReaderItem *last_reader;
-	uint32_t last_reader_id;
-	TTagItemStrength power[STRENGTH_LEVELS_COUNT];
+	uint32_t reader_id;
+	double power[MAX_POWER_COUNT];
+	int power_pos;
 } TTagItem;
 
 static void
@@ -235,10 +232,15 @@ hex_dump (const void *data, unsigned int addr, unsigned int len)
 static int
 parse_packet (double timestamp, uint32_t reader_id, const void *data, int len)
 {
-	int res, j;
+	int res, j, key_id;
+	int tag_strength, tag_count;
+	uint32_t tag_id, tag_flags, tag_sequence;
 	TBeaconEnvelope env;
 	TBeaconLogSighting *log;
+	TTagItem *item;
+	double delta, time, *pt;
 
+	key_id = -1;
 	res = 0;
 
 	/* check for new log file format */
@@ -283,11 +285,85 @@ parse_packet (double timestamp, uint32_t reader_id, const void *data, int len)
 				   sizeof (env.pkt) - sizeof (env.pkt.crc)) ==
 			ntohs (env.pkt.crc))
 		{
-			hex_dump(&env.pkt,0,sizeof(env.pkt));
+			key_id = j + 1;
 			break;
 		}
 	}
 
+	/* ignore broken packets */
+	if (key_id < 0)
+		return 0;
+
+	switch (env.pkt.proto)
+	{
+		case RFBPROTO_BEACONTRACKER_EXT:
+			tag_id = ntohs (env.pkt.oid);
+			tag_sequence = ntohl (env.pkt.p.trackerExt.seq);
+			tag_strength = env.pkt.p.trackerExt.strength;
+			if (tag_strength >= STRENGTH_LEVELS_COUNT)
+				tag_strength = STRENGTH_LEVELS_COUNT - 1;
+			tag_flags = (env.pkt.flags & RFBFLAGS_SENSOR) ?
+				TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
+			break;
+
+		case RFBPROTO_BEACONTRACKER:
+			{
+				tag_id = ntohs (env.pkt.oid);
+				tag_sequence = ntohl (env.pkt.p.tracker.seq);
+				tag_strength = env.pkt.p.tracker.strength;
+				if (tag_strength >= STRENGTH_LEVELS_COUNT)
+					tag_strength = STRENGTH_LEVELS_COUNT - 1;
+				tag_flags = (env.pkt.flags & RFBFLAGS_SENSOR) ?
+					TAGSIGHTINGFLAG_BUTTON_PRESS : 0;
+			}
+			break;
+
+		default:
+			tag_strength = -1;
+			tag_sequence = 0;
+			tag_id = 0;
+			tag_flags = 0;
+
+			fprintf(stderr, "\nInvalid protocol 0x%02X (%u):\n",
+				env.pkt.proto,
+				env.pkt.proto);
+			hex_dump(&env.pkt,0,sizeof(env.pkt));
+	}
+
+	/* only count tag strengths on lowest level zero */
+	if ((tag_strength == 0)
+		&& (item =
+			(TTagItem *)
+			g_map_tag.Add ((((uint64_t) reader_id) << 32) |
+							  tag_id, NULL)) != NULL)
+	{
+		/* on first occurence */
+		if(!item->tag_id)
+		{
+			item->tag_id = tag_id;
+			item->reader_id = reader_id;
+			item->sequence = tag_sequence;
+			item->flags = tag_flags;
+		}
+
+		time = microtime();
+
+		/* store current timestamp in fifo buffer */
+		item->power[item->power_pos++] = time;
+		if(item->power_pos>=MAX_POWER_COUNT)
+			item->power_pos = 0;
+
+		/* count all tags within a 0.5 second window */
+		tag_count = 0;
+		pt = item->power;
+		for( j = 0; j<MAX_POWER_COUNT; j++)
+		{
+			delta = time - *pt++;
+			if( delta<0.5 )
+				tag_count++;
+		}
+		printf("{\"tag\":%04u, \"reader\":%04u, \"power\":%02u},\n", tag_id, reader_id, tag_count);
+	}
 	return 0;
 }
 
@@ -350,7 +426,7 @@ main (int argc, char **argv)
 	g_ignored_protocol = g_invalid_protocol = 0;
 	memset (&g_tea_key_usage, 0, sizeof (g_tea_key_usage));
 
-//	g_map_tag.SetItemSize (sizeof (TTagItem));
+	g_map_tag.SetItemSize (sizeof (TTagItem));
 
 	return listen_packets ();
 }
