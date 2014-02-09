@@ -235,7 +235,57 @@ hex_dump (const void *data, unsigned int addr, unsigned int len)
 static int
 parse_packet (double timestamp, uint32_t reader_id, const void *data, int len)
 {
-	hex_dump(data,0,len);
+	int res, j;
+	TBeaconEnvelope env;
+	TBeaconLogSighting *log;
+
+	/* check for new log file format */
+	if ((len >= (int) sizeof (TBeaconLogSighting))
+		&& ((len % sizeof (TBeaconLogSighting)) == 0))
+	{
+		log = (TBeaconLogSighting *) data;
+		if ((log->hdr.protocol == BEACONLOG_SIGHTING) &&
+			(ntohs (log->hdr.size) == sizeof (TBeaconLogSighting)) &&
+			(icrc16
+			 ((uint8_t *) & log->hdr.protocol,
+			  sizeof (*log) - sizeof (log->hdr.icrc16)) ==
+			 ntohs (log->hdr.icrc16)))
+		{
+			reader_id = ntohs (log->hdr.reader_id);
+			data = &log->log;
+			len = sizeof (log->log);
+			res = sizeof (TBeaconLogSighting);
+		}
+	}
+
+	/* else if old log file format */
+	if (!res)
+	{
+		if (len < (int) sizeof (env))
+			return 0;
+		else
+			len = res = sizeof (env);
+	}
+
+	for (j = 0; j < (int) TEA_KEY_COUNT; j++)
+	{
+		memcpy (&env, data, len);
+
+		/* decode packet */
+		shuffle_tx_byteorder (env.block, XXTEA_BLOCK_COUNT);
+		xxtea_decode (env.block, XXTEA_BLOCK_COUNT, tea_keys[j]);
+		shuffle_tx_byteorder (env.block, XXTEA_BLOCK_COUNT);
+
+		/* verify CRC */
+		if (crc16 (env.byte,
+				   sizeof (env.pkt) - sizeof (env.pkt.crc)) ==
+			ntohs (env.pkt.crc))
+		{
+			hex_dump(&env.pkt,0,sizeof(env.pkt));
+			break;
+		}
+	}
+
 	return 0;
 }
 
