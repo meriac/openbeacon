@@ -29,19 +29,23 @@
 
 #define MANUAL_FLASH
 
-static int cmd_help( int argc, char *argv[] );
-static int cmd_version( int argc, char *argv[] );
-static int cmd_write_mem( int argc, char *argv[] );
-static int cmd_read_mem( int argc, char *argv[] );
-static int cmd_send_file( int argc, char *argv[] );
-static int cmd_set_clock( int argc, char *argv[] );
-static int cmd_locked_regions( int argc, char *argv[] );
-static int cmd_unlock_regions( int argc, char *argv[] );
 static int cmd_boot_from_flash( int argc, char *argv[] );
 static int cmd_flash( int argc, char *argv[] );
-static int cmd_read( int argc, char *argv[] );
+static int cmd_go( int argc, char *argv[] );
+static int cmd_help( int argc, char *argv[] );
+static int cmd_locked_regions( int argc, char *argv[] );
 static int cmd_manual_flash( int argc, char *argv[] );
 static int cmd_manual_read( int argc, char *argv[] );
+static int cmd_read( int argc, char *argv[] );
+static int cmd_read_mem( int argc, char *argv[] );
+static int cmd_reset( int argc, char *argv[] );
+static int cmd_send_file( int argc, char *argv[] );
+static int cmd_set_clock( int argc, char *argv[] );
+static int cmd_unlock_regions( int argc, char *argv[] );
+static int cmd_version( int argc, char *argv[] );
+static int cmd_wait( int argc, char *argv[] );
+static int cmd_write_mem( int argc, char *argv[] );
+
 
 static cmd_t cmds[] = {
   {cmd_write_mem, "wb", 
@@ -65,7 +69,6 @@ static cmd_t cmds[] = {
   {cmd_send_file, "sf",
    "sf <addr> <file> <offset> <len>", 
    "send len bytes of file starting at offset"},
-
   {cmd_set_clock, "set_clock",
    "set_clock",         "set clock as SAM-BA does"},
   {cmd_locked_regions, "locked_regions",
@@ -74,6 +77,12 @@ static cmd_t cmds[] = {
    "unlock_regions",    "unlock all lock regions"},
   {cmd_boot_from_flash, "boot_from_flash",
    "boot_from_flash",    "set the SAM7X to boot from flash"},
+  {cmd_reset, "reset",
+   "reset",              "reset the target"},
+  {cmd_go, "go",
+   "go <addr>",          "jump to code at <addr>"},
+  {cmd_wait, "wait",
+   "wait <secs>",        "wait for the specified numeber of seconds"},
   {cmd_flash, "flash",
    "flash <file>", "upload <file> to flash using the loader"},   
   {cmd_read, "read",
@@ -208,6 +217,7 @@ static int cmd_send_file( int argc, char *argv[] )
 {
   unsigned long int offset;
   unsigned long int len;
+  unsigned long int addr;
   char *endp;
   uint8_t *data;
   int fd;
@@ -216,7 +226,7 @@ static int cmd_send_file( int argc, char *argv[] )
     return CMD_E_WRONG_NUM_ARGS;
   }
 
-  strtoul( argv[1], &endp, 0 );
+  addr = strtoul( argv[1], &endp, 0 );
   if( endp == argv[1] ||
       *endp != '\0' ) {
     return CMD_E_INVAL_ARG;
@@ -235,12 +245,12 @@ static int cmd_send_file( int argc, char *argv[] )
   }
 
   if( (data = (uint8_t *) malloc( len )) == NULL ) {
-    printf( "can't allocate %d bytes\n", (int)len );
+    fprintf(stderr, "can't allocate %d bytes\n", (int)len );
     return CMD_E_NO_MEM;
   }
 
   if( (fd = open( argv[2], O_RDONLY )) < 0 ) {
-    printf( "can't open file \"%s\": %s\n", argv[2],
+    fprintf(stderr, "can't open file \"%s\": %s\n", argv[2],
 	    strerror( errno ) );
     return CMD_E_BAD_FILE;
   }
@@ -248,7 +258,7 @@ static int cmd_send_file( int argc, char *argv[] )
   lseek( fd, offset, SEEK_SET );
   len = read( fd, data, len );
 
-  if( samba_send_file( 0x202000, data, len ) < 0 ) {
+  if( samba_send_file( offset, data, len ) < 0 ) {
     return CMD_E_IO_FAILURE;
   }
 
@@ -301,14 +311,14 @@ static int cmd_set_clock( int argc, char *argv[] )
     return -1;
   }
   if( val8 != 0x13 ) {
-    printf( "warning: magic read 0x00200000 != 0x13\n" );
+    fprintf(stderr, "warning: magic read 0x00200000 != 0x13\n" );
   }
 
   if( samba_read_byte( 0x00200000, &val8 ) < 0 ) {
     return -1;
   }
   if( val8 != 0x13 ) {
-    printf( "warning: magic read 0x00200000 != 0x13\n" );
+    fprintf(stderr, "warning: magic read 0x00200000 != 0x13\n" );
   }
 
 
@@ -394,7 +404,7 @@ static int cmd_boot_from_flash( int argc, char *argv[] )
    */
   uint32_t val;
   
-  
+  /* wait for EFC to become ready */
   do {
     if( samba_read_word( 0xffffff68, &val ) < 0 ) {
       return -1;
@@ -402,9 +412,18 @@ static int cmd_boot_from_flash( int argc, char *argv[] )
   } while( !val & 0x1 );
 
   if( samba_write_word( 0xFFFFFF64, 0x5A00020B ) < 0 ) {
-    printf( "Couldn't flip the bit to boot from Flash.\n" );
+    fprintf(stderr, "Couldn't flip the bit to boot from Flash.\n" );
     return -1;
   }
+
+  /* wait for EFC to finish command */
+  do {
+    if( samba_read_word( 0xffffff68, &val ) < 0 ) {
+      return -1;
+    }
+  } while( !val & 0x1 );
+
+
   return 0;
 }
 
@@ -419,10 +438,26 @@ static int cmd_flash( int argc, char *argv[] )
   int read_len;
   int ps = samba_chip_info.page_size;
   uint8_t *loader_data;
+  int show_progress = 0;
+  char *filepath;
   
-  if( argc != 2 ) {
+  /*
+    Check our number of args.  If we got 3, assume one is a -show_progress flag.
+  */
+  if( argc == 3 ) { // check to see if we got a -show_progress flag
+    if(strncmp(argv[1], "-show_progress", strlen("-show_progress")) == 0) {
+      show_progress = 1;
+      filepath = argv[2];
+    }
+    else
+    {
+      fprintf( stderr, "unrecognized option for 'flash' - %s\n", argv[1] );
+      return CMD_E_INVAL_ARG;
+    }
+  } else if( argc == 2 ) { // no flags
+    filepath = argv[1];
+  } else
     return CMD_E_WRONG_NUM_ARGS;
-  }
 
   if( ps == 128 ) {
     loader_data = loader128_data;
@@ -431,56 +466,60 @@ static int cmd_flash( int argc, char *argv[] )
     loader_data = loader256_data;
     loader_len = sizeof( loader256_data );
   } else {
-    printf( "no loader for %d byte pages\n", ps );
+    fprintf( stderr, "no loader for %d byte pages\n", ps );
     return -1;
   }
 
-  if( stat( argv[1], &stbuf ) < 0 ) {
-    printf( "%s not found\n", argv[1] );
+  if( stat( filepath, &stbuf ) < 0 ) {
+    fprintf( stderr, "%s not found\n", filepath );
     return -1;
   }
 
   file_len = stbuf.st_size;
 
   if( (buff = (uint8_t *) malloc( ps ) ) == NULL ) {
-    printf( "can't alocate buffer of size 0x%x\n",  ps );
+    fprintf( stderr, "can't alocate buffer of size 0x%x\n",  ps );
     goto error0;
   }
 
   if( samba_send_file( 0x00201600, loader_data, loader_len ) < 0 ) {
-    printf( "could not upload samba.bin\n" );
+    fprintf( stderr, "could not upload samba.bin\n" );
     goto error1;
   }
   
-  if( (file_fd = open( argv[1], O_RDONLY )) < 0 ) {
-    printf( "can't open %s\n", argv[1] );
+  if( (file_fd = open( filepath, O_RDONLY )) < 0 ) {
+    fprintf( stderr, "can't open %s\n", argv[1] );
     return -1;
   }
 
   for( i=0 ; i<file_len ; i+=ps ) {
     /* set page # */
     if( samba_write_word( 0x00201400+ps, i/ps ) < 0 ) {
-      printf( "could not write page %d address\n", (int) i/ps );
+      fprintf( stderr, "could not write page %d address\n", (int) i/ps );
       goto error2;
     }
     
     read_len = (file_len-i < ps)?file_len-i:ps;
     /* XXX need to implement safe read */
     if( read( file_fd, buff, read_len ) < read_len ) {
-      printf( "could not read 0x%x bytes from file\n", read_len );
+      fprintf( stderr, "could not read 0x%x bytes from file\n", read_len );
       goto error2;
     }
 
     if( samba_send_file( 0x00201400, buff, ps ) < 0 ) {
-      printf( "could not send page %d\n", (int) i/ps );
+      fprintf( stderr, "could not send page %d\n", (int) i/ps );
       goto error2;
     }
 
     if( samba_go( 0x00201600 ) < 0 ) {
-      printf( "could not send go command for page %d\n", (int) i/ps );
+      fprintf( stderr, "could not send go command for page %d\n", (int) i/ps );
       goto error2;
     }
-
+    
+    if(show_progress) {
+      int progress = ((float)i / (float)file_len) * 100;
+      printf( "upload progress: %d%%\n", progress);
+    }
   }
   
   free( buff );
@@ -514,20 +553,20 @@ static int cmd_manual_flash( int argc, char *argv[] )
   }
 
   if( stat( argv[1], &stbuf ) < 0 ) {
-    printf( "%s not found\n", argv[1] );
+    fprintf( stderr, "%s not found\n", argv[1] );
     return -1;
   }
   file_len = stbuf.st_size;
 
 
   if( (buff = (char *) malloc( ps )) == NULL ) {
-    printf( "can't alocate buffer of size 128\n" );
+    fprintf( stderr, "can't alocate buffer of size 128\n" );
     return -1;
   }
 
 
   if( (file_fd = open( argv[1], O_RDONLY )) < 0 ) {
-    printf( "can't open %s\n", argv[1] );
+    fprintf( stderr, "can't open %s\n", argv[1] );
     goto error0;
   }
 
@@ -535,26 +574,26 @@ static int cmd_manual_flash( int argc, char *argv[] )
     /* wait for flash to become ready */
     do {
       if( samba_read_word( 0xffffff68, &val ) < 0 ) {
-	goto error1;
+        goto error1;
       }
     } while( !val & 0x1 );
 
     read_len = (file_len-i < ps)?file_len-i:ps;
     /* XXX need to implement safe read */
     if( read( file_fd, buff, read_len ) < read_len ) {
-      printf( "could not read 0x%x bytes from file\n", read_len );
+      fprintf( stderr, "could not read 0x%x bytes from file\n", read_len );
       goto error1;
     }
 
     for( j=0 ; j<ps ; j+=4 ) {
       if( samba_write_word( 0x00100000 + i + j, *((uint32_t*)(buff+j))) < 0 ) {
-	printf( "could not write byte 0x%x\n", (unsigned int)( 0x00100000 + i + j) );
+        fprintf( stderr, "could not write byte 0x%x\n", (unsigned int)( 0x00100000 + i + j) );
       }
     }
 
     /* send write command */
     if( samba_write_word( 0xFFFFFF64, 0x5A000001 | ((i/ps) << 8) ) < 0 ) {
-      printf( "could not send write command for page %d\n", (int) i/ps );
+      fprintf( stderr, "could not send write command for page %d\n", (int) i/ps );
       goto error1;
     }
 
@@ -584,38 +623,38 @@ static int cmd_manual_read( int argc, char *argv[] )
   char *endp;
   
   if( argc != 4 ) {
-    printf( "wrong number of args\n" );
+    fprintf( stderr, "wrong number of args\n" );
     return CMD_E_WRONG_NUM_ARGS;
   }
   
   addr = strtoul( argv[2], &endp, 0 );
   if( endp == argv[2] ||
       *endp != '\0' ) {
-    printf("%s not a vaild number\n", argv[2]);
+    fprintf( stderr, "%s not a vaild number\n", argv[2]);
     return CMD_E_INVAL_ARG;
   }
 
   len = strtoul( argv[3], &endp, 0 );
   if( endp == argv[3] ||
       *endp != '\0' ) {
-    printf("%s not a vaild number\n", argv[3]);
+    fprintf( stderr, "%s not a vaild number\n", argv[3]);
     return CMD_E_INVAL_ARG;
   }
 
   if( (fd = open( argv[1], O_RDWR | O_CREAT, 0666 )) < 0 ) {
-    printf( "can't open file \"%s\": %s\n", argv[1],
+    fprintf( stderr, "can't open file \"%s\": %s\n", argv[1],
 	    strerror( errno ) );
     return CMD_E_BAD_FILE;
   }
 
   for( i=0; i<len ; i+=4 ) {
     if( samba_read_word( addr + i, &val ) < 0 ) {
-      printf( "io error\n" );
+      fprintf( stderr, "io error\n" );
       return CMD_E_IO_FAILURE; 
     }
 
     if( write( fd, &val, 4 ) < 4 ) {
-      printf("write error\n" );
+      fprintf( stderr, "write error\n" );
       return CMD_E_IO_FAILURE;
     }
   }
@@ -636,26 +675,26 @@ static int cmd_read( int argc, char *argv[] )
   uint8_t buff[0x80];
 
   if( argc != 4 ) {
-    printf( "wrong number of args\n");
+    fprintf( stderr, "wrong number of args\n");
     return CMD_E_WRONG_NUM_ARGS;
   }
   
   addr = strtoul( argv[2], &endp, 0 );
   if( endp == argv[2] ||
       *endp != '\0' ) {
-    printf("%s not a vaild number\n", argv[2]);
+    fprintf( stderr, "%s not a vaild number\n", argv[2]);
     return CMD_E_INVAL_ARG;
   }
 
   len = strtoul( argv[3], &endp, 0 );
   if( endp == argv[3] ||
       *endp != '\0' ) {
-    printf("%s not a vaild number\n", argv[3]);
+    fprintf( stderr, "%s not a vaild number\n", argv[3]);
     return CMD_E_INVAL_ARG;
   }
 
   if( (fd = open( argv[1], O_RDWR | O_CREAT, 0666 )) < 0 ) {
-    printf( "can't open file \"%s\": %s\n", argv[1],
+    fprintf( stderr, "can't open file \"%s\": %s\n", argv[1],
 	    strerror( errno ) );
     return CMD_E_BAD_FILE;
   }
@@ -663,12 +702,12 @@ static int cmd_read( int argc, char *argv[] )
   for( i=0; i<len ; i+=0x80 ) {
     read_len = len-i < 0x80 ? len-i : 0x80;
     if( samba_recv_file( addr + i, buff, read_len ) < 0 ) {
-      printf( "io error\n" );
+      fprintf( stderr, "io error\n" );
       return CMD_E_IO_FAILURE; 
     }
 
     if( write( fd, buff, read_len ) < read_len ) {
-      printf("write error\n" );
+      fprintf( stderr, "write error\n" );
       return CMD_E_IO_FAILURE;
     }
   }
@@ -679,3 +718,67 @@ static int cmd_read( int argc, char *argv[] )
 }
 
 
+static int cmd_reset( int argc, char *argv[] )
+{
+  /* reset controller at 0xfffffd00
+   *
+   * RSTC_CR[31..24] = KEY = 0xa5
+   * RSTC_CR[3]      = EXTRST
+   * RSTC_CR[2]      = PERRST
+   * RSTC_CR[0]      = PROCRST
+   *
+   * EXTRST, PERRST, and PROCRST are all aserted.  A possible
+   * feature would be to add an argument to reset to specify 
+   * the type of reset wanted.
+   *  
+   */
+
+  if( samba_write_word( 0xFFFFFD00, 0xA500000D ) < 0 ) {
+    fprintf( stderr, "Couldn't reset target.\n" );
+    return -1;
+  }
+
+  return 0;
+}
+
+static int cmd_wait( int argc, char *argv[] )
+{
+  long secs;
+  char *endp;
+
+  if( argc != 2 ) {
+    fprintf( stderr, "wrong number of args\n");
+    return CMD_E_WRONG_NUM_ARGS;
+  }
+    
+  secs = strtoul( argv[1], &endp, 0 );
+  if( endp == argv[1] ||
+      *endp != '\0' ) {
+    fprintf( stderr, "%s not a vaild number\n", argv[1]);
+    return CMD_E_INVAL_ARG;
+  }
+
+  sleep(secs);
+  return 0;
+}
+
+static int cmd_go( int argc, char *argv[] )
+{
+  unsigned long int addr;
+  char *endp;
+
+  if( argc != 2 ) {
+    return CMD_E_WRONG_NUM_ARGS;
+  }
+  addr = strtoul( argv[1], &endp, 0 );
+  if( endp == argv[1] ||
+     *endp != '\0' ) {
+    return CMD_E_INVAL_ARG;
+  }
+
+  if( samba_go( addr ) < 0 )
+  {
+    return CMD_E_IO_FAILURE;
+  }
+  return CMD_E_OK;
+}

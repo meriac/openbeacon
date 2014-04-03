@@ -43,7 +43,7 @@ int io_init( char *dev )
   //  char buff[16];
 
   if( (io_fd = open( dev, O_RDWR )) < 0 ) {
-    printf( "can't open \"%s\": %s\n", dev, strerror( errno ) );
+    fprintf( stderr, "can't open \"%s\": %s\n", dev, strerror( errno ) );
     return -1;
   }
 

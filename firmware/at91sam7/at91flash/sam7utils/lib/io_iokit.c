@@ -54,7 +54,7 @@ int do_intf(io_service_t usbInterfaceRef)
 					    kIOCFPlugInInterfaceID, 
 					    &iodev, &score);
     if( err || !iodev ) {
-      printf("unable to create plugin. ret = %08x, iodev = %p\n", err, iodev);
+      fprintf( stderr, "unable to create plugin. ret = %08x, iodev = %p\n", err, iodev);
       return -1;
     }
     
@@ -64,20 +64,20 @@ int do_intf(io_service_t usbInterfaceRef)
     IODestroyPlugInInterface(iodev);
 	
     if (err || !intf) {
-      printf("unable to create a device interface. ret = %08x, intf = %p\n", 
+      fprintf( stderr, "unable to create a device interface. ret = %08x, intf = %p\n", 
 	     err, intf);
       return -1;
     }
 
     err = (*intf)->USBInterfaceOpen(intf);
     if (err) {
-      printf("unable to open interface. ret = %08x\n", err);
+      fprintf( stderr, "unable to open interface. ret = %08x\n", err);
       return -1;
     }
     
     err = (*intf)->GetNumEndpoints(intf, &numPipes);
     if (err) {
-      printf("unable to get number of endpoints. ret = %08x\n", err);
+      fprintf( stderr, "unable to get number of endpoints. ret = %08x\n", err);
       return -1;
     }
 
@@ -88,7 +88,7 @@ int do_intf(io_service_t usbInterfaceRef)
 					 &number, &transferType,
 					 &maxPacketSize, &interval);
 	if (err) {
-	    printf("unable to get pipe properties for pipe %d, err = %08x\n",
+	    fprintf( stderr, "unable to get pipe properties for pipe %d, err = %08x\n",
 		   i, err);
 	    continue;
 	}
@@ -132,7 +132,7 @@ static int do_dev( io_service_t usbDeviceRef )
 					  kIOUSBDeviceUserClientTypeID,
 					  kIOCFPlugInInterfaceID, &iodev, &score);
   if (err || !iodev) {
-    printf("unable to create plugin. ret = %08x, iodev = %p\n",
+    fprintf( stderr, "unable to create plugin. ret = %08x, iodev = %p\n",
 	   err, iodev);
 		return -1;
     }
@@ -143,32 +143,32 @@ static int do_dev( io_service_t usbDeviceRef )
   IODestroyPlugInInterface(iodev);				// done with this
   
   if (err || !usbDev) {
-    printf("unable to create a device interface. ret = %08x, dev = %p\n",
+    fprintf( stderr, "unable to create a device interface. ret = %08x, dev = %p\n",
 	   err, usbDev);
     return -1;
   }
   
   err = (*usbDev)->USBDeviceOpen(usbDev);
   if (err) {
-    printf("unable to open device. ret = %08x\n", err);
+    fprintf( stderr, "unable to open device. ret = %08x\n", err);
     return -1;
   }
   err = (*usbDev)->GetNumberOfConfigurations(usbDev, &numConf);
   if (err || !numConf) {
-    printf("unable to obtain the number of configurations. ret = %08x\n", err);
+    fprintf( stderr, "unable to obtain the number of configurations. ret = %08x\n", err);
     return -1;
   }
 
   err = (*usbDev)->GetConfigurationDescriptorPtr(usbDev, 0, &confDesc);			// get the first config desc (index 0)
   if (err) {
-      printf("unable to get config descriptor for index 0\n");
+      fprintf( stderr, "unable to get config descriptor for index 0\n");
       return -1;
   }
   
 
   err = (*usbDev)->SetConfiguration(usbDev, confDesc->bConfigurationValue);
   if (err) {
-    printf("unable to set the configuration\n");
+    fprintf( stderr, "unable to set the configuration\n");
     return -1;
   }
 
@@ -183,7 +183,7 @@ static int do_dev( io_service_t usbDeviceRef )
   
   err = (*usbDev)->CreateInterfaceIterator(usbDev, &interfaceRequest, &iterator);
   if (err) {
-    printf("unable to create interface iterator\n");
+    fprintf( stderr, "unable to create interface iterator\n");
     return -1;
   }
     
@@ -216,18 +216,18 @@ int io_init( char *dev __attribute__((unused)) )
 
   
   if( (err = IOMasterPort( MACH_PORT_NULL, &masterPort )) ) {
-    printf( "could not create master port, err = %08x\n", err );
+    fprintf( stderr, "could not create master port, err = %08x\n", err );
     return -1;
   }
 
   if( !(matchingDictionary = IOServiceMatching(kIOUSBDeviceClassName)) ) {
-    printf( "could not create matching dictionary\n" );
+    fprintf( stderr, "could not create matching dictionary\n" );
     return -1;
   }
   
   if( !(numberRef = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type,
 				   &idVendor)) ) {
-    printf( "could not create CFNumberRef for vendor\n" );
+    fprintf( stderr, "could not create CFNumberRef for vendor\n" );
     return -1;
   }
   CFDictionaryAddValue( matchingDictionary, CFSTR(kUSBVendorID), numberRef);
@@ -236,7 +236,7 @@ int io_init( char *dev __attribute__((unused)) )
 
   if( !(numberRef = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type,
 				   &idProduct)) ) {
-    printf( "could not create CFNumberRef for product\n" );
+    fprintf( stderr, "could not create CFNumberRef for product\n" );
     return -1;
   }
   CFDictionaryAddValue( matchingDictionary, CFSTR(kUSBProductID), numberRef);
@@ -250,10 +250,11 @@ int io_init( char *dev __attribute__((unused)) )
   
   if( (usbDeviceRef = IOIteratorNext( iterator )) ) {
     printf( "found boot agent\n" );
-
-    do_dev( usbDeviceRef );
+    if(do_dev( usbDeviceRef ) < 0) {
+      return -1;
+    }
   } else {
-    printf( "can not find boot agent\n" );
+    fprintf( stderr, "can't find boot agent\n" );
     return -1;
   }
 
@@ -295,7 +296,7 @@ int io_write( void *buff, int len )
 {
   if( (*intf)->WritePipe( intf, outPipeRef, buff, (UInt32) len ) !=
       kIOReturnSuccess ) {
-    printf( "write error\n");
+    fprintf( stderr, "write error\n");
   }
 
   return len;
@@ -308,7 +309,7 @@ int io_read( void *buff, int len )
 
   if( (*intf)->ReadPipe( intf, inPipeRef, buff, &size ) !=
       kIOReturnSuccess ) {
-    printf( "read error\n");
+    fprintf( stderr, "read error\n");
   }
 
   

@@ -1,3 +1,53 @@
+2009-06-09 marti raudsepp <marti@juffo.org>
+	* fix crash when unknown command line options are specified.
+	* add SAM7XC support; essentially the same as SAM7X
+	* 512KB chips have 32, not 16 lock bits
+	* print message if no devices were found
+
+2008-07-08 erik gilling <konkers@konkers.net>
+	* update loader to detect 512K parts and adjust flash timings
+	  accordingly
+	* tested sam7x512 and sam7x256
+	
+2008-07-08 erik gilling <konkers@konkers.net>
+	* add speculative support for sam7se512 and sam7x512
+	  (WARNING: untested may break everything)
+	
+2008-06-09 erik gilling <konkers@konkers.net>
+	* add go command from neundorf from forums
+	
+2008-06-09 erik gilling <konkers@konkers.net>
+	* from liam:
+		* Fix a bug in io_iokit.c where a return value was not 
+		  being checked which would result in a bus error on 
+		  OS X 10.5 Leopard (with that problem where the system 
+		  can't open the file descriptor)
+	
+2008-06-09 erik gilling <konkers@konkers.net>
+	* update auto(make|conf) files
+	
+2008-06-09 erik gilling <konkers@konkers.net>
+	* integrate patch from liam:
+		* replaced printf("msg") with fprintf( stderr, "msg") 
+		  where appropriate (lots of these)
+		* added calls at the top of main() to turn off buffering 
+		  for the std streams
+		* fixed a couple typos in messages to the user
+		* added a -show_progress flag to cmd_flash in cmd.c which 
+		  then prints out the progress of the upload from 0-100%.
+	
+2007-09-18 erik gilling <konkers@konkers.net>
+	* start moving backend code into library
+
+2007-08-10 erik gilling <konkers@konkers.net>
+	* sam7se support
+	
+2007-07-05 erik gilling <konkers@konkers.net>
+	* make boot_from_flash command wait for completion
+	* print out commands executed with -e arg
+	* add reset command
+	* add wait command
+	
 2006-09-15 erik gilling <konkers@konkers.net>
 	* version 0.2.1
 

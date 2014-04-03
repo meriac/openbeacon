@@ -49,13 +49,18 @@ int main( int argc, char *argv[] )
   int n_cmds=0;
   int c,i;
 
+  // turn buffering off for the standard streams
+  setbuf(stdout, 0);
+  setbuf(stderr, 0);
+
 
   while( 1 ) {
     int option_index;
     static struct option long_options[] = {
       { "line", 1, 0, 'l' },
       { "exec", 1, 0, 'e' },
-      { "help", 0, 0, 'h' }
+      { "help", 0, 0, 'h' },
+      { 0, 0, 0, 0 }
     };
 
     c = getopt_long( argc, argv, "l:e:h", long_options, &option_index );
@@ -71,8 +76,8 @@ int main( int argc, char *argv[] )
       
     case 'e':
       if( n_cmds >= MAX_CMDS ) {
-	printf( "to many commands, increase MAX_CMDS\n" );
-	return 1;
+        fprintf( stderr, "too many commands, increase MAX_CMDS\n" );
+        return 1;
       }
       cmds[n_cmds] = optarg;
       n_cmds++;
@@ -84,7 +89,7 @@ int main( int argc, char *argv[] )
       break;
 
     default:
-      printf( "unknown option\n" );
+      fprintf( stderr, "unknown option\n" );
       usage();
       return 1;
     }
@@ -97,9 +102,9 @@ int main( int argc, char *argv[] )
 
   if( n_cmds > 0 ) {
     for( i=0 ; i<n_cmds ; i++ ) {
+      printf("sam7> %s\n",cmds[i]);
       sam7_handle_line( cmds[i] );
     }
-
   } else {
     while( (cmdline = readline( "sam7> " )) ) {
       add_history( cmdline );
@@ -161,7 +166,7 @@ static int sam7_handle_line( char *line )
     if( (cmd = cmd_find( argv[0] )) != NULL ) {
       return cmd->func( argc, argv );
     }
-    printf( "command %s not found\n", argv[0] );
+    fprintf( stderr, "command %s not found\n", argv[0] );
     return -1;
   }
   
