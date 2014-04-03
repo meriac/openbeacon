@@ -189,7 +189,7 @@ static unsigned char
 vnRF_ProcessDevice (u_int8_t device)
 {
 	u_int8_t status, duplicate, pkt_size, pipe;
-	u_int16_t crc, oid, prox;
+	u_int16_t crc, oid, prox, log_size;
 	u_int32_t unique, t, seconds_since_boot, time;
 	static unsigned int reader_sequence = 0;
 
@@ -229,9 +229,9 @@ vnRF_ProcessDevice (u_int8_t device)
 				pkt_size = sizeof(g_Beacon.log.pkt);
 		}
 
-		g_Beacon.hdr.size = swapshort (
-			(sizeof (g_Beacon) - sizeof (g_Beacon.log)) + pkt_size
-		);
+		/* calculate size */
+		log_size = (sizeof(g_Beacon) - sizeof(g_Beacon.log)) + pkt_size;
+		g_Beacon.hdr.size = swapshort (log_size);
 
 		/* read packet from nRF chip */
 		nRFCMD_RegReadBuf (device, RD_RX_PLOAD, g_Beacon.log.data, pkt_size);
@@ -287,8 +287,7 @@ vnRF_ProcessDevice (u_int8_t device)
 			g_Beacon.timestamp = swaplong (time);
 			/* post packet to log file queue with CRC */
 			crc = env_icrc16 ((u_int8_t *) & g_Beacon.hdr.protocol,
-							  sizeof (g_Beacon) -
-							  sizeof (g_Beacon.hdr.icrc16));
+							  log_size - sizeof (g_Beacon.hdr.icrc16));
 			g_Beacon.hdr.icrc16 = swapshort (crc);
 			xQueueSend (xLogfile, &g_Beacon, 0);
 
