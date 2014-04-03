@@ -47,7 +47,7 @@ int io_init( char *dev )
   // Enumerate device
   if( !SetupDiEnumDeviceInterfaces(hInfo, NULL, (LPGUID)
 				   &USBIODS_GUID,0, &Interface_Info ) ) {
-    printf( "can't find boot agent\n");
+    fprintf( stderr, "can't find boot agent\n");
     goto error0;
   }
 
@@ -57,7 +57,7 @@ int io_init( char *dev )
   PSP_INTERFACE_DEVICE_DETAIL_DATA detail =
     (PSP_INTERFACE_DEVICE_DETAIL_DATA) malloc(needed);
   if( !detail ) {
-    printf( "can't find boot agent\n");
+    fprintf( stderr, "can't find boot agent\n");
     goto error0;
     return(-1);
   }
@@ -68,7 +68,7 @@ int io_init( char *dev )
   if( !SetupDiGetInterfaceDeviceDetail( hInfo,
 					&Interface_Info,detail, 
 					needed,NULL, NULL )) {
-    printf( "can't find boot agent\n");
+    fprintf( stderr, "can't find boot agent\n");
     goto error1;
   }
   
@@ -85,7 +85,7 @@ int io_init( char *dev )
 			    0, NULL );
 
   if( io_pipe_out == INVALID_HANDLE_VALUE ) {
-    printf( "can't open output pipe\n" );
+    fprintf( stderr, "can't open output pipe\n" );
 	    goto error2;
   }
 
@@ -99,7 +99,7 @@ int io_init( char *dev )
 			    0, NULL );
 
   if( io_pipe_in == INVALID_HANDLE_VALUE ) {
-    printf( "can't open input pipe\n" );
+    fprintf( stderr, "can't open input pipe\n" );
 	    goto error3;
   }
   

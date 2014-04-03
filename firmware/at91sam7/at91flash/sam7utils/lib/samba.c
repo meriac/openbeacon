@@ -153,7 +153,7 @@ int samba_init( void )
   uint16_t response;
 
   if( io_send_cmd( "N#", &response, sizeof( response ) ) < 0 ) {
-    printf( "can't init boot program: %s\n", strerror( errno ) );
+    fprintf( stderr, "can't init boot program: %s\n", strerror( errno ) );
     return -1;
   }
 
@@ -191,22 +191,13 @@ int samba_init( void )
       break;
 
     default:
-      printf( "unknown sam7s flash size %d\n", samba_chip_info.nvpsiz );
+      fprintf( stderr, "unknown sam7s flash size %d\n", samba_chip_info.nvpsiz );
       return -1;
     }
-  } else if( samba_chip_info.arch == AT91_ARCH_AT91SAM7SExx ) {
 
-    switch( samba_chip_info.nvpsiz) {
-    case 32*K:
-      samba_chip_info.page_size = 128;
-      samba_chip_info.lock_bits = 8;
-      break;
-
-    case 64*K:
-      samba_chip_info.page_size = 128;
-      samba_chip_info.lock_bits = 16;
-      break;
-
+  } else if( samba_chip_info.arch == AT91_ARCH_AT91SAM7Xxx ||
+             samba_chip_info.arch == AT91_ARCH_AT91SAM7XC ) {
+    switch( samba_chip_info.nvpsiz ) {
     case 128*K:
       samba_chip_info.page_size = 256;
       samba_chip_info.lock_bits = 8;
@@ -223,28 +214,28 @@ int samba_init( void )
       break;
 
     default:
-      printf( "unknown sam7se flash size %d\n", samba_chip_info.nvpsiz );
+      fprintf( stderr, "unknown sam7x flash size %d\n", samba_chip_info.nvpsiz );
       return -1;
-  }
-  } else if( (samba_chip_info.arch == AT91_ARCH_AT91SAM7Xxx) || (samba_chip_info.arch == AT91_ARCH_AT91SAM7XC) ) {
-
+    }
+  } else if( samba_chip_info.arch == AT91_ARCH_AT91SAM7SExx ) {
     switch( samba_chip_info.nvpsiz ) {
-    case 128*K:
-      samba_chip_info.page_size = 256;
-      samba_chip_info.lock_bits = 8;
-      break;
-
-    case 256*K:
-      samba_chip_info.page_size = 256;
-      samba_chip_info.lock_bits = 16;
-      break;
-
-    default:
-      printf( "unknown sam7x srflashsize %d\n", samba_chip_info.nvpsiz );
+      case 32*K:
+	samba_chip_info.page_size = 128;
+	samba_chip_info.lock_bits = 8;
+	break;
+	
+      case 256*K:
+      case 512*K:
+	samba_chip_info.page_size = 256;
+	samba_chip_info.lock_bits = 16;
+	break;
+	
+      default:
+	fprintf( stderr, "unknown sam7se flash size %d\n", samba_chip_info.nvpsiz );
       return -1;
     }
   } else {
-    printf( "Page size info of %s not known\n", 
+    fprintf( stderr, "Page size info of %s not known\n", 
 	    at91_arch_str( samba_chip_info.arch ) );
     return -1;
   }

@@ -40,6 +40,7 @@ int io_init( char *dev )
       }
   }
   
+  fprintf( stderr, "found no compatible usb devices");
   return -1;
 }
 
@@ -55,7 +56,7 @@ int io_write( void *buff, int len )
 {
   int ret = usb_bulk_write(io_handle, 0x1, buff, len, 5000);
   if( ret < 0 ) {
-    printf("error: %s\n", usb_strerror());
+    fprintf( stderr, "error: %s\n", usb_strerror());
   }
   return ret;
 }
@@ -64,7 +65,7 @@ int io_read( void *buff, int len )
 {
   int ret = usb_bulk_read(io_handle, 0x82, buff, len, 5000);
   if( ret < 0 ) {
-    printf("error: %s\n", usb_strerror());
+    fprintf( stderr, "error: %s\n", usb_strerror());
   }
   return ret;
 }
