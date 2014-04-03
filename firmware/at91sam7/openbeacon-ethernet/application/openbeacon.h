@@ -114,6 +114,7 @@ typedef union
 	TBeaconWrapper pkt;
 	u_int32_t block[XXTEA_BLOCK_COUNT];
 	u_int8_t byte[XXTEA_BLOCK_COUNT * 4];
+	u_int8_t data[32];
 } PACKED TBeaconEnvelope;
 
 typedef struct

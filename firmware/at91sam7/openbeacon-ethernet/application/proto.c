@@ -55,6 +55,7 @@ static u_int32_t rf_rec[NRFCMD_DEVICES], rf_rec_old[NRFCMD_DEVICES];
 static int pt_debug_level = 0;
 static u_int8_t nrf_powerlevel_current, nrf_powerlevel_last;
 static const u_int8_t broadcast_mac[NRF_MAX_MAC_SIZE] = { 1, 2, 3, 2, 1 };
+static const u_int8_t broadcast_mac_ng[NRF_MAX_MAC_SIZE] = { 0x62, 0x33, 0x61, 0xA2, 0x96 };
 
 TBeaconLogSighting g_Beacon;
 
@@ -94,8 +95,11 @@ PtInitChannel (u_int8_t device)
 		(device, DEFAULT_CHANNEL, broadcast_mac, sizeof (broadcast_mac), 0))
 		return 0;
 
-	nRFAPI_SetPipeSizeRX (device, 0, 16);
 	nRFAPI_SetRxMode (device, 1);
+	nRFAPI_SetPipeSizeRX (device, 0, sizeof(g_Beacon.log.pkt));
+	nRFAPI_SetPipeSizeRX (device, 1, sizeof(g_Beacon.log.data));
+	nRFAPI_SetRxMAC (device, broadcast_mac_ng, sizeof(broadcast_mac_ng), 1);
+	nRFAPI_PipesEnable(device, ERX_P0|ERX_P1);
 	nRFCMD_CE (device, 1);
 	return 1;
 }
@@ -184,7 +188,7 @@ swaplong (unsigned long src)
 static unsigned char
 vnRF_ProcessDevice (u_int8_t device)
 {
-	u_int8_t status, duplicate;
+	u_int8_t status, duplicate, pkt_size, pipe;
 	u_int16_t crc, oid, prox;
 	u_int32_t unique, t, seconds_since_boot, time;
 	static unsigned int reader_sequence = 0;
@@ -211,13 +215,30 @@ vnRF_ProcessDevice (u_int8_t device)
 	g_Beacon.hdr.protocol = BEACONLOG_SIGHTING;
 	g_Beacon.hdr.interface = device;
 	g_Beacon.hdr.reader_id = swapshort ((u_int16_t) env.e.reader_id);
-	g_Beacon.hdr.size = swapshort (sizeof (g_Beacon));
 
 	do
 	{
+		/* get packet size */
+		pipe = (nRFAPI_GetStatus(device) >> 1) & 0x7;
+		switch(pipe)
+		{
+			case 1 :
+				pkt_size = sizeof(g_Beacon.log.data);
+				break;
+			default:
+				pkt_size = sizeof(g_Beacon.log.pkt);
+		}
+
+		g_Beacon.hdr.size = swapshort (
+			(sizeof (g_Beacon) - sizeof (g_Beacon.log)) + pkt_size
+		);
+
 		/* read packet from nRF chip */
-		nRFCMD_RegReadBuf (device, RD_RX_PLOAD, g_Beacon.log.byte,
-						   sizeof (g_Beacon.log));
+		nRFCMD_RegReadBuf (device, RD_RX_PLOAD, g_Beacon.log.data, pkt_size);
+		/* pad data with zeroes if needed */
+		if(pkt_size<sizeof(g_Beacon.log.data))
+			memset( &g_Beacon.log.data[pkt_size], 0,
+				sizeof(g_Beacon.log.data) - pkt_size);
 
 		rf_rec[device]++;
 
@@ -232,7 +253,7 @@ vnRF_ProcessDevice (u_int8_t device)
 		}
 
 		/* calculate checkum to check for duplicates */
-		unique = crc32 (g_Beacon.log.byte, sizeof (g_Beacon.log.byte));
+		unique = crc32 (g_Beacon.log.data, pkt_size);
 
 		/* check for duplicates */
 		duplicate = pdFALSE;
@@ -275,7 +296,7 @@ vnRF_ProcessDevice (u_int8_t device)
 			vNetworkSendBeaconToServer ();
 		}
 
-		if (pt_debug_level)
+		if ((pkt_size==sizeof(g_Beacon.log.pkt)	) && pt_debug_level)
 		{
 			/* adjust byte order and decode */
 			shuffle_tx_byteorder ();
@@ -286,7 +307,8 @@ vnRF_ProcessDevice (u_int8_t device)
 
 			/* verify the crc checksum */
 			crc = env_crc16 (g_Beacon.log.byte,
-							 sizeof (g_Beacon.log) - sizeof (u_int16_t));
+							 sizeof (g_Beacon.log.pkt) -
+							 sizeof (g_Beacon.log.pkt.crc));
 
 			seconds_since_boot = time / 1000;
 
