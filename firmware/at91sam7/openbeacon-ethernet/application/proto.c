@@ -490,7 +490,7 @@ PtStatusRxTx (void)
 static void
 vnRFLogFileFileTask (void *parameter)
 {
-	UINT written;
+	UINT written, size;
 	FRESULT res;
 	static TBeaconLogSighting data;
 	static FIL fil;
@@ -537,9 +537,10 @@ vnRFLogFileFileTask (void *parameter)
 						if (xQueueReceive
 							(xLogfile, &data, 500 * portTICK_RATE_MS))
 						{
+							size = swapshort (data.hdr.size);
 							if (f_write
-								(&fil, &data, sizeof (data), &written)
-								|| written != sizeof (data))
+								(&fil, &data, size, &written)
+								|| written != size)
 								debug_printf
 									("\nfailed to write to logfile\n");
 						}
