@@ -262,7 +262,7 @@ main (int argc, char *argv[])
 	mongo_init (&g_mongo);
 	mongo_set_op_timeout (&g_mongo, 1000);
 	if ((res =
-		 mongo_connect (&g_mongo, mongo_host, mongo_port)) != MONGO_OK)
+		 mongo_client (&g_mongo, mongo_host, mongo_port)) != MONGO_OK)
 	{
 		fprintf (stderr, LOG_ERR " can't open mongo_db (host %s:%i)\n",
 				 mongo_host, mongo_port);

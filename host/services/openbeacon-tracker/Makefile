@@ -8,9 +8,11 @@ MAKE    :=make
 
 FILTERFILE_PREFIX:=logs/sightings.json
 
+MONGOC_VERSION:=0.8.1
+
 MIRROR  :=http://mirror.openbeacon.net
 LIBS    :=-lm -pthread -lpcap
-MONGOC  :=mongodb-mongo-c-driver
+MONGOC  :=mongo-c-driver-$(MONGOC_VERSION)
 
 # determine program version
 PROGRAM_VERSION:=$(shell git describe --tags --abbrev=4 --dirty 2>/dev/null | sed s/^v//)
@@ -73,16 +75,15 @@ $(FILTERSS): src/$(FILTERSS).cpp
 	$(CXX) $(CXXFLAGS) $(CXXOPT) $(LDOPT) $^ -lz -o $@
 
 $(MONGOC).tar.gz:
-	curl -L -o $@ http://github.com/mongodb/mongo-c-driver/tarball/master
+	curl -L -o $@ https://github.com/mongodb/mongo-c-driver/archive/v$(MONGOC_VERSION).tar.gz
 
 $(MONGOC): $(MONGOC).tar.gz
-	rm -rf $(MONGOC)-*
+	rm -rf $(MONGOC)
 	tar -xvzf $^
-	mv $(MONGOC)-* $(MONGOC)
 	$(MAKE) -C $(MONGOC)
 
 $(FILTERMG): src/$(FILTERMG).cpp $(MONGOC)
-	$(CXX) $(CXXFLAGS) $(CXXOPT) $(LDOPT) -DMONGO_HAVE_STDINT -I$(MONGOC)/src src/$(FILTERMG).cpp $(MONGOC)/libmongoc.a $(MONGOC)/libbson.a -ljson -o $@ 
+	$(CXX) $(CXXFLAGS) $(CXXOPT) $(LDOPT) -DMONGO_HAVE_STDINT -I$(MONGOC)/src src/$(FILTERMG).cpp $(MONGOC)/libmongoc.a $(MONGOC)/libbson.a -ljson-c -o $@ 
 
 indent: $(SOURCES)
 	find src -iname '*\.[cph]*' -exec indent -c81 -i4 -cli4 -bli0 -ts 4 \{\} \;
@@ -98,7 +99,7 @@ $(TARGET): .depend $(OBJS)
 	$(CXX) $(CXXFLAGS) $(CXXOPT) -c $< -o $@
 
 dependencies-fedora:
-	sudo yum install libpcap libpcap-devel zlib zlib-devel gcc-c++ mongodb-devel mongodb boost-build boost-devel json-c json-c-devel
+	sudo yum install libpcap libpcap-devel zlib zlib-devel gcc-c++ mongodb-devel mongodb boost-build boost-devel json-c json-c-devel libtool automake autoconf
 
 cleanall: clean
 	rm -f .depend $(MONGOC).tar.gz
