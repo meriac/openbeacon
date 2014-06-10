@@ -31,7 +31,7 @@
 #define LED_G   0x02
 #define LED_B   0x04
 
-#define COLOR_OVS 8192
+#define COLOR_OVS 1024
 #define COLOR_MAX 4
 
 static volatile uint8_t g_rgb_ready;
