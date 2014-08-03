@@ -75,6 +75,7 @@ main (void)
 
 	while(TRUE)
 	{
+#ifdef TRIGGER_RECORDING
 		/* blink once to trigger exposure */
 		memset(&g_data, 0xFF, sizeof(g_data));
 		update_leds();
@@ -84,6 +85,7 @@ main (void)
 		memset(&g_data, 0x80, sizeof(g_data));
 		update_leds();
 		pmu_wait_ms(500);
+#endif/*TRIGGER_RECORDING*/
 
 		/* transmit stored image */
 		for(x=0; x<(int)image.width; x++)
@@ -106,7 +108,10 @@ main (void)
 		/* turn off LED's */
 		memset(&g_data, 0x80, sizeof(g_data));
 		update_leds();
+
+#ifdef TRIGGER_RECORDING
 		pmu_wait_ms(2000);
+#endif/*TRIGGER_RECORDING*/
 	}
 	return 0;
 }
