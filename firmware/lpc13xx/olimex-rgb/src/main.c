@@ -1,8 +1,8 @@
 /***************************************************************
  *
- * OpenBeacon.org - eMeter demo
+ * OpenBeacon.org - RGB Strip control
  *
- * Copyright 2010 Milosch Meriac <meriac@openbeacon.de>
+ * Copyright 2014 Milosch Meriac <milosch@meriac.com>
  *
  ***************************************************************
 
@@ -21,10 +21,10 @@
 
  */
 #include <openbeacon.h>
-#include <math.h>
-#include "usbserial.h"
+#include "cie1931.h"
+#include "image.h"
 
-#define LED_COUNT (6*32)
+#define LED_COUNT (64)
 #define SPI_CS_RGB SPI_CS(LED_PORT,LED_PIN1,6, SPI_CS_MODE_NORMAL )
 
 static const uint8_t g_latch = 0;
@@ -36,10 +36,22 @@ CDC_GetCommand (unsigned char *command)
 	(void) command;
 }
 
+void update_leds(void)
+{
+	/* transmit new values */
+	spi_txrx (SPI_CS_RGB, &g_data, sizeof(g_data), NULL, 0);
+
+	/* latch data */
+	memset(&g_data, 0, sizeof(g_data));
+	spi_txrx (SPI_CS_RGB, &g_data, sizeof(g_data), NULL, 0);
+}
+
 int
 main (void)
 {
-	int i,t,offset;
+	int height,y,x,t;
+	const uint8_t *p;
+	uint16_t data;
 
 	/* Initialize GPIO (sets up clock) */
 	GPIOInit ();
@@ -51,29 +63,51 @@ main (void)
 	/* Init Power Management Routines */
 	pmu_init ();
 
-	/* CDC USB Initialization */
-	init_usbserial ();
-
 	/* setup SPI chipselect pin */
 	spi_init ();
 	spi_init_pin (SPI_CS_RGB);
 
-	offset = t = 0;
+	/* calculate height */
+	height = image.height<LED_COUNT ? image.height : LED_COUNT;
+
+	if(image.bytes_per_pixel!=2)
+		while(1);
+
 	while(TRUE)
 	{
-		for(i=0; i<LED_COUNT; i++)
+		/* blink once to trigger exposure */
+		memset(&g_data, 0xFF, sizeof(g_data));
+		update_leds();
+		pmu_wait_ms(50);
+
+		/* switch back to black */
+		memset(&g_data, 0x80, sizeof(g_data));
+		update_leds();
+		pmu_wait_ms(500);
+
+		/* transmit stored image */
+		for(x=0; x<(int)image.width; x++)
 		{
-			t = i+offset;
-			g_data[i][0] = 0x80|(uint8_t)(sin(t/12.0)*16+16);
-			g_data[i][1] = 0x80|(uint8_t)(cos(t/7.0)*16+16);
-			g_data[i][2] = 0x80|(uint8_t)(sin(t/15.0)*16+16);
+			for(y=0; y<height; y++)
+			{
+				p = &image.pixel_data[(y*image.width+x)*2];
+				data = (((uint16_t)p[1])<<8) | p[0];
+				t = LED_COUNT - y; 
+				g_data[t][1] = g_cie[(data & 0xF800UL)>>9];
+				g_data[t][2] = g_cie[(data & 0x07E0UL)>>4];
+				g_data[t][0] = g_cie[(data & 0x001FUL)<<1];
+			}
+
+			/* send data */
+			update_leds();
+			pmu_wait_ms(5);
 		}
-		offset++;
 
-		/* send data */
-		spi_txrx (SPI_CS_RGB, &g_data, sizeof(g_data), NULL, 0);
-		spi_txrx (SPI_CS_RGB, &g_latch, sizeof(g_latch), NULL, 0);
+		/* turn off LED's */
+		memset(&g_data, 0x80, sizeof(g_data));
+		update_leds();
+		pmu_wait_ms(2000);
 	}
-
 	return 0;
 }
+
