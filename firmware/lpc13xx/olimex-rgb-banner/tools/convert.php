@@ -39,9 +39,12 @@ for($x=0; $x<$sx; $x++)
 	/* convert to 4 bit packed */
 	$compressed = array();
 	$first = true;
+	$debug = array();
 	for($y=0; $y<($sy/2); $y++)
 	{
 		$data = $line[($y*2)+0] | ($line[($y*2)+1]<<4);
+		$debug[] = $data;
+
 		if($first)
 		{
 			$first = false;
@@ -50,33 +53,38 @@ for($x=0; $x<$sx; $x++)
 		}
 		else
 		{
-			if($data!=$prev)
-			{
-				if($count)
-				{
-					if($count==1)
-						$compressed[] = $data;
-					else
-					{
-						$compressed[] = 0xF0 | $count;
-						$compressed[] = $data;
-					}
-				}
-				$count = 1;
-			}
-			else
+			if($data==$prev)
 			{
 				$count++;
 				if($count>=15)
 				{
 					$compressed[] = 0xF0 | $count;
-					$compressed[] = $data;
+					$compressed[] = $prev;
 					$count = 0;
 				}
 			}
-
-			$prev = $data;
+			else
+			{
+				if($count==1)
+					$compressed[] = $prev;
+				else
+				{
+					if($count>0)
+					{
+						$compressed[] = 0xF0 | $count;
+						$compressed[] = $prev;
+					}
+					$count = 1;
+				}
+				$prev = $data;
+			}
 		}
+	}
+	/* dump remaining data */
+	if($count)
+	{
+		$compressed[] = 0xF0 | $count;
+		$compressed[] = $data;
 	}
 	$compressed[] = 0xF0;
 

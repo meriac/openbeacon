@@ -10,6 +10,9 @@ FIRMWARE:=/media/CRP\ DISABLD/firmware.bin
 ifeq ("$(wildcard $(FIRMWARE))","")
 	FIRMWARE:="/var/run/media/$(USER)/CRP DISABLD/firmware.bin"
 endif
+ifeq ("$(wildcard $(FIRMWARE))","")
+	FIRMWARE:="/media/$(USER)/CRP DISABLD/firmware.bin"
+endif
 
 # determine program version
 PROGRAM_VERSION:=$(shell git describe --tags --abbrev=4 --dirty 2>/dev/null | sed s/^v//)

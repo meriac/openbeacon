@@ -24,6 +24,8 @@
 #include "cie1931.h"
 #include "image.h"
 
+#define TRIGGER_RECORDING
+
 #define LED_COUNT (64)
 #define SPI_CS_RGB SPI_CS(LED_PORT,LED_PIN1,6, SPI_CS_MODE_NORMAL )
 
@@ -49,9 +51,9 @@ void update_leds(void)
 int
 main (void)
 {
-	int height,y,x,t;
+	int height,y,x,count;
 	const uint8_t *p;
-	uint16_t data;
+	uint8_t t,value,*out,line[IMAGE_HEIGHT/2];
 
 	/* Initialize GPIO (sets up clock) */
 	GPIOInit ();
@@ -68,10 +70,7 @@ main (void)
 	spi_init_pin (SPI_CS_RGB);
 
 	/* calculate height */
-	height = image.height<LED_COUNT ? image.height : LED_COUNT;
-
-	if(image.bytes_per_pixel!=2)
-		while(1);
+	height = IMAGE_HEIGHT<LED_COUNT ? IMAGE_HEIGHT : LED_COUNT;
 
 	while(TRUE)
 	{
@@ -84,20 +83,47 @@ main (void)
 		/* switch back to black */
 		memset(&g_data, 0x80, sizeof(g_data));
 		update_leds();
-		pmu_wait_ms(500);
+		pmu_wait_ms(1000);
 #endif/*TRIGGER_RECORDING*/
 
 		/* transmit stored image */
-		for(x=0; x<(int)image.width; x++)
+		for(x=0; x<IMAGE_WIDTH; x++)
 		{
-			for(y=0; y<height; y++)
+			/* get current line */
+			p = &g_img_lines[g_img_lookup_line[x]];
+
+			count = 0;
+			out = line;
+			while((t = *p++) != 0xF0)
 			{
-				p = &image.pixel_data[(y*image.width+x)*2];
-				data = (((uint16_t)p[1])<<8) | p[0];
-				t = LED_COUNT - y; 
-				g_data[t][1] = g_cie[(data & 0xF800UL)>>9];
-				g_data[t][2] = g_cie[(data & 0x07E0UL)>>4];
-				g_data[t][0] = g_cie[(data & 0x001FUL)<<1];
+				/* run length decoding case */
+				if((t & 0xF0)==0xF0)
+				{
+					t &= 0xF;
+					count += t;
+					value = *p++;
+					while(t--)
+						*out++ = value;
+				}
+				/* single character */
+				else
+				{
+					*out++ = t;
+					count++;
+				}
+			}
+
+			/* 4 bit unpacking */
+			p = line;
+			for(y=0; y<(height/2); y++)
+			{
+				t = *p++;
+
+				value = g_cie[(((t>>0) & 0xF) * IMAGE_VALUE_MULTIPLIER)>>1];
+				memset(&g_data[y*2+0], value, 3);
+
+				value = g_cie[(((t>>4) & 0xF) * IMAGE_VALUE_MULTIPLIER)>>1];
+				memset(&g_data[y*2+1], value, 3);
 			}
 
 			/* send data */
@@ -110,7 +136,8 @@ main (void)
 		update_leds();
 
 #ifdef TRIGGER_RECORDING
-		pmu_wait_ms(2000);
+		while(TRUE)
+			pmu_wait_ms(1000);
 #endif/*TRIGGER_RECORDING*/
 	}
 	return 0;

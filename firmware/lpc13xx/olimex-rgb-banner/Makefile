@@ -14,7 +14,11 @@ APP_SRC= \
 
 APP_SRC+=$(IMAGES_C)
 
-all: $(IMAGE) $(TARGET).bin
+.PHONY: image $(IMAGE)
+
+all: $(TARGET).bin
+
+image: $(IMAGE)
 
 $(IMAGE): image.png
 	tools/convert.php > $@
@@ -25,6 +29,5 @@ indent:
 
 app_clean:
 	find src -name '*.o' -exec rm \{\} \;
-	rm -f $(IMAGE)
 
 include ../core/Makefile.rules
