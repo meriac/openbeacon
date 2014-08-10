@@ -24,7 +24,13 @@
 #include "cie1931.h"
 #include "image.h"
 
+#define IMAGE_REPEAT
 #define TRIGGER_RECORDING
+
+#ifdef  IMAGE_REPEAT
+#include "image-repeat.h"
+#endif/*IMAGE_REPEAT*/
+
 
 #define LED_COUNT (64)
 #define SPI_CS_RGB SPI_CS(LED_PORT,LED_PIN1,6, SPI_CS_MODE_NORMAL )
@@ -72,58 +78,90 @@ main (void)
 	/* calculate height */
 	height = IMAGE_HEIGHT<LED_COUNT ? IMAGE_HEIGHT : LED_COUNT;
 
-	while(TRUE)
-	{
 #ifdef TRIGGER_RECORDING
-		/* blink once to trigger exposure */
-		memset(&g_data, 0xFF, sizeof(g_data));
-		update_leds();
-		pmu_wait_ms(50);
+	/* blink once to trigger exposure */
+	memset(&g_data, 0xFF, sizeof(g_data));
+	update_leds();
+	pmu_wait_ms(50);
 
-		/* switch back to black */
-		memset(&g_data, 0x80, sizeof(g_data));
-		update_leds();
-		pmu_wait_ms(1000);
+	/* switch back to black */
+	memset(&g_data, 0x80, sizeof(g_data));
+	update_leds();
+	pmu_wait_ms(1000);
 #endif/*TRIGGER_RECORDING*/
 
-		/* transmit stored image */
-		for(x=0; x<IMAGE_WIDTH; x++)
+	/* transmit stored banner */
+	for(x=0; x<IMAGE_WIDTH; x++)
+	{
+		/* get current line */
+		p = &g_img_lines[g_img_lookup_line[x]];
+
+		count = 0;
+		out = line;
+		while((t = *p++) != 0xF0)
 		{
-			/* get current line */
-			p = &g_img_lines[g_img_lookup_line[x]];
-
-			count = 0;
-			out = line;
-			while((t = *p++) != 0xF0)
+			/* run length decoding case */
+			if((t & 0xF0)==0xF0)
 			{
-				/* run length decoding case */
-				if((t & 0xF0)==0xF0)
-				{
-					t &= 0xF;
-					count += t;
-					value = *p++;
-					while(t--)
-						*out++ = value;
-				}
-				/* single character */
-				else
-				{
-					*out++ = t;
-					count++;
-				}
+				t &= 0xF;
+				count += t;
+				value = *p++;
+				while(t--)
+					*out++ = value;
 			}
-
-			/* 4 bit unpacking */
-			p = line;
-			for(y=0; y<(height/2); y++)
+			/* single character */
+			else
 			{
-				t = *p++;
+				*out++ = t;
+				count++;
+			}
+		}
 
-				value = g_cie[(((t>>0) & 0xF) * IMAGE_VALUE_MULTIPLIER)>>1];
-				memset(&g_data[y*2+0], value, 3);
+		/* 4 bit unpacking */
+		p = line;
+		for(y=0; y<(height/2); y++)
+		{
+			t = *p++;
 
-				value = g_cie[(((t>>4) & 0xF) * IMAGE_VALUE_MULTIPLIER)>>1];
-				memset(&g_data[y*2+1], value, 3);
+			value = g_cie[(((t>>0) & 0xF) * IMAGE_VALUE_MULTIPLIER)>>1];
+			memset(&g_data[y*2+0], value, 3);
+
+			value = g_cie[(((t>>4) & 0xF) * IMAGE_VALUE_MULTIPLIER)>>1];
+			memset(&g_data[y*2+1], value, 3);
+		}
+
+		/* send data */
+		update_leds();
+		pmu_wait_ms(5);
+	}
+
+	/* turn off LED's */
+	memset(&g_data, 0x80, sizeof(g_data));
+	update_leds();
+
+#ifndef IMAGE_REPEAT
+	while(TRUE)
+		pmu_wait_ms(1000);
+#else /*IMAGE_REPEAT*/
+	uint16_t data;
+
+	/* wait 10 seconds */
+	for(t=0;t<10;t++)
+		pmu_wait_ms(1000);
+
+	while(TRUE)
+	{
+		/* transmit stored image */
+		for(x=0; x<(int)image.width; x++)
+		{
+			for(y=0; y<height; y++)
+			{
+				p = &image.pixel_data[(y*image.width+x)*2];
+				data = (((uint16_t)p[1])<<8) | p[0];
+				t = LED_COUNT - y; 
+				g_data[t][1] = g_cie[(data & 0xF800UL)>>9];
+				g_data[t][2] = g_cie[(data & 0x07E0UL)>>4];
+				g_data[t][0] = g_cie[(data & 0x001FUL)<<1];
 			}
 
 			/* send data */
@@ -134,12 +172,8 @@ main (void)
 		/* turn off LED's */
 		memset(&g_data, 0x80, sizeof(g_data));
 		update_leds();
-
-#ifdef TRIGGER_RECORDING
-		while(TRUE)
-			pmu_wait_ms(1000);
-#endif/*TRIGGER_RECORDING*/
 	}
+#endif/*IMAGE_REPEAT*/
 	return 0;
 }
 
