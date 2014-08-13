@@ -166,7 +166,7 @@ main (void)
 
 			/* send data */
 			update_leds();
-			pmu_wait_ms(5);
+			pmu_wait_ms(10);
 		}
 
 		/* turn off LED's */

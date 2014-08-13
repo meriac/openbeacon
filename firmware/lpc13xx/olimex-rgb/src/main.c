@@ -24,17 +24,11 @@
 #include "cie1931.h"
 #include "image.h"
 
-#define LED_COUNT (64)
+#define LED_COUNT (127)
 #define SPI_CS_RGB SPI_CS(LED_PORT,LED_PIN1,6, SPI_CS_MODE_NORMAL )
 
 static const uint8_t g_latch = 0;
 static uint8_t g_data[LED_COUNT][3];
-
-void
-CDC_GetCommand (unsigned char *command)
-{
-	(void) command;
-}
 
 void update_leds(void)
 {
@@ -73,46 +67,36 @@ main (void)
 	if(image.bytes_per_pixel!=2)
 		while(1);
 
-	while(TRUE)
+	/* transmit stored image */
+	for(x=0; x<(int)image.width; x++)
 	{
-#ifdef TRIGGER_RECORDING
-		/* blink once to trigger exposure */
-		memset(&g_data, 0xFF, sizeof(g_data));
-		update_leds();
-		pmu_wait_ms(50);
-
-		/* switch back to black */
-		memset(&g_data, 0x80, sizeof(g_data));
-		update_leds();
-		pmu_wait_ms(500);
-#endif/*TRIGGER_RECORDING*/
-
-		/* transmit stored image */
-		for(x=0; x<(int)image.width; x++)
+		for(y=0; y<height; y++)
 		{
-			for(y=0; y<height; y++)
-			{
-				p = &image.pixel_data[(y*image.width+x)*2];
-				data = (((uint16_t)p[1])<<8) | p[0];
-				t = LED_COUNT - y; 
-				g_data[t][1] = g_cie[(data & 0xF800UL)>>9];
-				g_data[t][2] = g_cie[(data & 0x07E0UL)>>4];
-				g_data[t][0] = g_cie[(data & 0x001FUL)<<1];
-			}
-
-			/* send data */
-			update_leds();
-			pmu_wait_ms(5);
+			p = &image.pixel_data[(y*image.width+x)*2];
+			data = (((uint16_t)p[1])<<8) | p[0];
+			t = LED_COUNT - y;
+			g_data[t][1] = g_cie[(data & 0xF800UL)>>9];
+			g_data[t][2] = g_cie[(data & 0x07E0UL)>>4];
+			g_data[t][0] = g_cie[(data & 0x001FUL)<<1];
 		}
 
-		/* turn off LED's */
-		memset(&g_data, 0x80, sizeof(g_data));
+		/* send data */
 		update_leds();
-
-#ifdef TRIGGER_RECORDING
-		pmu_wait_ms(2000);
-#endif/*TRIGGER_RECORDING*/
+		pmu_wait_ms(10);
 	}
+
+	/* turn off LED's */
+	memset(&g_data, 0x80, sizeof(g_data));
+	update_leds();
+
+	/* endless wait */
+	while(1)
+	{
+		pmu_wait_ms(950);
+		GPIOSetValue (LED_PORT, LED_PIN0, LED_ON);
+		pmu_wait_ms(50);
+		GPIOSetValue (LED_PORT, LED_PIN0, LED_OFF);
+	}
+
 	return 0;
 }
-
