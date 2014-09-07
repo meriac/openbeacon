@@ -7,6 +7,7 @@ filter-singularsighting
 filter-mongodb
 mongodb-mongo-c-driver
 mongodb-mongo-c-driver.tar.gz
+mongo-c-driver-*
 src/custom-encryption-keys.h
 callgrind.out.*
 *.o

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+while read -p "[PRESS ENTER]"; do
+	./create_counted_firmware.php
+	smbclient -c "prompt off ; mput openbeacon-*.hex" -N $1
+	echo
+done
