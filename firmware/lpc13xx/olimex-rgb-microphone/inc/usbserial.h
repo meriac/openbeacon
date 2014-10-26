@@ -1,6 +1,6 @@
 /***************************************************************
  *
- * OpenBeacon.org - config file
+ * OpenBeacon.org - application specific USB functionality
  *
  * Copyright 2010 Milosch Meriac <meriac@openbeacon.de>
  *
@@ -21,27 +21,12 @@
 
  */
 
-#ifndef __CONFIG_H__
-#define __CONFIG_H__
+#ifndef __USBSERIAL_H__
+#define __USBSERIAL_H__
 
-#define LED_PORT 3																/* Port for led                      */
-#define LED_PIN0 0																/* Bit on port for led               */
-#define LED_PIN1 1																/* Bit on port for led               */
-#define LED_ON 0																/* Level to set port to turn on led  */
-#define LED_OFF 1																/* Level to set port to turn off led */
-
-#define ENABLE_USB_FULLFEATURED
-#define UART_DISABLE
-
-/* USB device settings */
 #ifdef  ENABLE_USB_FULLFEATURED
-#define USB_VENDOR_ID 0x2366
-#define USB_PROD_ID   0x0003
-#define USB_DEVICE    0x0100
+extern void init_usbserial (void);
+extern void CDC_GetCommand (unsigned char *command);
 #endif /*ENABLE_USB_FULLFEATURED */
 
-/* Clock Definition */
-#define SYSTEM_CRYSTAL_CLOCK 12000000
-#define SYSTEM_CORE_CLOCK (SYSTEM_CRYSTAL_CLOCK*6)
-
-#endif/*__CONFIG_H__*/
+#endif/*__USBSERIAL_H__*/
