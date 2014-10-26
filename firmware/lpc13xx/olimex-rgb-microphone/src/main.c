@@ -27,13 +27,13 @@
 #define FFT_SIZE 128
 #define FFT_SIZE2 (FFT_SIZE/2)
 #define CIE_MAX_INDEX2 (CIE_MAX_INDEX/2)
-#define SPI_CS_RGB SPI_CS(LED_PORT,LED_PIN1,7, SPI_CS_MODE_NORMAL )
+#define SPI_CS_RGB SPI_CS(LED_PORT,LED_PIN1, 6, SPI_CS_MODE_NORMAL )
 
 /* ADC0 @ 10 bits */
 //#define ADC_DIVIDER (((uint32_t)(SYSTEM_CORE_CLOCK/(FFT_SAMPLING_RATE*11)))-1)
 #define ADC_DIVIDER 0xFF
 #define FFT_SAMPLING_RATE ((int)((SYSTEM_CORE_CLOCK/(ADC_DIVIDER+1))/11))
-#define OVERSAMPLING 8
+#define OVERSAMPLING 4
 #define ADC_MODE (0x01UL|(ADC_DIVIDER<<8)|(1UL<<16))
 
 static volatile BOOL g_done;
@@ -81,7 +81,9 @@ void ADC_IRQHandler(void)
 static void adc_start(void)
 {
 	g_done = FALSE;
-	g_buffer_pos = 0;
+	for (int i = 0; i < FFT_SIZE2; i++)
+		g_buffer[i] = g_buffer[i + FFT_SIZE2];
+	g_buffer_pos = FFT_SIZE2;
 	g_oversampling = g_oversampling_count = 0;
 	LPC_ADC->CR = ADC_MODE|(1<<24);
 }
@@ -109,7 +111,7 @@ main (void)
 	float32_t max;
 	uint32_t index;
 	int i,rgb[3];
-	uint8_t colour;
+	float colour;
 
 	/* Initialize GPIO (sets up clock) */
 	GPIOInit ();
@@ -172,14 +174,15 @@ main (void)
 		if(max<1)
 			continue;
 
+		float colourMax = CIE_MAX_INDEX - 1;
 		for(i=0; i<FFT_SIZE2; i++)
 		{
 			/* normalize */
-			colour=(g_fft[i]*(CIE_MAX_INDEX-1))/max;
+			colour = g_fft[i]/max;
 
-			rgb[0] = colour/2;
-			rgb[1] = colour;
-			rgb[2] = colour/4;
+			rgb[0] = colour*colourMax;
+			rgb[1] = sqrtf(colour)*(1 - colour*colour)*colourMax;
+			rgb[2] = 0.15f*(1 - colour)*colourMax;
 
 			g_led[i][1] = g_cie[rgb[0]];
 			g_led[i][2] = g_cie[rgb[1]];
