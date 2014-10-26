@@ -24,10 +24,14 @@
 #include "usbserial.h"
 #include "cie1931.h"
 
-#define FFT_SIZE 128
+#define FFT_SIZE 256
 #define FFT_SIZE2 (FFT_SIZE/2)
 #define CIE_MAX_INDEX2 (CIE_MAX_INDEX/2)
 #define SPI_CS_RGB SPI_CS(LED_PORT,LED_PIN1, 6, SPI_CS_MODE_NORMAL )
+
+#define DISPLAY_FREQ_LOW_INDEX 5
+#define DISPLAY_FREQ_HIGH_INDEX 120
+#define DISPLAY_FREQ_STEPS 64
 
 /* ADC0 @ 10 bits */
 //#define ADC_DIVIDER (((uint32_t)(SYSTEM_CORE_CLOCK/(FFT_SAMPLING_RATE*11)))-1)
@@ -138,8 +142,9 @@ main (void)
 	adc_start();
 
 	/* create canned windowing function */
-	for(i=0; i<FFT_SIZE; i++)
+	for(i=0; i<FFT_SIZE; i++) {
 		g_window[i] = 0.5-0.5*cos((i*M_PI*2)/FFT_SIZE);
+	}
 
 	/* transmit image */
 	while(1)
@@ -161,7 +166,7 @@ main (void)
 		adc_start();
 
 		/* perform FFT */
-		arm_cfft_f32(&arm_cfft_sR_f32_len128, g_samples[0], 0, 1);
+		arm_cfft_f32(&arm_cfft_sR_f32_len256, g_samples[0], 0, 1);
 		arm_cmplx_mag_f32(g_samples[0], g_fft, FFT_SIZE2);
 
 		/* perceptual weighting */
@@ -174,11 +179,24 @@ main (void)
 		if(max<1)
 			continue;
 
+		float freqStep = expf(logf(DISPLAY_FREQ_HIGH_INDEX/(float)DISPLAY_FREQ_LOW_INDEX)/(DISPLAY_FREQ_STEPS + 1));
+		float freqIndexLow = DISPLAY_FREQ_LOW_INDEX;
+		float freqIndexHigh = freqIndexLow*freqStep;
+
 		float colourMax = CIE_MAX_INDEX - 1;
-		for(i=0; i<FFT_SIZE2; i++)
+		for(i=0; i<DISPLAY_FREQ_STEPS; i++)
 		{
+			/* average over an appropriate range */
+			int lowIndex = (int)freqIndexLow;
+			int highIndex = (int)(freqIndexHigh + 1);
+			float fftTotal = 0;
+			for (int j = lowIndex; j < highIndex; j++) {
+				fftTotal += g_fft[j];
+			}
+			
 			/* normalize */
-			colour = g_fft[i]/max;
+			colour = fftTotal/(highIndex - lowIndex)/max;
+			debug_printf("%i-%i %5i %5i ", lowIndex, highIndex, (int)(colour*10000), (int)colourMax);
 
 			rgb[0] = colour*colourMax;
 			rgb[1] = sqrtf(colour)*(1 - colour*colour)*colourMax;
@@ -187,7 +205,11 @@ main (void)
 			g_led[i][1] = g_cie[rgb[0]];
 			g_led[i][2] = g_cie[rgb[1]];
 			g_led[i][0] = g_cie[rgb[2]];
+			
+			freqIndexLow = freqIndexHigh;
+			freqIndexHigh *= freqStep;
 		}
+		debug_printf("\n");
 
 		/* send data */
 		update_leds();
