@@ -21,7 +21,6 @@
 
  */
 #include <openbeacon.h>
-#include <math.h>
 #include "cie1931.h"
 
 #define LED_COUNT (64)

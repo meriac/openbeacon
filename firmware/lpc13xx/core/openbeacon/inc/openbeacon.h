@@ -101,6 +101,11 @@ extern BOOL default_putchar (uint8_t data);
 #include <persistent.h>
 #include <default-pmu.h>
 
+/* add fft math support */
+#define ARM_MATH_CM3
+#include <math.h>
+#include <arm_const_structs.h>
+
 static inline uint16_t
 htons (uint16_t x)
 {
