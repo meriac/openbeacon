@@ -21,16 +21,26 @@
 
  */
 #include <openbeacon.h>
-
+#include "usbserial.h"
 #include "cie1931.h"
 
-#define FFT_SIZE 64
+#define FFT_SAMPLING_RATE 3000UL
+#define FFT_SIZE 128
+#define FFT_SIZE2 (FFT_SIZE/2)
 #define CIE_MAX_INDEX2 (CIE_MAX_INDEX/2)
-#define SPI_CS_RGB SPI_CS(LED_PORT,LED_PIN1,6, SPI_CS_MODE_NORMAL )
+#define SPI_CS_RGB SPI_CS(LED_PORT,LED_PIN1,7, SPI_CS_MODE_NORMAL )
 
+/* ADC0 @ 10 bits */
+#define ADC_DIVIDER (((uint32_t)(SYSTEM_CORE_CLOCK/(FFT_SAMPLING_RATE*11)))-1)
+#define ADC_MODE (0x01UL|ADC_DIVIDER<<8|(1UL<<16))
+
+static volatile BOOL g_done;
+static uint16_t g_buffer_pos;
 static uint8_t g_led[FFT_SIZE][3];
+static int16_t g_buffer[FFT_SIZE];
 static float32_t g_samples[FFT_SIZE][2];
 static float32_t g_fft[FFT_SIZE];
+static float32_t g_window[FFT_SIZE];
 
 void update_leds(void)
 {
@@ -42,14 +52,50 @@ void update_leds(void)
 	spi_txrx (SPI_CS_RGB, &g_led, sizeof(g_led), NULL, 0);
 }
 
+void ADC_IRQHandler(void)
+{
+	if(g_buffer_pos<FFT_SIZE)
+		/* sample data */
+		g_buffer[g_buffer_pos++] = ((int16_t)(((LPC_ADC->GDR >> 6) & 0x3FFUL)))-512;
+	else
+	{
+		/* stop ADC */
+		LPC_ADC->CR = ADC_MODE;
+		g_done = TRUE;
+	}
+}
+
+static void adc_start(void)
+{
+	g_done = FALSE;
+	g_buffer_pos = 0;
+	LPC_ADC->CR = ADC_MODE|(1<<24);
+}
+
+static void adc_init(void)
+{
+	/* enabled ADC0 @ 1MHz clock / 10 bits */
+	LPC_SYSCON->PDRUNCFG &= ~(1UL<<4);
+	LPC_SYSCON->SYSAHBCLKCTRL |= (1 << 13);
+	LPC_IOCON->JTAG_TDI_PIO0_11  = 0x02;
+	LPC_ADC->CR = ADC_MODE;
+	LPC_ADC->INTEN = 1<<8;
+	NVIC_EnableIRQ (ADC_IRQn);
+}
+
+void
+CDC_GetCommand (unsigned char *command)
+{
+	(void) command;
+}
+
 int
 main (void)
 {
-	double t,y;
+	float32_t max;
+	uint32_t index;
 	int i,rgb[3];
-
-	/* initialize FFT */
-	memset(&g_samples, 0, sizeof(g_samples));
+	uint8_t colour;
 
 	/* Initialize GPIO (sets up clock) */
 	GPIOInit ();
@@ -61,36 +107,77 @@ main (void)
 	/* Init Power Management Routines */
 	pmu_init ();
 
+	/* CDC USB Initialization */
+	init_usbserial ();
+
 	/* setup SPI chipselect pin */
 	spi_init ();
 	spi_init_pin (SPI_CS_RGB);
 
+	/* initialize ADC & FFT buffers */
+	adc_init();
+	memset(&g_buffer, 0, sizeof(g_buffer));
+
+	/* start first ADC conversion */
+	adc_start();
+
+	/* create canned windowing function */
+	for(i=0; i<FFT_SIZE; i++)
+		g_window[i] = 0.5-0.5*cos((i*M_PI*2)/FFT_SIZE);
+
 	/* transmit image */
-	t = 0;
 	while(1)
 	{
-		arm_cfft_f32(&arm_cfft_sR_f32_len64, g_samples[0], 0, 1);
-		arm_cmplx_mag_f32(g_samples[0], g_fft, FFT_SIZE);
-//		arm_max_f32(&g_fft, FFT_SIZE, &maxValue, &testIndex);
+		debug_printf("ADC_DIVIDER=%i\n\r", ADC_DIVIDER);
 
-		y=t;
+		/* wait for previous ADC to finish */
+		while(!g_done)
+			__WFE();
+
+		/* copy previous conversion */
 		for(i=0; i<FFT_SIZE; i++)
 		{
-			rgb[0] = (sin( y*0.1+cos(y*0.01))*CIE_MAX_INDEX2)+CIE_MAX_INDEX2;
-			rgb[1] = (cos(-y*0.2-sin(y*0.3 ))*CIE_MAX_INDEX2)+CIE_MAX_INDEX2;
-			rgb[2] = (cos( y*0.5-cos(y*0.4 ))*CIE_MAX_INDEX2)+CIE_MAX_INDEX2;
+			g_samples[i][0] = g_buffer[i]*g_window[i];
+			g_samples[i][1] = 0;
+		}
+
+		/* perform next ADC sampling while FFT'ing */
+		adc_start();
+
+		/* perform FFT */
+		arm_cfft_f32(&arm_cfft_sR_f32_len128, g_samples[0], 0, 1);
+		arm_cmplx_mag_f32(g_samples[0], g_fft, FFT_SIZE2);
+
+		/* perceptual weighting */
+		for(i=0; i<FFT_SIZE2; i++)
+			g_fft[i]*=i;
+
+		/* find maximum */
+		arm_max_f32(g_fft, FFT_SIZE2, &max, &index);
+
+		if(max<1)
+			continue;
+
+		for(i=0; i<FFT_SIZE2; i++)
+		{
+			/* normalize */
+			colour=(g_fft[i]*(CIE_MAX_INDEX-1))/max;
+
+			rgb[0] = colour/2;
+			rgb[1] = colour;
+			rgb[2] = colour/4;
 
 			g_led[i][1] = g_cie[rgb[0]];
 			g_led[i][2] = g_cie[rgb[1]];
 			g_led[i][0] = g_cie[rgb[2]];
-
-			y += 0.5;
 		}
 
 		/* send data */
 		update_leds();
-		pmu_wait_ms(2);
 
-		t+=0.1;
+		/* blink LED */
+		GPIOSetValue (LED_PORT, LED_PIN0, LED_ON);
+		pmu_wait_ms(2);
+		GPIOSetValue (LED_PORT, LED_PIN0, LED_OFF);
 	}
 }
