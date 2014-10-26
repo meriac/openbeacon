@@ -24,18 +24,21 @@
 #include "usbserial.h"
 #include "cie1931.h"
 
-#define FFT_SAMPLING_RATE 3000UL
 #define FFT_SIZE 128
 #define FFT_SIZE2 (FFT_SIZE/2)
 #define CIE_MAX_INDEX2 (CIE_MAX_INDEX/2)
 #define SPI_CS_RGB SPI_CS(LED_PORT,LED_PIN1,7, SPI_CS_MODE_NORMAL )
 
 /* ADC0 @ 10 bits */
-#define ADC_DIVIDER (((uint32_t)(SYSTEM_CORE_CLOCK/(FFT_SAMPLING_RATE*11)))-1)
-#define ADC_MODE (0x01UL|ADC_DIVIDER<<8|(1UL<<16))
+//#define ADC_DIVIDER (((uint32_t)(SYSTEM_CORE_CLOCK/(FFT_SAMPLING_RATE*11)))-1)
+#define ADC_DIVIDER 0xFF
+#define FFT_SAMPLING_RATE ((int)((SYSTEM_CORE_CLOCK/(ADC_DIVIDER+1))/11))
+#define OVERSAMPLING 8
+#define ADC_MODE (0x01UL|(ADC_DIVIDER<<8)|(1UL<<16))
 
 static volatile BOOL g_done;
 static uint16_t g_buffer_pos;
+static int g_oversampling, g_oversampling_count;
 static uint8_t g_led[FFT_SIZE][3];
 static int16_t g_buffer[FFT_SIZE];
 static float32_t g_samples[FFT_SIZE][2];
@@ -54,14 +57,24 @@ void update_leds(void)
 
 void ADC_IRQHandler(void)
 {
-	if(g_buffer_pos<FFT_SIZE)
-		/* sample data */
-		g_buffer[g_buffer_pos++] = ((int16_t)(((LPC_ADC->GDR >> 6) & 0x3FFUL)))-512;
+	if(g_oversampling_count < OVERSAMPLING)
+	{
+		/* oversample data */
+		g_oversampling += (LPC_ADC->GDR >> 6) & 0x3FFUL;
+		g_oversampling_count++;
+	}
 	else
 	{
-		/* stop ADC */
-		LPC_ADC->CR = ADC_MODE;
-		g_done = TRUE;
+		if(g_buffer_pos<FFT_SIZE)
+			g_buffer[g_buffer_pos++] = g_oversampling - (OVERSAMPLING*512);
+		else
+		{
+			/* stop ADC */
+			LPC_ADC->CR = ADC_MODE;
+			g_done = TRUE;
+		}
+
+		g_oversampling_count = g_oversampling = 0;
 	}
 }
 
@@ -69,6 +82,7 @@ static void adc_start(void)
 {
 	g_done = FALSE;
 	g_buffer_pos = 0;
+	g_oversampling = g_oversampling_count = 0;
 	LPC_ADC->CR = ADC_MODE|(1<<24);
 }
 
