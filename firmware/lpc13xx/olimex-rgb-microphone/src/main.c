@@ -29,6 +29,7 @@
 #define CIE_MAX_INDEX2 (CIE_MAX_INDEX/2)
 #define SPI_CS_RGB SPI_CS(LED_PORT,LED_PIN1, 6, SPI_CS_MODE_NORMAL )
 
+#define VOLUME_SLEW_RATE 0.01f;
 #define DISPLAY_FREQ_LOW_INDEX 5
 #define DISPLAY_FREQ_HIGH_INDEX 120
 #define DISPLAY_FREQ_STEPS 64
@@ -112,6 +113,7 @@ CDC_GetCommand (unsigned char *command)
 int
 main (void)
 {
+	float32_t slowMax = 0;
 	float32_t max;
 	uint32_t index;
 	int i,rgb[3];
@@ -178,6 +180,7 @@ main (void)
 
 		if(max<1)
 			continue;
+		slowMax += (max - slowMax)*VOLUME_SLEW_RATE;
 
 		float freqStep = expf(logf(DISPLAY_FREQ_HIGH_INDEX/(float)DISPLAY_FREQ_LOW_INDEX)/(DISPLAY_FREQ_STEPS + 1));
 		float freqIndexLow = DISPLAY_FREQ_LOW_INDEX;
@@ -195,7 +198,9 @@ main (void)
 			}
 			
 			/* normalize */
-			colour = fftTotal/(highIndex - lowIndex)/max;
+			colour = fftTotal/(highIndex - lowIndex)/slowMax;
+			if (colour > 1)
+				colour = 1;
 			debug_printf("%i-%i %5i %5i ", lowIndex, highIndex, (int)(colour*10000), (int)colourMax);
 
 			rgb[0] = colour*colourMax;
