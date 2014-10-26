@@ -57,7 +57,8 @@ $(OPTIM) \
 -fdata-sections \
 $(APP_CFLAGS)
 
-LINKER_FLAGS=$(APP_LDFLAGS) -Xlinker --gc-sections -Xlinker -o$(TARGET).elf -Xlinker -M -Xlinker -Map=$(TARGET).map
+MATH:=$(CORE)cmsis/lib/libarm_cortexM3l_math.a -lm
+LINKER_FLAGS=$(APP_LDFLAGS) $(MATH) -Xlinker --gc-sections -Xlinker -o$(TARGET).elf -Xlinker -M -Xlinker -Map=$(TARGET).map
 
 ARM_SRC= \
   $(APP_SRC) \
