@@ -33,9 +33,9 @@
 #define DISPLAY_FREQ_LOW_INDEX 5
 #define DISPLAY_FREQ_HIGH_INDEX 120
 #define DISPLAY_FREQ_STEPS 64
+#define COLOUR_MAX (CIE_MAX_INDEX-1)
 
 /* ADC0 @ 10 bits */
-//#define ADC_DIVIDER (((uint32_t)(SYSTEM_CORE_CLOCK/(FFT_SAMPLING_RATE*11)))-1)
 #define ADC_DIVIDER 0xFF
 #define FFT_SAMPLING_RATE ((int)((SYSTEM_CORE_CLOCK/(ADC_DIVIDER+1))/11))
 #define OVERSAMPLING 4
@@ -151,8 +151,6 @@ main (void)
 	/* transmit image */
 	while(1)
 	{
-		debug_printf("ADC_DIVIDER=%i\n\r", ADC_DIVIDER);
-
 		/* wait for previous ADC to finish */
 		while(!g_done)
 			__WFE();
@@ -186,7 +184,6 @@ main (void)
 		float freqIndexLow = DISPLAY_FREQ_LOW_INDEX;
 		float freqIndexHigh = freqIndexLow*freqStep;
 
-		float colourMax = CIE_MAX_INDEX - 1;
 		for(i=0; i<DISPLAY_FREQ_STEPS; i++)
 		{
 			/* average over an appropriate range */
@@ -201,11 +198,10 @@ main (void)
 			colour = fftTotal/(highIndex - lowIndex)/slowMax;
 			if (colour > 1)
 				colour = 1;
-			debug_printf("%i-%i %5i %5i ", lowIndex, highIndex, (int)(colour*10000), (int)colourMax);
 
-			rgb[0] = colour*colourMax;
-			rgb[1] = sqrtf(colour)*(1 - colour*colour)*colourMax;
-			rgb[2] = 0.15f*(1 - colour)*colourMax;
+			rgb[0] = colour*COLOUR_MAX;
+			rgb[1] = sqrtf(colour)*(1 - colour*colour)*COLOUR_MAX;
+			rgb[2] = 0.15f*(1 - colour)*COLOUR_MAX;
 
 			g_led[i][1] = g_cie[rgb[0]];
 			g_led[i][2] = g_cie[rgb[1]];
@@ -214,7 +210,6 @@ main (void)
 			freqIndexLow = freqIndexHigh;
 			freqIndexHigh *= freqStep;
 		}
-		debug_printf("\n");
 
 		/* send data */
 		update_leds();
