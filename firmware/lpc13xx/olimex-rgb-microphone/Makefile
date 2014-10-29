@@ -3,8 +3,9 @@ ARCH=LPC13
 CPU=$(ARCH)43
 DEBUG=-g
 OPTIM=-Os -mword-relocations
+LED_COUNT=64
 
-APP_CFLAGS=-Iinc -std=gnu99 -fgnu89-inline -D__USE_CMSIS
+APP_CFLAGS=-Iinc -std=gnu99 -fgnu89-inline -D__USE_CMSIS -DDISPLAY_FREQ_STEPS=$(LED_COUNT)
 APP_LDFLAGS=
 
 APP_SRC= \
