@@ -3,6 +3,7 @@
  * OpenBeacon.org - RGB Strip control
  *
  * Copyright 2014 Milosch Meriac <milosch@meriac.com>
+ *                Geraint Luff   <luffgd@gmail.com>
  *
  ***************************************************************
 
@@ -184,7 +185,8 @@ main (void)
 			continue;
 		slowMax += (max - slowMax)*VOLUME_SLEW_RATE;
 
-		float freqStep = expf(logf(DISPLAY_FREQ_HIGH_INDEX/(float)DISPLAY_FREQ_LOW_INDEX)/(DISPLAY_FREQ_STEPS + 1));
+		/* step calclulation */
+		const float freqStep = expf(logf(DISPLAY_FREQ_HIGH_INDEX/(float)DISPLAY_FREQ_LOW_INDEX)/(DISPLAY_FREQ_STEPS + 1));
 		float freqIndexLow = DISPLAY_FREQ_LOW_INDEX;
 		float freqIndexHigh = freqIndexLow*freqStep;
 
