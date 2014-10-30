@@ -35,7 +35,7 @@
 #define DISPLAY_FREQ_STEPS 64
 #endif/*DISPLAY_FREQ_STEPS*/
 
-#define VOLUME_SLEW_RATE 0.01f;
+#define VOLUME_SLEW_RATE 0.01f
 #define DISPLAY_FREQ_LOW_INDEX 5
 #define DISPLAY_FREQ_HIGH_INDEX 120
 #define COLOUR_MAX (CIE_MAX_INDEX-1)
@@ -212,7 +212,8 @@ main (void)
 			g_led[i][1] = g_cie[rgb[0]];
 			g_led[i][2] = g_cie[rgb[1]];
 			g_led[i][0] = g_cie[rgb[2]];
-			
+
+			/* goto next bin */
 			freqIndexLow = freqIndexHigh;
 			freqIndexHigh *= freqStep;
 		}
