@@ -35,7 +35,8 @@
 #define DISPLAY_FREQ_STEPS 64
 #endif/*DISPLAY_FREQ_STEPS*/
 
-#define VOLUME_SLEW_RATE 0.01f
+#define VOLUME_ATTACK_RATE 0.1f
+#define VOLUME_DECAY_RATE 0.01f
 #define DISPLAY_FREQ_LOW_INDEX 5
 #define DISPLAY_FREQ_HIGH_INDEX 120
 #define COLOUR_MAX (CIE_MAX_INDEX-1)
@@ -43,7 +44,7 @@
 /* ADC0 @ 10 bits */
 #define ADC_DIVIDER 0xFF
 #define FFT_SAMPLING_RATE ((int)((SYSTEM_CORE_CLOCK/(ADC_DIVIDER+1))/11))
-#define OVERSAMPLING 4
+#define OVERSAMPLING 2
 #define ADC_MODE (0x01UL|(ADC_DIVIDER<<8)|(1UL<<16))
 
 static volatile BOOL g_done;
@@ -183,7 +184,9 @@ main (void)
 
 		if(max<1)
 			continue;
-		slowMax += (max - slowMax)*VOLUME_SLEW_RATE;
+		slowMax += (max - slowMax)*((max<slowMax)?VOLUME_DECAY_RATE:VOLUME_ATTACK_RATE);
+
+		debug_printf("mx=%i\n\r",(int)(max - slowMax));
 
 		/* step calclulation */
 		const float freqStep = expf(logf(DISPLAY_FREQ_HIGH_INDEX/(float)DISPLAY_FREQ_LOW_INDEX)/(DISPLAY_FREQ_STEPS + 1));
