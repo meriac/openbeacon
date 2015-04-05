@@ -9,6 +9,7 @@ APP_LDFLAGS=-lm
 
 APP_SRC= \
   src/main.c \
+  src/swd.c \
   src/usbserial.c
 
 APP_SRC+=$(IMAGES_C)

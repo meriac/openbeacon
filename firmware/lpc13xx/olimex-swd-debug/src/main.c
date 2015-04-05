@@ -22,6 +22,7 @@
  */
 #include <openbeacon.h>
 #include "usbserial.h"
+#include "swd.h"
 
 volatile uint32_t timer_old, pulse_length, pulse_count;
 
@@ -29,30 +30,6 @@ void
 CDC_GetCommand (unsigned char *command)
 {
 	(void) command;
-}
-
-void
-TIMER32_0_IRQHandler (void)
-{
-	uint32_t irq_reason, cr;
-
-	/* get IRQ reason */
-	irq_reason = LPC_TMR32B0->IR;
-
-	/* capture IRQ event */
-	if((irq_reason & 0x10)>0)
-	{
-		cr = LPC_TMR32B0->CR0;
-		pulse_length = cr-timer_old;
-		timer_old = cr;
-		pulse_count++;
-
-		/* update LED */
-		GPIOSetValue (LED_PORT, LED_PIN1, pulse_count&1);
-	}
-
-	/* reset IRQ reason */
-	LPC_TMR32B0->IR = irq_reason;
 }
 
 int
@@ -73,15 +50,21 @@ main (void)
 	/* CDC USB Initialization */
 	init_usbserial ();
 
+	/* update core clock variable */
+	SystemCoreClockUpdate();
+
+	/* init debug interface */
+	swd_init();
+
 	while(TRUE)
 	{
-		debug_printf ( "Hello World\n" );
+		debug_printf( "Hello World (0x%02X)\n", swd_rx (0xFF));
 
 		/* blink once per second */
 		GPIOSetValue (LED_PORT, LED_PIN0, LED_ON);
 		pmu_wait_ms(50);
 		GPIOSetValue (LED_PORT, LED_PIN0, LED_OFF);
-		pmu_wait_ms(950);
+		pmu_wait_ms(50);
 	}
 
 	return 0;
