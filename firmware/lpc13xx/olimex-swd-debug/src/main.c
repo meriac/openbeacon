@@ -58,7 +58,7 @@ main (void)
 
 	while(TRUE)
 	{
-		debug_printf( "Hello World (0x%02X)\n", swd_rx (0xFF));
+		debug_printf( "Hello World (0x%02X)\n", swd_rx (0xA5));
 
 		/* blink once per second */
 		GPIOSetValue (LED_PORT, LED_PIN0, LED_ON);

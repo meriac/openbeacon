@@ -28,6 +28,7 @@
 int
 swd_rx (uint8_t cmd)
 {
+	uint32_t res;
 	uint8_t data;
 
 	/* MOSI */
@@ -44,14 +45,33 @@ swd_rx (uint8_t cmd)
 
 	/* set to GPIO, input & pulldown */
 	LPC_IOCON->PIO0_9 = 0x01 << 3;
-	/* 6 bit RX */
-	LPC_SSP->CR0 = 0x85;
+	/* 4 bit RX */
+	LPC_SSP->CR0 = 0x83;
 	/* transmit dummy byte */
 	LPC_SSP->DR = 0;
 	/* wait for TX to complete */
 	while ((LPC_SSP->SR & 4) == 0);
 	/* read ACK */
 	data = LPC_SSP->DR;
+
+	/* 16 bit TX */
+	LPC_SSP->CR0 = 0x8F;
+	/* send out 32 clocks */
+	LPC_SSP->DR = 0;
+	LPC_SSP->DR = 0;
+
+	/* wait for RX FIFO to be filled */
+	while ((LPC_SSP->SR & 4) == 0);
+	res = (uint16_t)LPC_SSP->DR;
+	while ((LPC_SSP->SR & 4) == 0);
+	res = (res<<16) | ((uint16_t)LPC_SSP->DR);
+
+	/* 4 bit TX */
+	LPC_SSP->CR0 = 0x83;
+	/* send out 4 clocks */
+	LPC_SSP->DR = 0;
+	while ((LPC_SSP->SR & 4) == 0);
+	data = (uint8_t)LPC_SSP->DR;
 
 	return data;
 }
