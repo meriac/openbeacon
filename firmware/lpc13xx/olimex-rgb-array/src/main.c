@@ -23,28 +23,49 @@
 #include <openbeacon.h>
 #include "cie1931.h"
 
-#define LED_COUNT (22*5)
+#define LED_X (22L)
+#define LED_Y (5L)
+#define LED_COUNT (LED_X*LED_Y)
 #define CIE_MAX_INDEX2 (CIE_MAX_INDEX/2)
 #define SPI_CS_RGB SPI_CS(LED_PORT,LED_PIN1,6, SPI_CS_MODE_NORMAL )
 
+typedef struct {
+	uint8_t b, r ,g;
+} TRGB;
+
 static const uint8_t g_latch = 0;
-static uint8_t g_data[LED_COUNT][3];
+static TRGB g_data[LED_Y][LED_X];
 
 void update_leds(void)
 {
+	int x,y;
+	TRGB data[LED_COUNT], *dst;
+
+	/* transform array to linear LED strip */
+	for(y=0; y<LED_Y; y++)
+	{
+		dst = &data[y*LED_X];
+		if(y&1)
+			memcpy(dst, &g_data[y], sizeof(g_data[y]));
+		else
+			for(x=(LED_X-1); x>=0; x--)
+				*dst++ = g_data[y][x];
+	}
+
 	/* transmit new values */
-	spi_txrx (SPI_CS_RGB, &g_data, sizeof(g_data), NULL, 0);
+	spi_txrx (SPI_CS_RGB, &data, sizeof(data), NULL, 0);
 
 	/* latch data */
-	memset(&g_data, 0, sizeof(g_data));
-	spi_txrx (SPI_CS_RGB, &g_data, sizeof(g_data), NULL, 0);
+	memset(&data, 0, sizeof(data));
+	spi_txrx (SPI_CS_RGB, &data, sizeof(data), NULL, 0);
 }
 
 int
 main (void)
 {
-	double t,y;
-	int i,rgb[3];
+	double t;
+	int x, y;
+	TRGB color, *p;
 
 	/* Initialize GPIO (sets up clock) */
 	GPIOInit ();
@@ -64,24 +85,24 @@ main (void)
 	t = 0;
 	while(1)
 	{		
-		y=t;
-		for(i=0; i<LED_COUNT; i++)
+		for(y=0; y<LED_Y; y++)
 		{
-			rgb[0] = (sin( y*0.1+cos(y*0.01))*CIE_MAX_INDEX2)+CIE_MAX_INDEX2;
-			rgb[1] = (cos(-y*0.2-sin(y*0.3 ))*CIE_MAX_INDEX2)+CIE_MAX_INDEX2;
-			rgb[2] = (cos( y*0.5-cos(y*0.4 ))*CIE_MAX_INDEX2)+CIE_MAX_INDEX2;
+			for(x=0; x<LED_X; x++)
+			{
+				color.r = (sin( x*0.1+cos(y*0.1+t))*CIE_MAX_INDEX2)+CIE_MAX_INDEX2;
+				color.g = (cos(-y*0.2-sin(x*0.3-t))*CIE_MAX_INDEX2)+CIE_MAX_INDEX2;
+				color.b = (cos( x*0.5-cos(y*0.4+t))*CIE_MAX_INDEX2)+CIE_MAX_INDEX2;
 
-			g_data[i][1] = g_cie[rgb[0]];
-			g_data[i][2] = g_cie[rgb[1]];
-			g_data[i][0] = g_cie[rgb[2]];
-
-			y += 0.5;
+				p = &g_data[y][x];
+				p->r = g_cie[color.r];
+				p->g = g_cie[color.g];
+				p->b = g_cie[color.b];
+			}
 		}
-
 		/* send data */
 		update_leds();
 		pmu_wait_ms(1);
 
-		t+=0.1;
+		t+=0.05;
 	}
 }
