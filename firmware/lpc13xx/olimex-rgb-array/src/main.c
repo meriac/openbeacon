@@ -24,7 +24,7 @@
 #include "words.h"
 #include "cie1931.h"
 
-#define DELAY 300
+#define DELAY 200
 #define CIE_MAX_INDEX2 (CIE_MAX_INDEX/2)
 #define SPI_CS_RGB SPI_CS(LED_PORT,LED_PIN1,6, SPI_CS_MODE_NORMAL )
 

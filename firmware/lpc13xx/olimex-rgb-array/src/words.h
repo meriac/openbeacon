@@ -79,6 +79,9 @@ static const int g_sentence[] = {
 	// People should not be afraid of their governments
 	14, 19, 11, 2, 0, 13, 21, 27, -1,
 	6, 19, 2, 0, 13, 21, 14, -1, -1,
+
+	// long pause
+	-1, -1,
 };
 
 #define WORD_COUNT ((int)(sizeof(g_sentence)/sizeof(g_sentence[0])))
