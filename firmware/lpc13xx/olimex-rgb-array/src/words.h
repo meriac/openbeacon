@@ -58,8 +58,9 @@ static const TWordPos g_words[] = {
 	{ 0,2, 7}, // 22 treason
 	{13,3, 3}, // 23 why
 	{ 0,1, 3}, // 24 guy
-	{ 7,1, 5}, // 25 fawkes
+	{ 7,1, 6}, // 25 fawkes
 	{ 3,1, 4}, // 26 1605
+	{ 0,0,12}, // 27 governments.
 };
 
 static const int g_sentence[] = {
@@ -76,7 +77,7 @@ static const int g_sentence[] = {
 	24, 25, -1, 26, -1, -1,
 
 	// People should not be afraid of their governments
-	14, 19, 11, 2, 0, 13, 21, 6, -1,
+	14, 19, 11, 2, 0, 13, 21, 27, -1,
 	6, 19, 2, 0, 13, 21, 14, -1, -1,
 };
 
