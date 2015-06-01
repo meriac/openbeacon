@@ -28,13 +28,6 @@
 #define LED_Y (5L)
 #define LED_COUNT (LED_X*LED_Y)
 
-
-/* People should not be afraid of their governments.
- * Governments should be afraid of their people. */
-
-/* Remember, the Fifth of November, the Gunpowder Treason and Plot.
- * I know of no reason why the Gunpowder Treason should ever be forgot*/
-
 typedef struct {
 	int x,y, length;
 } TWordPos;
@@ -58,13 +51,35 @@ static const TWordPos g_words[] = {
 	{12,0, 4}, // 15 plot
 	{ 1,2, 6}, // 16 reason
 	{13,2, 8}, // 17 remember
-	{16,0, 6}, // 18 should
-	{ 8,4, 3}, // 19 the
-	{ 8,4, 5}, // 20 their
-	{ 0,2, 7}, // 21 treason
-	{13,3, 3}  // 22 why
+	{13,2, 9}, // 18 remember,
+	{16,0, 6}, // 19 should
+	{ 8,4, 3}, // 20 the
+	{ 8,4, 5}, // 21 their
+	{ 0,2, 7}, // 22 treason
+	{13,3, 3}, // 23 why
+	{ 0,1, 3}, // 24 guy
+	{ 7,1, 5}, // 25 fawkes
+	{ 3,1, 4}, // 26 1605
 };
 
-#define WORD_COUNT ((int)(sizeof(g_words)/sizeof(g_words[0])))
+static const int g_sentence[] = {
+	// Remember, Remember, the Fifth of November,
+	18, -1, 18, -1, 20, 4, 13, 12, -1,
+	// the Gunpowder Treason and Plot
+	20, 7, 22, 1, 15, -1,
+	// I know of no reason why the Gunpowder Treason
+	8, 9, 13, 10, 16, -1, 23, 20, 7, 22, -1,
+	// should ever be forgot
+	19, 3, -1, 2, -1, 5, -1, -1,
+
+	// guy fawkes, 1605
+	24, 25, -1, 26, -1, -1,
+
+	// People should not be afraid of their governments
+	14, 19, 11, 2, 0, 13, 21, 6, -1,
+	6, 19, 2, 0, 13, 21, 14, -1, -1,
+};
+
+#define WORD_COUNT ((int)(sizeof(g_sentence)/sizeof(g_sentence[0])))
 
 #endif/*__WORDS_H__*/

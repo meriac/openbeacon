@@ -24,7 +24,7 @@
 #include "words.h"
 #include "cie1931.h"
 
-#define DELAY 750
+#define DELAY 300
 #define CIE_MAX_INDEX2 (CIE_MAX_INDEX/2)
 #define SPI_CS_RGB SPI_CS(LED_PORT,LED_PIN1,6, SPI_CS_MODE_NORMAL )
 
@@ -95,28 +95,33 @@ main (void)
 				g_data[y][x].g = g_cie[0x0B];
 			}
 
-		w = &g_words[word/DELAY];
+		/* get next word */
+		i = g_sentence[word/DELAY];
 		word++;
 		if(word>=(WORD_COUNT*DELAY))
 			word=0;
 
-		for(i=0; i<w->length; i++)
+		if(i>=0)
 		{
-			/* word coordinates */
-			x = w->x + i;
-			y = w->y;
+			w = &g_words[i];
 
-			/* update color */
-			color.r = (sin( x*0.1+cos(y*0.1+t))*CIE_MAX_INDEX2)+CIE_MAX_INDEX2;
-			color.g = (cos(-y*0.2-sin(x*0.3-t))*CIE_MAX_INDEX2)+CIE_MAX_INDEX2;
-			color.b = (cos( x*0.5-cos(y*0.4+t))*CIE_MAX_INDEX2)+CIE_MAX_INDEX2;
+			for(i=0; i<w->length; i++)
+			{
+				/* word coordinates */
+				x = w->x + i;
+				y = w->y;
 
-			p = &g_data[y][x];
-			p->r = g_cie[color.r];
-			p->g = g_cie[color.g];
-			p->b = g_cie[color.b];
+				/* update color */
+				color.r = (sin( x*0.1+cos(y*0.1+t))*CIE_MAX_INDEX2)+CIE_MAX_INDEX2;
+				color.g = (cos(-y*0.2-sin(x*0.3-t))*CIE_MAX_INDEX2)+CIE_MAX_INDEX2;
+				color.b = (cos( x*0.5-cos(y*0.4+t))*CIE_MAX_INDEX2)+CIE_MAX_INDEX2;
+
+				p = &g_data[y][x];
+				p->r = g_cie[color.r];
+				p->g = g_cie[color.g];
+				p->b = g_cie[color.b];
+			}
 		}
-
 		/* send data */
 		update_leds();
 		pmu_wait_ms(1);
