@@ -195,7 +195,7 @@ vNetworkReceive (void *arg, struct udp_pcb *pcb, struct pbuf *p,
 	buf = pbuf_alloc (PBUF_TRANSPORT, sizeof (msg), PBUF_REF);
 	if (buf)
 	{
-		buf->payload = &msg;
+		buf->payload = (char*)&msg;
 		udp_sendto (pcb, buf, addr, port);
 		pbuf_free (buf);
 	}
