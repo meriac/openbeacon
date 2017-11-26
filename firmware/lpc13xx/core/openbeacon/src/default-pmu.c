@@ -60,6 +60,28 @@ pmu_wait_ms (uint16_t ms)
 }
 
 void
+pmu_wait_ticks (uint16_t ticks)
+{
+	if(ticks<10)
+		ticks=10;
+
+	/* prepare sleep */
+	LPC_PMU->PCON = (1 << 11) | (1 << 8);
+	SCB->SCR &= ~SCB_SCR_SLEEPDEEP_Msk;
+
+	/* start timer */
+	LPC_TMR16B0->TC = 0;
+	LPC_TMR16B0->MR0 = ticks;
+	LPC_TMR16B0->TCR = 1;
+
+	/* sleep */
+	g_sleeping = TRUE;
+
+	while (g_sleeping)
+		__WFI ();
+}
+
+void
 pmu_init (void)
 {
 	/* enable timer clock */

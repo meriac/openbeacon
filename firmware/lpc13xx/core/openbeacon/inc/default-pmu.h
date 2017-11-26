@@ -25,6 +25,7 @@
 #define __DEFAULT_PMU_H__
 #ifndef DISABLE_DEFAULT_PMU
 
+extern void pmu_wait_ticks (uint16_t ticks);
 extern void pmu_wait_ms (uint16_t ms);
 extern void pmu_init (void);
 
